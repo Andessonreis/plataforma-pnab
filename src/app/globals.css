@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-sans: 'Inter', sans-serif;
+  }
+
+  /* Foco visível para acessibilidade (WCAG AA) */
+  *:focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand-600;
+  }
+
+  /* Tipografia base */
+  body {
+    @apply bg-white text-gray-900 antialiased;
+  }
+}

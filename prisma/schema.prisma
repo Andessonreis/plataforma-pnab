@@ -1,0 +1,279 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  PROPONENTE
+  ATENDIMENTO
+  HABILITADOR
+  AVALIADOR
+  ADMIN
+}
+
+enum TipoProponente {
+  PF
+  MEI
+  PJ
+  COLETIVO
+}
+
+enum EditalStatus {
+  RASCUNHO
+  PUBLICADO
+  INSCRICOES_ABERTAS
+  INSCRICOES_ENCERRADAS
+  HABILITACAO
+  AVALIACAO
+  RESULTADO_PRELIMINAR
+  RECURSO
+  RESULTADO_FINAL
+  ENCERRADO
+}
+
+enum InscricaoStatus {
+  RASCUNHO
+  ENVIADA
+  HABILITADA
+  INABILITADA
+  EM_AVALIACAO
+  RESULTADO_PRELIMINAR
+  RECURSO_ABERTO
+  RESULTADO_FINAL
+  CONTEMPLADA
+  NAO_CONTEMPLADA
+  SUPLENTE
+}
+
+enum TicketStatus {
+  ABERTO
+  EM_ATENDIMENTO
+  FECHADO
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Usuários
+// ─────────────────────────────────────────────────────────────────────────────
+
+model User {
+  id             String          @id @default(cuid())
+  email          String          @unique
+  password       String
+  role           UserRole        @default(PROPONENTE)
+  nome           String
+  cpfCnpj        String?         @unique
+  tipoProponente TipoProponente?
+  telefone       String?
+  ativo          Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  inscricoes Inscricao[]
+  avaliacoes Avaliacao[]
+  tickets    Ticket[]
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Editais
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Edital {
+  id                  String       @id @default(cuid())
+  titulo              String
+  slug                String       @unique
+  ano                 Int
+  status              EditalStatus @default(RASCUNHO)
+  resumo              String?
+  valorTotal          Decimal?     @db.Decimal(12, 2)
+  categorias          String[]
+  acoesAfirmativas    String?
+  regrasElegibilidade String?
+  // Array de marcos: [{ label: string, dataHora: string, destaque?: boolean }]
+  cronograma          Json         @default("[]")
+  // Definição dinâmica dos campos do formulário de inscrição
+  camposFormulario    Json         @default("[]")
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  arquivos   ArquivoEdital[]
+  inscricoes Inscricao[]
+  faqItems   FaqItem[]
+}
+
+model ArquivoEdital {
+  id          String   @id @default(cuid())
+  editalId    String
+  tipo        String   // PDF | ANEXO | MODELO | PLANILHA | DECLARACAO
+  titulo      String
+  url         String
+  acessivel   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  edital Edital @relation(fields: [editalId], references: [id], onDelete: Cascade)
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Inscrições / Propostas
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Inscricao {
+  id                 String          @id @default(cuid())
+  numero             String          @unique
+  editalId           String
+  proponenteId       String
+  status             InscricaoStatus @default(RASCUNHO)
+  categoria          String?
+  // Campos dinâmicos preenchidos pelo proponente
+  campos             Json            @default("{}")
+  orcamento          Json?
+  notaFinal          Decimal?        @db.Decimal(5, 2)
+  motivoInabilitacao String?
+  submittedAt        DateTime?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  edital      Edital           @relation(fields: [editalId], references: [id])
+  proponente  User             @relation(fields: [proponenteId], references: [id])
+  anexos      AnexoInscricao[]
+  avaliacoes  Avaliacao[]
+  recursos    Recurso[]
+  projetoApoiado ProjetoApoiado?
+}
+
+model AnexoInscricao {
+  id          String    @id @default(cuid())
+  inscricaoId String
+  tipo        String
+  titulo      String
+  url         String
+  valido      Boolean?
+  observacao  String?
+  createdAt   DateTime  @default(now())
+
+  inscricao Inscricao @relation(fields: [inscricaoId], references: [id], onDelete: Cascade)
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Avaliação
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Avaliacao {
+  id          String   @id @default(cuid())
+  inscricaoId String
+  avaliadorId String
+  // { criterio: string, nota: number, peso?: number }[]
+  notas       Json     @default("[]")
+  parecer     String?
+  notaTotal   Decimal  @db.Decimal(5, 2)
+  createdAt   DateTime @default(now())
+
+  inscricao Inscricao @relation(fields: [inscricaoId], references: [id])
+  avaliador User      @relation(fields: [avaliadorId], references: [id])
+
+  @@unique([inscricaoId, avaliadorId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Recursos
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Recurso {
+  id            String    @id @default(cuid())
+  inscricaoId   String
+  fase          String    // HABILITACAO | RESULTADO_PRELIMINAR | RESULTADO_FINAL
+  texto         String
+  urlAnexos     String[]
+  decisao       String?   // DEFERIDO | INDEFERIDO
+  justificativa String?
+  createdAt     DateTime  @default(now())
+  decidedAt     DateTime?
+
+  inscricao Inscricao @relation(fields: [inscricaoId], references: [id])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Transparência
+// ─────────────────────────────────────────────────────────────────────────────
+
+model ProjetoApoiado {
+  id             String   @id @default(cuid())
+  inscricaoId    String   @unique
+  valorAprovado  Decimal  @db.Decimal(12, 2)
+  statusExecucao String   @default("EM_EXECUCAO")
+  contrapartida  String?
+  mediaUrls      String[]
+  relatorios     Json?
+  publicado      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  inscricao Inscricao @relation(fields: [inscricaoId], references: [id])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Conteúdo CMS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Noticia {
+  id          String    @id @default(cuid())
+  titulo      String
+  slug        String    @unique
+  corpo       String
+  tags        String[]
+  imagemUrl   String?
+  publicado   Boolean   @default(false)
+  publicadoEm DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Manual {
+  id        String   @id @default(cuid())
+  titulo    String
+  categoria String
+  url       String
+  versao    String?
+  publicado Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model FaqItem {
+  id        String   @id @default(cuid())
+  editalId  String?
+  pergunta  String
+  resposta  String
+  ordem     Int      @default(0)
+  publicado Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  edital Edital? @relation(fields: [editalId], references: [id])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Atendimento / Tickets
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Ticket {
+  id           String       @id @default(cuid())
+  protocolo    String       @unique
+  editalId     String?
+  autorId      String?
+  nomeContato  String
+  emailContato String
+  assunto      String
+  mensagem     String
+  status       TicketStatus @default(ABERTO)
+  // [{ de: string, texto: string, criadoEm: string }]
+  historico    Json[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  autor User? @relation(fields: [autorId], references: [id])
+}
