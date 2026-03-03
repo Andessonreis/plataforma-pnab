@@ -1,12 +1,17 @@
-// Layout compartilhado pelas páginas públicas (header + footer)
-// Implementar Header e Footer como componentes em src/components/layout/
+import { Suspense } from 'react'
+import { Header, Footer, CookieBanner } from '@/components/layout'
+import { ActiveBanners } from '@/components/layout'
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col">
-      {/* <Header /> */}
+      <Header />
+      <Suspense fallback={null}>
+        <ActiveBanners />
+      </Suspense>
       <main className="flex-1">{children}</main>
-      {/* <Footer /> */}
+      <Footer />
+      <CookieBanner />
     </div>
   )
 }

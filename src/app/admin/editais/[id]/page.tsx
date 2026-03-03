@@ -1,0 +1,71 @@
+import type { Metadata } from 'next'
+import Link from 'next/link'
+import { auth } from '@/lib/auth'
+import { redirect, notFound } from 'next/navigation'
+import { prisma } from '@/lib/db'
+import { EditalForm } from '../edital-form'
+import type { EditalStatus } from '@prisma/client'
+
+interface Props {
+  params: Promise<{ id: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params
+  const edital = await prisma.edital.findUnique({
+    where: { id },
+    select: { titulo: true },
+  })
+  return { title: `Editar: ${edital?.titulo ?? id} — Portal PNAB Irece` }
+}
+
+interface CronogramaItem {
+  label: string
+  dataHora: string
+  destaque: boolean
+}
+
+export default async function EditarEditalPage({ params }: Props) {
+  const session = await auth()
+  if (!session || session.user.role !== 'ADMIN') redirect('/')
+
+  const { id } = await params
+  const edital = await prisma.edital.findUnique({ where: { id } })
+
+  if (!edital) notFound()
+
+  const cronograma = (Array.isArray(edital.cronograma) ? edital.cronograma : []) as unknown as CronogramaItem[]
+
+  return (
+    <section>
+      <div className="mb-6">
+        <Link
+          href="/admin/editais"
+          className="text-sm text-brand-600 hover:text-brand-700 font-medium flex items-center gap-1 mb-2"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          Voltar para Editais
+        </Link>
+        <h1 className="text-2xl font-bold text-slate-900">Editar Edital</h1>
+        <p className="text-slate-600 mt-1">{edital.titulo}</p>
+      </div>
+
+      <EditalForm
+        initialData={{
+          id: edital.id,
+          titulo: edital.titulo,
+          resumo: edital.resumo ?? '',
+          ano: edital.ano,
+          valorTotal: edital.valorTotal ? String(edital.valorTotal) : '',
+          categorias: edital.categorias,
+          acoesAfirmativas: edital.acoesAfirmativas ?? '',
+          regrasElegibilidade: edital.regrasElegibilidade ?? '',
+          cronograma,
+          status: edital.status as EditalStatus,
+        }}
+      />
+    </section>
+  )
+}

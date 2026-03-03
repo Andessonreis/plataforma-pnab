@@ -73,7 +73,7 @@ Funcionalidades centrais: publicação de editais, inscrição online de propone
 | Cache / Filas | Redis 7 + BullMQ (email, PDF) |
 | Storage | Supabase Storage (3 buckets) |
 | E-mail | Nodemailer (SMTP) |
-| Auth | NextAuth v5 — Credentials (CPF/CNPJ) |
+| Auth | NextAuth v5 (beta) — Credentials (CPF/CNPJ) |
 | Validação | Zod |
 | Infra | Docker Compose (app + worker + postgres + redis) |
 
@@ -82,7 +82,7 @@ Funcionalidades centrais: publicação de editais, inscrição online de propone
 ```
 portal-pnab-irece/
 ├── prisma/
-│   └── schema.prisma          # Schema completo (10 modelos)
+│   └── schema.prisma          # Schema completo (12 modelos, 5 enums)
 ├── src/
 │   ├── app/
 │   │   ├── (public)/          # Páginas públicas (/, /editais, /noticias, etc.)
@@ -102,6 +102,7 @@ portal-pnab-irece/
 │   │   └── next-auth.d.ts     # Extensão de Session (id, role)
 │   ├── middleware.ts           # Proteção de rotas por role
 │   └── worker.ts              # Entry point do worker BullMQ
+├── docs/                      # Documentação do projeto (visão, backlog, checklist)
 ├── Makefile
 ├── Dockerfile                 # Multi-stage (deps → builder → runner)
 ├── docker-compose.yml
@@ -125,6 +126,7 @@ portal-pnab-irece/
 | `/cadastro` | `(auth)/cadastro/page.tsx` | Público |
 | `/proponente` | `proponente/page.tsx` | PROPONENTE |
 | `/proponente/inscricoes` | `proponente/inscricoes/page.tsx` | PROPONENTE |
+| `/proponente/inscricoes/[id]` | `proponente/inscricoes/[id]/page.tsx` | PROPONENTE |
 | `/admin` | `admin/page.tsx` | ADMIN, ATENDIMENTO, HABILITADOR, AVALIADOR |
 | `/admin/editais` | `admin/editais/page.tsx` | ADMIN |
 | `/admin/inscricoes` | `admin/inscricoes/page.tsx` | Roles internos |

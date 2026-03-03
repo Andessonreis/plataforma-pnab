@@ -16,6 +16,7 @@ export type EmailTemplate =
   | 'resultado_final'
   | 'protocolo_atendimento'
   | 'notificacao_prazo'
+  | 'recuperacao_senha'
 
 export interface SendEmailOptions {
   to: string
@@ -62,6 +63,23 @@ function renderTemplate(template: EmailTemplate, data: Record<string, unknown>):
       <h2>Lembrete de Prazo</h2>
       <p>${data.mensagem}</p>
       <p>Acesse: <a href="${data.url}">${data.url}</a></p>
+    `,
+    recuperacao_senha: `
+      <h2>Recuperação de Senha</h2>
+      <p>Olá, <strong>${data.nome}</strong>!</p>
+      <p>Recebemos uma solicitação para redefinir sua senha no Portal PNAB Irecê.</p>
+      <p>Clique no link abaixo para criar uma nova senha:</p>
+      <p>
+        <a href="${data.resetUrl}" style="display:inline-block;padding:12px 24px;background-color:#059669;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;">
+          Redefinir minha senha
+        </a>
+      </p>
+      <p style="margin-top:16px;font-size:14px;color:#64748b;">
+        Este link é válido por <strong>1 hora</strong>. Se você não solicitou a recuperação, ignore este e-mail.
+      </p>
+      <p style="font-size:12px;color:#94a3b8;margin-top:24px;">
+        Se o botão não funcionar, copie e cole o link: ${data.resetUrl}
+      </p>
     `,
   }
 

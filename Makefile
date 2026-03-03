@@ -127,6 +127,10 @@ db-push:
 db-migrate:
 	@$(NPM) run db:migrate
 
+## Popula o banco com dados de teste (seed)
+db-seed:
+	@$(NPM) run db:seed
+
 ## Abre Prisma Studio (GUI visual do banco)
 db-studio:
 	@$(NPM) run db:studio
@@ -155,6 +159,18 @@ typecheck:
 ## Verifica lint + tipos
 check: lint typecheck
 	@echo "$(GREEN)Todas as verificações passaram!$(RESET)"
+
+## Roda testes e2e (Playwright)
+test-e2e:
+	@npx playwright test
+
+## Roda testes e2e com UI interativa
+test-e2e-ui:
+	@npx playwright test --ui
+
+## Instala browsers do Playwright
+test-setup:
+	@npx playwright install chromium
 
 # -----------------------------------------------------------------------------
 # Utilitários | Utilities
@@ -210,6 +226,7 @@ help:
 	@echo "  make db-generate   Gera Prisma Client"
 	@echo "  make db-push       Push do schema (sem migration)"
 	@echo "  make db-migrate    Cria e executa migration"
+	@echo "  make db-seed       Popula banco com dados de teste"
 	@echo "  make db-studio     Abre Prisma Studio (GUI)"
 	@echo "  make db-reset      Reset completo do banco"
 	@echo "  make db-setup      Setup completo (generate + push)"
@@ -218,6 +235,11 @@ help:
 	@echo "  make lint          Verifica lint"
 	@echo "  make typecheck     Verifica tipos TypeScript"
 	@echo "  make check         lint + typecheck"
+	@echo ""
+	@echo "$(GREEN)Testes:$(RESET)"
+	@echo "  make test-e2e      Roda testes e2e (Playwright)"
+	@echo "  make test-e2e-ui   Testes e2e com UI interativa"
+	@echo "  make test-setup    Instala browsers do Playwright"
 	@echo ""
 	@echo "$(GREEN)Utilitários:$(RESET)"
 	@echo "  make clean         Remove .next e node_modules"

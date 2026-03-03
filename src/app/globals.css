@@ -5,6 +5,22 @@
 @layer base {
   :root {
     --font-sans: 'Inter', sans-serif;
+
+    /* Semânticas — usar nas classes utilitárias */
+    --color-primary: #059669;
+    --color-primary-hover: #047857;
+    --color-primary-light: #ecfdf5;
+    --color-accent: #d97706;
+    --color-accent-hover: #b45309;
+    --color-accent-light: #fffbeb;
+    --color-surface: #ffffff;
+    --color-background: #f8fafc;
+    --color-text: #0f172a;
+    --color-text-muted: #475569;
+    --color-border: #e2e8f0;
+    --color-error: #dc2626;
+    --color-success: #059669;
+    --color-info: #2563eb;
   }
 
   /* Foco visível para acessibilidade (WCAG AA) */
@@ -14,6 +30,75 @@
 
   /* Tipografia base */
   body {
-    @apply bg-white text-gray-900 antialiased;
+    @apply bg-slate-50 text-slate-900 antialiased;
+  }
+
+  /* Acessibilidade — tamanho de fonte */
+  html.font-size-large {
+    font-size: 112.5%; /* 18px */
+  }
+  html.font-size-xl {
+    font-size: 125%; /* 20px */
+  }
+
+  /* Acessibilidade — alto contraste */
+  html.high-contrast {
+    filter: contrast(1.4);
+  }
+  html.high-contrast img,
+  html.high-contrast video {
+    filter: contrast(0.714); /* neutraliza o filtro pai */
+  }
+}
+
+/* Estilos para conteudo CMS renderizado via dangerouslySetInnerHTML */
+@layer components {
+  .cms-content {
+    @apply text-slate-700 leading-relaxed;
+  }
+  .cms-content h2 {
+    @apply text-2xl font-bold text-slate-900 mt-8 mb-4;
+  }
+  .cms-content h3 {
+    @apply text-xl font-semibold text-slate-900 mt-6 mb-3;
+  }
+  .cms-content h4 {
+    @apply text-lg font-semibold text-slate-800 mt-5 mb-2;
+  }
+  .cms-content p {
+    @apply mb-4;
+  }
+  .cms-content ul {
+    @apply list-disc pl-6 mb-4 space-y-1;
+  }
+  .cms-content ol {
+    @apply list-decimal pl-6 mb-4 space-y-1;
+  }
+  .cms-content li {
+    @apply text-slate-700;
+  }
+  .cms-content a {
+    @apply text-brand-600 hover:text-brand-700 underline underline-offset-2;
+  }
+  .cms-content strong {
+    @apply font-semibold text-slate-900;
+  }
+  .cms-content em {
+    @apply italic;
+  }
+  .cms-content blockquote {
+    @apply border-l-4 border-brand-300 pl-4 py-1 my-4 text-slate-600 italic;
+  }
+  .cms-content table {
+    @apply w-full border-collapse border border-slate-200 my-4;
+  }
+  .cms-content th {
+    @apply bg-slate-50 text-left py-2 px-3 border border-slate-200 font-medium text-slate-700 text-sm;
+  }
+  .cms-content td {
+    @apply py-2 px-3 border border-slate-200 text-sm;
+  }
+  .cms-content hr {
+    @apply my-8 border-slate-200;
   }
 }

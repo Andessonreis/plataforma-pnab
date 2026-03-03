@@ -72,13 +72,86 @@ model User {
   cpfCnpj        String?         @unique
   tipoProponente TipoProponente?
   telefone       String?
+  cep            String?
+  logradouro     String?
+  numero         String?
+  complemento    String?
+  bairro         String?
+  cidade         String?
+  uf             String?         @db.Char(2)
   ativo          Boolean         @default(true)
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 
-  inscricoes Inscricao[]
-  avaliacoes Avaliacao[]
-  tickets    Ticket[]
+  inscricoes          Inscricao[]
+  avaliacoes          Avaliacao[]
+  tickets             Ticket[]
+  passwordResetTokens PasswordResetToken[]
+  auditLogs           AuditLog[]
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Recuperação de Senha
+// ─────────────────────────────────────────────────────────────────────────────
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Auditoria
+// ─────────────────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String   // LOGIN, LOGOUT, CADASTRO, INSCRICAO_CRIADA, STATUS_ALTERADO, EDITAL_PUBLICADO, etc.
+  entity    String?  // User, Inscricao, Edital, etc.
+  entityId  String?
+  details   Json?
+  ip        String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Newsletter
+// ─────────────────────────────────────────────────────────────────────────────
+
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  nome      String
+  email     String   @unique
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Banners
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Banner {
+  id        String   @id @default(cuid())
+  titulo    String
+  texto     String
+  ctaLabel  String?
+  ctaUrl    String?
+  ativo     Boolean  @default(true)
+  inicioEm  DateTime
+  fimEm     DateTime
+  createdAt DateTime @default(now())
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -254,6 +327,20 @@ model FaqItem {
   createdAt DateTime @default(now())
 
   edital Edital? @relation(fields: [editalId], references: [id])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CMS — Páginas Institucionais
+// ─────────────────────────────────────────────────────────────────────────────
+
+model CmsPage {
+  id        String   @id @default(cuid())
+  titulo    String
+  slug      String   @unique
+  corpo     String   // HTML do editor rich text
+  publicado Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
