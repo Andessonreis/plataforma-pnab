@@ -101,4 +101,8 @@
   .cms-content hr {
     @apply my-8 border-slate-200;
   }
+
+  .section-label {
+    @apply text-xs font-semibold uppercase tracking-wider;
+  }
 }

@@ -3,12 +3,12 @@ import Link from 'next/link'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { Card, Badge, Pagination } from '@/components/ui'
+import { Card, Badge, Pagination, Button, EmptyState, FadeIn, IconPlus, IconNews } from '@/components/ui'
 import { editalStatusLabel, editalStatusVariant } from '@/lib/status-maps'
 import type { EditalStatus } from '@prisma/client'
 
 export const metadata: Metadata = {
-  title: 'Gestao de Editais — Portal PNAB Irece',
+  title: 'Gestão de Editais — Portal PNAB Irecê',
 }
 
 interface Props {
@@ -49,21 +49,18 @@ export default async function AdminEditaisPage({ searchParams }: Props) {
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Gestao de Editais</h1>
-          <p className="text-slate-600 mt-1">{total} edital(ais) encontrado(s)</p>
+      <FadeIn>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Gestão de Editais</h1>
+            <p className="text-slate-600 mt-1">{total} edital(ais) encontrado(s)</p>
+          </div>
+          <Button href="/admin/editais/novo">
+            <IconPlus className="h-4 w-4 mr-2" />
+            Novo Edital
+          </Button>
         </div>
-        <Link
-          href="/admin/editais/novo"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-brand-600 text-white text-sm font-medium hover:bg-brand-700 transition-colors min-h-[44px]"
-        >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
-          Novo Edital
-        </Link>
-      </div>
+      </FadeIn>
 
       {/* Filtros por status */}
       <div className="flex flex-wrap gap-2 mb-6">
@@ -96,13 +93,12 @@ export default async function AdminEditaisPage({ searchParams }: Props) {
 
       {editais.length === 0 ? (
         <Card>
-          <div className="text-center py-12">
-            <svg className="mx-auto h-12 w-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-            </svg>
-            <h2 className="text-lg font-semibold text-slate-900 mt-4">Nenhum edital</h2>
-            <p className="text-slate-500 mt-1">Crie o primeiro edital para comecar.</p>
-          </div>
+          <EmptyState
+            icon={<IconNews className="h-8 w-8 text-slate-400" />}
+            title="Nenhum edital"
+            description="Crie o primeiro edital para começar."
+            action={{ label: 'Novo Edital', href: '/admin/editais/novo' }}
+          />
         </Card>
       ) : (
         <>
@@ -111,13 +107,13 @@ export default async function AdminEditaisPage({ searchParams }: Props) {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-slate-50">
-                    <th className="text-left py-3 px-4 font-medium text-slate-600">Titulo</th>
+                    <th className="text-left py-3 px-4 font-medium text-slate-600">Título</th>
                     <th className="text-left py-3 px-4 font-medium text-slate-600">Ano</th>
                     <th className="text-left py-3 px-4 font-medium text-slate-600">Status</th>
                     <th className="text-left py-3 px-4 font-medium text-slate-600">Categorias</th>
                     <th className="text-right py-3 px-4 font-medium text-slate-600">Valor Total</th>
-                    <th className="text-center py-3 px-4 font-medium text-slate-600">Inscricoes</th>
-                    <th className="text-right py-3 px-4 font-medium text-slate-600">Acoes</th>
+                    <th className="text-center py-3 px-4 font-medium text-slate-600">Inscrições</th>
+                    <th className="text-right py-3 px-4 font-medium text-slate-600">Ações</th>
                   </tr>
                 </thead>
                 <tbody>

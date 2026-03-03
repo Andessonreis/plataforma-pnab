@@ -3,10 +3,10 @@ import Link from 'next/link'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { Card, Badge, Pagination } from '@/components/ui'
+import { Card, Badge, Pagination, Button, EmptyState, FadeIn, IconPlus, IconQuestion } from '@/components/ui'
 
 export const metadata: Metadata = {
-  title: 'Gestao de FAQ — Portal PNAB Irece',
+  title: 'Gestão de FAQ — Portal PNAB Irecê',
 }
 
 interface Props {
@@ -23,7 +23,6 @@ export default async function AdminFaqPage({ searchParams }: Props) {
   const editalFilter = params.editalId || undefined
   const publicadoFilter = params.publicado
 
-  // Montar filtros
   const where: Record<string, unknown> = {}
   if (editalFilter) {
     where.editalId = editalFilter
@@ -53,7 +52,6 @@ export default async function AdminFaqPage({ searchParams }: Props) {
 
   const totalPages = Math.ceil(total / pageSize)
 
-  // Montar URL base para paginacao preservando filtros
   function buildBaseUrl() {
     const parts: string[] = []
     if (editalFilter) parts.push(`editalId=${editalFilter}`)
@@ -61,7 +59,6 @@ export default async function AdminFaqPage({ searchParams }: Props) {
     return parts.length > 0 ? `/admin/faq?${parts.join('&')}` : '/admin/faq'
   }
 
-  // Montar URL para filtros
   function buildFilterUrl(filters: { editalId?: string; publicado?: string }) {
     const parts: string[] = []
     const eid = filters.editalId ?? editalFilter
@@ -73,25 +70,21 @@ export default async function AdminFaqPage({ searchParams }: Props) {
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Gestao de FAQ</h1>
-          <p className="text-slate-600 mt-1">{total} item(ns) encontrado(s)</p>
+      <FadeIn>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Gestão de FAQ</h1>
+            <p className="text-slate-600 mt-1">{total} item(ns) encontrado(s)</p>
+          </div>
+          <Button href="/admin/faq/novo">
+            <IconPlus className="h-4 w-4 mr-2" />
+            Novo Item
+          </Button>
         </div>
-        <Link
-          href="/admin/faq/novo"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-brand-600 text-white text-sm font-medium hover:bg-brand-700 transition-colors min-h-[44px]"
-        >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
-          Novo Item
-        </Link>
-      </div>
+      </FadeIn>
 
       {/* Filtros */}
       <div className="flex flex-wrap gap-4 mb-6">
-        {/* Filtro por edital */}
         <div className="flex flex-wrap gap-2 items-center">
           <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Edital:</span>
           <Link
@@ -122,7 +115,6 @@ export default async function AdminFaqPage({ searchParams }: Props) {
           ))}
         </div>
 
-        {/* Filtro por status de publicacao */}
         <div className="flex flex-wrap gap-2 items-center">
           <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Status:</span>
           <Link
@@ -163,13 +155,12 @@ export default async function AdminFaqPage({ searchParams }: Props) {
 
       {faqItems.length === 0 ? (
         <Card>
-          <div className="text-center py-12">
-            <svg className="mx-auto h-12 w-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <h2 className="text-lg font-semibold text-slate-900 mt-4">Nenhum item de FAQ</h2>
-            <p className="text-slate-500 mt-1">Crie o primeiro item para comecar.</p>
-          </div>
+          <EmptyState
+            icon={<IconQuestion className="h-8 w-8 text-slate-400" />}
+            title="Nenhum item de FAQ"
+            description="Crie o primeiro item para começar."
+            action={{ label: 'Novo Item', href: '/admin/faq/novo' }}
+          />
         </Card>
       ) : (
         <>
@@ -182,7 +173,7 @@ export default async function AdminFaqPage({ searchParams }: Props) {
                     <th className="text-left py-3 px-4 font-medium text-slate-600">Edital</th>
                     <th className="text-center py-3 px-4 font-medium text-slate-600">Ordem</th>
                     <th className="text-center py-3 px-4 font-medium text-slate-600">Status</th>
-                    <th className="text-right py-3 px-4 font-medium text-slate-600">Acoes</th>
+                    <th className="text-right py-3 px-4 font-medium text-slate-600">Ações</th>
                   </tr>
                 </thead>
                 <tbody>

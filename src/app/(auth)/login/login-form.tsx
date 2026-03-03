@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { signIn } from 'next-auth/react'
+import { signIn, getSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button, Input } from '@/components/ui'
@@ -30,7 +30,11 @@ export function LoginForm() {
       if (result?.error) {
         setError('CPF/CNPJ ou senha incorretos.')
       } else {
-        router.push('/proponente')
+        const session = await getSession()
+        const role = session?.user?.role
+        const ROLES_ADMIN = ['ADMIN', 'ATENDIMENTO', 'HABILITADOR', 'AVALIADOR']
+        const dest = role && ROLES_ADMIN.includes(role) ? '/admin' : '/proponente'
+        router.push(dest)
         router.refresh()
       }
     } catch {

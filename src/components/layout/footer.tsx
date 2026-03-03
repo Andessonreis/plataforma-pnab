@@ -1,14 +1,20 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import { NewsletterForm } from './newsletter-form'
 
-const institutionalLinks = [
+const navigationLinks = [
   { href: '/', label: 'Início' },
   { href: '/editais', label: 'Editais' },
   { href: '/projetos-apoiados', label: 'Projetos Apoiados' },
   { href: '/noticias', label: 'Notícias' },
   { href: '/manuais', label: 'Manuais' },
-  { href: '/faq', label: 'FAQ' },
+  { href: '/faq', label: 'Perguntas Frequentes' },
   { href: '/contato', label: 'Contato' },
+]
+
+const proponenteLinks = [
+  { href: '/login', label: 'Acessar minha conta' },
+  { href: '/cadastro', label: 'Cadastrar-se' },
 ]
 
 const legalLinks = [
@@ -22,35 +28,94 @@ function Footer() {
 
   return (
     <footer className="bg-brand-950 text-slate-300" role="contentinfo">
+      {/* Faixa accent no topo */}
+      <div className="h-1 bg-gradient-to-r from-brand-600 via-accent-500 to-brand-600" />
+
+      {/* Newsletter — seção de destaque */}
+      <div className="border-b border-slate-700/40">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div className="lg:max-w-md">
+              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                <svg className="h-5 w-5 text-accent-400 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+                </svg>
+                Fique por dentro dos editais
+              </h2>
+              <p className="mt-1 text-sm text-slate-400">
+                Receba notificações sobre novos editais, prazos e resultados diretamente no seu e-mail.
+              </p>
+            </div>
+            <div className="lg:w-[480px]">
+              <NewsletterForm />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Conteúdo principal */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Conteúdo principal */}
-        <div className="grid grid-cols-1 gap-8 py-12 sm:grid-cols-2 lg:grid-cols-4">
-          {/* Coluna 1 — Sobre */}
-          <div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600">
-                <span className="text-white font-bold text-sm">P</span>
-              </div>
+        <div className="grid grid-cols-1 gap-10 py-12 sm:grid-cols-2 lg:grid-cols-12">
+          {/* Coluna 1 — Institucional (mais larga) */}
+          <div className="lg:col-span-4">
+            <div className="flex items-center gap-3 mb-5">
+              <Image
+                src="https://www.irece.ba.gov.br/files/config/brasao.png"
+                alt="Brasão de Irecê"
+                width={40}
+                height={40}
+                className="h-10 w-10 object-contain"
+              />
               <div>
-                <p className="text-sm font-bold text-white leading-tight">Portal PNAB</p>
-                <p className="text-xs text-slate-400 leading-tight">Irecê</p>
+                <p className="text-base font-bold text-white leading-tight">Portal PNAB</p>
+                <p className="text-xs text-accent-400 font-medium leading-tight">Irecê/BA</p>
               </div>
             </div>
-            <p className="text-sm leading-relaxed">
+            <p className="text-sm leading-relaxed mb-5">
               Política Nacional Aldir Blanc de Fomento à Cultura.
               Secretaria de Arte e Cultura de Irecê/BA.
             </p>
+            {/* Contato */}
+            <div className="space-y-2 text-sm">
+              <a
+                href="mailto:cultura@irece.ba.gov.br"
+                className="flex items-center gap-2 hover:text-white transition-colors"
+              >
+                <svg className="h-4 w-4 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+                </svg>
+                cultura@irece.ba.gov.br
+              </a>
+              <a
+                href="tel:+557436413116"
+                className="flex items-center gap-2 hover:text-white transition-colors"
+              >
+                <svg className="h-4 w-4 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" />
+                </svg>
+                (74) 3641-3116
+              </a>
+              <p className="flex items-center gap-2 text-slate-400">
+                <svg className="h-4 w-4 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                </svg>
+                Irecê, Bahia — Brasil
+              </p>
+            </div>
           </div>
 
           {/* Coluna 2 — Navegação */}
-          <div>
-            <h2 className="text-sm font-semibold text-white mb-4">Navegação</h2>
+          <div className="lg:col-span-3">
+            <h2 className="text-xs font-semibold text-white uppercase tracking-wider mb-4">
+              Navegação
+            </h2>
             <ul className="space-y-2.5">
-              {institutionalLinks.map((link) => (
+              {navigationLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm hover:text-white transition-colors"
+                    className="text-sm hover:text-white hover:pl-1 transition-all duration-150"
                   >
                     {link.label}
                   </Link>
@@ -60,45 +125,32 @@ function Footer() {
           </div>
 
           {/* Coluna 3 — Área do Proponente */}
-          <div>
-            <h2 className="text-sm font-semibold text-white mb-4">Área do Proponente</h2>
+          <div className="lg:col-span-3">
+            <h2 className="text-xs font-semibold text-white uppercase tracking-wider mb-4">
+              Área do Proponente
+            </h2>
             <ul className="space-y-2.5">
-              <li>
-                <Link href="/login" className="text-sm hover:text-white transition-colors">
-                  Entrar
-                </Link>
-              </li>
-              <li>
-                <Link href="/cadastro" className="text-sm hover:text-white transition-colors">
-                  Cadastrar-se
-                </Link>
-              </li>
+              {proponenteLinks.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="text-sm hover:text-white hover:pl-1 transition-all duration-150"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
 
-            <h2 className="text-sm font-semibold text-white mb-4 mt-8">Contato</h2>
-            <ul className="space-y-2.5 text-sm">
-              <li>
-                <a href="mailto:cultura@irece.ba.gov.br" className="hover:text-white transition-colors">
-                  cultura@irece.ba.gov.br
-                </a>
-              </li>
-              <li>
-                <a href="tel:+557436413116" className="hover:text-white transition-colors">
-                  (74) 3641-3116
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Coluna 4 — Legal */}
-          <div>
-            <h2 className="text-sm font-semibold text-white mb-4">Legal</h2>
+            <h2 className="text-xs font-semibold text-white uppercase tracking-wider mb-4 mt-8">
+              Legal
+            </h2>
             <ul className="space-y-2.5">
               {legalLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm hover:text-white transition-colors"
+                    className="text-sm hover:text-white hover:pl-1 transition-all duration-150"
                   >
                     {link.label}
                   </Link>
@@ -106,24 +158,41 @@ function Footer() {
               ))}
             </ul>
           </div>
-        </div>
 
-        {/* Newsletter */}
-        <div className="border-t border-slate-700/50 py-8">
-          <div className="max-w-xl">
-            <h2 className="text-sm font-semibold text-white mb-2">Receba novidades</h2>
-            <p className="text-sm text-slate-400 mb-4">
-              Inscreva-se para receber informações sobre editais, prazos e resultados.
-            </p>
-            <NewsletterForm />
+          {/* Coluna 4 — Selos e Badges */}
+          <div className="lg:col-span-2">
+            <h2 className="text-xs font-semibold text-white uppercase tracking-wider mb-4">
+              Certificações
+            </h2>
+            <div className="space-y-3">
+              <div className="rounded-lg bg-white/5 border border-white/10 px-3 py-2.5 text-center">
+                <p className="text-xs font-semibold text-slate-200">PNAB</p>
+                <p className="text-[10px] text-slate-500 mt-0.5">Lei Aldir Blanc</p>
+              </div>
+              <div className="rounded-lg bg-white/5 border border-white/10 px-3 py-2.5 text-center">
+                <p className="text-xs font-semibold text-slate-200">WCAG AA</p>
+                <p className="text-[10px] text-slate-500 mt-0.5">Acessibilidade</p>
+              </div>
+              <div className="rounded-lg bg-white/5 border border-white/10 px-3 py-2.5 text-center">
+                <p className="text-xs font-semibold text-slate-200">100% Digital</p>
+                <p className="text-[10px] text-slate-500 mt-0.5">Processos online</p>
+              </div>
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Barra inferior */}
-        <div className="border-t border-slate-700/50 py-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
-            <p>&copy; {currentYear} Secretaria de Arte e Cultura — Prefeitura Municipal de Irecê/BA</p>
-            <p>Portal PNAB Irecê — Todos os direitos reservados</p>
+      {/* Barra inferior */}
+      <div className="border-t border-slate-700/40 bg-brand-950/80">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+            <p>
+              &copy; {currentYear} Secretaria de Arte e Cultura — Prefeitura Municipal de Irecê/BA
+            </p>
+            <p className="flex items-center gap-1.5">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-brand-500" aria-hidden="true" />
+              Portal PNAB Irecê
+            </p>
           </div>
         </div>
       </div>

@@ -3,12 +3,12 @@ import Link from 'next/link'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { Card, Badge, Pagination } from '@/components/ui'
+import { Card, Badge, Pagination, Button, EmptyState, FadeIn, IconPlus, IconClipboard } from '@/components/ui'
 import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
 import type { InscricaoStatus } from '@prisma/client'
 
 export const metadata: Metadata = {
-  title: 'Minhas Inscricoes — Portal PNAB Irece',
+  title: 'Minhas Inscrições — Portal PNAB Irecê',
 }
 
 interface Props {
@@ -41,37 +41,27 @@ export default async function MinhasInscricoesPage({ searchParams }: Props) {
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Minhas Inscricoes</h1>
-          <p className="text-slate-600 mt-1">{total} inscricao(oes) encontrada(s)</p>
+      <FadeIn>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Minhas Inscrições</h1>
+            <p className="text-slate-600 mt-1">{total} inscrição(ões) encontrada(s)</p>
+          </div>
+          <Button href="/editais">
+            <IconPlus className="h-4 w-4 mr-2" />
+            Nova Inscrição
+          </Button>
         </div>
-        <Link
-          href="/editais"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-brand-600 text-white text-sm font-medium hover:bg-brand-700 transition-colors min-h-[44px]"
-        >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
-          Nova Inscricao
-        </Link>
-      </div>
+      </FadeIn>
 
       {inscricoes.length === 0 ? (
         <Card>
-          <div className="text-center py-12">
-            <svg className="mx-auto h-12 w-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <h2 className="text-lg font-semibold text-slate-900 mt-4">Nenhuma inscricao</h2>
-            <p className="text-slate-500 mt-1">Voce ainda nao se inscreveu em nenhum edital.</p>
-            <Link
-              href="/editais"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-brand-600 text-white text-sm font-medium hover:bg-brand-700 transition-colors mt-4 min-h-[44px]"
-            >
-              Ver Editais Abertos
-            </Link>
-          </div>
+          <EmptyState
+            icon={<IconClipboard className="h-8 w-8 text-slate-400" />}
+            title="Nenhuma inscrição"
+            description="Você ainda não se inscreveu em nenhum edital."
+            action={{ label: 'Ver Editais Abertos', href: '/editais' }}
+          />
         </Card>
       ) : (
         <>
@@ -81,12 +71,12 @@ export default async function MinhasInscricoesPage({ searchParams }: Props) {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-slate-50">
-                    <th className="text-left py-3 px-4 font-medium text-slate-600">Numero</th>
+                    <th className="text-left py-3 px-4 font-medium text-slate-600">Número</th>
                     <th className="text-left py-3 px-4 font-medium text-slate-600">Edital</th>
                     <th className="text-left py-3 px-4 font-medium text-slate-600">Categoria</th>
                     <th className="text-left py-3 px-4 font-medium text-slate-600">Status</th>
                     <th className="text-left py-3 px-4 font-medium text-slate-600">Enviada em</th>
-                    <th className="text-right py-3 px-4 font-medium text-slate-600">Acoes</th>
+                    <th className="text-right py-3 px-4 font-medium text-slate-600">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -145,7 +135,6 @@ export default async function MinhasInscricoesPage({ searchParams }: Props) {
             ))}
           </div>
 
-          {/* Paginacao */}
           <Pagination
             currentPage={page}
             totalPages={totalPages}

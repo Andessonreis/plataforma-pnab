@@ -9,6 +9,14 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: '*.supabase.co',
       },
+      {
+        protocol: 'https',
+        hostname: 'www.irece.ba.gov.br',
+      },
+      {
+        protocol: 'https',
+        hostname: 'classepolitica.com.br',
+      },
     ],
   },
 }

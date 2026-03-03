@@ -2,7 +2,16 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { Badge } from '@/components/ui'
+import { Badge, Button, PageHeader } from '@/components/ui'
+import {
+  IconDownload,
+  IconCheckSimple,
+  IconShield,
+  IconHeart,
+  IconChevronDown,
+  IconAccessible,
+  IconArrowLeft,
+} from '@/components/ui/icons'
 import { getStatusDisplay } from '@/lib/utils/edital-status'
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/utils/format'
 
@@ -23,56 +32,6 @@ interface FaqItemData {
   pergunta: string
   resposta: string
   ordem: number
-}
-
-// ── Ícones inline ─────────────────────────────────────────────────────────────
-
-function IconDownload({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-    </svg>
-  )
-}
-
-function IconCheck({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-    </svg>
-  )
-}
-
-function IconShield({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
-    </svg>
-  )
-}
-
-function IconHeart({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
-    </svg>
-  )
-}
-
-function IconChevronDown({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-    </svg>
-  )
-}
-
-function IconAccessible({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-    </svg>
-  )
 }
 
 // ── Metadata ──────────────────────────────────────────────────────────────────
@@ -124,65 +83,42 @@ export default async function EditalPage({ params }: Props) {
 
   return (
     <>
-      {/* Header */}
-      <section className="bg-gradient-to-r from-brand-700 to-brand-800 text-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-          {/* Breadcrumb */}
-          <nav aria-label="Breadcrumb" className="mb-4">
-            <ol className="flex items-center gap-2 text-sm text-brand-200">
-              <li>
-                <Link href="/" className="hover:text-white transition-colors">
-                  Início
-                </Link>
-              </li>
-              <li aria-hidden="true">/</li>
-              <li>
-                <Link href="/editais" className="hover:text-white transition-colors">
-                  Editais
-                </Link>
-              </li>
-              <li aria-hidden="true">/</li>
-              <li className="text-white font-medium truncate max-w-[200px]" aria-current="page">
-                {edital.titulo}
-              </li>
-            </ol>
-          </nav>
-
-          {/* Título e metadados */}
-          <div className="flex flex-wrap items-start gap-3 mb-4">
-            <Badge variant={statusDisplay.badgeVariant} className="text-sm">
-              {statusDisplay.label}
-            </Badge>
-          </div>
-
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
-            {edital.titulo}
-          </h1>
-
-          <div className="flex flex-wrap items-center gap-4 text-brand-100">
-            {/* Categorias */}
-            {edital.categorias.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {edital.categorias.map((cat) => (
-                  <span
-                    key={cat}
-                    className="inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-sm font-medium text-white"
-                  >
-                    {cat}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {/* Valor */}
-            {edital.valorTotal && (
-              <span className="inline-flex items-center gap-1.5 text-lg font-semibold text-white">
-                {formatCurrency(edital.valorTotal)}
-              </span>
-            )}
-          </div>
+      <PageHeader
+        title={edital.titulo}
+        breadcrumbs={[
+          { label: 'Início', href: '/' },
+          { label: 'Editais', href: '/editais' },
+          { label: edital.titulo },
+        ]}
+      >
+        {/* Metadata no header */}
+        <div className="mt-4 flex flex-wrap items-start gap-3">
+          <Badge variant={statusDisplay.badgeVariant} className="text-sm" dot>
+            {statusDisplay.label}
+          </Badge>
         </div>
-      </section>
+
+        <div className="mt-3 flex flex-wrap items-center gap-4 text-brand-100">
+          {edital.categorias.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {edital.categorias.map((cat) => (
+                <span
+                  key={cat}
+                  className="inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-sm font-medium text-white"
+                >
+                  {cat}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {edital.valorTotal && (
+            <span className="inline-flex items-center gap-1.5 text-lg font-semibold text-white">
+              {formatCurrency(edital.valorTotal)}
+            </span>
+          )}
+        </div>
+      </PageHeader>
 
       {/* Conteúdo principal */}
       <section className="bg-slate-50 py-10 sm:py-14">
@@ -209,7 +145,6 @@ export default async function EditalPage({ params }: Props) {
                     Cronograma
                   </h2>
                   <div className="relative">
-                    {/* Linha vertical */}
                     <div
                       className="absolute left-4 top-2 bottom-2 w-0.5 bg-slate-200"
                       aria-hidden="true"
@@ -223,7 +158,6 @@ export default async function EditalPage({ params }: Props) {
 
                         return (
                           <li key={index} className="relative pl-10">
-                            {/* Dot */}
                             <div
                               className={[
                                 'absolute left-2.5 top-1.5 h-3 w-3 rounded-full border-2',
@@ -399,12 +333,14 @@ export default async function EditalPage({ params }: Props) {
                       Cadastre-se ou acesse sua conta para inscrever seu projeto
                       cultural neste edital.
                     </p>
-                    <Link
+                    <Button
                       href="/login"
-                      className="inline-flex items-center justify-center w-full rounded-lg bg-white text-brand-700 px-5 py-3 text-base font-semibold hover:bg-brand-50 transition-colors shadow-md min-h-[44px]"
+                      variant="ghost"
+                      size="lg"
+                      className="w-full bg-white text-brand-700 hover:bg-brand-50 hover:text-brand-800 shadow-md font-semibold"
                     >
                       Inscrever-se
-                    </Link>
+                    </Button>
                     <p className="mt-3 text-center text-xs text-brand-200">
                       Ainda não tem conta?{' '}
                       <Link href="/cadastro" className="underline hover:text-white">
@@ -423,7 +359,7 @@ export default async function EditalPage({ params }: Props) {
                     <div>
                       <dt className="text-slate-500">Status</dt>
                       <dd className="mt-0.5">
-                        <Badge variant={statusDisplay.badgeVariant}>
+                        <Badge variant={statusDisplay.badgeVariant} dot>
                           {statusDisplay.label}
                         </Badge>
                       </dd>
@@ -486,9 +422,7 @@ export default async function EditalPage({ params }: Props) {
                   href="/editais"
                   className="inline-flex items-center gap-2 text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors"
                 >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-                  </svg>
+                  <IconArrowLeft className="h-4 w-4" />
                   Voltar para editais
                 </Link>
               </div>
@@ -529,7 +463,7 @@ function getFileBadgeVariant(tipo: string): 'info' | 'warning' | 'success' | 'ne
   }
 }
 
-// ── Componente FAQ Accordion (client component inline via details/summary) ───
+// ── FAQ Accordion (details/summary — sem JS) ─────────────────────────────────
 
 function FaqAccordion({ items }: { items: FaqItemData[] }) {
   return (

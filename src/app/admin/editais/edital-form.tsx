@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, type FormEvent } from 'react'
+import { useState, useRef, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { Input, Button, Card, Textarea, Select } from '@/components/ui'
 import type { EditalStatus } from '@prisma/client'
+import { EditalArquivos, type EditalArquivosHandle } from './edital-arquivos'
 
 interface CronogramaItem {
   label: string
@@ -42,6 +43,7 @@ const statusOptions = [
 export function EditalForm({ initialData }: EditalFormProps) {
   const router = useRouter()
   const isEdit = !!initialData
+  const arquivosRef = useRef<EditalArquivosHandle>(null)
 
   const [titulo, setTitulo] = useState(initialData?.titulo ?? '')
   const [resumo, setResumo] = useState(initialData?.resumo ?? '')
@@ -116,9 +118,20 @@ export function EditalForm({ initialData }: EditalFormProps) {
         return
       }
 
-      setMessage({ type: 'success', text: isEdit ? 'Edital atualizado.' : 'Edital criado com sucesso.' })
-      if (!isEdit) {
+      // Envia arquivos pendentes após criar o edital
+      if (!isEdit && arquivosRef.current?.hasPending()) {
+        const errors = await arquivosRef.current.uploadPending(data.id)
+        if (errors > 0) {
+          setMessage({ type: 'error', text: `Edital criado, mas ${errors} arquivo(s) falharam no envio.` })
+        } else {
+          setMessage({ type: 'success', text: 'Edital criado com sucesso.' })
+        }
         router.push(`/admin/editais/${data.id}`)
+      } else {
+        setMessage({ type: 'success', text: isEdit ? 'Edital atualizado.' : 'Edital criado com sucesso.' })
+        if (!isEdit) {
+          router.push(`/admin/editais/${data.id}`)
+        }
       }
     } catch {
       setMessage({ type: 'error', text: 'Erro de conexao. Tente novamente.' })
@@ -128,7 +141,7 @@ export function EditalForm({ initialData }: EditalFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-2xl space-y-6">
+    <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-6">
       {message && (
         <div
           className={`p-3 rounded-lg text-sm ${
@@ -286,6 +299,9 @@ export function EditalForm({ initialData }: EditalFormProps) {
           </div>
         )}
       </Card>
+
+      {/* Documentos e Anexos */}
+      <EditalArquivos ref={arquivosRef} editalId={isEdit ? initialData.id : undefined} />
 
       {/* Botoes */}
       <div className="flex items-center justify-end gap-3">

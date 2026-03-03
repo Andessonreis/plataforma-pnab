@@ -1,13 +1,18 @@
 import { forwardRef, type ButtonHTMLAttributes } from 'react'
+import Link from 'next/link'
 
 type Variant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger'
 type Size = 'sm' | 'md' | 'lg'
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonBaseProps {
   variant?: Variant
   size?: Size
   loading?: boolean
+  href?: string
 }
+
+type ButtonProps = ButtonBaseProps &
+  Omit<ButtonHTMLAttributes<HTMLButtonElement>, keyof ButtonBaseProps>
 
 const variantStyles: Record<Variant, string> = {
   primary:
@@ -29,22 +34,33 @@ const sizeStyles: Record<Size, string> = {
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ variant = 'primary', size = 'md', loading, disabled, className = '', children, ...props }, ref) => {
+  ({ variant = 'primary', size = 'md', loading, disabled, className = '', children, href, ...props }, ref) => {
     const isDisabled = disabled || loading
+
+    const classes = [
+      'inline-flex items-center justify-center font-medium transition-colors',
+      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
+      'disabled:opacity-50 disabled:pointer-events-none',
+      'min-h-[44px]', // WCAG touch target
+      variantStyles[variant],
+      sizeStyles[size],
+      className,
+    ].join(' ')
+
+    // Quando href está presente, renderiza como Link
+    if (href && !isDisabled) {
+      return (
+        <Link href={href} className={classes}>
+          {children}
+        </Link>
+      )
+    }
 
     return (
       <button
         ref={ref}
         disabled={isDisabled}
-        className={[
-          'inline-flex items-center justify-center font-medium transition-colors',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
-          'disabled:opacity-50 disabled:pointer-events-none',
-          'min-h-[44px]', // WCAG touch target
-          variantStyles[variant],
-          sizeStyles[size],
-          className,
-        ].join(' ')}
+        className={classes}
         {...props}
       >
         {loading && (

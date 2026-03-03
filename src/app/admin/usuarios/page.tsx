@@ -2,11 +2,11 @@ import type { Metadata } from 'next'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { Card, Badge, Pagination } from '@/components/ui'
+import { Card, Badge, Pagination, Button, EmptyState, FadeIn, IconUsers } from '@/components/ui'
 import type { UserRole } from '@prisma/client'
 
 export const metadata: Metadata = {
-  title: 'Usuarios — Portal PNAB Irece',
+  title: 'Usuários — Portal PNAB Irecê',
 }
 
 interface Props {
@@ -84,10 +84,12 @@ export default async function AdminUsuariosPage({ searchParams }: Props) {
 
   return (
     <section>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Usuarios</h1>
-        <p className="text-slate-600 mt-1">{total} usuario(s) encontrado(s)</p>
-      </div>
+      <FadeIn>
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-slate-900">Usuários</h1>
+          <p className="text-slate-600 mt-1">{total} usuário(s) encontrado(s)</p>
+        </div>
+      </FadeIn>
 
       {/* Filtros */}
       <Card className="mb-6" padding="md">
@@ -126,31 +128,23 @@ export default async function AdminUsuariosPage({ searchParams }: Props) {
           </div>
 
           <div className="flex gap-2">
-            <button
-              type="submit"
-              className="px-4 py-2.5 rounded-lg bg-brand-600 text-white text-sm font-medium hover:bg-brand-700 transition-colors min-h-[44px]"
-            >
+            <Button type="submit">
               Filtrar
-            </button>
-            <a
-              href="/admin/usuarios"
-              className="px-4 py-2.5 rounded-lg border border-slate-300 text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors min-h-[44px] inline-flex items-center"
-            >
+            </Button>
+            <Button href="/admin/usuarios" variant="ghost">
               Limpar
-            </a>
+            </Button>
           </div>
         </form>
       </Card>
 
       {users.length === 0 ? (
         <Card>
-          <div className="text-center py-12">
-            <svg className="mx-auto h-12 w-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
-            <h2 className="text-lg font-semibold text-slate-900 mt-4">Nenhum usuario encontrado</h2>
-            <p className="text-slate-500 mt-1">Ajuste os filtros.</p>
-          </div>
+          <EmptyState
+            icon={<IconUsers className="h-8 w-8 text-slate-400" />}
+            title="Nenhum usuário encontrado"
+            description="Ajuste os filtros."
+          />
         </Card>
       ) : (
         <>
@@ -163,7 +157,7 @@ export default async function AdminUsuariosPage({ searchParams }: Props) {
                     <th className="text-left py-3 px-4 font-medium text-slate-600">CPF/CNPJ</th>
                     <th className="text-left py-3 px-4 font-medium text-slate-600">E-mail</th>
                     <th className="text-left py-3 px-4 font-medium text-slate-600">Perfil</th>
-                    <th className="text-center py-3 px-4 font-medium text-slate-600">Inscricoes</th>
+                    <th className="text-center py-3 px-4 font-medium text-slate-600">Inscrições</th>
                     <th className="text-left py-3 px-4 font-medium text-slate-600">Status</th>
                     <th className="text-left py-3 px-4 font-medium text-slate-600">Cadastro</th>
                   </tr>

@@ -2,11 +2,11 @@ import type { Metadata } from 'next'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { Card, Badge } from '@/components/ui'
+import { Card, Badge, FadeIn } from '@/components/ui'
 import { ProfileForm } from './profile-form'
 
 export const metadata: Metadata = {
-  title: 'Meu Perfil — Portal PNAB Irece',
+  title: 'Meu Perfil — Portal PNAB Irecê',
 }
 
 export default async function ProfilePage() {
@@ -37,73 +37,77 @@ export default async function ProfilePage() {
   if (!user) redirect('/login')
 
   const tipoLabels: Record<string, string> = {
-    PF: 'Pessoa Fisica',
-    PJ: 'Pessoa Juridica',
+    PF: 'Pessoa Física',
+    PJ: 'Pessoa Jurídica',
     MEI: 'Microempreendedor Individual',
     COLETIVO: 'Coletivo / Grupo',
   }
 
   return (
     <section>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Meu Perfil</h1>
-        <p className="text-slate-600 mt-1">Gerencie suas informacoes pessoais.</p>
-      </div>
+      <FadeIn>
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-slate-900">Meu Perfil</h1>
+          <p className="text-slate-600 mt-1">Gerencie suas informações pessoais.</p>
+        </div>
+      </FadeIn>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Resumo */}
-        <Card>
-          <div className="text-center">
-            <div className="h-20 w-20 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-2xl font-bold mx-auto">
-              {user.nome.charAt(0).toUpperCase()}
+        <FadeIn delay={0.1}>
+          <Card>
+            <div className="text-center">
+              <div className="h-20 w-20 rounded-full bg-gradient-to-br from-brand-100 to-brand-200 text-brand-700 flex items-center justify-center text-2xl font-bold mx-auto">
+                {user.nome.charAt(0).toUpperCase()}
+              </div>
+              <h2 className="text-lg font-semibold text-slate-900 mt-3">{user.nome}</h2>
+              <p className="text-sm text-slate-500">{user.email}</p>
+              <div className="mt-3">
+                <Badge variant="success">
+                  {tipoLabels[user.tipoProponente ?? ''] ?? 'Proponente'}
+                </Badge>
+              </div>
             </div>
-            <h2 className="text-lg font-semibold text-slate-900 mt-3">{user.nome}</h2>
-            <p className="text-sm text-slate-500">{user.email}</p>
-            <div className="mt-3">
-              <Badge variant="success">
-                {tipoLabels[user.tipoProponente ?? ''] ?? 'Proponente'}
-              </Badge>
-            </div>
-          </div>
 
-          <div className="mt-6 pt-6 border-t border-slate-100">
-            <dl className="space-y-3">
-              <div>
-                <dt className="text-xs font-medium text-slate-500 uppercase">CPF/CNPJ</dt>
-                <dd className="text-sm text-slate-900 font-mono">{user.cpfCnpj ?? '—'}</dd>
-              </div>
-              <div>
-                <dt className="text-xs font-medium text-slate-500 uppercase">Telefone</dt>
-                <dd className="text-sm text-slate-900">{user.telefone ?? '—'}</dd>
-              </div>
-              {user.logradouro && (
+            <div className="mt-6 pt-6 border-t border-slate-100">
+              <dl className="space-y-3">
                 <div>
-                  <dt className="text-xs font-medium text-slate-500 uppercase">Endereco</dt>
+                  <dt className="text-xs font-medium text-slate-500 uppercase">CPF/CNPJ</dt>
+                  <dd className="text-sm text-slate-900 font-mono">{user.cpfCnpj ?? '—'}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-medium text-slate-500 uppercase">Telefone</dt>
+                  <dd className="text-sm text-slate-900">{user.telefone ?? '—'}</dd>
+                </div>
+                {user.logradouro && (
+                  <div>
+                    <dt className="text-xs font-medium text-slate-500 uppercase">Endereço</dt>
+                    <dd className="text-sm text-slate-900">
+                      {user.logradouro}{user.numero ? `, ${user.numero}` : ''}
+                      {user.complemento ? ` — ${user.complemento}` : ''}
+                      <br />
+                      {user.bairro} — {user.cidade}/{user.uf}
+                      <br />
+                      <span className="font-mono text-xs">{user.cep}</span>
+                    </dd>
+                  </div>
+                )}
+                <div>
+                  <dt className="text-xs font-medium text-slate-500 uppercase">Membro desde</dt>
                   <dd className="text-sm text-slate-900">
-                    {user.logradouro}{user.numero ? `, ${user.numero}` : ''}
-                    {user.complemento ? ` — ${user.complemento}` : ''}
-                    <br />
-                    {user.bairro} — {user.cidade}/{user.uf}
-                    <br />
-                    <span className="font-mono text-xs">{user.cep}</span>
+                    {new Date(user.createdAt).toLocaleDateString('pt-BR', {
+                      month: 'long',
+                      year: 'numeric',
+                    })}
                   </dd>
                 </div>
-              )}
-              <div>
-                <dt className="text-xs font-medium text-slate-500 uppercase">Membro desde</dt>
-                <dd className="text-sm text-slate-900">
-                  {new Date(user.createdAt).toLocaleDateString('pt-BR', {
-                    month: 'long',
-                    year: 'numeric',
-                  })}
-                </dd>
-              </div>
-            </dl>
-          </div>
-        </Card>
+              </dl>
+            </div>
+          </Card>
+        </FadeIn>
 
-        {/* Formulario de edicao */}
-        <div className="lg:col-span-2">
+        {/* Formulário de edição */}
+        <FadeIn delay={0.2} className="lg:col-span-2">
           <ProfileForm
             initialData={{
               nome: user.nome,
@@ -118,7 +122,7 @@ export default async function ProfilePage() {
               uf: user.uf ?? '',
             }}
           />
-        </div>
+        </FadeIn>
       </div>
     </section>
   )

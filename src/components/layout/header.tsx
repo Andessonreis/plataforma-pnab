@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { AccessibilityControls } from './accessibility-controls'
@@ -36,9 +37,13 @@ function Header() {
           <div className="flex h-16 items-center justify-between">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-3 shrink-0">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600">
-                <span className="text-white font-bold text-sm">P</span>
-              </div>
+              <Image
+                src="https://www.irece.ba.gov.br/files/config/brasao.png"
+                alt="Brasão de Irecê"
+                width={36}
+                height={36}
+                className="h-9 w-9 object-contain"
+              />
               <div className="hidden sm:block">
                 <p className="text-sm font-bold text-slate-900 leading-tight">Portal PNAB</p>
                 <p className="text-xs text-slate-500 leading-tight">Irecê</p>
