@@ -4,9 +4,10 @@ import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { Card, Badge, Pagination } from '@/components/ui'
+import { PurgeButton } from './purge-button'
 
 export const metadata: Metadata = {
-  title: 'Logs de Auditoria — Portal PNAB Irece',
+  title: 'Logs de Auditoria — Portal PNAB Irecê',
 }
 
 interface Props {
@@ -14,7 +15,51 @@ interface Props {
     page?: string
     action?: string
     userId?: string
+    entity?: string
+    dateFrom?: string
+    dateTo?: string
   }>
+}
+
+/** Mapeia categorias de ação para variante de badge */
+function actionBadgeVariant(action: string): 'success' | 'error' | 'warning' | 'info' | 'neutral' {
+  if (action === 'LOGIN') return 'success'
+  if (action === 'LOGIN_FALHA') return 'error'
+  if (action.includes('EXCLU') || action.includes('INABILITADA')) return 'error'
+  if (action.includes('CRIA') || action.includes('CADASTRO') || action.includes('HABILITADA')) return 'success'
+  if (action.includes('ATUALIZ') || action.includes('PUBLICAD')) return 'info'
+  if (action.includes('RESET') || action.includes('RECURSO')) return 'warning'
+  return 'neutral'
+}
+
+/** Rótulos legíveis para as ações */
+const ACTION_LABELS: Record<string, string> = {
+  LOGIN: 'Login',
+  LOGIN_FALHA: 'Login falho',
+  LOGOUT: 'Logout',
+  CADASTRO: 'Cadastro',
+  SENHA_RESET_SOLICITADO: 'Reset senha (pedido)',
+  SENHA_RESET_CONCLUIDO: 'Reset senha (concluído)',
+  PERFIL_ATUALIZADO: 'Perfil atualizado',
+  INSCRICAO_CRIADA: 'Inscrição criada',
+  INSCRICAO_ENVIADA: 'Inscrição enviada',
+  EDITAL_CRIADO: 'Edital criado',
+  EDITAL_ATUALIZADO: 'Edital atualizado',
+  EDITAL_PUBLICADO: 'Edital publicado',
+  INSCRICAO_HABILITADA: 'Habilitada',
+  INSCRICAO_INABILITADA: 'Inabilitada',
+  STATUS_ALTERADO: 'Status alterado',
+  NOTICIA_CRIADA: 'Notícia criada',
+  NOTICIA_ATUALIZADA: 'Notícia atualizada',
+  NOTICIA_EXCLUIDA: 'Notícia excluída',
+  CMS_PAGINA_CRIADA: 'Página CMS criada',
+  CMS_PAGINA_ATUALIZADA: 'Página CMS atualizada',
+  CMS_PAGINA_EXCLUIDA: 'Página CMS excluída',
+  FAQ_CRIADO: 'FAQ criado',
+  FAQ_ATUALIZADO: 'FAQ atualizado',
+  FAQ_EXCLUIDO: 'FAQ excluído',
+  EXPORTACAO_CSV: 'Exportação CSV',
+  IMPORTACAO_CONTEMPLADOS: 'Importação contemplados',
 }
 
 export default async function AdminLogsPage({ searchParams }: Props) {
@@ -26,18 +71,33 @@ export default async function AdminLogsPage({ searchParams }: Props) {
   const pageSize = 20
   const actionFilter = params.action || undefined
   const userIdFilter = params.userId || undefined
+  const entityFilter = params.entity || undefined
+  const dateFromFilter = params.dateFrom || undefined
+  const dateToFilter = params.dateTo || undefined
 
+  // Monta filtros dinâmicos
   const where: Record<string, unknown> = {}
   if (actionFilter) where.action = actionFilter
   if (userIdFilter) where.userId = userIdFilter
+  if (entityFilter) where.entity = entityFilter
+  if (dateFromFilter || dateToFilter) {
+    const createdAt: Record<string, Date> = {}
+    if (dateFromFilter) createdAt.gte = new Date(dateFromFilter)
+    if (dateToFilter) {
+      const end = new Date(dateToFilter)
+      end.setHours(23, 59, 59, 999)
+      createdAt.lte = end
+    }
+    where.createdAt = createdAt
+  }
 
-  const [logs, total, distinctActions] = await Promise.all([
+  const [logs, total, distinctActions, distinctEntities] = await Promise.all([
     prisma.auditLog.findMany({
       where,
       orderBy: { createdAt: 'desc' },
       skip: (page - 1) * pageSize,
       take: pageSize,
-      include: { user: { select: { nome: true, email: true } } },
+      include: { user: { select: { nome: true, email: true, role: true } } },
     }),
     prisma.auditLog.count({ where }),
     prisma.auditLog.findMany({
@@ -45,20 +105,38 @@ export default async function AdminLogsPage({ searchParams }: Props) {
       select: { action: true },
       orderBy: { action: 'asc' },
     }),
+    prisma.auditLog.findMany({
+      distinct: ['entity'],
+      select: { entity: true },
+      where: { entity: { not: null } },
+      orderBy: { entity: 'asc' },
+    }),
   ])
 
   const totalPages = Math.ceil(total / pageSize)
 
+  // Constrói URL base para paginação preservando filtros
   const filterParams = new URLSearchParams()
   if (actionFilter) filterParams.set('action', actionFilter)
   if (userIdFilter) filterParams.set('userId', userIdFilter)
+  if (entityFilter) filterParams.set('entity', entityFilter)
+  if (dateFromFilter) filterParams.set('dateFrom', dateFromFilter)
+  if (dateToFilter) filterParams.set('dateTo', dateToFilter)
   const baseUrl = `/admin/logs${filterParams.toString() ? `?${filterParams.toString()}` : ''}`
+
+  const retentionDays = parseInt(process.env.AUDIT_RETENTION_DAYS || '365', 10) || 365
 
   return (
     <section>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Logs de Auditoria</h1>
-        <p className="text-slate-600 mt-1">{total} registro(s) encontrado(s)</p>
+      {/* Cabeçalho */}
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Logs de Auditoria</h1>
+          <p className="text-slate-600 mt-1">
+            {total} registro(s) encontrado(s) &middot; Retenção: {retentionDays} dias
+          </p>
+        </div>
+        <PurgeButton retentionDays={retentionDays} />
       </div>
 
       {/* Filtros */}
@@ -66,7 +144,7 @@ export default async function AdminLogsPage({ searchParams }: Props) {
         <form method="get" action="/admin/logs" className="flex flex-wrap gap-4 items-end">
           <div>
             <label htmlFor="action" className="block text-sm font-medium text-slate-700 mb-1.5">
-              Acao
+              Ação
             </label>
             <select
               id="action"
@@ -77,10 +155,55 @@ export default async function AdminLogsPage({ searchParams }: Props) {
               <option value="">Todas</option>
               {distinctActions.map((a) => (
                 <option key={a.action} value={a.action}>
-                  {a.action}
+                  {ACTION_LABELS[a.action] ?? a.action}
                 </option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label htmlFor="entity" className="block text-sm font-medium text-slate-700 mb-1.5">
+              Entidade
+            </label>
+            <select
+              id="entity"
+              name="entity"
+              defaultValue={entityFilter}
+              className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-500 min-h-[44px]"
+            >
+              <option value="">Todas</option>
+              {distinctEntities.map((e) => (
+                <option key={e.entity} value={e.entity!}>
+                  {e.entity}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="dateFrom" className="block text-sm font-medium text-slate-700 mb-1.5">
+              De
+            </label>
+            <input
+              type="date"
+              id="dateFrom"
+              name="dateFrom"
+              defaultValue={dateFromFilter}
+              className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-500 min-h-[44px]"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="dateTo" className="block text-sm font-medium text-slate-700 mb-1.5">
+              Até
+            </label>
+            <input
+              type="date"
+              id="dateTo"
+              name="dateTo"
+              defaultValue={dateToFilter}
+              className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-500 min-h-[44px]"
+            />
           </div>
 
           <div className="flex gap-2">
@@ -118,8 +241,8 @@ export default async function AdminLogsPage({ searchParams }: Props) {
                 <thead>
                   <tr className="bg-slate-50">
                     <th className="text-left py-3 px-4 font-medium text-slate-600">Data/Hora</th>
-                    <th className="text-left py-3 px-4 font-medium text-slate-600">Usuario</th>
-                    <th className="text-left py-3 px-4 font-medium text-slate-600">Acao</th>
+                    <th className="text-left py-3 px-4 font-medium text-slate-600">Usuário</th>
+                    <th className="text-left py-3 px-4 font-medium text-slate-600">Ação</th>
                     <th className="text-left py-3 px-4 font-medium text-slate-600">Entidade</th>
                     <th className="text-left py-3 px-4 font-medium text-slate-600">Detalhes</th>
                     <th className="text-left py-3 px-4 font-medium text-slate-600">IP</th>
@@ -149,7 +272,9 @@ export default async function AdminLogsPage({ searchParams }: Props) {
                         )}
                       </td>
                       <td className="py-3 px-4">
-                        <Badge variant="neutral">{log.action}</Badge>
+                        <Badge variant={actionBadgeVariant(log.action)}>
+                          {ACTION_LABELS[log.action] ?? log.action}
+                        </Badge>
                       </td>
                       <td className="py-3 px-4 text-slate-600">
                         {log.entity ? (

@@ -140,9 +140,9 @@ db-reset:
 	@$(NPM) run db:push -- --force-reset
 	@echo "$(YELLOW)Banco resetado$(RESET)"
 
-## Setup completo do banco (generate + push)
-db-setup: db-generate db-push
-	@echo "$(GREEN)Banco de dados configurado!$(RESET)"
+## Setup completo do banco (generate + push + seed)
+db-setup: db-generate db-push db-seed
+	@echo "$(GREEN)Banco de dados configurado e populado!$(RESET)"
 
 # -----------------------------------------------------------------------------
 # Qualidade de Código | Code Quality

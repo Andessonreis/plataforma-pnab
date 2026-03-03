@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { randomUUID, randomBytes } from 'crypto'
 import { prisma } from '@/lib/db'
 import { sendEmail } from '@/lib/mail'
+import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
 
 export const runtime = 'nodejs'
 
@@ -75,6 +76,14 @@ export async function POST(req: NextRequest) {
           resetUrl,
           token,
         },
+      })
+
+      await logAudit({
+        userId: user.id,
+        action: AUDIT_ACTIONS.SENHA_RESET_SOLICITADO,
+        entity: 'User',
+        entityId: user.id,
+        ip: req.headers.get('x-forwarded-for') ?? undefined,
       })
     }
 
