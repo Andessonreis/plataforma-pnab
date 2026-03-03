@@ -140,9 +140,9 @@ db-reset:
 	@$(NPM) run db:push -- --force-reset
 	@echo "$(YELLOW)Banco resetado$(RESET)"
 
-## Setup completo do banco (generate + push)
-db-setup: db-generate db-push
-	@echo "$(GREEN)Banco de dados configurado!$(RESET)"
+## Setup completo do banco (generate + push + seed)
+db-setup: db-generate db-push db-seed
+	@echo "$(GREEN)Banco de dados configurado e populado!$(RESET)"
 
 # -----------------------------------------------------------------------------
 # Qualidade de Código | Code Quality
@@ -190,7 +190,7 @@ else
 endif
 
 ## Setup inicial completo: env-check + install + infra + banco + seed
-setup: env-check install docker-clean docker-up db-setup db-seed
+setup: env-check install docker-clean docker-up db-setup
 	@echo ""
 	@echo "$(GREEN)Setup completo! Execute 'make dev' para iniciar.$(RESET)"
 	@echo ""
@@ -229,7 +229,7 @@ help:
 	@echo "  make db-seed       Popula banco com dados de teste"
 	@echo "  make db-studio     Abre Prisma Studio (GUI)"
 	@echo "  make db-reset      Reset completo do banco"
-	@echo "  make db-setup      Setup completo (generate + push)"
+	@echo "  make db-setup      Setup completo (generate + push + seed)"
 	@echo ""
 	@echo "$(GREEN)Qualidade:$(RESET)"
 	@echo "  make lint          Verifica lint"

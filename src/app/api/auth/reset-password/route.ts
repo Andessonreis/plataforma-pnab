@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { randomUUID } from 'crypto'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/db'
+import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
 
 export const runtime = 'nodejs'
 
@@ -64,6 +65,14 @@ export async function POST(req: NextRequest) {
         data: { usedAt: new Date() },
       }),
     ])
+
+    await logAudit({
+      userId: resetToken.userId,
+      action: AUDIT_ACTIONS.SENHA_RESET_CONCLUIDO,
+      entity: 'User',
+      entityId: resetToken.userId,
+      ip: req.headers.get('x-forwarded-for') ?? undefined,
+    })
 
     const res = NextResponse.json(
       { message: 'Senha redefinida com sucesso.', requestId },

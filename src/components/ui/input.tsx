@@ -7,10 +7,11 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   error?: string
   hint?: string
   leftIcon?: ReactNode
+  rightIcon?: ReactNode
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, hint, leftIcon, id, className = '', ...props }, ref) => {
+  ({ label, error, hint, leftIcon, rightIcon, id, className = '', ...props }, ref) => {
     const inputId = id || label.toLowerCase().replace(/\s+/g, '-')
     const errorId = `${inputId}-error`
     const hintId = `${inputId}-hint`
@@ -45,6 +46,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               'disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed',
               'min-h-[44px]', // WCAG touch target
               leftIcon ? 'pl-10' : '',
+              rightIcon ? 'pr-12' : '',
               error
                 ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
                 : 'border-slate-300 focus:border-brand-500 focus:ring-brand-200',
@@ -52,6 +54,12 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             ].join(' ')}
             {...props}
           />
+
+          {rightIcon && (
+            <span className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-400" aria-hidden="true">
+              {rightIcon}
+            </span>
+          )}
         </div>
 
         {error && (
