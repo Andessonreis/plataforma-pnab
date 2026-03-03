@@ -189,8 +189,8 @@ else
 	@test -f .env || (cp .env.example .env && echo "$(YELLOW).env criado a partir de .env.example — preencha as variáveis antes de continuar$(RESET)")
 endif
 
-## Setup inicial completo: env-check + install + infra + banco
-setup: env-check install docker-clean docker-up db-setup
+## Setup inicial completo: env-check + install + infra + banco + seed
+setup: env-check install docker-clean docker-up db-setup db-seed
 	@echo ""
 	@echo "$(GREEN)Setup completo! Execute 'make dev' para iniciar.$(RESET)"
 	@echo ""

@@ -21,11 +21,13 @@
   },
   "dependencies": {
     "@prisma/client": "^6.4.0",
+    "@radix-ui/react-accordion": "^1.2.12",
     "@sentry/nextjs": "^10.41.0",
     "@supabase/supabase-js": "^2.48.0",
     "autoprefixer": "^10.4.20",
     "bcryptjs": "^2.4.3",
     "bullmq": "^5.38.0",
+    "framer-motion": "^12.34.5",
     "ioredis": "^5.4.2",
     "next": "^15.2.0",
     "next-auth": "^5.0.0-beta.25",

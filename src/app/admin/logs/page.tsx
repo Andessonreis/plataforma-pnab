@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { Card, Badge, Pagination } from '@/components/ui'
+import { Card, Badge, Pagination, Button, EmptyState, FadeIn, IconInfo } from '@/components/ui'
 import { PurgeButton } from './purge-button'
 
 export const metadata: Metadata = {
@@ -138,12 +138,19 @@ export default async function AdminLogsPage({ searchParams }: Props) {
         </div>
         <PurgeButton retentionDays={retentionDays} />
       </div>
+      <FadeIn>
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-slate-900">Logs de Auditoria</h1>
+          <p className="text-slate-600 mt-1">{total} registro(s) encontrado(s)</p>
+        </div>
+      </FadeIn>
 
       {/* Filtros */}
       <Card className="mb-6" padding="md">
         <form method="get" action="/admin/logs" className="flex flex-wrap gap-4 items-end">
           <div>
             <label htmlFor="action" className="block text-sm font-medium text-slate-700 mb-1.5">
+              Ação
               Ação
             </label>
             <select
@@ -207,31 +214,23 @@ export default async function AdminLogsPage({ searchParams }: Props) {
           </div>
 
           <div className="flex gap-2">
-            <button
-              type="submit"
-              className="px-4 py-2.5 rounded-lg bg-brand-600 text-white text-sm font-medium hover:bg-brand-700 transition-colors min-h-[44px]"
-            >
+            <Button type="submit">
               Filtrar
-            </button>
-            <Link
-              href="/admin/logs"
-              className="px-4 py-2.5 rounded-lg border border-slate-300 text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors min-h-[44px] inline-flex items-center"
-            >
+            </Button>
+            <Button href="/admin/logs" variant="ghost">
               Limpar
-            </Link>
+            </Button>
           </div>
         </form>
       </Card>
 
       {logs.length === 0 ? (
         <Card>
-          <div className="text-center py-12">
-            <svg className="mx-auto h-12 w-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-            <h2 className="text-lg font-semibold text-slate-900 mt-4">Nenhum log encontrado</h2>
-            <p className="text-slate-500 mt-1">Ajuste os filtros ou aguarde atividades.</p>
-          </div>
+          <EmptyState
+            icon={<IconInfo className="h-8 w-8 text-slate-400" />}
+            title="Nenhum log encontrado"
+            description="Ajuste os filtros ou aguarde atividades."
+          />
         </Card>
       ) : (
         <>
@@ -241,6 +240,8 @@ export default async function AdminLogsPage({ searchParams }: Props) {
                 <thead>
                   <tr className="bg-slate-50">
                     <th className="text-left py-3 px-4 font-medium text-slate-600">Data/Hora</th>
+                    <th className="text-left py-3 px-4 font-medium text-slate-600">Usuário</th>
+                    <th className="text-left py-3 px-4 font-medium text-slate-600">Ação</th>
                     <th className="text-left py-3 px-4 font-medium text-slate-600">Usuário</th>
                     <th className="text-left py-3 px-4 font-medium text-slate-600">Ação</th>
                     <th className="text-left py-3 px-4 font-medium text-slate-600">Entidade</th>

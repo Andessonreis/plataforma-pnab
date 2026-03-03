@@ -3,12 +3,12 @@ import Link from 'next/link'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { Card, Badge, Pagination } from '@/components/ui'
+import { Card, Badge, Pagination, Button, EmptyState, FadeIn, IconExport, IconClipboard } from '@/components/ui'
 import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
 import type { InscricaoStatus } from '@prisma/client'
 
 export const metadata: Metadata = {
-  title: 'Inscricoes — Portal PNAB Irece',
+  title: 'Inscrições — Portal PNAB Irecê',
 }
 
 interface Props {
@@ -31,7 +31,6 @@ export default async function AdminInscricoesPage({ searchParams }: Props) {
   const editalIdFilter = params.editalId || undefined
   const searchQuery = params.search || undefined
 
-  // Construir filtro
   const where: Record<string, unknown> = {}
   if (statusFilter) where.status = statusFilter
   if (editalIdFilter) where.editalId = editalIdFilter
@@ -69,7 +68,6 @@ export default async function AdminInscricoesPage({ searchParams }: Props) {
     'CONTEMPLADA', 'NAO_CONTEMPLADA', 'SUPLENTE',
   ]
 
-  // Construir URL base para paginacao mantendo filtros
   const filterParams = new URLSearchParams()
   if (statusFilter) filterParams.set('status', statusFilter)
   if (editalIdFilter) filterParams.set('editalId', editalIdFilter)
@@ -78,27 +76,23 @@ export default async function AdminInscricoesPage({ searchParams }: Props) {
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Inscricoes</h1>
-          <p className="text-slate-600 mt-1">{total} inscricao(oes) encontrada(s)</p>
+      <FadeIn>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Inscrições</h1>
+            <p className="text-slate-600 mt-1">{total} inscrição(ões) encontrada(s)</p>
+          </div>
+          <Button href="/api/admin/inscricoes/export" variant="ghost">
+            <IconExport className="h-4 w-4 mr-2" />
+            Exportar CSV
+          </Button>
         </div>
-        <Link
-          href="/api/admin/inscricoes/export"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-300 text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors min-h-[44px]"
-        >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          Exportar CSV
-        </Link>
-      </div>
+      </FadeIn>
 
       {/* Filtros */}
       <Card className="mb-6" padding="md">
         <form method="get" action="/admin/inscricoes" className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {/* Busca */}
             <div>
               <label htmlFor="search" className="block text-sm font-medium text-slate-700 mb-1.5">
                 Buscar
@@ -108,12 +102,11 @@ export default async function AdminInscricoesPage({ searchParams }: Props) {
                 name="search"
                 type="text"
                 defaultValue={searchQuery}
-                placeholder="Nome, CPF ou numero..."
+                placeholder="Nome, CPF ou número..."
                 className="block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-500 min-h-[44px]"
               />
             </div>
 
-            {/* Edital */}
             <div>
               <label htmlFor="editalId" className="block text-sm font-medium text-slate-700 mb-1.5">
                 Edital
@@ -133,7 +126,6 @@ export default async function AdminInscricoesPage({ searchParams }: Props) {
               </select>
             </div>
 
-            {/* Status */}
             <div>
               <label htmlFor="status" className="block text-sm font-medium text-slate-700 mb-1.5">
                 Status
@@ -155,31 +147,23 @@ export default async function AdminInscricoesPage({ searchParams }: Props) {
           </div>
 
           <div className="flex items-center gap-3">
-            <button
-              type="submit"
-              className="px-4 py-2 rounded-lg bg-brand-600 text-white text-sm font-medium hover:bg-brand-700 transition-colors min-h-[44px]"
-            >
+            <Button type="submit">
               Filtrar
-            </button>
-            <Link
-              href="/admin/inscricoes"
-              className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors min-h-[44px] inline-flex items-center"
-            >
+            </Button>
+            <Button href="/admin/inscricoes" variant="ghost">
               Limpar
-            </Link>
+            </Button>
           </div>
         </form>
       </Card>
 
       {inscricoes.length === 0 ? (
         <Card>
-          <div className="text-center py-12">
-            <svg className="mx-auto h-12 w-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <h2 className="text-lg font-semibold text-slate-900 mt-4">Nenhuma inscricao encontrada</h2>
-            <p className="text-slate-500 mt-1">Ajuste os filtros ou aguarde novas inscricoes.</p>
-          </div>
+          <EmptyState
+            icon={<IconClipboard className="h-8 w-8 text-slate-400" />}
+            title="Nenhuma inscrição encontrada"
+            description="Ajuste os filtros ou aguarde novas inscrições."
+          />
         </Card>
       ) : (
         <>
@@ -188,13 +172,13 @@ export default async function AdminInscricoesPage({ searchParams }: Props) {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-slate-50">
-                    <th className="text-left py-3 px-4 font-medium text-slate-600">Numero</th>
+                    <th className="text-left py-3 px-4 font-medium text-slate-600">Número</th>
                     <th className="text-left py-3 px-4 font-medium text-slate-600">Proponente</th>
                     <th className="text-left py-3 px-4 font-medium text-slate-600">Edital</th>
                     <th className="text-left py-3 px-4 font-medium text-slate-600">Categoria</th>
                     <th className="text-left py-3 px-4 font-medium text-slate-600">Status</th>
                     <th className="text-left py-3 px-4 font-medium text-slate-600">Enviada em</th>
-                    <th className="text-right py-3 px-4 font-medium text-slate-600">Acoes</th>
+                    <th className="text-right py-3 px-4 font-medium text-slate-600">Ações</th>
                   </tr>
                 </thead>
                 <tbody>

@@ -2,13 +2,20 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { Badge } from '@/components/ui'
+import { Badge, PageHeader } from '@/components/ui'
+import { IconArrowLeft, IconNews } from '@/components/ui/icons'
+import { formatDate } from '@/lib/utils/format'
 
 interface NoticiaPageProps {
   params: Promise<{ slug: string }>
 }
 
-function formatDate(date: Date): string {
+function truncateText(text: string, maxLength: number): string {
+  if (text.length <= maxLength) return text
+  return text.substring(0, maxLength).trimEnd() + '...'
+}
+
+function formatDateLong(date: Date): string {
   return new Intl.DateTimeFormat('pt-BR', {
     day: '2-digit',
     month: 'long',
@@ -24,11 +31,6 @@ function formatDateShort(date: Date): string {
   }).format(date)
 }
 
-function truncateText(text: string, maxLength: number): string {
-  if (text.length <= maxLength) return text
-  return text.substring(0, maxLength).trimEnd() + '...'
-}
-
 export async function generateMetadata({ params }: NoticiaPageProps): Promise<Metadata> {
   const { slug } = await params
 
@@ -38,11 +40,11 @@ export async function generateMetadata({ params }: NoticiaPageProps): Promise<Me
   })
 
   if (!noticia) {
-    return { title: 'Noticia nao encontrada' }
+    return { title: 'Notícia não encontrada' }
   }
 
   return {
-    title: `${noticia.titulo} — Portal PNAB Irece`,
+    title: `${noticia.titulo} — Portal PNAB Irecê`,
     description: truncateText(noticia.corpo.replace(/[#*_`]/g, ''), 160),
     openGraph: {
       title: noticia.titulo,
@@ -63,7 +65,6 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
     notFound()
   }
 
-  // Noticias relacionadas (3 mais recentes, excluindo a atual)
   const related = await prisma.noticia.findMany({
     where: {
       publicado: true,
@@ -85,57 +86,35 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
 
   return (
     <>
-      {/* Header */}
-      <section className="bg-gradient-to-br from-brand-700 via-brand-600 to-brand-800 text-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-          <nav className="mb-4 text-sm text-brand-200" aria-label="Breadcrumb">
-            <ol className="flex items-center gap-1.5">
-              <li>
-                <Link href="/" className="hover:text-white transition-colors">
-                  Inicio
-                </Link>
-              </li>
-              <li aria-hidden="true">/</li>
-              <li>
-                <Link href="/noticias" className="hover:text-white transition-colors">
-                  Noticias
-                </Link>
-              </li>
-              <li aria-hidden="true">/</li>
-              <li className="text-white font-medium truncate max-w-xs">
-                {noticia.titulo}
-              </li>
-            </ol>
-          </nav>
+      <PageHeader
+        title={noticia.titulo}
+        breadcrumbs={[
+          { label: 'Início', href: '/' },
+          { label: 'Notícias', href: '/noticias' },
+          { label: noticia.titulo },
+        ]}
+      >
+        {noticia.tags.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-4">
+            {noticia.tags.map((tag) => (
+              <Badge key={tag} variant="warning" className="text-xs">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        )}
 
-          {/* Tags */}
-          {noticia.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-4">
-              {noticia.tags.map((tag) => (
-                <Badge key={tag} variant="warning" className="text-xs">
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-          )}
-
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight max-w-4xl">
-            {noticia.titulo}
-          </h1>
-
-          <time
-            dateTime={noticia.publicadoEm.toISOString()}
-            className="mt-4 block text-brand-200"
-          >
-            Publicado em {formatDate(noticia.publicadoEm)}
-          </time>
-        </div>
-      </section>
+        <time
+          dateTime={noticia.publicadoEm.toISOString()}
+          className="mt-3 block text-brand-200"
+        >
+          Publicado em {formatDateLong(noticia.publicadoEm)}
+        </time>
+      </PageHeader>
 
       {/* Artigo */}
       <article className="bg-white py-12 sm:py-16">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-          {/* Imagem de destaque */}
           {noticia.imagemUrl && (
             <div className="mb-10 -mt-8 rounded-xl overflow-hidden shadow-lg">
               <img
@@ -146,13 +125,11 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
             </div>
           )}
 
-          {/* Corpo do artigo */}
           <div className="prose prose-slate prose-lg max-w-none">
             {noticia.corpo.split('\n').map((paragraph, i) => {
               const trimmed = paragraph.trim()
               if (!trimmed) return null
 
-              // Detecta headers markdown basicos
               if (trimmed.startsWith('### ')) {
                 return (
                   <h3 key={i} className="text-xl font-bold text-slate-900 mt-8 mb-4">
@@ -176,27 +153,24 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
             })}
           </div>
 
-          {/* Voltar */}
           <div className="mt-12 pt-8 border-t border-slate-200">
             <Link
               href="/noticias"
               className="inline-flex items-center text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors"
             >
-              <svg className="mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
-              </svg>
-              Voltar para Noticias
+              <IconArrowLeft className="mr-1.5 h-4 w-4" />
+              Voltar para Notícias
             </Link>
           </div>
         </div>
       </article>
 
-      {/* Noticias Relacionadas */}
+      {/* Notícias Relacionadas */}
       {related.length > 0 && (
         <section className="bg-slate-50 py-12 sm:py-16">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <h2 className="text-2xl font-bold text-slate-900 mb-8">
-              Outras Noticias
+              Outras Notícias
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -204,9 +178,8 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
                 <Link
                   key={item.id}
                   href={`/noticias/${item.slug}`}
-                  className="group bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col"
+                  className="group bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden flex flex-col"
                 >
-                  {/* Imagem ou placeholder */}
                   <div className="relative h-40 overflow-hidden">
                     {item.imagemUrl ? (
                       <img
@@ -216,9 +189,7 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
                       />
                     ) : (
                       <div className="h-full w-full bg-gradient-to-br from-brand-100 via-brand-50 to-accent-50 flex items-center justify-center">
-                        <svg className="h-10 w-10 text-brand-300" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" aria-hidden="true">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 0 1-2.25 2.25M16.5 7.5V18a2.25 2.25 0 0 0 2.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 0 0 2.25 2.25h13.5M6 7.5h3v3H6v-3Z" />
-                        </svg>
+                        <IconNews className="h-10 w-10 text-brand-300" />
                       </div>
                     )}
                   </div>

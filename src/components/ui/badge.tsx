@@ -4,6 +4,7 @@ type BadgeVariant = 'success' | 'warning' | 'error' | 'info' | 'neutral'
 
 interface BadgeProps {
   variant?: BadgeVariant
+  dot?: boolean
   children: ReactNode
   className?: string
 }
@@ -16,7 +17,15 @@ const variantStyles: Record<BadgeVariant, string> = {
   neutral: 'bg-slate-100 text-slate-600 ring-slate-200',
 }
 
-function Badge({ variant = 'neutral', children, className = '' }: BadgeProps) {
+const dotColors: Record<BadgeVariant, string> = {
+  success: 'bg-brand-500',
+  warning: 'bg-accent-500',
+  error:   'bg-red-500',
+  info:    'bg-blue-500',
+  neutral: 'bg-slate-400',
+}
+
+function Badge({ variant = 'neutral', dot, children, className = '' }: BadgeProps) {
   return (
     <span
       className={[
@@ -26,6 +35,12 @@ function Badge({ variant = 'neutral', children, className = '' }: BadgeProps) {
         className,
       ].join(' ')}
     >
+      {dot && (
+        <span
+          className={`mr-1.5 h-1.5 w-1.5 rounded-full ${dotColors[variant]}`}
+          aria-hidden="true"
+        />
+      )}
       {children}
     </span>
   )

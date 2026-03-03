@@ -1,12 +1,14 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { prisma } from '@/lib/db'
-import { Badge } from '@/components/ui'
+import { Badge, Button, PageHeader, EmptyState, FilterTabs } from '@/components/ui'
+import { IconChart } from '@/components/ui/icons'
+import { formatCurrency } from '@/lib/utils/format'
 
 export const metadata: Metadata = {
-  title: 'Projetos Apoiados — Portal PNAB Irece',
+  title: 'Projetos Apoiados — Portal PNAB Irecê',
   description:
-    'Consulte os projetos culturais apoiados pela Politica Nacional Aldir Blanc em Irece. Transparencia com valores, status e contrapartidas.',
+    'Consulte os projetos culturais apoiados pela Política Nacional Aldir Blanc em Irecê. Transparência com valores, status e contrapartidas.',
 }
 
 interface ProjetosApoiadosPageProps {
@@ -14,24 +16,16 @@ interface ProjetosApoiadosPageProps {
 }
 
 const statusLabels: Record<string, { label: string; variant: 'success' | 'warning' | 'info' | 'neutral' }> = {
-  EM_EXECUCAO: { label: 'Em execucao', variant: 'info' },
-  CONCLUIDO: { label: 'Concluido', variant: 'success' },
-  PRESTACAO_CONTAS: { label: 'Prestacao de contas', variant: 'warning' },
+  EM_EXECUCAO: { label: 'Em execução', variant: 'info' },
+  CONCLUIDO: { label: 'Concluído', variant: 'success' },
+  PRESTACAO_CONTAS: { label: 'Prestação de contas', variant: 'warning' },
   CANCELADO: { label: 'Cancelado', variant: 'neutral' },
-}
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value)
 }
 
 export default async function ProjetosApoiadosPage({ searchParams }: ProjetosApoiadosPageProps) {
   const params = await searchParams
   const selectedYear = params.ano ? parseInt(params.ano, 10) : undefined
 
-  // Busca projetos publicados
   const projetos = await prisma.projetoApoiado.findMany({
     where: {
       publicado: true,
@@ -69,18 +63,15 @@ export default async function ProjetosApoiadosPage({ searchParams }: ProjetosApo
     },
   })
 
-  // Calcula valor total
   const totalValue = projetos.reduce(
     (sum, p) => sum + Number(p.valorAprovado),
     0,
   )
 
-  // Anos disponiveis para filtro
   const allYears = [...new Set(projetos.map((p) => p.inscricao.edital.ano))].sort(
     (a, b) => b - a,
   )
 
-  // Se nao ha projetos e nenhum ano no DB, busca anos dos editais para o filtro
   let filterYears = allYears
   if (filterYears.length === 0) {
     const editaisYears = await prisma.edital.findMany({
@@ -92,38 +83,32 @@ export default async function ProjetosApoiadosPage({ searchParams }: ProjetosApo
     filterYears = editaisYears.map((e) => e.ano)
   }
 
+  // Monta tabs de filtro por ano
+  const yearTabs = [
+    { key: 'todos', label: 'Todos', href: '/projetos-apoiados' },
+    ...filterYears.map((year) => ({
+      key: String(year),
+      label: String(year),
+      href: `/projetos-apoiados?ano=${year}`,
+    })),
+  ]
+
   return (
     <>
-      {/* Header */}
-      <section className="bg-gradient-to-br from-brand-700 via-brand-600 to-brand-800 text-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-          <nav className="mb-4 text-sm text-brand-200" aria-label="Breadcrumb">
-            <ol className="flex items-center gap-1.5">
-              <li>
-                <Link href="/" className="hover:text-white transition-colors">
-                  Inicio
-                </Link>
-              </li>
-              <li aria-hidden="true">/</li>
-              <li className="text-white font-medium">Projetos Apoiados</li>
-            </ol>
-          </nav>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
-            Projetos Apoiados
-          </h1>
-          <p className="mt-3 text-lg text-brand-100 max-w-2xl">
-            Transparencia na aplicacao dos recursos da PNAB. Consulte os projetos
-            culturais contemplados em Irece.
-          </p>
-        </div>
-      </section>
+      <PageHeader
+        title="Projetos Apoiados"
+        subtitle="Transparência na aplicação dos recursos da PNAB. Consulte os projetos culturais contemplados em Irecê."
+        breadcrumbs={[
+          { label: 'Início', href: '/' },
+          { label: 'Projetos Apoiados' },
+        ]}
+      />
 
-      {/* Conteudo */}
+      {/* Conteúdo */}
       <section className="bg-slate-50 py-12 sm:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           {/* Resumo + Filtro */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-            {/* Resumo */}
             {projetos.length > 0 && (
               <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-6 py-4 flex items-center gap-6">
                 <div>
@@ -138,64 +123,26 @@ export default async function ProjetosApoiadosPage({ searchParams }: ProjetosApo
               </div>
             )}
 
-            {/* Filtro por ano */}
             {filterYears.length > 0 && (
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-slate-600">Filtrar por ano:</span>
-                <div className="flex gap-1.5">
-                  <Link
-                    href="/projetos-apoiados"
-                    className={[
-                      'inline-flex items-center justify-center rounded-lg px-3.5 py-2 text-sm font-medium transition-colors min-h-[44px]',
-                      !selectedYear
-                        ? 'bg-brand-600 text-white'
-                        : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50',
-                    ].join(' ')}
-                  >
-                    Todos
-                  </Link>
-                  {filterYears.map((year) => (
-                    <Link
-                      key={year}
-                      href={`/projetos-apoiados?ano=${year}`}
-                      className={[
-                        'inline-flex items-center justify-center rounded-lg px-3.5 py-2 text-sm font-medium transition-colors min-h-[44px]',
-                        selectedYear === year
-                          ? 'bg-brand-600 text-white'
-                          : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50',
-                      ].join(' ')}
-                    >
-                      {year}
-                    </Link>
-                  ))}
-                </div>
-              </div>
+              <FilterTabs
+                tabs={yearTabs}
+                activeKey={selectedYear ? String(selectedYear) : 'todos'}
+                ariaLabel="Filtrar projetos por ano"
+              />
             )}
           </div>
 
           {projetos.length === 0 ? (
-            /* Estado vazio */
-            <div className="text-center py-16">
-              <svg className="mx-auto h-16 w-16 text-slate-300" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5M9 11.25v1.5M12 9v3.75m3-6v6" />
-              </svg>
-              <h2 className="mt-4 text-xl font-semibold text-slate-900">
-                Nenhum projeto publicado ainda
-              </h2>
-              <p className="mt-2 text-slate-600 max-w-md mx-auto">
-                {selectedYear
+            <EmptyState
+              icon={<IconChart className="h-8 w-8 text-slate-400" />}
+              title="Nenhum projeto publicado ainda"
+              description={
+                selectedYear
                   ? `Nenhum projeto encontrado para o ano ${selectedYear}. Tente selecionar outro ano.`
-                  : 'Os projetos apoiados serao publicados aqui apos a conclusao dos processos de selecao.'}
-              </p>
-              {selectedYear && (
-                <Link
-                  href="/projetos-apoiados"
-                  className="mt-6 inline-flex items-center justify-center rounded-lg bg-brand-600 px-6 py-3 text-sm font-medium text-white hover:bg-brand-700 transition-colors min-h-[44px]"
-                >
-                  Ver todos os anos
-                </Link>
-              )}
-            </div>
+                  : 'Os projetos apoiados serão publicados aqui após a conclusão dos processos de seleção.'
+              }
+              action={selectedYear ? { label: 'Ver todos os anos', href: '/projetos-apoiados' } : undefined}
+            />
           ) : (
             <>
               {/* Tabela (desktop) */}
@@ -203,22 +150,22 @@ export default async function ProjetosApoiadosPage({ searchParams }: ProjetosApo
                 <table className="w-full">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200">
-                      <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      <th className="px-6 py-3.5 text-left section-label text-slate-600">
                         Proponente
                       </th>
-                      <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      <th className="px-6 py-3.5 text-left section-label text-slate-600">
                         Edital
                       </th>
-                      <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      <th className="px-6 py-3.5 text-left section-label text-slate-600">
                         Categoria
                       </th>
-                      <th className="px-6 py-3.5 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      <th className="px-6 py-3.5 text-right section-label text-slate-600">
                         Valor Aprovado
                       </th>
-                      <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      <th className="px-6 py-3.5 text-left section-label text-slate-600">
                         Status
                       </th>
-                      <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      <th className="px-6 py-3.5 text-left section-label text-slate-600">
                         Contrapartida
                       </th>
                     </tr>
@@ -257,7 +204,7 @@ export default async function ProjetosApoiadosPage({ searchParams }: ProjetosApo
                             {formatCurrency(Number(projeto.valorAprovado))}
                           </td>
                           <td className="px-6 py-4">
-                            <Badge variant={status.variant}>
+                            <Badge variant={status.variant} dot>
                               {status.label}
                             </Badge>
                           </td>
@@ -293,7 +240,7 @@ export default async function ProjetosApoiadosPage({ searchParams }: ProjetosApo
                             {projeto.inscricao.numero}
                           </p>
                         </div>
-                        <Badge variant={status.variant}>
+                        <Badge variant={status.variant} dot>
                           {status.label}
                         </Badge>
                       </div>
@@ -334,11 +281,11 @@ export default async function ProjetosApoiadosPage({ searchParams }: ProjetosApo
                 })}
               </div>
 
-              {/* Nota de transparencia */}
+              {/* Nota de transparência */}
               <div className="mt-8 bg-brand-50 rounded-xl border border-brand-200 p-6 text-center">
                 <p className="text-sm text-brand-700">
-                  Dados publicados em atendimento ao principio da transparencia e publicidade
-                  na aplicacao dos recursos publicos da Politica Nacional Aldir Blanc.
+                  Dados publicados em atendimento ao princípio da transparência e publicidade
+                  na aplicação dos recursos públicos da Política Nacional Aldir Blanc.
                 </p>
               </div>
             </>

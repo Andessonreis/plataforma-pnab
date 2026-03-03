@@ -3,10 +3,10 @@ import Link from 'next/link'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { Card, Badge, Pagination } from '@/components/ui'
+import { Card, Badge, Pagination, Button, EmptyState, FadeIn, IconPlus, IconDocument } from '@/components/ui'
 
 export const metadata: Metadata = {
-  title: 'Paginas Institucionais — Portal PNAB Irece',
+  title: 'Páginas Institucionais — Portal PNAB Irecê',
 }
 
 interface Props {
@@ -34,31 +34,27 @@ export default async function AdminCmsPage({ searchParams }: Props) {
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Paginas Institucionais</h1>
-          <p className="text-slate-600 mt-1">{total} pagina(s) encontrada(s)</p>
+      <FadeIn>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Páginas Institucionais</h1>
+            <p className="text-slate-600 mt-1">{total} página(s) encontrada(s)</p>
+          </div>
+          <Button href="/admin/cms/nova">
+            <IconPlus className="h-4 w-4 mr-2" />
+            Nova Página
+          </Button>
         </div>
-        <Link
-          href="/admin/cms/nova"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-brand-600 text-white text-sm font-medium hover:bg-brand-700 transition-colors min-h-[44px]"
-        >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
-          Nova Pagina
-        </Link>
-      </div>
+      </FadeIn>
 
       {pages.length === 0 ? (
         <Card>
-          <div className="text-center py-12">
-            <svg className="mx-auto h-12 w-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-            </svg>
-            <h2 className="text-lg font-semibold text-slate-900 mt-4">Nenhuma pagina</h2>
-            <p className="text-slate-500 mt-1">Crie a primeira pagina institucional.</p>
-          </div>
+          <EmptyState
+            icon={<IconDocument className="h-8 w-8 text-slate-400" />}
+            title="Nenhuma página"
+            description="Crie a primeira página institucional."
+            action={{ label: 'Nova Página', href: '/admin/cms/nova' }}
+          />
         </Card>
       ) : (
         <>
@@ -67,11 +63,11 @@ export default async function AdminCmsPage({ searchParams }: Props) {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-slate-50">
-                    <th className="text-left py-3 px-4 font-medium text-slate-600">Titulo</th>
+                    <th className="text-left py-3 px-4 font-medium text-slate-600">Título</th>
                     <th className="text-left py-3 px-4 font-medium text-slate-600">Slug</th>
                     <th className="text-left py-3 px-4 font-medium text-slate-600">Status</th>
                     <th className="text-left py-3 px-4 font-medium text-slate-600">Atualizada em</th>
-                    <th className="text-right py-3 px-4 font-medium text-slate-600">Acoes</th>
+                    <th className="text-right py-3 px-4 font-medium text-slate-600">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
