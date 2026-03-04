@@ -2,7 +2,7 @@
 
 import { useState, useRef, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { Input, Button, Card, Textarea, Select } from '@/components/ui'
+import { Input, Button, Card, Select } from '@/components/ui'
 import type { EditalStatus } from '@prisma/client'
 import { EditalArquivos, type EditalArquivosHandle } from './edital-arquivos'
 
@@ -27,6 +27,48 @@ interface EditalFormProps {
   }
 }
 
+const CATEGORIAS_OPCOES = [
+  'Artes Visuais', 'Música', 'Teatro', 'Dança',
+  'Literatura', 'Circo', 'Audiovisual', 'Artesanato',
+  'Cultura Popular', 'Patrimônio Cultural', 'Cultura Digital',
+  'Gastronomia', 'Moda', 'Hip Hop', 'Culturas Indígenas',
+  'Culturas Afro-Brasileiras',
+]
+
+const TEMPLATE_REGRAS = `QUEM PODE PARTICIPAR
+• Pessoas físicas, coletivos, MEIs e pessoas jurídicas sem fins lucrativos.
+• Domiciliados no município de Irecê/BA.
+• CPF ou CNPJ regularizados.
+
+DOCUMENTOS OBRIGATÓRIOS
+• Documento de identificação oficial com foto.
+• CPF ou CNPJ (cartão ou comprovante).
+• Comprovante de residência no município (emitido nos últimos 90 dias).
+• Portfólio ou currículo cultural (quando aplicável).
+
+VEDAÇÕES
+• Não podem participar servidores públicos municipais de Irecê.
+• É vedada a submissão de mais de uma proposta por proponente.
+• Projetos em execução com outro financiamento público não serão aceitos.
+
+CRITÉRIOS ELIMINATÓRIOS
+• Documentação incompleta ou inidônea.
+• Proposta em desacordo com o objeto deste edital.`
+
+const TEMPLATE_ACOES = `COTAS
+• 30% das vagas reservadas para proponentes negros(as) e pardos(as).
+• 10% das vagas reservadas para pessoas com deficiência (PcD).
+• 10% das vagas reservadas para mulheres em situação de vulnerabilidade.
+
+BÔNUS DE PONTUAÇÃO
+• +5 pontos: propostas de comunidades quilombolas.
+• +5 pontos: propostas de comunidades indígenas.
+• +3 pontos: proponentes residentes em zonas rurais de Irecê.
+• +2 pontos: proponentes LGBTQIAPN+.
+
+CRITÉRIO DE DESEMPATE
+Em caso de pontuação igual, a proposta de proponente pertencente a grupo prioritário será classificada em posição superior, respeitando a ordem: PcD → negros(as)/pardos(as) → mulheres → LGBTQIAPN+.`
+
 const statusOptions = [
   { value: 'RASCUNHO', label: 'Rascunho' },
   { value: 'PUBLICADO', label: 'Publicado' },
@@ -49,7 +91,7 @@ export function EditalForm({ initialData }: EditalFormProps) {
   const [resumo, setResumo] = useState(initialData?.resumo ?? '')
   const [ano, setAno] = useState(initialData?.ano ?? new Date().getFullYear())
   const [valorTotal, setValorTotal] = useState(initialData?.valorTotal ?? '')
-  const [categoriasText, setCategoriasText] = useState(initialData?.categorias.join(', ') ?? '')
+  const [categorias, setCategorias] = useState<string[]>(initialData?.categorias ?? [])
   const [acoesAfirmativas, setAcoesAfirmativas] = useState(initialData?.acoesAfirmativas ?? '')
   const [regrasElegibilidade, setRegrasElegibilidade] = useState(initialData?.regrasElegibilidade ?? '')
   const [status, setStatus] = useState<string>(initialData?.status ?? 'RASCUNHO')
@@ -73,16 +115,17 @@ export function EditalForm({ initialData }: EditalFormProps) {
     setCronograma(cronograma.filter((_, i) => i !== index))
   }
 
+  function toggleCategoria(cat: string) {
+    setCategorias((prev) =>
+      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
+    )
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setLoading(true)
     setMessage(null)
     setErrors({})
-
-    const categorias = categoriasText
-      .split(',')
-      .map((c) => c.trim())
-      .filter(Boolean)
 
     const body = {
       titulo,
@@ -120,18 +163,16 @@ export function EditalForm({ initialData }: EditalFormProps) {
 
       // Envia arquivos pendentes após criar o edital
       if (!isEdit && arquivosRef.current?.hasPending()) {
-        const errors = await arquivosRef.current.uploadPending(data.id)
-        if (errors > 0) {
-          setMessage({ type: 'error', text: `Edital criado, mas ${errors} arquivo(s) falharam no envio.` })
-        } else {
-          setMessage({ type: 'success', text: 'Edital criado com sucesso.' })
+        const uploadErrors = await arquivosRef.current.uploadPending(data.id)
+        if (uploadErrors > 0) {
+          setMessage({ type: 'error', text: `Edital criado, mas ${uploadErrors} arquivo(s) falharam no envio.` })
         }
-        router.push(`/admin/editais/${data.id}`)
+      }
+
+      if (!isEdit) {
+        router.push('/admin/editais')
       } else {
-        setMessage({ type: 'success', text: isEdit ? 'Edital atualizado.' : 'Edital criado com sucesso.' })
-        if (!isEdit) {
-          router.push(`/admin/editais/${data.id}`)
-        }
+        setMessage({ type: 'success', text: 'Edital atualizado com sucesso.' })
       }
     } catch {
       setMessage({ type: 'error', text: 'Erro de conexao. Tente novamente.' })
@@ -198,44 +239,107 @@ export function EditalForm({ initialData }: EditalFormProps) {
             required
           />
 
-          <Textarea
-            label="Resumo"
-            value={resumo}
-            onChange={(e) => setResumo(e.target.value)}
-            error={errors.resumo}
-            placeholder="Breve descricao do edital..."
-            rows={3}
-          />
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Resumo</label>
+            {errors.resumo && <p className="text-xs text-red-600 mb-1">{errors.resumo}</p>}
+            <textarea
+              value={resumo}
+              onChange={(e) => setResumo(e.target.value)}
+              placeholder="Breve descricao do edital..."
+              rows={3}
+              className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            />
+          </div>
 
-          <Input
-            label="Categorias"
-            value={categoriasText}
-            onChange={(e) => setCategoriasText(e.target.value)}
-            error={errors.categorias}
-            hint="Separe por virgula. Ex: Artes Visuais, Musica, Teatro, Danca"
-            placeholder="Artes Visuais, Musica, Teatro"
-          />
+          <div>
+            <p className="block text-sm font-medium text-slate-700 mb-2">Categorias</p>
+            {errors.categorias && (
+              <p className="text-xs text-red-600 mb-2">{errors.categorias}</p>
+            )}
+            <div className="flex flex-wrap gap-2">
+              {CATEGORIAS_OPCOES.map((cat) => {
+                const selected = categorias.includes(cat)
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => toggleCategoria(cat)}
+                    className={[
+                      'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium border transition-colors',
+                      selected
+                        ? 'bg-brand-600 text-white border-brand-600'
+                        : 'bg-white text-slate-600 border-slate-300 hover:border-brand-400 hover:text-brand-700',
+                    ].join(' ')}
+                    aria-pressed={selected}
+                  >
+                    {selected && (
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                    {cat}
+                  </button>
+                )
+              })}
+            </div>
+            {categorias.length > 0 && (
+              <p className="text-xs text-slate-500 mt-2">{categorias.length} categoria(s) selecionada(s)</p>
+            )}
+          </div>
         </div>
       </Card>
 
       {/* Regras */}
       <Card>
         <h2 className="text-lg font-semibold text-slate-900 mb-4">Regras e Elegibilidade</h2>
-        <div className="space-y-4">
-          <Textarea
-            label="Regras de Elegibilidade"
-            value={regrasElegibilidade}
-            onChange={(e) => setRegrasElegibilidade(e.target.value)}
-            placeholder="Quem pode participar, requisitos..."
-            rows={4}
-          />
-          <Textarea
-            label="Acoes Afirmativas"
-            value={acoesAfirmativas}
-            onChange={(e) => setAcoesAfirmativas(e.target.value)}
-            placeholder="Cotas, bonificacoes para grupos especificos..."
-            rows={3}
-          />
+        <div className="space-y-6">
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium text-slate-700">Regras de Elegibilidade</label>
+              <button
+                type="button"
+                onClick={() => setRegrasElegibilidade((v) => v ? v : TEMPLATE_REGRAS)}
+                className="inline-flex items-center gap-1 text-xs text-brand-600 hover:text-brand-700 font-medium"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                Usar template
+              </button>
+            </div>
+            <p className="text-xs text-slate-500 mb-2">Use marcadores (•) e seções em MAIÚSCULAS para estruturar o texto. Aparece formatado na página pública.</p>
+            <textarea
+              value={regrasElegibilidade}
+              onChange={(e) => setRegrasElegibilidade(e.target.value)}
+              placeholder="Clique em 'Usar template' para começar com uma estrutura pronta..."
+              rows={10}
+              className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 font-mono"
+            />
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium text-slate-700">Ações Afirmativas</label>
+              <button
+                type="button"
+                onClick={() => setAcoesAfirmativas((v) => v ? v : TEMPLATE_ACOES)}
+                className="inline-flex items-center gap-1 text-xs text-brand-600 hover:text-brand-700 font-medium"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                Usar template
+              </button>
+            </div>
+            <p className="text-xs text-slate-500 mb-2">Descreva cotas, bônus de pontuação e critérios de desempate. Será exibido com destaque visual na página pública.</p>
+            <textarea
+              value={acoesAfirmativas}
+              onChange={(e) => setAcoesAfirmativas(e.target.value)}
+              placeholder="Clique em 'Usar template' para começar com uma estrutura pronta..."
+              rows={10}
+              className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 font-mono"
+            />
+          </div>
         </div>
       </Card>
 
@@ -258,7 +362,15 @@ export function EditalForm({ initialData }: EditalFormProps) {
         ) : (
           <div className="space-y-3">
             {cronograma.map((item, index) => (
-              <div key={index} className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
+              <div
+                key={index}
+                className={[
+                  'flex items-start gap-3 p-3 rounded-lg border transition-colors',
+                  item.destaque
+                    ? 'bg-brand-50 border-brand-200'
+                    : 'bg-slate-50 border-transparent',
+                ].join(' ')}
+              >
                 <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Input
                     label="Descricao"
@@ -274,14 +386,19 @@ export function EditalForm({ initialData }: EditalFormProps) {
                   />
                 </div>
                 <div className="flex items-center gap-2 pt-7">
-                  <label className="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                  <label
+                    className={[
+                      'flex items-center gap-1.5 text-xs cursor-pointer font-medium select-none',
+                      item.destaque ? 'text-brand-700' : 'text-slate-600',
+                    ].join(' ')}
+                  >
                     <input
                       type="checkbox"
                       checked={item.destaque}
                       onChange={(e) => updateCronogramaItem(index, 'destaque', e.target.checked)}
-                      className="rounded border-slate-300"
+                      className="rounded border-slate-300 text-brand-600 focus:ring-brand-500"
                     />
-                    Destaque
+                    {item.destaque ? '★ Destaque' : 'Destaque'}
                   </label>
                   <button
                     type="button"

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
+import { auth } from '@/lib/auth'
 import { Badge, Button, PageHeader } from '@/components/ui'
 import {
   IconDownload,
@@ -58,6 +59,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function EditalPage({ params }: Props) {
   const { slug } = await params
+  const session = await auth()
+  const isAdmin = session?.user?.role === 'ADMIN'
 
   const edital = await prisma.edital.findUnique({
     where: { slug },
@@ -72,7 +75,7 @@ export default async function EditalPage({ params }: Props) {
     },
   })
 
-  if (!edital || edital.status === 'RASCUNHO') {
+  if (!edital || (!isAdmin && edital.status === 'RASCUNHO')) {
     notFound()
   }
 
@@ -83,6 +86,14 @@ export default async function EditalPage({ params }: Props) {
 
   return (
     <>
+      {isAdmin && edital.status === 'RASCUNHO' && (
+        <div className="bg-amber-50 border-b border-amber-200 py-2.5 px-4 text-center text-sm text-amber-800 font-medium">
+          ⚠️ Pré-visualização de rascunho &mdash; este edital não está visível ao público.{' '}
+          <Link href={`/admin/editais/${edital.id}`} className="underline hover:text-amber-900">
+            Editar edital
+          </Link>
+        </div>
+      )}
       <PageHeader
         title={edital.titulo}
         breadcrumbs={[
