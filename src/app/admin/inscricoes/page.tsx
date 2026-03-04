@@ -82,7 +82,7 @@ export default async function AdminInscricoesPage({ searchParams }: Props) {
             <h1 className="text-2xl font-bold text-slate-900">Inscrições</h1>
             <p className="text-slate-600 mt-1">{total} inscrição(ões) encontrada(s)</p>
           </div>
-          <Button href="/api/admin/inscricoes/export" variant="ghost">
+          <Button href="/admin/inscricoes/export" variant="ghost">
             <IconExport className="h-4 w-4 mr-2" />
             Exportar CSV
           </Button>

@@ -24,8 +24,11 @@ export async function GET(req: NextRequest) {
 
     const url = new URL(req.url)
     const editalId = url.searchParams.get('editalId') || undefined
+    const status = url.searchParams.get('status') || undefined
 
-    const where = editalId ? { editalId } : {}
+    const where: Record<string, unknown> = {}
+    if (editalId) where.editalId = editalId
+    if (status) where.status = status
 
     const inscricoes = await prisma.inscricao.findMany({
       where,
@@ -59,11 +62,13 @@ export async function GET(req: NextRequest) {
       userId: session.user.id,
       action: 'EXPORTACAO_CSV',
       entity: 'Inscricao',
-      details: { totalRegistros: inscricoes.length, editalId: editalId ?? 'todos' },
+      details: { totalRegistros: inscricoes.length, editalId: editalId ?? 'todos', status: status ?? 'todos' },
       ip: req.headers.get('x-forwarded-for') ?? undefined,
     })
 
-    const filename = `inscricoes_pnab_${new Date().toISOString().slice(0, 10)}.csv`
+    const datePart = new Date().toISOString().slice(0, 10)
+    const statusPart = status ? `_${status.toLowerCase()}` : ''
+    const filename = `inscricoes_pnab${statusPart}_${datePart}.csv`
 
     const res = new NextResponse(csv, {
       status: 200,
