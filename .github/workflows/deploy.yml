@@ -16,5 +16,6 @@ jobs:
           git pull origin main
           make install
           make build
+          make db-seed
           pkill -f "next start" || true
           nohup npm run start > app.log 2>&1 &
