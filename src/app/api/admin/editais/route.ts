@@ -10,8 +10,8 @@ export const runtime = 'nodejs'
 // ── Schema de validacao ─────────────────────────────────────────────────────
 
 const cronogramaItemSchema = z.object({
-  label: z.string().min(1),
-  dataHora: z.string(),
+  label: z.string().min(1, 'Descrição do marco é obrigatória'),
+  dataHora: z.string().default(''),
   destaque: z.boolean().default(false),
 })
 
