@@ -1,7 +1,6 @@
 'use client'
 
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { Select } from '@/components/ui'
 
 interface FilterFormProps {
   editais: { id: string; titulo: string; ano: number }[]
@@ -31,36 +30,68 @@ export default function FilterForm({ editais, selectedEditalId, selectedStatus }
 
   function update(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString())
-    if (value) {
-      params.set(key, value)
-    } else {
-      params.delete(key)
-    }
+    if (value) params.set(key, value)
+    else params.delete(key)
     router.push(`${pathname}?${params.toString()}`)
   }
 
-  const editalOptions = [
-    { value: '', label: 'Todos os editais' },
-    ...editais.map((e) => ({
-      value: e.id,
-      label: `${e.titulo} (${e.ano})`,
-    })),
-  ]
+  function clearAll() {
+    router.push(pathname)
+  }
+
+  const hasFilters = !!selectedEditalId || !!selectedStatus
+  const selectClass = 'w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500'
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <Select
-        label="Edital"
-        value={selectedEditalId ?? ''}
-        options={editalOptions}
-        onChange={(e) => update('editalId', e.target.value)}
-      />
-      <Select
-        label="Status"
-        value={selectedStatus ?? ''}
-        options={STATUS_OPTIONS}
-        onChange={(e) => update('status', e.target.value)}
-      />
+    <div className="space-y-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div>
+          <label className="block text-xs font-medium text-slate-500 mb-1" htmlFor="filter-edital">
+            Edital
+          </label>
+          <select
+            id="filter-edital"
+            value={selectedEditalId ?? ''}
+            onChange={(e) => update('editalId', e.target.value)}
+            className={selectClass}
+          >
+            <option value="">Todos os editais</option>
+            {editais.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.titulo} ({e.ano})
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-slate-500 mb-1" htmlFor="filter-status">
+            Status
+          </label>
+          <select
+            id="filter-status"
+            value={selectedStatus ?? ''}
+            onChange={(e) => update('status', e.target.value)}
+            className={selectClass}
+          >
+            {STATUS_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {hasFilters && (
+        <button
+          type="button"
+          onClick={clearAll}
+          className="text-xs text-slate-500 hover:text-slate-700 underline underline-offset-2"
+        >
+          Limpar filtros
+        </button>
+      )}
     </div>
   )
 }
