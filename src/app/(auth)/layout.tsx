@@ -94,33 +94,30 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </div>
       </div>
 
-      {/* Header mobile — aparece só em telas pequenas */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-brand-800 to-brand-900 px-4 py-3 shadow-lg">
-        <div className="flex items-center gap-3">
-          <div className="relative h-9 w-9 flex-shrink-0 rounded-lg bg-white/10 p-1">
-            <Image
-              src="https://www.irece.ba.gov.br/files/config/brasao.png"
-              alt="Brasão de Irecê"
-              fill
-              className="object-contain p-0.5"
-              unoptimized
-            />
-          </div>
-          <div className="min-w-0">
-            <p className="text-sm font-bold text-white leading-tight truncate">
-              Portal PNAB
-            </p>
-            <p className="text-[11px] text-brand-200 leading-tight">
-              Irecê — Bahia
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Painel do formulário — lado direito */}
       <div className="flex-1 flex flex-col bg-white lg:overflow-y-auto">
-        <div className="flex-1 flex flex-col justify-center px-6 sm:px-10 lg:px-14 xl:px-20 py-8 pt-20 lg:pt-8">
+        <div className="flex-1 flex flex-col justify-center px-6 sm:px-10 lg:px-14 xl:px-20 py-8">
           <div className="w-full max-w-md mx-auto">
+            {/* Branding mobile — aparece só em telas pequenas */}
+            <div className="lg:hidden flex items-center gap-3 mb-8">
+              <div className="relative h-11 w-11 flex-shrink-0 rounded-xl bg-brand-50 p-1.5 ring-1 ring-brand-100">
+                <Image
+                  src="https://www.irece.ba.gov.br/files/config/brasao.png"
+                  alt="Brasão de Irecê"
+                  fill
+                  className="object-contain p-0.5"
+                  unoptimized
+                />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-slate-900 leading-tight">
+                  Portal PNAB
+                </p>
+                <p className="text-xs text-slate-500 leading-tight">
+                  Irecê — Bahia
+                </p>
+              </div>
+            </div>
             {children}
 
             {/* Voltar ao portal */}

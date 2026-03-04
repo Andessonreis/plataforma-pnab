@@ -125,11 +125,11 @@ export default async function ProjetosApoiadosPage({ searchParams }: ProjetosApo
         ]}
       />
 
-      <section className="bg-slate-50 py-12 sm:py-16">
+      <section className="bg-slate-50 py-6 sm:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           {/* Estatísticas */}
           {projetos.length > 0 && (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
               <StatCard
                 icon={<IconUsers className="h-5 w-5 text-brand-600" />}
                 label="Projetos contemplados"
@@ -160,7 +160,7 @@ export default async function ProjetosApoiadosPage({ searchParams }: ProjetosApo
 
           {/* Filtros */}
           {filterYears.length > 0 && (
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
               <FilterTabs
                 tabs={yearTabs}
                 activeKey={selectedYear ? String(selectedYear) : 'todos'}
@@ -302,55 +302,69 @@ export default async function ProjetosApoiadosPage({ searchParams }: ProjetosApo
                         return (
                           <div
                             key={projeto.id}
-                            className="bg-white rounded-xl border border-slate-200 shadow-sm p-5"
+                            className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden"
                           >
-                            <div className="flex items-start justify-between gap-3 mb-3">
-                              <div>
-                                {projectName && (
-                                  <p className="text-base font-semibold text-slate-900">
+                            {/* Header do card */}
+                            <div className="px-4 pt-4 pb-3 border-b border-slate-100">
+                              <div className="flex items-start justify-between gap-2 mb-1">
+                                {projectName ? (
+                                  <p className="text-[15px] font-semibold text-slate-900 leading-snug">
                                     {projectName}
                                   </p>
+                                ) : (
+                                  <p className="text-[15px] font-semibold text-slate-900 leading-snug">
+                                    {projeto.inscricao.proponente.nome}
+                                  </p>
                                 )}
-                                <p className={`${projectName ? 'text-sm text-slate-600' : 'text-base font-semibold text-slate-900'}`}>
+                                <Badge variant={status.variant} dot>
+                                  {status.label}
+                                </Badge>
+                              </div>
+                              {projectName && (
+                                <p className="text-sm text-slate-500">
                                   {projeto.inscricao.proponente.nome}
                                 </p>
-                                <p className="text-xs text-slate-400 mt-0.5">
-                                  {projeto.inscricao.numero}
-                                </p>
-                              </div>
-                              <Badge variant={status.variant} dot>
-                                {status.label}
-                              </Badge>
+                              )}
+                              <p className="text-[11px] text-slate-400 mt-0.5 font-mono">
+                                {projeto.inscricao.numero}
+                              </p>
                             </div>
 
-                            <div className="space-y-2 text-sm">
+                            {/* Dados do projeto */}
+                            <div className="px-4 py-3 space-y-2.5 text-sm">
                               {grouped.size <= 1 && (
-                                <div className="flex justify-between gap-2">
-                                  <span className="text-slate-500 shrink-0">Edital</span>
+                                <div>
+                                  <p className="text-[11px] text-slate-400 uppercase tracking-wide mb-0.5">Edital</p>
                                   <Link
                                     href={`/editais/${projeto.inscricao.edital.slug}`}
-                                    className="text-brand-600 hover:text-brand-700 font-medium transition-colors text-right"
+                                    className="text-brand-600 hover:text-brand-700 font-medium transition-colors text-sm leading-snug"
                                   >
                                     {projeto.inscricao.edital.titulo}
                                   </Link>
                                 </div>
                               )}
-                              {projeto.inscricao.categoria && (
-                                <div className="flex justify-between">
-                                  <span className="text-slate-500">Categoria</span>
-                                  <span className="text-slate-900">{projeto.inscricao.categoria}</span>
+
+                              <div className="flex items-center gap-4">
+                                {projeto.inscricao.categoria && (
+                                  <div className="flex-1">
+                                    <p className="text-[11px] text-slate-400 uppercase tracking-wide mb-0.5">Categoria</p>
+                                    <span className="inline-block rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">
+                                      {projeto.inscricao.categoria}
+                                    </span>
+                                  </div>
+                                )}
+                                <div className="text-right">
+                                  <p className="text-[11px] text-slate-400 uppercase tracking-wide mb-0.5">Valor</p>
+                                  <p className="text-base font-bold text-slate-900">
+                                    {formatCurrency(Number(projeto.valorAprovado))}
+                                  </p>
                                 </div>
-                              )}
-                              <div className="flex justify-between">
-                                <span className="text-slate-500">Valor aprovado</span>
-                                <span className="text-slate-900 font-semibold">
-                                  {formatCurrency(Number(projeto.valorAprovado))}
-                                </span>
                               </div>
+
                               {projeto.contrapartida && (
-                                <div className="pt-2 border-t border-slate-100">
-                                  <p className="text-xs text-slate-500 mb-1">Contrapartida</p>
-                                  <p className="text-slate-600">
+                                <div className="pt-2.5 border-t border-slate-100">
+                                  <p className="text-[11px] text-slate-400 uppercase tracking-wide mb-1">Contrapartida</p>
+                                  <p className="text-slate-600 leading-relaxed">
                                     {projeto.contrapartida}
                                   </p>
                                 </div>
@@ -365,7 +379,7 @@ export default async function ProjetosApoiadosPage({ searchParams }: ProjetosApo
               </div>
 
               {/* Nota de transparência */}
-              <div className="mt-10 bg-brand-50 rounded-xl border border-brand-200 p-6 flex items-start gap-4">
+              <div className="mt-8 sm:mt-10 bg-brand-50 rounded-xl border border-brand-200 p-4 sm:p-6 flex items-start gap-3 sm:gap-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-100 text-brand-600 shrink-0">
                   <IconEye className="h-5 w-5" />
                 </div>
@@ -403,14 +417,14 @@ function StatCard({
   highlight?: boolean
 }) {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5">
-      <div className="flex items-center gap-3">
-        <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${bgColor} shrink-0`}>
+    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-3 sm:p-5">
+      <div className="flex items-center gap-2 sm:gap-3">
+        <div className={`flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-lg ${bgColor} shrink-0`}>
           {icon}
         </div>
         <div className="min-w-0">
-          <p className="text-xs text-slate-500 truncate">{label}</p>
-          <p className={`text-lg sm:text-xl font-bold truncate ${highlight ? 'text-brand-700' : 'text-slate-900'}`}>
+          <p className="text-[10px] sm:text-xs text-slate-500 leading-tight">{label}</p>
+          <p className={`text-sm sm:text-xl font-bold ${highlight ? 'text-brand-700' : 'text-slate-900'}`}>
             {value}
           </p>
         </div>

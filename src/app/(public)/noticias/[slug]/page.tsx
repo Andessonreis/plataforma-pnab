@@ -122,18 +122,18 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
         ]}
       >
         {/* Tags + metadata no header */}
-        <div className="mt-4 flex flex-wrap items-center gap-2">
+        <div className="mt-3 sm:mt-4 flex flex-wrap items-center gap-2">
           {noticia.tags.map((tag) => (
             <span
               key={tag}
-              className="inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-sm font-medium text-white"
+              className="inline-flex items-center rounded-full bg-white/15 px-2.5 py-0.5 sm:px-3 sm:py-1 text-xs sm:text-sm font-medium text-white"
             >
               {tag}
             </span>
           ))}
         </div>
 
-        <div className="mt-3 flex flex-wrap items-center gap-4 text-brand-200 text-sm">
+        <div className="mt-2 sm:mt-3 flex flex-wrap items-center gap-3 sm:gap-4 text-brand-200 text-sm">
           <time
             dateTime={noticia.publicadoEm.toISOString()}
             className="inline-flex items-center gap-1.5"
@@ -149,9 +149,9 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
       </PageHeader>
 
       {/* Artigo */}
-      <section className="bg-slate-50 py-10 sm:py-14">
+      <section className="bg-slate-50 py-6 sm:py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
             {/* Coluna principal (2/3) */}
             <div className="lg:col-span-2">
               <FadeIn delay={0.1}>
@@ -172,7 +172,7 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
                   )}
 
                   {/* Corpo do artigo */}
-                  <div className="p-6 sm:p-8 lg:p-10">
+                  <div className="p-5 sm:p-8 lg:p-10">
                     <div className="prose prose-slate prose-lg max-w-none">
                       {noticia.corpo.split('\n').map((paragraph, i) => {
                         const trimmed = paragraph.trim()
@@ -230,9 +230,9 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
             {/* Sidebar (1/3) */}
             <aside className="lg:col-span-1">
               <FadeIn delay={0.2} direction="right">
-                <div className="sticky top-6 space-y-6">
+                <div className="sticky top-6 space-y-5 sm:space-y-6">
                   {/* Metadata da notícia */}
-                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 sm:p-6">
                     <h3 className="text-base font-semibold text-slate-900 mb-4">
                       Sobre esta notícia
                     </h3>
@@ -296,10 +296,10 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
 
       {/* Notícias Relacionadas */}
       {related.length > 0 && (
-        <section className="bg-white py-12 sm:py-16">
+        <section className="bg-white py-8 sm:py-16">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <FadeIn>
-              <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center justify-between mb-6 sm:mb-8">
                 <div>
                   <p className="section-label text-brand-600 mb-2">Continue lendo</p>
                   <h2 className="text-2xl font-bold text-slate-900">

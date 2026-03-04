@@ -120,17 +120,17 @@ export default async function AdminDashboardPage() {
   return (
     <section>
       <FadeIn>
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <p className="text-sm text-slate-500 capitalize mb-1">{today}</p>
-          <h1 className="text-2xl font-bold text-slate-900">Painel da Secretaria</h1>
-          <p className="text-slate-500 mt-1">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Painel da Secretaria</h1>
+          <p className="text-sm text-slate-500 mt-1">
             Visão geral das atividades do Portal PNAB Irecê.
           </p>
         </div>
       </FadeIn>
 
       {/* KPI Cards */}
-      <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <StaggerContainer className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
         {stats.map((stat) => (
           <StaggerItem key={stat.label}>
             <StatCard {...stat} />
@@ -140,16 +140,16 @@ export default async function AdminDashboardPage() {
 
       {/* Ações rápidas */}
       <FadeIn delay={0.2}>
-        <div className="flex flex-wrap gap-3 mb-8">
-          <Button href="/admin/editais/novo">
-            <IconPlus className="h-4 w-4 mr-2" />
+        <div className="grid grid-cols-2 sm:flex gap-3 mb-6 sm:mb-8">
+          <Button href="/admin/editais/novo" className="text-sm sm:text-base">
+            <IconPlus className="h-4 w-4 mr-1.5" />
             Novo Edital
           </Button>
-          <Button href="/admin/inscricoes" variant="outline">
-            Gerenciar Inscrições
+          <Button href="/admin/inscricoes" variant="outline" className="text-sm sm:text-base">
+            Inscrições
           </Button>
-          <Button href="/admin/inscricoes/export" variant="ghost">
-            <IconExport className="h-4 w-4 mr-2" />
+          <Button href="/admin/inscricoes/export" variant="ghost" className="col-span-2 sm:col-span-1 text-sm sm:text-base">
+            <IconExport className="h-4 w-4 mr-1.5" />
             Exportar CSV
           </Button>
         </div>
@@ -172,34 +172,37 @@ export default async function AdminDashboardPage() {
               description="As ações realizadas no sistema aparecerão aqui."
             />
           ) : (
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-slate-100 -mx-1 sm:mx-0">
               {recentLogs.map((log) => {
                 const actionStyle = getActionStyle(log.action)
                 return (
-                  <div key={log.id} className="flex items-center gap-3 px-3 py-3.5 hover:bg-slate-50/50 transition-colors first:pt-0 last:pb-0">
-                    <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${actionStyle.bg}`}>
-                      <actionStyle.Icon className={`h-4 w-4 ${actionStyle.color}`} />
+                  <div key={log.id} className="flex items-start gap-2.5 sm:gap-3 px-1 sm:px-3 py-2.5 sm:py-3.5 hover:bg-slate-50/50 transition-colors first:pt-0 last:pb-0">
+                    <div className={`h-7 w-7 sm:h-8 sm:w-8 rounded-md sm:rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${actionStyle.bg}`}>
+                      <actionStyle.Icon className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${actionStyle.color}`} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-slate-800">
-                        <span className="font-medium">{log.user?.nome ?? 'Sistema'}</span>
-                        {' '}
-                        <Badge variant={actionStyle.badge}>{log.action.replace(/_/g, ' ')}</Badge>
-                      </p>
-                      {log.entity && (
-                        <p className="text-xs text-slate-400 mt-0.5">
-                          {log.entity} {log.entityId ? `#${log.entityId.slice(0, 8)}` : ''}
+                      <div className="flex items-baseline justify-between gap-2">
+                        <p className="text-xs sm:text-sm text-slate-800 truncate">
+                          <span className="font-medium">{log.user?.nome?.split(' ').slice(0, 2).join(' ') ?? 'Sistema'}</span>
                         </p>
-                      )}
+                        <span className="text-[10px] sm:text-xs text-slate-400 shrink-0 tabular-nums">
+                          {new Date(log.createdAt).toLocaleDateString('pt-BR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <Badge variant={actionStyle.badge}>{log.action.replace(/_/g, ' ')}</Badge>
+                        {log.entity && (
+                          <span className="text-[10px] sm:text-xs text-slate-400 truncate">
+                            {log.entity} #{log.entityId?.slice(0, 6)}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <span className="text-xs text-slate-400 shrink-0 tabular-nums">
-                      {new Date(log.createdAt).toLocaleDateString('pt-BR', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </span>
                   </div>
                 )
               })}

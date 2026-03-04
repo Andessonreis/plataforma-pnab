@@ -42,14 +42,14 @@ export default async function MinhasInscricoesPage({ searchParams }: Props) {
   return (
     <section>
       <FadeIn>
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-start sm:items-center justify-between gap-3 mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Minhas Inscrições</h1>
-            <p className="text-slate-600 mt-1">{total} inscrição(ões) encontrada(s)</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Minhas Inscrições</h1>
+            <p className="text-sm text-slate-600 mt-1">{total} inscrição(ões) encontrada(s)</p>
           </div>
-          <Button href="/editais">
-            <IconPlus className="h-4 w-4 mr-2" />
-            Nova Inscrição
+          <Button href="/editais" size="sm" className="shrink-0">
+            <IconPlus className="h-4 w-4 mr-1.5" />
+            Nova
           </Button>
         </div>
       </FadeIn>
@@ -113,7 +113,7 @@ export default async function MinhasInscricoesPage({ searchParams }: Props) {
           {/* Cards mobile */}
           <div className="md:hidden space-y-3">
             {inscricoes.map((inscricao) => (
-              <Card key={inscricao.id} hover padding="md">
+              <Card key={inscricao.id} hover padding="sm">
                 <Link href={`/proponente/inscricoes/${inscricao.id}`} className="block">
                   <div className="flex items-start justify-between mb-2">
                     <span className="font-mono text-xs text-slate-500">{inscricao.numero}</span>

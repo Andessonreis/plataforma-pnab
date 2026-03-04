@@ -91,9 +91,9 @@ export default async function ProponenteDashboardPage() {
   return (
     <section>
       <FadeIn>
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <p className="text-sm text-slate-500 capitalize mb-1">{today}</p>
-          <h1 className="text-2xl font-bold text-slate-900">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
             Bem-vindo(a), {session.user.name?.split(' ')[0] ?? 'Proponente'}
           </h1>
           <p className="text-slate-500 mt-1">
@@ -107,7 +107,7 @@ export default async function ProponenteDashboardPage() {
         <FadeIn delay={0.1}>
           <Link
             href="/editais"
-            className="group flex items-center gap-3 rounded-xl border border-brand-200/60 bg-brand-50/40 px-4 py-3.5 mb-8 transition-all hover:bg-brand-50/70 hover:border-brand-200"
+            className="group flex items-center gap-3 rounded-xl border border-brand-200/60 bg-brand-50/40 px-3 sm:px-4 py-3 sm:py-3.5 mb-6 sm:mb-8 transition-all hover:bg-brand-50/70 hover:border-brand-200"
           >
             <span className="relative flex h-2.5 w-2.5 shrink-0">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-500 opacity-75" />
@@ -124,7 +124,7 @@ export default async function ProponenteDashboardPage() {
       )}
 
       {/* KPI Cards */}
-      <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <StaggerContainer className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
         {stats.map((stat) => (
           <StaggerItem key={stat.label}>
             <StatCard {...stat} />
@@ -134,13 +134,13 @@ export default async function ProponenteDashboardPage() {
 
       {/* Ações rápidas */}
       <FadeIn delay={0.2}>
-        <div className="flex flex-wrap gap-3 mb-8">
-          <Button href="/editais">
-            <IconPlus className="h-4 w-4 mr-2" />
-            Ver Editais Abertos
+        <div className="grid grid-cols-2 sm:flex gap-3 mb-6 sm:mb-8">
+          <Button href="/editais" className="text-sm sm:text-base">
+            <IconPlus className="h-4 w-4 mr-1.5 sm:mr-2" />
+            Ver Editais
           </Button>
-          <Button href="/proponente/inscricoes" variant="outline">
-            Minhas Inscrições
+          <Button href="/proponente/inscricoes" variant="outline" className="text-sm sm:text-base">
+            Inscrições
           </Button>
         </div>
       </FadeIn>
@@ -165,43 +165,70 @@ export default async function ProponenteDashboardPage() {
               action={{ label: 'Ver Editais Abertos', href: '/editais' }}
             />
           ) : (
-            <div className="overflow-x-auto -mx-2">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-slate-200">
-                    <th className="text-left py-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Número</th>
-                    <th className="text-left py-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Edital</th>
-                    <th className="text-left py-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Status</th>
-                    <th className="text-left py-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Data</th>
-                    <th className="text-right py-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Ações</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {recentInscricoes.map((inscricao) => (
-                    <tr key={inscricao.id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="py-3.5 px-3 font-mono text-xs text-slate-600">{inscricao.numero}</td>
-                      <td className="py-3.5 px-3 font-medium text-slate-800">{inscricao.edital.titulo}</td>
-                      <td className="py-3.5 px-3">
-                        <Badge variant={inscricaoStatusVariant[inscricao.status as InscricaoStatus]}>
-                          {inscricaoStatusLabel[inscricao.status as InscricaoStatus]}
-                        </Badge>
-                      </td>
-                      <td className="py-3.5 px-3 text-slate-400">
+            <>
+              {/* Mobile: cards */}
+              <div className="sm:hidden space-y-3">
+                {recentInscricoes.map((inscricao) => (
+                  <Link
+                    key={inscricao.id}
+                    href={`/proponente/inscricoes/${inscricao.id}`}
+                    className="block rounded-lg border border-slate-200 p-4 hover:bg-slate-50 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <p className="text-sm font-medium text-slate-900 leading-snug">{inscricao.edital.titulo}</p>
+                      <Badge variant={inscricaoStatusVariant[inscricao.status as InscricaoStatus]}>
+                        {inscricaoStatusLabel[inscricao.status as InscricaoStatus]}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-xs text-slate-500">{inscricao.numero}</span>
+                      <span className="text-xs text-slate-400">
                         {new Date(inscricao.createdAt).toLocaleDateString('pt-BR')}
-                      </td>
-                      <td className="py-3.5 px-3 text-right">
-                        <Link
-                          href={`/proponente/inscricoes/${inscricao.id}`}
-                          className="text-sm text-brand-600 hover:text-brand-700 font-medium transition-colors"
-                        >
-                          Detalhes
-                        </Link>
-                      </td>
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+
+              {/* Desktop: tabela */}
+              <div className="hidden sm:block overflow-x-auto -mx-2">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-200">
+                      <th className="text-left py-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Número</th>
+                      <th className="text-left py-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Edital</th>
+                      <th className="text-left py-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Status</th>
+                      <th className="text-left py-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Data</th>
+                      <th className="text-right py-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Ações</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {recentInscricoes.map((inscricao) => (
+                      <tr key={inscricao.id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="py-3.5 px-3 font-mono text-xs text-slate-600">{inscricao.numero}</td>
+                        <td className="py-3.5 px-3 font-medium text-slate-800">{inscricao.edital.titulo}</td>
+                        <td className="py-3.5 px-3">
+                          <Badge variant={inscricaoStatusVariant[inscricao.status as InscricaoStatus]}>
+                            {inscricaoStatusLabel[inscricao.status as InscricaoStatus]}
+                          </Badge>
+                        </td>
+                        <td className="py-3.5 px-3 text-slate-400">
+                          {new Date(inscricao.createdAt).toLocaleDateString('pt-BR')}
+                        </td>
+                        <td className="py-3.5 px-3 text-right">
+                          <Link
+                            href={`/proponente/inscricoes/${inscricao.id}`}
+                            className="text-sm text-brand-600 hover:text-brand-700 font-medium transition-colors"
+                          >
+                            Detalhes
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </Card>
       </FadeIn>

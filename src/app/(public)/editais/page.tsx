@@ -126,9 +126,9 @@ export default async function EditaisPage({
       />
 
       {/* Conteúdo */}
-      <section className="bg-slate-50 py-10 sm:py-14">
+      <section className="bg-slate-50 py-6 sm:py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
             <FilterTabs
               tabs={tabs}
               activeKey={activeTab}

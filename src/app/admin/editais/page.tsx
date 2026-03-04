@@ -50,24 +50,25 @@ export default async function AdminEditaisPage({ searchParams }: Props) {
   return (
     <section>
       <FadeIn>
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Gestão de Editais</h1>
-            <p className="text-slate-600 mt-1">{total} edital(ais) encontrado(s)</p>
+        <div className="flex items-center justify-between gap-3 mb-4 sm:mb-6">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Gestão de Editais</h1>
+            <p className="text-xs sm:text-sm text-slate-600 mt-0.5 sm:mt-1">{total} edital(ais) encontrado(s)</p>
           </div>
-          <Button href="/admin/editais/novo">
-            <IconPlus className="h-4 w-4 mr-2" />
-            Novo Edital
+          <Button href="/admin/editais/novo" size="sm" className="sm:size-md">
+            <IconPlus className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Novo Edital</span>
+            <span className="sm:hidden">Novo</span>
           </Button>
         </div>
       </FadeIn>
 
       {/* Filtros por status */}
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div className="flex gap-2 mb-4 sm:mb-6 overflow-x-auto pb-2 sm:flex-wrap sm:overflow-visible sm:pb-0 scrollbar-hide">
         <Link
           href="/admin/editais"
           className={[
-            'px-3 py-1.5 rounded-full text-xs font-medium transition-colors min-h-[36px] inline-flex items-center',
+            'px-3 py-1.5 rounded-full text-xs font-medium transition-colors min-h-[36px] inline-flex items-center whitespace-nowrap shrink-0',
             !statusFilter
               ? 'bg-brand-600 text-white'
               : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
@@ -80,7 +81,7 @@ export default async function AdminEditaisPage({ searchParams }: Props) {
             key={status}
             href={`/admin/editais?status=${status}`}
             className={[
-              'px-3 py-1.5 rounded-full text-xs font-medium transition-colors min-h-[36px] inline-flex items-center',
+              'px-3 py-1.5 rounded-full text-xs font-medium transition-colors min-h-[36px] inline-flex items-center whitespace-nowrap shrink-0',
               statusFilter === status
                 ? 'bg-brand-600 text-white'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
@@ -102,7 +103,40 @@ export default async function AdminEditaisPage({ searchParams }: Props) {
         </Card>
       ) : (
         <>
-          <Card padding="sm" className="overflow-hidden">
+          {/* Mobile: cards */}
+          <div className="sm:hidden space-y-3">
+            {editais.map((edital) => (
+              <Link
+                key={edital.id}
+                href={`/admin/editais/${edital.id}`}
+                className="block overflow-hidden rounded-lg border border-slate-200 bg-white p-3.5 hover:bg-slate-50 transition-colors shadow-sm"
+              >
+                <p className="text-[13px] font-medium text-slate-900 leading-snug mb-2 line-clamp-2">{edital.titulo}</p>
+                <div className="flex items-center flex-wrap gap-1.5 mb-2.5 overflow-hidden">
+                  <Badge variant={editalStatusVariant[edital.status as EditalStatus]}>
+                    {editalStatusLabel[edital.status as EditalStatus]}
+                  </Badge>
+                  {edital.categorias.slice(0, 1).map((cat) => (
+                    <Badge key={cat} variant="neutral">{cat}</Badge>
+                  ))}
+                  {edital.categorias.length > 1 && (
+                    <Badge variant="neutral">+{edital.categorias.length - 1}</Badge>
+                  )}
+                </div>
+                <div className="flex items-center justify-between text-[11px] text-slate-500">
+                  <span>{edital.ano} · <span className="font-mono">
+                    {edital.valorTotal
+                      ? `R$ ${Number(edital.valorTotal).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+                      : '—'}
+                  </span></span>
+                  <span>{edital._count.inscricoes} inscr.</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          {/* Desktop: tabela */}
+          <Card padding="sm" className="overflow-hidden hidden sm:block">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -180,7 +214,7 @@ export default async function AdminEditaisPage({ searchParams }: Props) {
             currentPage={page}
             totalPages={totalPages}
             baseUrl={statusFilter ? `/admin/editais?status=${statusFilter}` : '/admin/editais'}
-            className="mt-6"
+            className="mt-4 sm:mt-6"
           />
         </>
       )}

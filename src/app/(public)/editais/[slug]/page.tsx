@@ -111,14 +111,14 @@ export default async function EditalPage({ params }: Props) {
         ]}
       >
         {/* Metadata no header */}
-        <div className="mt-4 flex flex-wrap items-center gap-3">
+        <div className="mt-3 sm:mt-4 flex flex-wrap items-center gap-2 sm:gap-3">
           <Badge variant={statusDisplay.badgeVariant} className="text-sm" dot>
             {statusDisplay.label}
           </Badge>
           {edital.categorias.map((cat) => (
             <span
               key={cat}
-              className="inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-sm font-medium text-white"
+              className="inline-flex items-center rounded-full bg-white/15 px-2.5 py-0.5 sm:px-3 sm:py-1 text-xs sm:text-sm font-medium text-white"
             >
               {cat}
             </span>
@@ -126,9 +126,9 @@ export default async function EditalPage({ params }: Props) {
         </div>
 
         {/* Destaques rápidos */}
-        <div className="mt-4 flex flex-wrap items-center gap-6 text-brand-100 text-sm">
+        <div className="mt-3 sm:mt-4 flex flex-wrap items-center gap-3 sm:gap-6 text-brand-100 text-sm">
           {edital.valorTotal && (
-            <span className="inline-flex items-center gap-2 text-lg font-semibold text-white">
+            <span className="inline-flex items-center gap-2 text-base sm:text-lg font-semibold text-white">
               <IconCurrency className="h-5 w-5 text-brand-200" />
               {formatCurrency(edital.valorTotal)}
             </span>
@@ -148,14 +148,14 @@ export default async function EditalPage({ params }: Props) {
       </PageHeader>
 
       {/* Conteúdo principal */}
-      <section className="bg-slate-50 py-10 sm:py-14">
+      <section className="bg-slate-50 py-6 sm:py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
             {/* Coluna principal (2/3) */}
-            <div className="lg:col-span-2 space-y-8">
+            <div className="lg:col-span-2 space-y-5 sm:space-y-8">
               {/* Resumo */}
               {edital.resumo && (
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8">
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 sm:p-8">
                   <div className="flex items-start gap-3 mb-4">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-50 text-brand-600 shrink-0">
                       <IconDocument className="h-5 w-5" />
@@ -174,7 +174,7 @@ export default async function EditalPage({ params }: Props) {
 
               {/* Cronograma / Timeline */}
               {cronograma.length > 0 && (
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8">
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 sm:p-8">
                   <div className="flex items-start gap-3 mb-6">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-50 text-accent-600 shrink-0">
                       <IconCalendar className="h-5 w-5" />
@@ -256,7 +256,7 @@ export default async function EditalPage({ params }: Props) {
 
               {/* Arquivos para download */}
               {edital.arquivos.length > 0 && (
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8">
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 sm:p-8">
                   <div className="flex items-start gap-3 mb-6">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-slate-600 shrink-0">
                       <IconDownload className="h-5 w-5" />
@@ -366,7 +366,7 @@ export default async function EditalPage({ params }: Props) {
 
               {/* Regras de Elegibilidade */}
               {edital.regrasElegibilidade && (
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8">
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 sm:p-8">
                   <div className="flex items-start gap-3 mb-4">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600 shrink-0">
                       <IconShield className="h-5 w-5" />
@@ -388,7 +388,7 @@ export default async function EditalPage({ params }: Props) {
 
               {/* Ações Afirmativas */}
               {edital.acoesAfirmativas && (
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8">
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 sm:p-8">
                   <div className="flex items-start gap-3 mb-4">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-rose-50 text-rose-600 shrink-0">
                       <IconHeart className="h-5 w-5" />
@@ -410,7 +410,7 @@ export default async function EditalPage({ params }: Props) {
 
               {/* FAQ do Edital */}
               {edital.faqItems.length > 0 && (
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8">
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 sm:p-8">
                   <div className="flex items-start gap-3 mb-6">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50 text-amber-600 shrink-0">
                       <IconQuestion className="h-5 w-5" />
@@ -426,7 +426,7 @@ export default async function EditalPage({ params }: Props) {
 
             {/* Sidebar (1/3) */}
             <aside className="lg:col-span-1">
-              <div className="sticky top-6 space-y-6">
+              <div className="sticky top-6 space-y-5 sm:space-y-6">
                 {/* CTA de inscrição */}
                 {isOpen && (
                   <div className="bg-gradient-to-br from-brand-600 to-brand-700 rounded-xl p-6 text-white shadow-lg">

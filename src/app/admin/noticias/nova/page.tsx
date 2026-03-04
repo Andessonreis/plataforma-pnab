@@ -14,7 +14,7 @@ export default async function NovaNoticiaPage() {
 
   return (
     <section>
-      <div className="mb-6">
+      <div className="mb-4 sm:mb-6">
         <Link
           href="/admin/noticias"
           className="text-sm text-brand-600 hover:text-brand-700 font-medium flex items-center gap-1 mb-2"
@@ -24,8 +24,8 @@ export default async function NovaNoticiaPage() {
           </svg>
           Voltar para Noticias
         </Link>
-        <h1 className="text-2xl font-bold text-slate-900">Nova Noticia</h1>
-        <p className="text-slate-600 mt-1">Preencha os dados da nova noticia.</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Nova Noticia</h1>
+        <p className="text-xs sm:text-sm text-slate-600 mt-1">Preencha os dados da nova noticia.</p>
       </div>
 
       <NoticiaForm />

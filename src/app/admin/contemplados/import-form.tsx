@@ -94,8 +94,8 @@ export function ImportForm({ editais }: ImportFormProps) {
   }))
 
   return (
-    <Card>
-      <h2 className="text-lg font-semibold text-slate-900 mb-4">Importar CSV</h2>
+    <Card padding="sm" className="sm:p-6">
+      <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Importar CSV</h2>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Selecao de edital */}

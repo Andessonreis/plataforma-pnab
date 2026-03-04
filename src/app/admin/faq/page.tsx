@@ -71,20 +71,21 @@ export default async function AdminFaqPage({ searchParams }: Props) {
   return (
     <section>
       <FadeIn>
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Gestão de FAQ</h1>
-            <p className="text-slate-600 mt-1">{total} item(ns) encontrado(s)</p>
+        <div className="flex items-center justify-between gap-3 mb-4 sm:mb-6">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Gestão de FAQ</h1>
+            <p className="text-xs sm:text-sm text-slate-600 mt-0.5 sm:mt-1">{total} item(ns)</p>
           </div>
-          <Button href="/admin/faq/novo">
-            <IconPlus className="h-4 w-4 mr-2" />
-            Novo Item
+          <Button href="/admin/faq/novo" size="sm">
+            <IconPlus className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Novo Item</span>
+            <span className="sm:hidden">Novo</span>
           </Button>
         </div>
       </FadeIn>
 
       {/* Filtros */}
-      <div className="flex flex-wrap gap-4 mb-6">
+      <div className="flex flex-wrap gap-3 sm:gap-4 mb-4 sm:mb-6">
         <div className="flex flex-wrap gap-2 items-center">
           <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Edital:</span>
           <Link
@@ -164,7 +165,31 @@ export default async function AdminFaqPage({ searchParams }: Props) {
         </Card>
       ) : (
         <>
-          <Card padding="sm" className="overflow-hidden">
+          {/* Mobile: cards */}
+          <div className="sm:hidden space-y-3">
+            {faqItems.map((item) => (
+              <Link
+                key={item.id}
+                href={`/admin/faq/${item.id}`}
+                className="block rounded-lg border border-slate-200 bg-white p-3.5 hover:bg-slate-50 transition-colors shadow-sm"
+              >
+                <div className="flex items-start justify-between gap-2 mb-1">
+                  <p className="text-sm font-medium text-slate-900 leading-snug line-clamp-2">{item.pergunta}</p>
+                  <Badge variant={item.publicado ? 'success' : 'neutral'}>
+                    {item.publicado ? 'Publicado' : 'Oculto'}
+                  </Badge>
+                </div>
+                <p className="text-xs text-slate-500 line-clamp-1 mb-2">{item.resposta}</p>
+                <div className="flex items-center justify-between text-[11px] text-slate-500">
+                  <span>{item.edital ? item.edital.titulo.slice(0, 25) + (item.edital.titulo.length > 25 ? '...' : '') : 'Geral'}</span>
+                  <span>Ordem: {item.ordem}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          {/* Desktop: tabela */}
+          <Card padding="sm" className="overflow-hidden hidden sm:block">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -223,7 +248,7 @@ export default async function AdminFaqPage({ searchParams }: Props) {
             currentPage={page}
             totalPages={totalPages}
             baseUrl={buildBaseUrl()}
-            className="mt-6"
+            className="mt-4 sm:mt-6"
           />
         </>
       )}

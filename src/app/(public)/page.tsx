@@ -91,7 +91,7 @@ export default async function HomePage() {
   return (
     <>
       {/* Hero */}
-      <section className="relative min-h-[540px] sm:min-h-[600px] text-white overflow-hidden">
+      <section className="relative min-h-[480px] sm:min-h-[600px] text-white overflow-hidden">
         <Image
           src="/images/hero-irece.jpg"
           alt="Cidade de Irecê — Cultura e tradição"
@@ -103,7 +103,7 @@ export default async function HomePage() {
 
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/55 to-black/40" />
 
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 sm:py-28 lg:py-32">
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-28 lg:py-32">
           <FadeIn direction="up" delay={0.1}>
             <div className="max-w-3xl">
               <Badge variant="warning" className="mb-6 text-sm">
@@ -138,8 +138,8 @@ export default async function HomePage() {
 
       {/* Barra de Números */}
       <section className="bg-white border-b border-slate-100">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-          <StaggerContainer className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8" staggerDelay={0.15}>
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          <StaggerContainer className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8" staggerDelay={0.15}>
             {[
               { value: String(editaisAbertos || '—'), label: 'Editais Abertos', color: 'text-brand-700' },
               { value: valorFormatado, label: 'Valor em Fomento', color: 'text-brand-700' },
@@ -147,8 +147,8 @@ export default async function HomePage() {
               { value: '100%', label: 'Online', color: 'text-accent-700' },
             ].map((item) => (
               <StaggerItem key={item.label} className="text-center">
-                <CountUp value={item.value} className={`text-2xl font-bold ${item.color}`} />
-                <p className="mt-1 text-sm text-slate-500">
+                <CountUp value={item.value} className={`text-xl sm:text-2xl font-bold ${item.color}`} />
+                <p className="mt-1 text-xs sm:text-sm text-slate-500">
                   {item.label}
                 </p>
               </StaggerItem>
@@ -158,7 +158,7 @@ export default async function HomePage() {
       </section>
 
       {/* Como funciona */}
-      <section className="bg-white py-16 sm:py-20">
+      <section className="bg-white py-12 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <FadeIn className="mb-12">
             <p className="section-label text-brand-600 mb-2">Como funciona</p>
@@ -232,7 +232,7 @@ export default async function HomePage() {
       </section>
 
       {/* Editais em destaque */}
-      <section className="bg-slate-50 py-16 sm:py-20">
+      <section className="bg-slate-50 py-12 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <FadeIn>
             <div className="flex items-center justify-between mb-10">
@@ -322,12 +322,12 @@ export default async function HomePage() {
       </section>
 
       {/* Transparência + Atendimento */}
-      <section className="bg-white py-16 sm:py-20">
+      <section className="bg-white py-12 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <StaggerContainer className="grid grid-cols-1 lg:grid-cols-2 gap-8" staggerDelay={0.2}>
+          <StaggerContainer className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8" staggerDelay={0.2}>
             {/* Transparência */}
             <StaggerItem>
-              <div className="relative bg-brand-50/50 rounded-2xl p-8 lg:p-10 border border-brand-100 overflow-hidden group hover:shadow-lg hover:shadow-brand-100/50 transition-shadow duration-300">
+              <div className="relative bg-brand-50/50 rounded-2xl p-6 sm:p-8 lg:p-10 border border-brand-100 overflow-hidden group hover:shadow-lg hover:shadow-brand-100/50 transition-shadow duration-300">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-400 to-brand-600" />
                 <div className="flex items-start gap-4 mb-4">
                   <div className="flex-shrink-0 h-12 w-12 rounded-xl bg-brand-100 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
@@ -354,7 +354,7 @@ export default async function HomePage() {
 
             {/* Atendimento */}
             <StaggerItem>
-              <div className="relative bg-accent-50/50 rounded-2xl p-8 lg:p-10 border border-accent-100 overflow-hidden group hover:shadow-lg hover:shadow-accent-100/50 transition-shadow duration-300">
+              <div className="relative bg-accent-50/50 rounded-2xl p-6 sm:p-8 lg:p-10 border border-accent-100 overflow-hidden group hover:shadow-lg hover:shadow-accent-100/50 transition-shadow duration-300">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-accent-400 to-accent-600" />
                 <div className="flex items-start gap-4 mb-4">
                   <div className="flex-shrink-0 h-12 w-12 rounded-xl bg-accent-100 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">

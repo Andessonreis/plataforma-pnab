@@ -20,7 +20,7 @@ export default async function NovoFaqPage() {
 
   return (
     <section>
-      <div className="mb-6">
+      <div className="mb-4 sm:mb-6">
         <Link
           href="/admin/faq"
           className="text-sm text-brand-600 hover:text-brand-700 font-medium flex items-center gap-1 mb-2"
@@ -30,8 +30,8 @@ export default async function NovoFaqPage() {
           </svg>
           Voltar para FAQ
         </Link>
-        <h1 className="text-2xl font-bold text-slate-900">Novo Item de FAQ</h1>
-        <p className="text-slate-600 mt-1">Preencha a pergunta e a resposta.</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Novo Item de FAQ</h1>
+        <p className="text-xs sm:text-sm text-slate-600 mt-1">Preencha a pergunta e a resposta.</p>
       </div>
 
       <FaqForm editais={editais} />

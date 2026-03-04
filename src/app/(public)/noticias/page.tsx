@@ -73,11 +73,11 @@ export default async function NoticiasPage({ searchParams }: NoticiasPageProps) 
         ]}
       />
 
-      <section className="bg-slate-50 py-12 sm:py-16">
+      <section className="bg-slate-50 py-6 sm:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           {/* Contador */}
           <FadeIn>
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center justify-between mb-6 sm:mb-8">
               <p className="text-sm text-slate-500">
                 {total} {total === 1 ? 'notícia publicada' : 'notícias publicadas'}
               </p>
@@ -97,10 +97,10 @@ export default async function NoticiasPage({ searchParams }: NoticiasPageProps) 
                 <FadeIn delay={0.1}>
                   <Link
                     href={`/noticias/${featured.slug}`}
-                    className="group block bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden mb-10"
+                    className="group block bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden mb-8 sm:mb-10"
                   >
                     <div className="grid grid-cols-1 lg:grid-cols-2">
-                      <div className="relative h-64 lg:h-full min-h-[300px] overflow-hidden">
+                      <div className="relative h-48 sm:h-64 lg:h-full min-h-[200px] sm:min-h-[300px] overflow-hidden">
                         {featured.imagemUrl ? (
                           <Image
                             src={featured.imagemUrl}
@@ -125,7 +125,7 @@ export default async function NoticiasPage({ searchParams }: NoticiasPageProps) 
                         </div>
                       </div>
 
-                      <div className="p-8 lg:p-10 flex flex-col justify-center">
+                      <div className="p-5 sm:p-8 lg:p-10 flex flex-col justify-center">
                         {featured.tags.length > 0 && (
                           <div className="flex flex-wrap gap-1.5 mb-4">
                             {featured.tags.slice(0, 4).map((tag) => (
@@ -136,7 +136,7 @@ export default async function NoticiasPage({ searchParams }: NoticiasPageProps) 
                           </div>
                         )}
 
-                        <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 group-hover:text-brand-700 transition-colors leading-tight">
+                        <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 group-hover:text-brand-700 transition-colors leading-tight">
                           {featured.titulo}
                         </h2>
 
@@ -235,7 +235,7 @@ function NoticiaCard({ noticia }: { noticia: NoticiaData }) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/15 to-transparent" />
       </div>
 
-      <div className="p-6 flex flex-col flex-1">
+      <div className="p-4 sm:p-6 flex flex-col flex-1">
         {noticia.tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-3">
             {noticia.tags.slice(0, 3).map((tag) => (

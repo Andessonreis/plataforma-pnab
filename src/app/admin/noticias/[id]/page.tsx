@@ -35,7 +35,7 @@ export default async function EditarNoticiaPage({ params }: Props) {
 
   return (
     <section>
-      <div className="mb-6">
+      <div className="mb-4 sm:mb-6">
         <Link
           href="/admin/noticias"
           className="text-sm text-brand-600 hover:text-brand-700 font-medium flex items-center gap-1 mb-2"
@@ -45,10 +45,10 @@ export default async function EditarNoticiaPage({ params }: Props) {
           </svg>
           Voltar para Noticias
         </Link>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Editar Noticia</h1>
-            <p className="text-slate-600 mt-1">{noticia.titulo}</p>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Editar Noticia</h1>
+            <p className="text-xs sm:text-sm text-slate-600 mt-1 line-clamp-1">{noticia.titulo}</p>
           </div>
           <DeleteNoticiaButton noticiaId={noticia.id} noticiaTitle={noticia.titulo} />
         </div>

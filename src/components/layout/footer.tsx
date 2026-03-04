@@ -52,7 +52,7 @@ function Footer() {
 
       {/* Conteúdo principal */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-10 py-12 sm:grid-cols-2 lg:grid-cols-12">
+        <div className="grid grid-cols-1 gap-8 py-8 sm:grid-cols-2 sm:gap-10 sm:py-12 lg:grid-cols-12">
           {/* Coluna 1 — Institucional */}
           <div className="lg:col-span-4">
             <Link href="/" className="flex items-center gap-3 mb-5 group">
@@ -112,58 +112,61 @@ function Footer() {
             </div>
           </div>
 
-          {/* Coluna 2 — Navegação */}
-          <div className="lg:col-span-3">
-            <h2 className="text-[11px] font-semibold text-white uppercase tracking-widest mb-4">
-              Navegação
-            </h2>
-            <ul className="space-y-2">
-              {navigationLinks.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-slate-400 hover:text-white hover:pl-1 transition-all duration-150"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Colunas de links — lado a lado no mobile */}
+          <div className="grid grid-cols-2 gap-6 sm:contents">
+            {/* Coluna 2 — Navegação */}
+            <div className="lg:col-span-3">
+              <h2 className="text-[11px] font-semibold text-white uppercase tracking-widest mb-3 sm:mb-4">
+                Navegação
+              </h2>
+              <ul className="space-y-1.5 sm:space-y-2">
+                {navigationLinks.map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
+                      className="text-sm text-slate-400 hover:text-white hover:pl-1 transition-all duration-150"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-          {/* Coluna 3 — Área do Proponente + Legal */}
-          <div className="lg:col-span-3">
-            <h2 className="text-[11px] font-semibold text-white uppercase tracking-widest mb-4">
-              Área do Proponente
-            </h2>
-            <ul className="space-y-2">
-              {proponenteLinks.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-slate-400 hover:text-white hover:pl-1 transition-all duration-150"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            {/* Coluna 3 — Área do Proponente + Legal */}
+            <div className="lg:col-span-3">
+              <h2 className="text-[11px] font-semibold text-white uppercase tracking-widest mb-3 sm:mb-4">
+                Área do Proponente
+              </h2>
+              <ul className="space-y-1.5 sm:space-y-2">
+                {proponenteLinks.map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
+                      className="text-sm text-slate-400 hover:text-white hover:pl-1 transition-all duration-150"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
 
-            <h2 className="text-[11px] font-semibold text-white uppercase tracking-widest mb-4 mt-8">
-              Legal
-            </h2>
-            <ul className="space-y-2">
-              {legalLinks.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-slate-400 hover:text-white hover:pl-1 transition-all duration-150"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+              <h2 className="text-[11px] font-semibold text-white uppercase tracking-widest mb-3 mt-6 sm:mb-4 sm:mt-8">
+                Legal
+              </h2>
+              <ul className="space-y-1.5 sm:space-y-2">
+                {legalLinks.map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
+                      className="text-sm text-slate-400 hover:text-white hover:pl-1 transition-all duration-150"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
 
           {/* Coluna 4 — Selos e Badges */}
@@ -171,38 +174,38 @@ function Footer() {
             <h2 className="text-[11px] font-semibold text-white uppercase tracking-widest mb-4">
               Certificações
             </h2>
-            <div className="space-y-3">
-              <div className="flex items-center gap-3 rounded-lg bg-white/[0.04] border border-white/[0.06] px-3.5 py-3 group hover:bg-white/[0.06] transition-colors">
-                <span className="flex h-8 w-8 items-center justify-center rounded-md bg-brand-500/10 shrink-0">
-                  <svg className="h-4 w-4 text-brand-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
+            <div className="flex flex-wrap gap-2 sm:flex-col sm:gap-3">
+              <div className="flex items-center gap-2.5 rounded-lg bg-white/[0.04] border border-white/[0.06] px-3 py-2.5 sm:px-3.5 sm:py-3 group hover:bg-white/[0.06] transition-colors">
+                <span className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-md bg-brand-500/10 shrink-0">
+                  <svg className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-brand-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0 0 12 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75Z" />
                   </svg>
                 </span>
                 <div>
                   <p className="text-xs font-semibold text-slate-200">PNAB</p>
-                  <p className="text-[10px] text-slate-500 mt-0.5">Lei Aldir Blanc</p>
+                  <p className="text-[10px] text-slate-500 mt-0.5 hidden sm:block">Lei Aldir Blanc</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 rounded-lg bg-white/[0.04] border border-white/[0.06] px-3.5 py-3 group hover:bg-white/[0.06] transition-colors">
-                <span className="flex h-8 w-8 items-center justify-center rounded-md bg-blue-500/10 shrink-0">
-                  <svg className="h-4 w-4 text-blue-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
+              <div className="flex items-center gap-2.5 rounded-lg bg-white/[0.04] border border-white/[0.06] px-3 py-2.5 sm:px-3.5 sm:py-3 group hover:bg-white/[0.06] transition-colors">
+                <span className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-md bg-blue-500/10 shrink-0">
+                  <svg className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
                   </svg>
                 </span>
                 <div>
                   <p className="text-xs font-semibold text-slate-200">WCAG AA</p>
-                  <p className="text-[10px] text-slate-500 mt-0.5">Acessibilidade</p>
+                  <p className="text-[10px] text-slate-500 mt-0.5 hidden sm:block">Acessibilidade</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 rounded-lg bg-white/[0.04] border border-white/[0.06] px-3.5 py-3 group hover:bg-white/[0.06] transition-colors">
-                <span className="flex h-8 w-8 items-center justify-center rounded-md bg-accent-500/10 shrink-0">
-                  <svg className="h-4 w-4 text-accent-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
+              <div className="flex items-center gap-2.5 rounded-lg bg-white/[0.04] border border-white/[0.06] px-3 py-2.5 sm:px-3.5 sm:py-3 group hover:bg-white/[0.06] transition-colors">
+                <span className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-md bg-accent-500/10 shrink-0">
+                  <svg className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-accent-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25m18 0A2.25 2.25 0 0 0 18.75 3H5.25A2.25 2.25 0 0 0 3 5.25m18 0V12a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 12V5.25" />
                   </svg>
                 </span>
                 <div>
                   <p className="text-xs font-semibold text-slate-200">100% Digital</p>
-                  <p className="text-[10px] text-slate-500 mt-0.5">Processos online</p>
+                  <p className="text-[10px] text-slate-500 mt-0.5 hidden sm:block">Processos online</p>
                 </div>
               </div>
             </div>
@@ -213,8 +216,8 @@ function Footer() {
       {/* Barra inferior */}
       <div className="border-t border-white/[0.06]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
-            <p>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-3 text-xs text-slate-500">
+            <p className="text-center sm:text-left">
               &copy; {currentYear} Secretaria de Arte e Cultura — Prefeitura Municipal de Irecê/BA
             </p>
             <p className="flex items-center gap-1.5">

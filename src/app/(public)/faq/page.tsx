@@ -97,7 +97,7 @@ export default async function FaqPage({ searchParams }: FaqPageProps) {
       />
 
       {/* Conteúdo */}
-      <section className="bg-slate-50 py-12 sm:py-16">
+      <section className="bg-slate-50 py-6 sm:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           {!hasAnyContent ? (
             <EmptyState
@@ -107,9 +107,9 @@ export default async function FaqPage({ searchParams }: FaqPageProps) {
               action={{ label: 'Entrar em contato', href: '/contato' }}
             />
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
               {/* Coluna principal (2/3) */}
-              <div className="lg:col-span-2 space-y-10">
+              <div className="lg:col-span-2 space-y-8 sm:space-y-10">
                 {/* Dúvidas gerais */}
                 {generalItems.length > 0 && (
                   <FadeIn delay={0.1}>

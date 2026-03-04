@@ -11,9 +11,9 @@ export default async function ProponenteLayout({ children }: { children: React.R
     <div className="flex min-h-screen bg-slate-50">
       <ProponenteSidebar userName={session.user.name ?? 'Proponente'} />
 
-      <div className="flex-1 lg:ml-64">
+      <div className="flex-1 min-w-0 lg:ml-64">
         {/* Barra superior */}
-        <header className="sticky top-0 z-30 flex items-center justify-between bg-white/95 backdrop-blur-sm border-b border-slate-200 shadow-sm px-4 py-3 lg:px-6">
+        <header className="lg:sticky lg:top-0 z-30 flex items-center justify-between bg-white/95 backdrop-blur-sm border-b border-slate-200 shadow-sm px-4 py-2 lg:px-6 lg:py-3">
           <label
             htmlFor="sidebar-toggle"
             className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg text-slate-600 hover:bg-slate-100 lg:hidden cursor-pointer"
@@ -32,7 +32,7 @@ export default async function ProponenteLayout({ children }: { children: React.R
           </div>
         </header>
 
-        <main className="p-4 lg:p-6">
+        <main className="p-4 pb-24 lg:p-6 lg:pb-8">
           {children}
         </main>
       </div>

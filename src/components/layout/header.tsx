@@ -44,7 +44,10 @@ function Header() {
       <div className="bg-brand-950 text-white/90">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-9 items-center justify-between text-xs">
-            <span className="font-medium tracking-wide">Secretaria de Arte e Cultura — Irecê/BA</span>
+            <span className="font-medium tracking-wide truncate mr-2">
+              <span className="sm:hidden">Sec. Arte e Cultura — Irecê/BA</span>
+              <span className="hidden sm:inline">Secretaria de Arte e Cultura — Irecê/BA</span>
+            </span>
             <AccessibilityControls />
           </div>
         </div>
@@ -65,11 +68,11 @@ function Header() {
                   className="h-9 w-9 object-contain"
                 />
               </div>
-              <div className="hidden sm:block">
+              <div>
                 <p className="text-sm font-bold text-slate-900 leading-tight group-hover:text-brand-700 transition-colors">
                   Portal PNAB
                 </p>
-                <p className="text-[11px] text-slate-400 leading-tight">Irecê/BA</p>
+                <p className="text-[11px] text-slate-400 leading-tight hidden sm:block">Irecê/BA</p>
               </div>
             </Link>
 

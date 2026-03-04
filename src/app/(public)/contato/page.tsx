@@ -43,13 +43,13 @@ export default async function ContatoPage() {
       />
 
       {/* Conteúdo */}
-      <section className="bg-slate-50 py-12 sm:py-16">
+      <section className="bg-slate-50 py-6 sm:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
             {/* Formulário (2/3) */}
             <div className="lg:col-span-2">
               <FadeIn delay={0.1}>
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8">
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 sm:p-8">
                   <div className="flex items-start gap-3 mb-6">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-50 text-brand-600 shrink-0">
                       <IconMail className="h-5 w-5" />
@@ -71,9 +71,9 @@ export default async function ContatoPage() {
             {/* Sidebar (1/3) */}
             <aside className="lg:col-span-1">
               <FadeIn delay={0.2} direction="right">
-                <div className="sticky top-6 space-y-6">
+                <div className="sticky top-6 space-y-5 sm:space-y-6">
                   {/* Informações de contato */}
-                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 sm:p-6">
                     <h3 className="text-base font-semibold text-slate-900 mb-5">
                       Secretaria de Arte e Cultura
                     </h3>
@@ -140,7 +140,7 @@ export default async function ContatoPage() {
                   </div>
 
                   {/* FAQ rápido */}
-                  <div className="bg-accent-50 rounded-xl border border-accent-200 p-6">
+                  <div className="bg-accent-50 rounded-xl border border-accent-200 p-5 sm:p-6">
                     <div className="flex items-start gap-3 mb-3">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-100 text-accent-600">
                         <IconQuestion className="h-4 w-4" />

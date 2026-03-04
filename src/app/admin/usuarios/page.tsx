@@ -85,15 +85,15 @@ export default async function AdminUsuariosPage({ searchParams }: Props) {
   return (
     <section>
       <FadeIn>
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-slate-900">Usuários</h1>
-          <p className="text-slate-600 mt-1">{total} usuário(s) encontrado(s)</p>
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Usuários</h1>
+          <p className="text-xs sm:text-sm text-slate-600 mt-0.5 sm:mt-1">{total} usuário(s)</p>
         </div>
       </FadeIn>
 
       {/* Filtros */}
-      <Card className="mb-6" padding="md">
-        <form method="get" action="/admin/usuarios" className="flex flex-wrap gap-4 items-end">
+      <Card padding="sm" className="mb-4 sm:mb-6 sm:p-6">
+        <form method="get" action="/admin/usuarios" className="space-y-4 sm:space-y-0 sm:flex sm:flex-wrap sm:gap-4 sm:items-end">
           <div className="flex-1 min-w-[200px]">
             <label htmlFor="search" className="block text-sm font-medium text-slate-700 mb-1.5">
               Buscar
@@ -148,7 +148,35 @@ export default async function AdminUsuariosPage({ searchParams }: Props) {
         </Card>
       ) : (
         <>
-          <Card padding="sm" className="overflow-hidden">
+          {/* Mobile: cards */}
+          <div className="sm:hidden space-y-3">
+            {users.map((user) => (
+              <div
+                key={user.id}
+                className="rounded-lg border border-slate-200 bg-white p-3.5 shadow-sm"
+              >
+                <div className="flex items-start justify-between gap-2 mb-1.5">
+                  <p className="text-sm font-medium text-slate-900 leading-snug">{user.nome}</p>
+                  <Badge variant={roleBadgeVariant[user.role]}>
+                    {roleLabels[user.role]}
+                  </Badge>
+                </div>
+                <p className="text-xs text-slate-500 mb-1">{user.email}</p>
+                <div className="flex items-center justify-between text-[11px] text-slate-500">
+                  <span className="font-mono">{user.cpfCnpj ?? '—'}</span>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={user.ativo ? 'success' : 'error'}>
+                      {user.ativo ? 'Ativo' : 'Inativo'}
+                    </Badge>
+                    <span>{new Date(user.createdAt).toLocaleDateString('pt-BR')}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop: tabela */}
+          <Card padding="sm" className="overflow-hidden hidden sm:block">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -197,7 +225,7 @@ export default async function AdminUsuariosPage({ searchParams }: Props) {
             currentPage={page}
             totalPages={totalPages}
             baseUrl={baseUrl}
-            className="mt-6"
+            className="mt-4 sm:mt-6"
           />
         </>
       )}

@@ -90,10 +90,10 @@ export default async function AdminLogsPage({ searchParams }: Props) {
     <section>
       <FadeIn>
         {/* Cabeçalho */}
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Logs de Auditoria</h1>
-            <p className="text-slate-600 mt-1">
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Logs de Auditoria</h1>
+            <p className="text-xs sm:text-sm text-slate-600 mt-0.5 sm:mt-1">
               {total} registro(s) encontrado(s) &middot; Retenção: {retentionDays} dias
             </p>
           </div>
@@ -102,8 +102,8 @@ export default async function AdminLogsPage({ searchParams }: Props) {
       </FadeIn>
 
       {/* Filtros */}
-      <Card className="mb-6" padding="md">
-        <form method="get" action="/admin/logs" className="flex flex-wrap gap-4 items-end">
+      <Card padding="sm" className="mb-4 sm:mb-6 sm:p-6">
+        <form method="get" action="/admin/logs" className="space-y-4 sm:space-y-0 sm:flex sm:flex-wrap sm:gap-4 sm:items-end">
           <div>
             <label htmlFor="action" className="block text-sm font-medium text-slate-700 mb-1.5">
               Ação
@@ -189,7 +189,42 @@ export default async function AdminLogsPage({ searchParams }: Props) {
         </Card>
       ) : (
         <>
-          <Card padding="sm" className="overflow-hidden">
+          {/* Mobile: cards */}
+          <div className="sm:hidden space-y-3">
+            {logs.map((log) => (
+              <div
+                key={log.id}
+                className="rounded-lg border border-slate-200 bg-white p-3.5 shadow-sm"
+              >
+                <div className="flex items-start justify-between gap-2 mb-1.5">
+                  <p className="text-sm font-medium text-slate-900 leading-snug">
+                    {log.user?.nome ?? 'Sistema'}
+                  </p>
+                  <Badge variant={actionBadgeVariant(log.action)}>
+                    {ACTION_LABELS[log.action] ?? log.action}
+                  </Badge>
+                </div>
+                {log.entity && (
+                  <p className="text-xs text-slate-600 mb-1">
+                    {log.entity}
+                    {log.entityId && <span className="text-slate-400 ml-1">#{log.entityId.slice(0, 8)}</span>}
+                  </p>
+                )}
+                <div className="flex items-center justify-between text-[11px] text-slate-500">
+                  <span>
+                    {new Date(log.createdAt).toLocaleDateString('pt-BR', {
+                      day: '2-digit', month: '2-digit', year: 'numeric',
+                      hour: '2-digit', minute: '2-digit',
+                    })}
+                  </span>
+                  <span className="font-mono">{log.ip ?? '—'}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop: tabela */}
+          <Card padding="sm" className="overflow-hidden hidden sm:block">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -261,7 +296,7 @@ export default async function AdminLogsPage({ searchParams }: Props) {
             currentPage={page}
             totalPages={totalPages}
             baseUrl={baseUrl}
-            className="mt-6"
+            className="mt-4 sm:mt-6"
           />
         </>
       )}

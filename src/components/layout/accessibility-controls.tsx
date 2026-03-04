@@ -79,7 +79,7 @@ function AccessibilityControls() {
   }
 
   return (
-    <div className="hidden sm:flex items-center gap-1">
+    <div className="flex items-center gap-0.5 sm:gap-1">
       <button
         type="button"
         className="inline-flex items-center justify-center rounded px-2 py-1 text-[11px] font-medium text-white/80 hover:text-white hover:bg-white/10 transition-colors min-h-[28px]"
@@ -112,7 +112,7 @@ function AccessibilityControls() {
         <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
         </svg>
-        Contraste
+        <span className="hidden sm:inline">Contraste</span>
       </button>
     </div>
   )

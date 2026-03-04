@@ -58,16 +58,16 @@ export default async function ContempladosPage() {
   return (
     <section>
       <FadeIn>
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-slate-900">Importar Contemplados</h1>
-          <p className="text-slate-600 mt-1">
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Importar Contemplados</h1>
+          <p className="text-xs sm:text-sm text-slate-600 mt-1">
             Importe projetos contemplados a partir de um arquivo CSV vinculado a um edital.
           </p>
         </div>
       </FadeIn>
 
       {/* Resumo */}
-      <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+      <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
         <StaggerItem>
           <StatCard
             icon={<IconCheck className="h-8 w-8" />}
@@ -120,70 +120,102 @@ export default async function ContempladosPage() {
       </StaggerContainer>
 
       {/* Formulário de importação */}
-      <div className="mb-8">
+      <div className="mb-6 sm:mb-8">
         <ImportForm editais={editaisOptions} />
       </div>
 
-      {/* Tabela de projetos existentes */}
+      {/* Projetos existentes */}
       <FadeIn delay={0.2}>
-        <Card>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-slate-900">Projetos Apoiados Recentes</h2>
-            <Badge variant="neutral">{totalContemplados} total</Badge>
-          </div>
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
+          <h2 className="text-base sm:text-lg font-semibold text-slate-900">Projetos Apoiados Recentes</h2>
+          <Badge variant="neutral">{totalContemplados} total</Badge>
+        </div>
 
-          {recentProjetos.length === 0 ? (
+        {recentProjetos.length === 0 ? (
+          <Card padding="sm" className="sm:p-6">
             <EmptyState
               icon={<IconCheck className="h-8 w-8 text-slate-400" />}
               title="Nenhum projeto apoiado"
               description="Importe contemplados a partir de um CSV."
             />
-          ) : (
-            <div className="overflow-x-auto -mx-6">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-slate-200 text-left">
-                    <th className="px-6 py-3 font-medium text-slate-600">Inscrição</th>
-                    <th className="px-6 py-3 font-medium text-slate-600">Proponente</th>
-                    <th className="px-6 py-3 font-medium text-slate-600">Edital</th>
-                    <th className="px-6 py-3 font-medium text-slate-600 text-right">Valor</th>
-                    <th className="px-6 py-3 font-medium text-slate-600">Status</th>
-                    <th className="px-6 py-3 font-medium text-slate-600">Data</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {recentProjetos.map((projeto) => (
-                    <tr key={projeto.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-3 font-mono text-xs text-slate-700">
-                        {projeto.inscricao.numero}
-                      </td>
-                      <td className="px-6 py-3 text-slate-900">
-                        {projeto.inscricao.proponente.nome}
-                      </td>
-                      <td className="px-6 py-3 text-slate-600 max-w-[200px] truncate">
-                        {projeto.inscricao.edital.titulo}
-                      </td>
-                      <td className="px-6 py-3 text-right font-medium text-slate-900">
-                        {Number(projeto.valorAprovado).toLocaleString('pt-BR', {
-                          style: 'currency',
-                          currency: 'BRL',
-                        })}
-                      </td>
-                      <td className="px-6 py-3">
-                        <Badge variant={statusExecucaoVariant[projeto.statusExecucao] ?? 'neutral'}>
-                          {statusExecucaoLabel[projeto.statusExecucao] ?? projeto.statusExecucao}
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-3 text-xs text-slate-500">
-                        {new Date(projeto.createdAt).toLocaleDateString('pt-BR')}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          </Card>
+        ) : (
+          <>
+            {/* Mobile: cards */}
+            <div className="sm:hidden space-y-3">
+              {recentProjetos.map((projeto) => (
+                <div
+                  key={projeto.id}
+                  className="rounded-lg border border-slate-200 bg-white p-3.5 shadow-sm"
+                >
+                  <div className="flex items-start justify-between gap-2 mb-1.5">
+                    <p className="text-sm font-medium text-slate-900 leading-snug">{projeto.inscricao.proponente.nome}</p>
+                    <Badge variant={statusExecucaoVariant[projeto.statusExecucao] ?? 'neutral'}>
+                      {statusExecucaoLabel[projeto.statusExecucao] ?? projeto.statusExecucao}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-slate-500 leading-snug mb-2 line-clamp-1">{projeto.inscricao.edital.titulo}</p>
+                  <div className="flex items-center justify-between text-[11px] text-slate-500">
+                    <span className="font-mono">{projeto.inscricao.numero}</span>
+                    <span className="font-medium text-slate-900 text-xs">
+                      {Number(projeto.valorAprovado).toLocaleString('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                      })}
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
-          )}
-        </Card>
+
+            {/* Desktop: tabela */}
+            <Card padding="sm" className="overflow-hidden hidden sm:block">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-200 text-left">
+                      <th className="px-4 py-3 font-medium text-slate-600">Inscrição</th>
+                      <th className="px-4 py-3 font-medium text-slate-600">Proponente</th>
+                      <th className="px-4 py-3 font-medium text-slate-600">Edital</th>
+                      <th className="px-4 py-3 font-medium text-slate-600 text-right">Valor</th>
+                      <th className="px-4 py-3 font-medium text-slate-600">Status</th>
+                      <th className="px-4 py-3 font-medium text-slate-600">Data</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {recentProjetos.map((projeto) => (
+                      <tr key={projeto.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-4 py-3 font-mono text-xs text-slate-700">
+                          {projeto.inscricao.numero}
+                        </td>
+                        <td className="px-4 py-3 text-slate-900">
+                          {projeto.inscricao.proponente.nome}
+                        </td>
+                        <td className="px-4 py-3 text-slate-600 max-w-[200px] truncate">
+                          {projeto.inscricao.edital.titulo}
+                        </td>
+                        <td className="px-4 py-3 text-right font-medium text-slate-900">
+                          {Number(projeto.valorAprovado).toLocaleString('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL',
+                          })}
+                        </td>
+                        <td className="px-4 py-3">
+                          <Badge variant={statusExecucaoVariant[projeto.statusExecucao] ?? 'neutral'}>
+                            {statusExecucaoLabel[projeto.statusExecucao] ?? projeto.statusExecucao}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3 text-xs text-slate-500">
+                          {new Date(projeto.createdAt).toLocaleDateString('pt-BR')}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          </>
+        )}
       </FadeIn>
     </section>
   )

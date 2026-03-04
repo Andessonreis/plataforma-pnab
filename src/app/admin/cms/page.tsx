@@ -35,14 +35,15 @@ export default async function AdminCmsPage({ searchParams }: Props) {
   return (
     <section>
       <FadeIn>
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Páginas Institucionais</h1>
-            <p className="text-slate-600 mt-1">{total} página(s) encontrada(s)</p>
+        <div className="flex items-center justify-between gap-3 mb-4 sm:mb-6">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Páginas Institucionais</h1>
+            <p className="text-xs sm:text-sm text-slate-600 mt-0.5 sm:mt-1">{total} página(s)</p>
           </div>
-          <Button href="/admin/cms/nova">
-            <IconPlus className="h-4 w-4 mr-2" />
-            Nova Página
+          <Button href="/admin/cms/nova" size="sm">
+            <IconPlus className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Nova Página</span>
+            <span className="sm:hidden">Nova</span>
           </Button>
         </div>
       </FadeIn>
@@ -58,7 +59,30 @@ export default async function AdminCmsPage({ searchParams }: Props) {
         </Card>
       ) : (
         <>
-          <Card padding="sm" className="overflow-hidden">
+          {/* Mobile: cards */}
+          <div className="sm:hidden space-y-3">
+            {pages.map((cmsPage) => (
+              <Link
+                key={cmsPage.id}
+                href={`/admin/cms/${cmsPage.id}`}
+                className="block rounded-lg border border-slate-200 bg-white p-3.5 hover:bg-slate-50 transition-colors shadow-sm"
+              >
+                <div className="flex items-start justify-between gap-2 mb-1.5">
+                  <p className="text-sm font-medium text-slate-900 leading-snug">{cmsPage.titulo}</p>
+                  <Badge variant={cmsPage.publicado ? 'success' : 'neutral'}>
+                    {cmsPage.publicado ? 'Publicada' : 'Rascunho'}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between text-[11px] text-slate-500">
+                  <span className="font-mono">{cmsPage.slug}</span>
+                  <span>{new Date(cmsPage.updatedAt).toLocaleDateString('pt-BR')}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          {/* Desktop: tabela */}
+          <Card padding="sm" className="overflow-hidden hidden sm:block">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -123,7 +147,7 @@ export default async function AdminCmsPage({ searchParams }: Props) {
             currentPage={page}
             totalPages={totalPages}
             baseUrl="/admin/cms"
-            className="mt-6"
+            className="mt-4 sm:mt-6"
           />
         </>
       )}

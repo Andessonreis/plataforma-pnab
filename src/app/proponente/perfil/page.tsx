@@ -47,17 +47,17 @@ export default async function ProfilePage() {
     <section>
       <FadeIn>
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-slate-900">Meu Perfil</h1>
-          <p className="text-slate-600 mt-1">Gerencie suas informações pessoais.</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Meu Perfil</h1>
+          <p className="text-sm text-slate-600 mt-1">Gerencie suas informações pessoais.</p>
         </div>
       </FadeIn>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Resumo */}
         <FadeIn delay={0.1}>
           <Card>
             <div className="text-center">
-              <div className="h-20 w-20 rounded-full bg-gradient-to-br from-brand-100 to-brand-200 text-brand-700 flex items-center justify-center text-2xl font-bold mx-auto">
+              <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-gradient-to-br from-brand-100 to-brand-200 text-brand-700 flex items-center justify-center text-xl sm:text-2xl font-bold mx-auto">
                 {user.nome.charAt(0).toUpperCase()}
               </div>
               <h2 className="text-lg font-semibold text-slate-900 mt-3">{user.nome}</h2>

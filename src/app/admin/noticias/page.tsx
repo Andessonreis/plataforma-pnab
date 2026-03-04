@@ -49,20 +49,21 @@ export default async function AdminNoticiasPage({ searchParams }: Props) {
   return (
     <section>
       <FadeIn>
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Gestão de Notícias</h1>
-            <p className="text-slate-600 mt-1">{total} notícia(s) encontrada(s)</p>
+        <div className="flex items-center justify-between gap-3 mb-4 sm:mb-6">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Gestão de Notícias</h1>
+            <p className="text-xs sm:text-sm text-slate-600 mt-0.5 sm:mt-1">{total} notícia(s)</p>
           </div>
-          <Button href="/admin/noticias/nova">
-            <IconPlus className="h-4 w-4 mr-2" />
-            Nova Notícia
+          <Button href="/admin/noticias/nova" size="sm">
+            <IconPlus className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Nova Notícia</span>
+            <span className="sm:hidden">Nova</span>
           </Button>
         </div>
       </FadeIn>
 
       {/* Filtros por status */}
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div className="flex flex-wrap gap-2 mb-4 sm:mb-6">
         {statusOptions.map((opt) => (
           <Link
             key={opt.value}
@@ -90,7 +91,39 @@ export default async function AdminNoticiasPage({ searchParams }: Props) {
         </Card>
       ) : (
         <>
-          <Card padding="sm" className="overflow-hidden">
+          {/* Mobile: cards */}
+          <div className="sm:hidden space-y-3">
+            {noticias.map((noticia) => (
+              <Link
+                key={noticia.id}
+                href={`/admin/noticias/${noticia.id}`}
+                className="block rounded-lg border border-slate-200 bg-white p-3.5 hover:bg-slate-50 transition-colors shadow-sm"
+              >
+                <div className="flex items-start justify-between gap-2 mb-1.5">
+                  <p className="text-sm font-medium text-slate-900 leading-snug line-clamp-2">{noticia.titulo}</p>
+                  <Badge variant={noticia.publicado ? 'success' : 'neutral'}>
+                    {noticia.publicado ? 'Publicada' : 'Rascunho'}
+                  </Badge>
+                </div>
+                <div className="flex items-center flex-wrap gap-1 mb-2">
+                  {noticia.tags.slice(0, 2).map((tag) => (
+                    <Badge key={tag} variant="neutral">{tag}</Badge>
+                  ))}
+                  {noticia.tags.length > 2 && (
+                    <Badge variant="neutral">+{noticia.tags.length - 2}</Badge>
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-500">
+                  {noticia.publicadoEm
+                    ? new Date(noticia.publicadoEm).toLocaleDateString('pt-BR')
+                    : 'Sem data de publicação'}
+                </p>
+              </Link>
+            ))}
+          </div>
+
+          {/* Desktop: tabela */}
+          <Card padding="sm" className="overflow-hidden hidden sm:block">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -163,7 +196,7 @@ export default async function AdminNoticiasPage({ searchParams }: Props) {
             currentPage={page}
             totalPages={totalPages}
             baseUrl={statusFilter ? `/admin/noticias?status=${statusFilter}` : '/admin/noticias'}
-            className="mt-6"
+            className="mt-4 sm:mt-6"
           />
         </>
       )}

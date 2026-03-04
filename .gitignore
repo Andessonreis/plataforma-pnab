@@ -48,6 +48,14 @@ docs/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+.playwright-mcp/
+
+# Screenshots de desenvolvimento
+*.png
+*.jpeg
+!src/**/*.png
+!public/**/*.png
+!public/**/*.jpeg
 
 # Sentry
 .sentryclirc

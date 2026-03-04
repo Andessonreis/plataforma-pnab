@@ -42,7 +42,13 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
 
   if (!inscricao) notFound()
 
-  const campos = inscricao.campos as Record<string, unknown>
+  const rawCampos = inscricao.campos
+  const campos: Record<string, unknown> =
+    typeof rawCampos === 'string'
+      ? (() => { try { return JSON.parse(rawCampos) } catch { return {} } })()
+      : (rawCampos && typeof rawCampos === 'object' && !Array.isArray(rawCampos))
+        ? (rawCampos as Record<string, unknown>)
+        : {}
   const canHabilitar = session.user.role === 'ADMIN' || session.user.role === 'HABILITADOR'
   const isHabilitacaoStatus = inscricao.status === 'ENVIADA' || inscricao.status === 'HABILITADA' || inscricao.status === 'INABILITADA'
 
@@ -55,34 +61,34 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
 
   return (
     <section>
-      <div className="flex items-start justify-between mb-6">
-        <div>
+      <div className="mb-4 sm:mb-6">
+        <div className="flex items-start justify-between gap-3 mb-1">
           <Link
             href="/admin/inscricoes"
-            className="text-sm text-brand-600 hover:text-brand-700 font-medium flex items-center gap-1 mb-2"
+            className="text-sm text-brand-600 hover:text-brand-700 font-medium flex items-center gap-1"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
-            Voltar para Inscricoes
+            Voltar
           </Link>
-          <h1 className="text-2xl font-bold text-slate-900">Inscricao {inscricao.numero}</h1>
-          <p className="text-slate-600 mt-1">
-            {inscricao.edital.titulo} ({inscricao.edital.ano})
-          </p>
+          <Badge variant={inscricaoStatusVariant[inscricao.status as InscricaoStatus]}>
+            {inscricaoStatusLabel[inscricao.status as InscricaoStatus]}
+          </Badge>
         </div>
-        <Badge variant={inscricaoStatusVariant[inscricao.status as InscricaoStatus]} className="text-sm px-3 py-1">
-          {inscricaoStatusLabel[inscricao.status as InscricaoStatus]}
-        </Badge>
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">{inscricao.numero}</h1>
+        <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
+          {inscricao.edital.titulo} ({inscricao.edital.ano})
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Coluna principal */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
           {/* Dados do proponente */}
-          <Card>
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">Proponente</h2>
-            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Card padding="sm" className="sm:p-6">
+            <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Proponente</h2>
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <dt className="text-sm font-medium text-slate-500">Nome</dt>
                 <dd className="text-sm text-slate-900 font-medium">{inscricao.proponente.nome}</dd>
@@ -114,8 +120,8 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
 
           {/* Dados da proposta */}
           {Object.keys(campos).length > 0 && (
-            <Card>
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">Dados da Proposta</h2>
+            <Card padding="sm" className="sm:p-6">
+              <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Dados da Proposta</h2>
               <dl className="space-y-3">
                 {Object.entries(campos).map(([key, value]) => (
                   <div key={key} className="border-b border-slate-100 pb-3 last:border-0 last:pb-0">
@@ -133,13 +139,13 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
 
           {/* Anexos */}
           {inscricao.anexos.length > 0 && (
-            <Card>
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">
+            <Card padding="sm" className="sm:p-6">
+              <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">
                 Anexos ({inscricao.anexos.length})
               </h2>
               <div className="space-y-2">
                 {inscricao.anexos.map((anexo) => (
-                  <div key={anexo.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                  <div key={anexo.id} className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-slate-50 rounded-lg">
                     <svg className="h-5 w-5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                     </svg>
@@ -163,11 +169,11 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
 
           {/* Avaliacoes */}
           {inscricao.avaliacoes.length > 0 && (
-            <Card>
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">Avaliacoes</h2>
-              <div className="space-y-4">
+            <Card padding="sm" className="sm:p-6">
+              <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Avaliacoes</h2>
+              <div className="space-y-3 sm:space-y-4">
                 {inscricao.avaliacoes.map((avaliacao) => (
-                  <div key={avaliacao.id} className="p-4 bg-slate-50 rounded-lg">
+                  <div key={avaliacao.id} className="p-3 sm:p-4 bg-slate-50 rounded-lg">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-slate-700">
                         {avaliacao.avaliador.nome}
@@ -190,11 +196,11 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
 
           {/* Recursos */}
           {inscricao.recursos.length > 0 && (
-            <Card>
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">Recursos</h2>
-              <div className="space-y-4">
+            <Card padding="sm" className="sm:p-6">
+              <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Recursos</h2>
+              <div className="space-y-3 sm:space-y-4">
                 {inscricao.recursos.map((recurso) => (
-                  <div key={recurso.id} className="p-4 border border-slate-200 rounded-lg">
+                  <div key={recurso.id} className="p-3 sm:p-4 border border-slate-200 rounded-lg">
                     <div className="flex items-center justify-between mb-2">
                       <Badge variant="info">{recurso.fase}</Badge>
                       {recurso.decisao && (
@@ -221,10 +227,10 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
         </div>
 
         {/* Coluna lateral — Acoes */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Resumo */}
-          <Card>
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">Resumo</h2>
+          <Card padding="sm" className="sm:p-6">
+            <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Resumo</h2>
             <dl className="space-y-3">
               <div>
                 <dt className="text-xs font-medium text-slate-500 uppercase">Numero</dt>
@@ -262,8 +268,8 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
 
           {/* Motivo inabilitacao */}
           {inscricao.motivoInabilitacao && (
-            <Card className="border-red-200 bg-red-50">
-              <h2 className="text-lg font-semibold text-red-800 mb-2">Motivo da Inabilitacao</h2>
+            <Card padding="sm" className="sm:p-6 border-red-200 bg-red-50">
+              <h2 className="text-base sm:text-lg font-semibold text-red-800 mb-2">Motivo da Inabilitacao</h2>
               <p className="text-sm text-red-700">{inscricao.motivoInabilitacao}</p>
             </Card>
           )}

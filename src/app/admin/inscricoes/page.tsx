@@ -77,20 +77,21 @@ export default async function AdminInscricoesPage({ searchParams }: Props) {
   return (
     <section>
       <FadeIn>
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Inscrições</h1>
-            <p className="text-slate-600 mt-1">{total} inscrição(ões) encontrada(s)</p>
+        <div className="flex items-center justify-between gap-3 mb-4 sm:mb-6">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Inscrições</h1>
+            <p className="text-xs sm:text-sm text-slate-600 mt-0.5 sm:mt-1">{total} inscrição(ões)</p>
           </div>
-          <Button href="/admin/inscricoes/export" variant="ghost">
-            <IconExport className="h-4 w-4 mr-2" />
-            Exportar CSV
+          <Button href="/admin/inscricoes/export" variant="ghost" size="sm">
+            <IconExport className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Exportar CSV</span>
+            <span className="sm:hidden">CSV</span>
           </Button>
         </div>
       </FadeIn>
 
       {/* Filtros */}
-      <Card className="mb-6" padding="md">
+      <Card padding="sm" className="mb-4 sm:mb-6 sm:p-6">
         <form method="get" action="/admin/inscricoes" className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
@@ -167,7 +168,35 @@ export default async function AdminInscricoesPage({ searchParams }: Props) {
         </Card>
       ) : (
         <>
-          <Card padding="sm" className="overflow-hidden">
+          {/* Mobile: cards */}
+          <div className="sm:hidden space-y-3">
+            {inscricoes.map((inscricao) => (
+              <Link
+                key={inscricao.id}
+                href={`/admin/inscricoes/${inscricao.id}`}
+                className="block overflow-hidden rounded-lg border border-slate-200 bg-white p-3.5 hover:bg-slate-50 transition-colors shadow-sm"
+              >
+                <div className="flex items-start justify-between gap-2 mb-1.5">
+                  <p className="text-sm font-medium text-slate-900 leading-snug">{inscricao.proponente.nome}</p>
+                  <Badge variant={inscricaoStatusVariant[inscricao.status as InscricaoStatus]}>
+                    {inscricaoStatusLabel[inscricao.status as InscricaoStatus]}
+                  </Badge>
+                </div>
+                <p className="text-xs text-slate-500 leading-snug mb-2 line-clamp-1">{inscricao.edital.titulo}</p>
+                <div className="flex items-center justify-between text-[11px] text-slate-500">
+                  <span className="font-mono">{inscricao.numero}</span>
+                  <span>
+                    {inscricao.submittedAt
+                      ? new Date(inscricao.submittedAt).toLocaleDateString('pt-BR')
+                      : '—'}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          {/* Desktop: tabela */}
+          <Card padding="sm" className="overflow-hidden hidden sm:block">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -222,7 +251,7 @@ export default async function AdminInscricoesPage({ searchParams }: Props) {
             currentPage={page}
             totalPages={totalPages}
             baseUrl={baseUrl}
-            className="mt-6"
+            className="mt-4 sm:mt-6"
           />
         </>
       )}

@@ -83,7 +83,7 @@ export function FaqForm({ initialData, faqItemId, editais }: FaqFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-2xl space-y-6">
+    <form onSubmit={handleSubmit} className="max-w-2xl space-y-5 sm:space-y-6">
       {message && (
         <div
           className={`p-3 rounded-lg text-sm ${
@@ -98,8 +98,8 @@ export function FaqForm({ initialData, faqItemId, editais }: FaqFormProps) {
       )}
 
       {/* Conteudo */}
-      <Card>
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">Conteudo</h2>
+      <Card padding="sm" className="sm:p-6">
+        <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Conteudo</h2>
         <div className="space-y-4">
           <Input
             label="Pergunta"
@@ -123,8 +123,8 @@ export function FaqForm({ initialData, faqItemId, editais }: FaqFormProps) {
       </Card>
 
       {/* Configuracao */}
-      <Card>
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">Configuracao</h2>
+      <Card padding="sm" className="sm:p-6">
+        <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Configuracao</h2>
         <div className="space-y-4">
           <Select
             label="Edital Relacionado"

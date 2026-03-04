@@ -97,7 +97,7 @@ export function CmsForm({ initialData }: CmsFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-3xl space-y-6">
+    <form onSubmit={handleSubmit} className="max-w-3xl space-y-5 sm:space-y-6">
       {message && (
         <div
           className={`p-3 rounded-lg text-sm ${
@@ -112,8 +112,8 @@ export function CmsForm({ initialData }: CmsFormProps) {
       )}
 
       {/* Conteudo */}
-      <Card>
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">Conteudo</h2>
+      <Card padding="sm" className="sm:p-6">
+        <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Conteudo</h2>
         <div className="space-y-4">
           <Input
             label="Titulo da Pagina"
@@ -140,8 +140,8 @@ export function CmsForm({ initialData }: CmsFormProps) {
       </Card>
 
       {/* Publicacao */}
-      <Card>
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">Publicacao</h2>
+      <Card padding="sm" className="sm:p-6">
+        <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Publicacao</h2>
         <label className="flex items-center gap-3 cursor-pointer min-h-[44px]">
           <input
             type="checkbox"
