@@ -37,7 +37,6 @@ export async function GET(req: NextRequest) {
     )
     const { page, pageSize, action, userId, entity, dateFrom, dateTo } = params
 
-    // Monta filtros dinâmicos
     const where: Record<string, unknown> = {}
     if (action) where.action = action
     if (userId) where.userId = userId

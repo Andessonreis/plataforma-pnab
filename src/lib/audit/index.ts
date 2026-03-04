@@ -47,6 +47,36 @@ export const AUDIT_ACTIONS = {
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS]
 
+/** Rótulos legíveis em português para cada ação */
+export const ACTION_LABELS: Record<string, string> = {
+  LOGIN: 'Login',
+  LOGIN_FALHA: 'Login falho',
+  LOGOUT: 'Logout',
+  CADASTRO: 'Cadastro',
+  SENHA_RESET_SOLICITADO: 'Reset senha (pedido)',
+  SENHA_RESET_CONCLUIDO: 'Reset senha (concluído)',
+  PERFIL_ATUALIZADO: 'Perfil atualizado',
+  INSCRICAO_CRIADA: 'Inscrição criada',
+  INSCRICAO_ENVIADA: 'Inscrição enviada',
+  EDITAL_CRIADO: 'Edital criado',
+  EDITAL_ATUALIZADO: 'Edital atualizado',
+  EDITAL_PUBLICADO: 'Edital publicado',
+  INSCRICAO_HABILITADA: 'Habilitada',
+  INSCRICAO_INABILITADA: 'Inabilitada',
+  STATUS_ALTERADO: 'Status alterado',
+  NOTICIA_CRIADA: 'Notícia criada',
+  NOTICIA_ATUALIZADA: 'Notícia atualizada',
+  NOTICIA_EXCLUIDA: 'Notícia excluída',
+  CMS_PAGINA_CRIADA: 'Página CMS criada',
+  CMS_PAGINA_ATUALIZADA: 'Página CMS atualizada',
+  CMS_PAGINA_EXCLUIDA: 'Página CMS excluída',
+  FAQ_CRIADO: 'FAQ criado',
+  FAQ_ATUALIZADO: 'FAQ atualizado',
+  FAQ_EXCLUIDO: 'FAQ excluído',
+  EXPORTACAO_CSV: 'Exportação CSV',
+  IMPORTACAO_CONTEMPLADOS: 'Importação contemplados',
+}
+
 interface LogAuditParams {
   userId?: string
   action: AuditAction | string
@@ -83,13 +113,28 @@ export async function logAudit(params: LogAuditParams): Promise<void> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Variante de badge por categoria de ação
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Mapeia categorias de ação para variante de badge */
+export function actionBadgeVariant(action: string): 'success' | 'error' | 'warning' | 'info' | 'neutral' {
+  if (action === 'LOGIN') return 'success'
+  if (action === 'LOGIN_FALHA') return 'error'
+  if (action.includes('EXCLU') || action.includes('INABILITADA')) return 'error'
+  if (action.includes('CRIA') || action.includes('CADASTRO') || action.includes('HABILITADA')) return 'success'
+  if (action.includes('ATUALIZ') || action.includes('PUBLICAD')) return 'info'
+  if (action.includes('RESET') || action.includes('RECURSO')) return 'warning'
+  return 'neutral'
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Retenção — limpeza de logs antigos
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
  * Dias de retenção — configurável via env AUDIT_RETENTION_DAYS (padrão: 365).
  */
-function getRetentionDays(): number {
+export function getRetentionDays(): number {
   const env = process.env.AUDIT_RETENTION_DAYS
   if (env) {
     const parsed = parseInt(env, 10)

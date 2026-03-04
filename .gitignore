@@ -38,6 +38,7 @@ next-env.d.ts
 # Claude Code (configurações locais)
 .claude/
 .claudeignore
+.mcp.json
 
 # Documentação interna (não versionar)
 docs/

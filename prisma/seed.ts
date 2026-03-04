@@ -242,7 +242,17 @@ async function main() {
   for (const e of editaisData) {
     const edital = await prisma.edital.upsert({
       where: { slug: e.slug },
-      update: {},
+      update: {
+        cronograma: e.cronograma,
+        camposFormulario: [
+          { nome: 'nomeProjeto', label: 'Nome do projeto', tipo: 'text', obrigatorio: true },
+          { nome: 'descricao', label: 'Descrição do projeto', tipo: 'textarea', obrigatorio: true },
+          { nome: 'valorSolicitado', label: 'Valor solicitado (R$)', tipo: 'number', obrigatorio: true },
+        ],
+        resumo: e.resumo,
+        acoesAfirmativas: e.acoesAfirmativas,
+        regrasElegibilidade: e.regrasElegibilidade,
+      },
       create: {
         titulo: e.titulo,
         slug: e.slug,
@@ -253,12 +263,12 @@ async function main() {
         categorias: e.categorias,
         acoesAfirmativas: e.acoesAfirmativas,
         regrasElegibilidade: e.regrasElegibilidade,
-        cronograma: JSON.stringify(e.cronograma),
-        camposFormulario: JSON.stringify([
+        cronograma: e.cronograma,
+        camposFormulario: [
           { nome: 'nomeProjeto', label: 'Nome do projeto', tipo: 'text', obrigatorio: true },
           { nome: 'descricao', label: 'Descrição do projeto', tipo: 'textarea', obrigatorio: true },
           { nome: 'valorSolicitado', label: 'Valor solicitado (R$)', tipo: 'number', obrigatorio: true },
-        ]),
+        ],
       },
     })
     editaisMap[e.slug] = edital.id
@@ -279,6 +289,12 @@ async function main() {
     { editalSlug: 'pnab-2025-audiovisual', tipo: 'PDF', titulo: 'Edital Audiovisual 2025', url: '#', acessivel: true },
     { editalSlug: 'pnab-2025-audiovisual', tipo: 'MODELO', titulo: 'Roteiro de Pré-Produção', url: '#', acessivel: false },
   ]
+
+  // Limpa arquivos existentes para evitar duplicatas em re-seeds
+  const editalIds = Object.values(editaisMap)
+  if (editalIds.length > 0) {
+    await prisma.arquivoEdital.deleteMany({ where: { editalId: { in: editalIds } } })
+  }
 
   let arquivosCount = 0
   for (const a of arquivosData) {
@@ -310,6 +326,11 @@ async function main() {
     { pergunta: 'Posso inscrever mais de um projeto?', resposta: 'Sim, desde que sejam em categorias diferentes do mesmo edital ou em editais distintos. Um mesmo proponente pode ter no máximo 2 projetos aprovados simultaneamente.' },
     { pergunta: 'Como acompanho o resultado?', resposta: 'Todos os resultados são publicados nesta plataforma e os proponentes inscritos recebem notificação por e-mail. Você também pode acompanhar pelo painel do proponente após fazer login.' },
   ]
+
+  // Limpa FAQs existentes para evitar duplicatas de execuções anteriores
+  await prisma.faqItem.deleteMany({
+    where: { id: { not: { startsWith: 'keep-' } } },
+  })
 
   for (let i = 0; i < faqGeral.length; i++) {
     await prisma.faqItem.upsert({

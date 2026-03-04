@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'classepolitica.com.br',
+        hostname: 'images.unsplash.com',
       },
     ],
   },

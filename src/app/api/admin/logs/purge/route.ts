@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import { auth } from '@/lib/auth'
-import { purgeOldAuditLogs } from '@/lib/audit'
+import { purgeOldAuditLogs, getRetentionDays } from '@/lib/audit'
 
 export const runtime = 'nodejs'
 
@@ -31,7 +31,7 @@ export async function POST() {
     const res = NextResponse.json({
       message: `${removidos} log(s) removido(s).`,
       removidos,
-      retentionDays: parseInt(process.env.AUDIT_RETENTION_DAYS || '365', 10) || 365,
+      retentionDays: getRetentionDays(),
       requestId,
     })
     res.headers.set('X-Request-Id', requestId)

@@ -128,10 +128,6 @@ export const EditalArquivos = forwardRef<EditalArquivosHandle, EditalArquivosPro
         setError('Selecione um arquivo.')
         return
       }
-      if (!titulo.trim()) {
-        setError('Informe o título do documento.')
-        return
-      }
 
       const validationError = validateFile(file)
       if (validationError) {
@@ -141,10 +137,12 @@ export const EditalArquivos = forwardRef<EditalArquivosHandle, EditalArquivosPro
 
       setError(null)
 
+      const tituloFinal = titulo.trim() || file.name.replace(/\.[^.]+$/, '')
+
       // Modo criação — enfileira localmente
       if (!editalId) {
         const localId = `pending-${++localIdCounter}`
-        setPending((prev) => [...prev, { localId, file, titulo: titulo.trim(), tipo }])
+        setPending((prev) => [...prev, { localId, file, titulo: tituloFinal, tipo }])
         setTitulo('')
         if (fileInputRef.current) fileInputRef.current.value = ''
         return
@@ -157,7 +155,7 @@ export const EditalArquivos = forwardRef<EditalArquivosHandle, EditalArquivosPro
         formData.append('file', file)
         formData.append('editalId', editalId)
         formData.append('tipo', tipo)
-        formData.append('titulo', titulo.trim())
+        formData.append('titulo', tituloFinal)
 
         const res = await fetch('/api/admin/editais/arquivos', {
           method: 'POST',
@@ -234,6 +232,12 @@ export const EditalArquivos = forwardRef<EditalArquivosHandle, EditalArquivosPro
                 type="file"
                 accept=".pdf,.png,.jpg,.jpeg,.xlsx"
                 className="block w-full text-sm text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 file:cursor-pointer"
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file && !titulo.trim()) {
+                    setTitulo(file.name.replace(/\.[^.]+$/, ''))
+                  }
+                }}
               />
             </div>
             <Button

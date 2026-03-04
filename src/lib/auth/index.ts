@@ -28,7 +28,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         })
 
         if (!user || !user.ativo) {
-          // Registra tentativa de login com falha (usuário inexistente ou inativo)
           await logAudit({
             action: AUDIT_ACTIONS.LOGIN_FALHA,
             entity: 'User',
@@ -53,7 +52,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null
         }
 
-        // Registra login bem-sucedido
+        // Login bem-sucedido
         await logAudit({
           userId: user.id,
           action: AUDIT_ACTIONS.LOGIN,

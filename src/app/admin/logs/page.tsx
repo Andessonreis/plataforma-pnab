@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { Card, Badge, Pagination, Button, EmptyState, FadeIn, IconInfo } from '@/components/ui'
+import { ACTION_LABELS, actionBadgeVariant, getRetentionDays } from '@/lib/audit'
 import { PurgeButton } from './purge-button'
 
 export const metadata: Metadata = {
@@ -21,47 +22,6 @@ interface Props {
   }>
 }
 
-/** Mapeia categorias de ação para variante de badge */
-function actionBadgeVariant(action: string): 'success' | 'error' | 'warning' | 'info' | 'neutral' {
-  if (action === 'LOGIN') return 'success'
-  if (action === 'LOGIN_FALHA') return 'error'
-  if (action.includes('EXCLU') || action.includes('INABILITADA')) return 'error'
-  if (action.includes('CRIA') || action.includes('CADASTRO') || action.includes('HABILITADA')) return 'success'
-  if (action.includes('ATUALIZ') || action.includes('PUBLICAD')) return 'info'
-  if (action.includes('RESET') || action.includes('RECURSO')) return 'warning'
-  return 'neutral'
-}
-
-/** Rótulos legíveis para as ações */
-const ACTION_LABELS: Record<string, string> = {
-  LOGIN: 'Login',
-  LOGIN_FALHA: 'Login falho',
-  LOGOUT: 'Logout',
-  CADASTRO: 'Cadastro',
-  SENHA_RESET_SOLICITADO: 'Reset senha (pedido)',
-  SENHA_RESET_CONCLUIDO: 'Reset senha (concluído)',
-  PERFIL_ATUALIZADO: 'Perfil atualizado',
-  INSCRICAO_CRIADA: 'Inscrição criada',
-  INSCRICAO_ENVIADA: 'Inscrição enviada',
-  EDITAL_CRIADO: 'Edital criado',
-  EDITAL_ATUALIZADO: 'Edital atualizado',
-  EDITAL_PUBLICADO: 'Edital publicado',
-  INSCRICAO_HABILITADA: 'Habilitada',
-  INSCRICAO_INABILITADA: 'Inabilitada',
-  STATUS_ALTERADO: 'Status alterado',
-  NOTICIA_CRIADA: 'Notícia criada',
-  NOTICIA_ATUALIZADA: 'Notícia atualizada',
-  NOTICIA_EXCLUIDA: 'Notícia excluída',
-  CMS_PAGINA_CRIADA: 'Página CMS criada',
-  CMS_PAGINA_ATUALIZADA: 'Página CMS atualizada',
-  CMS_PAGINA_EXCLUIDA: 'Página CMS excluída',
-  FAQ_CRIADO: 'FAQ criado',
-  FAQ_ATUALIZADO: 'FAQ atualizado',
-  FAQ_EXCLUIDO: 'FAQ excluído',
-  EXPORTACAO_CSV: 'Exportação CSV',
-  IMPORTACAO_CONTEMPLADOS: 'Importação contemplados',
-}
-
 export default async function AdminLogsPage({ searchParams }: Props) {
   const session = await auth()
   if (!session || session.user.role !== 'ADMIN') redirect('/')
@@ -75,7 +35,7 @@ export default async function AdminLogsPage({ searchParams }: Props) {
   const dateFromFilter = params.dateFrom || undefined
   const dateToFilter = params.dateTo || undefined
 
-  // Monta filtros dinâmicos
+  // Filtros dinâmicos
   const where: Record<string, unknown> = {}
   if (actionFilter) where.action = actionFilter
   if (userIdFilter) where.userId = userIdFilter
@@ -115,7 +75,6 @@ export default async function AdminLogsPage({ searchParams }: Props) {
 
   const totalPages = Math.ceil(total / pageSize)
 
-  // Constrói URL base para paginação preservando filtros
   const filterParams = new URLSearchParams()
   if (actionFilter) filterParams.set('action', actionFilter)
   if (userIdFilter) filterParams.set('userId', userIdFilter)
@@ -124,24 +83,20 @@ export default async function AdminLogsPage({ searchParams }: Props) {
   if (dateToFilter) filterParams.set('dateTo', dateToFilter)
   const baseUrl = `/admin/logs${filterParams.toString() ? `?${filterParams.toString()}` : ''}`
 
-  const retentionDays = parseInt(process.env.AUDIT_RETENTION_DAYS || '365', 10) || 365
+  const retentionDays = getRetentionDays()
 
   return (
     <section>
-      {/* Cabeçalho */}
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Logs de Auditoria</h1>
-          <p className="text-slate-600 mt-1">
-            {total} registro(s) encontrado(s) &middot; Retenção: {retentionDays} dias
-          </p>
-        </div>
-        <PurgeButton retentionDays={retentionDays} />
-      </div>
       <FadeIn>
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-slate-900">Logs de Auditoria</h1>
-          <p className="text-slate-600 mt-1">{total} registro(s) encontrado(s)</p>
+        {/* Cabeçalho */}
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Logs de Auditoria</h1>
+            <p className="text-slate-600 mt-1">
+              {total} registro(s) encontrado(s) &middot; Retenção: {retentionDays} dias
+            </p>
+          </div>
+          <PurgeButton retentionDays={retentionDays} />
         </div>
       </FadeIn>
 
@@ -150,7 +105,6 @@ export default async function AdminLogsPage({ searchParams }: Props) {
         <form method="get" action="/admin/logs" className="flex flex-wrap gap-4 items-end">
           <div>
             <label htmlFor="action" className="block text-sm font-medium text-slate-700 mb-1.5">
-              Ação
               Ação
             </label>
             <select
@@ -240,8 +194,6 @@ export default async function AdminLogsPage({ searchParams }: Props) {
                 <thead>
                   <tr className="bg-slate-50">
                     <th className="text-left py-3 px-4 font-medium text-slate-600">Data/Hora</th>
-                    <th className="text-left py-3 px-4 font-medium text-slate-600">Usuário</th>
-                    <th className="text-left py-3 px-4 font-medium text-slate-600">Ação</th>
                     <th className="text-left py-3 px-4 font-medium text-slate-600">Usuário</th>
                     <th className="text-left py-3 px-4 font-medium text-slate-600">Ação</th>
                     <th className="text-left py-3 px-4 font-medium text-slate-600">Entidade</th>

@@ -1,0 +1,20 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Deploy
+        run: |
+          cd /mnt/ssd4t/Code/plataforma-pnab
+          git pull origin main
+          make install
+          make db-seed
+          pkill -f "next dev" || true
+          nohup npm run dev > app.log 2>&1 &
