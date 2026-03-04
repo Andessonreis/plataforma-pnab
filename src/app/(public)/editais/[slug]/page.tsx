@@ -12,6 +12,12 @@ import {
   IconChevronDown,
   IconAccessible,
   IconArrowLeft,
+  IconArrowRight,
+  IconCalendar,
+  IconClock,
+  IconCurrency,
+  IconDocument,
+  IconQuestion,
 } from '@/components/ui/icons'
 import { getStatusDisplay } from '@/lib/utils/edital-status'
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/utils/format'
@@ -84,11 +90,13 @@ export default async function EditalPage({ params }: Props) {
   const now = new Date()
   const isOpen = edital.status === 'INSCRICOES_ABERTAS'
 
+  const nextDeadline = cronograma.find((item) => new Date(item.dataHora) > now)
+
   return (
     <>
       {isAdmin && edital.status === 'RASCUNHO' && (
         <div className="bg-amber-50 border-b border-amber-200 py-2.5 px-4 text-center text-sm text-amber-800 font-medium">
-          ⚠️ Pré-visualização de rascunho &mdash; este edital não está visível ao público.{' '}
+          Pré-visualização de rascunho &mdash; este edital não está visível ao público.{' '}
           <Link href={`/admin/editais/${edital.id}`} className="underline hover:text-amber-900">
             Editar edital
           </Link>
@@ -103,31 +111,39 @@ export default async function EditalPage({ params }: Props) {
         ]}
       >
         {/* Metadata no header */}
-        <div className="mt-4 flex flex-wrap items-start gap-3">
+        <div className="mt-4 flex flex-wrap items-center gap-3">
           <Badge variant={statusDisplay.badgeVariant} className="text-sm" dot>
             {statusDisplay.label}
           </Badge>
+          {edital.categorias.map((cat) => (
+            <span
+              key={cat}
+              className="inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-sm font-medium text-white"
+            >
+              {cat}
+            </span>
+          ))}
         </div>
 
-        <div className="mt-3 flex flex-wrap items-center gap-4 text-brand-100">
-          {edital.categorias.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {edital.categorias.map((cat) => (
-                <span
-                  key={cat}
-                  className="inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-sm font-medium text-white"
-                >
-                  {cat}
-                </span>
-              ))}
-            </div>
-          )}
-
+        {/* Destaques rápidos */}
+        <div className="mt-4 flex flex-wrap items-center gap-6 text-brand-100 text-sm">
           {edital.valorTotal && (
-            <span className="inline-flex items-center gap-1.5 text-lg font-semibold text-white">
+            <span className="inline-flex items-center gap-2 text-lg font-semibold text-white">
+              <IconCurrency className="h-5 w-5 text-brand-200" />
               {formatCurrency(edital.valorTotal)}
             </span>
           )}
+          {nextDeadline && (
+            <span className="inline-flex items-center gap-2">
+              <IconClock className="h-4 w-4 text-brand-200" />
+              <span className="font-medium text-white">{nextDeadline.label}:</span>{' '}
+              {formatDate(nextDeadline.dataHora)}
+            </span>
+          )}
+          <span className="inline-flex items-center gap-2">
+            <IconCalendar className="h-4 w-4 text-brand-200" />
+            Publicado em {formatDate(edital.createdAt)}
+          </span>
         </div>
       </PageHeader>
 
@@ -140,11 +156,18 @@ export default async function EditalPage({ params }: Props) {
               {/* Resumo */}
               {edital.resumo && (
                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8">
-                  <h2 className="text-xl font-semibold text-slate-900 mb-4">
-                    Sobre o Edital
-                  </h2>
-                  <div className="text-slate-700 leading-relaxed whitespace-pre-line">
-                    {edital.resumo}
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-50 text-brand-600 shrink-0">
+                      <IconDocument className="h-5 w-5" />
+                    </div>
+                    <h2 className="text-xl font-semibold text-slate-900 pt-1">
+                      Sobre o Edital
+                    </h2>
+                  </div>
+                  <div className="text-slate-700 leading-relaxed space-y-3">
+                    {edital.resumo.split('\n').filter(Boolean).map((paragraph, i) => (
+                      <p key={i}>{paragraph}</p>
+                    ))}
                   </div>
                 </div>
               )}
@@ -152,16 +175,21 @@ export default async function EditalPage({ params }: Props) {
               {/* Cronograma / Timeline */}
               {cronograma.length > 0 && (
                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8">
-                  <h2 className="text-xl font-semibold text-slate-900 mb-6">
-                    Cronograma
-                  </h2>
+                  <div className="flex items-start gap-3 mb-6">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-50 text-accent-600 shrink-0">
+                      <IconCalendar className="h-5 w-5" />
+                    </div>
+                    <h2 className="text-xl font-semibold text-slate-900 pt-1">
+                      Cronograma
+                    </h2>
+                  </div>
                   <div className="relative">
                     <div
                       className="absolute left-4 top-2 bottom-2 w-0.5 bg-slate-200"
                       aria-hidden="true"
                     />
 
-                    <ol className="space-y-6">
+                    <ol className="space-y-1">
                       {cronograma.map((item, index) => {
                         const itemDate = new Date(item.dataHora)
                         const isPast = itemDate < now
@@ -171,11 +199,11 @@ export default async function EditalPage({ params }: Props) {
                           <li key={index} className="relative pl-10">
                             <div
                               className={[
-                                'absolute left-2.5 top-1.5 h-3 w-3 rounded-full border-2',
+                                'absolute left-2.5 top-4 h-3 w-3 rounded-full border-2 z-10',
                                 isPast
-                                  ? 'bg-slate-300 border-slate-300'
+                                  ? 'bg-brand-200 border-brand-300'
                                   : isHighlight
-                                    ? 'bg-brand-600 border-brand-600'
+                                    ? 'bg-brand-600 border-brand-600 shadow-sm shadow-brand-600/30'
                                     : 'bg-white border-brand-400',
                               ].join(' ')}
                               aria-hidden="true"
@@ -183,32 +211,40 @@ export default async function EditalPage({ params }: Props) {
 
                             <div
                               className={[
-                                'rounded-lg p-3',
+                                'rounded-lg p-3 transition-colors',
                                 isPast
                                   ? 'opacity-60'
                                   : isHighlight
                                     ? 'bg-brand-50 border border-brand-200'
-                                    : '',
+                                    : 'hover:bg-slate-50',
                               ].join(' ')}
                             >
-                              <time
-                                dateTime={item.dataHora}
-                                className={[
-                                  'block text-sm font-semibold',
-                                  isPast ? 'text-slate-400' : 'text-brand-700',
-                                ].join(' ')}
-                              >
-                                {formatDateTime(item.dataHora)}
-                              </time>
-                              <span
-                                className={[
-                                  'block mt-0.5',
-                                  isPast ? 'text-slate-500' : 'text-slate-900',
-                                  isHighlight && !isPast ? 'font-medium' : '',
-                                ].join(' ')}
-                              >
-                                {item.label}
-                              </span>
+                              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                                <span
+                                  className={[
+                                    'font-medium',
+                                    isPast ? 'text-slate-500' : 'text-slate-900',
+                                    isHighlight && !isPast ? 'font-semibold' : '',
+                                  ].join(' ')}
+                                >
+                                  {item.label}
+                                </span>
+                                <time
+                                  dateTime={item.dataHora}
+                                  className={[
+                                    'text-sm font-medium tabular-nums',
+                                    isPast ? 'text-slate-400' : 'text-brand-700',
+                                  ].join(' ')}
+                                >
+                                  {formatDateTime(item.dataHora)}
+                                </time>
+                              </div>
+                              {isPast && (
+                                <span className="inline-flex items-center gap-1 text-xs text-slate-400 mt-1">
+                                  <IconCheckSimple className="h-3 w-3" />
+                                  Concluído
+                                </span>
+                              )}
                             </div>
                           </li>
                         )
@@ -221,10 +257,52 @@ export default async function EditalPage({ params }: Props) {
               {/* Arquivos para download */}
               {edital.arquivos.length > 0 && (
                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8">
-                  <h2 className="text-xl font-semibold text-slate-900 mb-4">
-                    Arquivos para Download
-                  </h2>
-                  <div className="overflow-x-auto">
+                  <div className="flex items-start gap-3 mb-6">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-slate-600 shrink-0">
+                      <IconDownload className="h-5 w-5" />
+                    </div>
+                    <h2 className="text-xl font-semibold text-slate-900 pt-1">
+                      Arquivos para Download
+                    </h2>
+                  </div>
+
+                  {/* Layout cards para mobile */}
+                  <div className="sm:hidden space-y-3">
+                    {edital.arquivos.map((arquivo) => (
+                      <a
+                        key={arquivo.id}
+                        href={arquivo.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        download
+                        className="flex items-center gap-3 rounded-lg border border-slate-200 p-4 hover:bg-slate-50 hover:border-brand-200 transition-colors group"
+                      >
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 group-hover:bg-brand-50 shrink-0 transition-colors">
+                          <IconDownload className="h-4 w-4 text-slate-500 group-hover:text-brand-600 transition-colors" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-slate-900 truncate">
+                            {arquivo.titulo}
+                          </p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <Badge variant={getFileBadgeVariant(arquivo.tipo)} className="text-[10px]">
+                              {arquivo.tipo}
+                            </Badge>
+                            {arquivo.acessivel && (
+                              <span className="inline-flex items-center gap-0.5 text-[10px] text-brand-700 font-medium">
+                                <IconAccessible className="h-3 w-3" />
+                                Acessível
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <IconArrowRight className="h-4 w-4 text-slate-400 shrink-0 group-hover:text-brand-600 transition-colors" />
+                      </a>
+                    ))}
+                  </div>
+
+                  {/* Layout tabela para desktop */}
+                  <div className="hidden sm:block overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-slate-200">
@@ -297,9 +375,14 @@ export default async function EditalPage({ params }: Props) {
                       Regras de Elegibilidade
                     </h2>
                   </div>
-                  <div className="text-slate-700 leading-relaxed whitespace-pre-line">
-                    {edital.regrasElegibilidade}
-                  </div>
+                  <ul className="space-y-2.5">
+                    {edital.regrasElegibilidade.split('\n').filter(Boolean).map((regra, i) => (
+                      <li key={i} className="flex items-start gap-3 text-slate-700 leading-relaxed">
+                        <IconCheckSimple className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
+                        <span>{regra}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
 
@@ -314,18 +397,28 @@ export default async function EditalPage({ params }: Props) {
                       Ações Afirmativas
                     </h2>
                   </div>
-                  <div className="text-slate-700 leading-relaxed whitespace-pre-line">
-                    {edital.acoesAfirmativas}
-                  </div>
+                  <ul className="space-y-2.5">
+                    {edital.acoesAfirmativas.split('\n').filter(Boolean).map((acao, i) => (
+                      <li key={i} className="flex items-start gap-3 text-slate-700 leading-relaxed">
+                        <IconHeart className="h-4 w-4 text-rose-400 shrink-0 mt-0.5" />
+                        <span>{acao}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
 
               {/* FAQ do Edital */}
               {edital.faqItems.length > 0 && (
                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8">
-                  <h2 className="text-xl font-semibold text-slate-900 mb-6">
-                    Perguntas Frequentes
-                  </h2>
+                  <div className="flex items-start gap-3 mb-6">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50 text-amber-600 shrink-0">
+                      <IconQuestion className="h-5 w-5" />
+                    </div>
+                    <h2 className="text-xl font-semibold text-slate-900 pt-1">
+                      Perguntas Frequentes
+                    </h2>
+                  </div>
                   <FaqAccordion items={edital.faqItems} />
                 </div>
               )}
@@ -397,6 +490,14 @@ export default async function EditalPage({ params }: Props) {
                         </dd>
                       </div>
                     )}
+                    {edital.arquivos.length > 0 && (
+                      <div>
+                        <dt className="text-slate-500">Documentos</dt>
+                        <dd className="mt-0.5 font-medium text-slate-900">
+                          {edital.arquivos.length} {edital.arquivos.length === 1 ? 'arquivo' : 'arquivos'} disponíveis
+                        </dd>
+                      </div>
+                    )}
                     <div>
                       <dt className="text-slate-500">Publicado em</dt>
                       <dd className="mt-0.5 font-medium text-slate-900">
@@ -407,26 +508,22 @@ export default async function EditalPage({ params }: Props) {
                 </div>
 
                 {/* Próxima data do cronograma */}
-                {(() => {
-                  const nextItem = cronograma.find(
-                    (item) => new Date(item.dataHora) > now,
-                  )
-                  if (!nextItem) return null
-
-                  return (
-                    <div className="bg-accent-50 rounded-xl border border-accent-200 p-6">
-                      <h3 className="text-base font-semibold text-accent-900 mb-1">
+                {nextDeadline && (
+                  <div className="bg-accent-50 rounded-xl border border-accent-200 p-6">
+                    <div className="flex items-center gap-2 mb-2">
+                      <IconClock className="h-4 w-4 text-accent-600" />
+                      <h3 className="text-base font-semibold text-accent-900">
                         Próxima data
                       </h3>
-                      <p className="text-sm text-accent-800 font-medium">
-                        {nextItem.label}
-                      </p>
-                      <p className="text-sm text-accent-700 mt-1">
-                        {formatDateTime(nextItem.dataHora)}
-                      </p>
                     </div>
-                  )
-                })()}
+                    <p className="text-sm text-accent-800 font-medium">
+                      {nextDeadline.label}
+                    </p>
+                    <p className="text-sm text-accent-700 mt-1 tabular-nums">
+                      {formatDateTime(nextDeadline.dataHora)}
+                    </p>
+                  </div>
+                )}
 
                 {/* Link de volta */}
                 <Link
@@ -448,8 +545,13 @@ export default async function EditalPage({ params }: Props) {
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 function parseCronograma(raw: unknown): CronogramaItem[] {
-  if (!Array.isArray(raw)) return []
-  return raw.filter(
+  // Suporta tanto array direto quanto JSON string (double-serialized)
+  let data = raw
+  if (typeof data === 'string') {
+    try { data = JSON.parse(data) } catch { return [] }
+  }
+  if (!Array.isArray(data)) return []
+  return data.filter(
     (item): item is CronogramaItem =>
       typeof item === 'object' &&
       item !== null &&
@@ -482,12 +584,12 @@ function FaqAccordion({ items }: { items: FaqItemData[] }) {
       {items.map((item) => (
         <details key={item.id} className="group">
           <summary className="flex items-center justify-between gap-4 py-4 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
-            <span className="text-sm font-medium text-slate-900 group-open:text-brand-700">
+            <span className="text-sm font-medium text-slate-900 group-open:text-brand-700 transition-colors">
               {item.pergunta}
             </span>
             <IconChevronDown className="h-5 w-5 text-slate-400 shrink-0 transition-transform group-open:rotate-180" />
           </summary>
-          <div className="pb-4 text-sm text-slate-600 leading-relaxed">
+          <div className="pb-4 text-sm text-slate-600 leading-relaxed pl-0">
             {item.resposta}
           </div>
         </details>

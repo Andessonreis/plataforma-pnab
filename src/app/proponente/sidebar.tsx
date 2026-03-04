@@ -53,8 +53,8 @@ export function ProponenteSidebar({ userName }: ProponenteSidebarProps) {
 
       {/* Sidebar */}
       <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-white transform -translate-x-full peer-checked:translate-x-0 lg:translate-x-0 transition-transform duration-200 ease-in-out flex flex-col">
-        {/* Faixa accent no topo */}
-        <div className="h-1 bg-gradient-to-r from-brand-600 via-accent-500 to-brand-600 shrink-0" />
+        {/* Faixa topo */}
+        <div className="h-1 bg-gradient-to-r from-brand-500 to-brand-600 shrink-0" />
 
         {/* Cabeçalho */}
         <div className="flex items-center gap-3 px-4 py-5 border-b border-slate-800">
@@ -63,7 +63,7 @@ export function ProponenteSidebar({ userName }: ProponenteSidebarProps) {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold truncate">Portal PNAB</p>
-            <p className="text-xs text-accent-400 truncate">{userName}</p>
+            <p className="text-xs text-slate-400 truncate">{userName}</p>
           </div>
           <label
             htmlFor="sidebar-toggle"
@@ -75,16 +75,16 @@ export function ProponenteSidebar({ userName }: ProponenteSidebarProps) {
         </div>
 
         {/* Navegação */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto" aria-label="Menu do proponente">
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto scrollbar-hide" aria-label="Menu do proponente">
           {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               className={[
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px]',
+                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 min-h-[44px]',
                 isActive(item.href)
-                  ? 'bg-brand-600 text-white'
-                  : 'text-slate-300 hover:bg-slate-800 hover:text-white',
+                  ? 'bg-white/10 text-white border-l-2 border-brand-400'
+                  : 'text-slate-400 hover:bg-white/5 hover:text-slate-200',
               ].join(' ')}
               aria-current={isActive(item.href) ? 'page' : undefined}
             >
@@ -98,7 +98,7 @@ export function ProponenteSidebar({ userName }: ProponenteSidebarProps) {
         <div className="px-3 py-4 border-t border-slate-800">
           <Link
             href="/api/auth/signout"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-colors min-h-[44px]"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-all duration-150 min-h-[44px]"
           >
             <IconLogout className="h-5 w-5" />
             Sair

@@ -51,7 +51,7 @@ function NewsletterForm() {
           value={nome}
           onChange={(e) => setNome(e.target.value)}
           required
-          className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/20 min-h-[44px]"
+          className="flex-1 rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/20 h-9"
           aria-label="Nome para newsletter"
         />
         <input
@@ -60,13 +60,13 @@ function NewsletterForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/20 min-h-[44px]"
+          className="flex-1 rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/20 h-9"
           aria-label="E-mail para newsletter"
         />
         <button
           type="submit"
           disabled={status === 'loading'}
-          className="rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-500 transition-colors disabled:opacity-50 min-h-[44px] shrink-0"
+          className="rounded-md bg-brand-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-brand-500 transition-colors disabled:opacity-50 h-9 shrink-0"
         >
           {status === 'loading' ? 'Enviando...' : 'Inscrever-se'}
         </button>

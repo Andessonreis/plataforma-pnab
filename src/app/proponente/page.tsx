@@ -54,41 +54,49 @@ export default async function ProponenteDashboardPage() {
     {
       label: 'Total de Inscrições',
       value: totalInscricoes,
-      icon: <IconClipboard className="h-8 w-8" />,
+      icon: <IconClipboard className="h-6 w-6" />,
       color: 'bg-brand-50',
       iconColor: 'text-brand-600',
     },
     {
       label: 'Pendentes',
       value: inscricoesEnviadas,
-      icon: <IconClock className="h-8 w-8" />,
+      icon: <IconClock className="h-6 w-6" />,
       color: 'bg-accent-50',
       iconColor: 'text-accent-600',
     },
     {
       label: 'Contempladas',
       value: inscricoesContempladas,
-      icon: <IconCheck className="h-8 w-8" />,
+      icon: <IconCheck className="h-6 w-6" />,
       color: 'bg-green-50',
       iconColor: 'text-green-600',
     },
     {
       label: 'Editais Abertos',
       value: editaisAbertos,
-      icon: <IconNews className="h-8 w-8" />,
+      icon: <IconNews className="h-6 w-6" />,
       color: 'bg-blue-50',
       iconColor: 'text-blue-600',
     },
   ]
 
+  const today = new Date().toLocaleDateString('pt-BR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+
   return (
     <section>
       <FadeIn>
-        <div className="mb-6">
+        <div className="mb-8">
+          <p className="text-sm text-slate-500 capitalize mb-1">{today}</p>
           <h1 className="text-2xl font-bold text-slate-900">
             Bem-vindo(a), {session.user.name?.split(' ')[0] ?? 'Proponente'}
           </h1>
-          <p className="text-slate-600 mt-1">
+          <p className="text-slate-500 mt-1">
             Acompanhe suas inscrições e gerencie seu perfil.
           </p>
         </div>
@@ -99,7 +107,7 @@ export default async function ProponenteDashboardPage() {
         <FadeIn delay={0.1}>
           <Link
             href="/editais"
-            className="group flex items-center gap-3 rounded-xl border border-brand-200 bg-brand-50/60 px-4 py-3 mb-6 transition-colors hover:bg-brand-50"
+            className="group flex items-center gap-3 rounded-xl border border-brand-200/60 bg-brand-50/40 px-4 py-3.5 mb-8 transition-all hover:bg-brand-50/70 hover:border-brand-200"
           >
             <span className="relative flex h-2.5 w-2.5 shrink-0">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-500 opacity-75" />
@@ -157,34 +165,34 @@ export default async function ProponenteDashboardPage() {
               action={{ label: 'Ver Editais Abertos', href: '/editais' }}
             />
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto -mx-2">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-100">
-                    <th className="text-left py-3 px-2 font-medium text-slate-600">Número</th>
-                    <th className="text-left py-3 px-2 font-medium text-slate-600">Edital</th>
-                    <th className="text-left py-3 px-2 font-medium text-slate-600">Status</th>
-                    <th className="text-left py-3 px-2 font-medium text-slate-600">Data</th>
-                    <th className="text-right py-3 px-2 font-medium text-slate-600">Ações</th>
+                  <tr className="border-b border-slate-200">
+                    <th className="text-left py-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Número</th>
+                    <th className="text-left py-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Edital</th>
+                    <th className="text-left py-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Status</th>
+                    <th className="text-left py-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Data</th>
+                    <th className="text-right py-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Ações</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-slate-100">
                   {recentInscricoes.map((inscricao) => (
-                    <tr key={inscricao.id} className="border-b border-slate-50 hover:bg-slate-50">
-                      <td className="py-3 px-2 font-mono text-xs">{inscricao.numero}</td>
-                      <td className="py-3 px-2">{inscricao.edital.titulo}</td>
-                      <td className="py-3 px-2">
+                    <tr key={inscricao.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="py-3.5 px-3 font-mono text-xs text-slate-600">{inscricao.numero}</td>
+                      <td className="py-3.5 px-3 font-medium text-slate-800">{inscricao.edital.titulo}</td>
+                      <td className="py-3.5 px-3">
                         <Badge variant={inscricaoStatusVariant[inscricao.status as InscricaoStatus]}>
                           {inscricaoStatusLabel[inscricao.status as InscricaoStatus]}
                         </Badge>
                       </td>
-                      <td className="py-3 px-2 text-slate-500">
+                      <td className="py-3.5 px-3 text-slate-400">
                         {new Date(inscricao.createdAt).toLocaleDateString('pt-BR')}
                       </td>
-                      <td className="py-3 px-2 text-right">
+                      <td className="py-3.5 px-3 text-right">
                         <Link
                           href={`/proponente/inscricoes/${inscricao.id}`}
-                          className="text-brand-600 hover:text-brand-700 font-medium"
+                          className="text-sm text-brand-600 hover:text-brand-700 font-medium transition-colors"
                         >
                           Detalhes
                         </Link>

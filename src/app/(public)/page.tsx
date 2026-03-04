@@ -20,6 +20,8 @@ import {
   IconEye,
   IconMail,
 } from '@/components/ui/icons'
+import { getStatusDisplay } from '@/lib/utils/edital-status'
+import { formatCurrency, formatDate } from '@/lib/utils/format'
 
 export const metadata: Metadata = {
   title: 'Início',
@@ -27,9 +29,32 @@ export const metadata: Metadata = {
     'Portal oficial da Política Nacional Aldir Blanc de Fomento à Cultura — Secretaria de Arte e Cultura de Irecê/BA.',
 }
 
+// ── Helpers ─────────────────────────────────────────────────────────────────
+
+interface CronogramaItem {
+  label: string
+  dataHora: string
+  destaque?: boolean
+}
+
+function getNextDeadline(cronograma: unknown): CronogramaItem | null {
+  if (!Array.isArray(cronograma)) return null
+
+  const now = new Date()
+  const items = cronograma as CronogramaItem[]
+
+  const future = items
+    .filter((item) => item.dataHora && new Date(item.dataHora) > now)
+    .sort((a, b) => new Date(a.dataHora).getTime() - new Date(b.dataHora).getTime())
+
+  return future[0] ?? null
+}
+
+// ── Página ──────────────────────────────────────────────────────────────────
+
 export default async function HomePage() {
-  // Buscar métricas reais
-  const [editaisAbertos, totalFomento, projetosCount] = await Promise.all([
+  // Buscar métricas reais e editais em destaque
+  const [editaisAbertos, totalFomento, projetosCount, editaisDestaque] = await Promise.all([
     prisma.edital.count({
       where: { status: { in: ['PUBLICADO', 'INSCRICOES_ABERTAS'] } },
     }),
@@ -40,10 +65,27 @@ export default async function HomePage() {
     prisma.projetoApoiado.count({
       where: { publicado: true },
     }),
+    prisma.edital.findMany({
+      where: { status: { not: 'RASCUNHO' } },
+      orderBy: { createdAt: 'desc' },
+      take: 3,
+      select: {
+        id: true,
+        titulo: true,
+        slug: true,
+        status: true,
+        valorTotal: true,
+        categorias: true,
+        cronograma: true,
+      },
+    }),
   ])
 
-  const valorFormatado = totalFomento._sum.valorTotal
-    ? `R$ ${Math.round(Number(totalFomento._sum.valorTotal) / 1000)} mil`
+  const valorTotal = totalFomento._sum.valorTotal
+    ? Number(totalFomento._sum.valorTotal)
+    : 0
+  const valorFormatado = valorTotal > 0
+    ? valorTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0, maximumFractionDigits: 0 })
     : '—'
 
   return (
@@ -51,7 +93,7 @@ export default async function HomePage() {
       {/* Hero */}
       <section className="relative min-h-[540px] sm:min-h-[600px] text-white overflow-hidden">
         <Image
-          src="https://classepolitica.com.br/storage/noticias/irece-governo-murilo-franca-detalha-metas-fiscais-de-2025-em-audiencia-publica-nesta-sexta-feira539820439.jpeg"
+          src="/images/hero-irece.jpg"
           alt="Cidade de Irecê — Cultura e tradição"
           fill
           priority
@@ -126,43 +168,52 @@ export default async function HomePage() {
           </FadeIn>
 
           <div className="relative">
-            {/* Linha conectora horizontal (desktop) */}
-            <div className="hidden lg:block absolute top-5 left-[calc(12.5%+12px)] right-[calc(12.5%+12px)] h-0.5 bg-slate-200" aria-hidden="true" />
+            {/* Linha conectora (desktop) */}
+            <div className="hidden lg:block absolute top-5 left-5 right-[25%] h-0.5 bg-slate-200" aria-hidden="true" />
+            <div className="hidden lg:block absolute top-5 left-5 w-[37%] h-0.5 bg-gradient-to-r from-accent-400 to-brand-400 rounded-full" aria-hidden="true" />
 
             <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8" staggerDelay={0.15} delay={0.2}>
               {[
                 {
-                  icon: IconSearch,
+                  Icon: IconSearch,
                   label: 'Consulta',
                   title: 'Consulte os editais',
                   description: 'Acesse os editais abertos, leia o regulamento e baixe os anexos.',
-                  dotColor: 'bg-accent-500 ring-accent-100',
+                  bgColor: 'bg-accent-50',
+                  iconColor: 'text-accent-600',
+                  ringColor: 'ring-accent-100',
                 },
                 {
-                  icon: IconClipboard,
+                  Icon: IconClipboard,
                   label: 'Cadastro',
                   title: 'Cadastre-se',
                   description: 'Crie sua conta como Pessoa Física, Jurídica ou Coletivo Cultural.',
-                  dotColor: 'bg-brand-500 ring-brand-100',
+                  bgColor: 'bg-brand-50',
+                  iconColor: 'text-brand-600',
+                  ringColor: 'ring-brand-100',
                 },
                 {
-                  icon: IconFileText,
+                  Icon: IconFileText,
                   label: 'Inscrição',
                   title: 'Inscreva seu projeto',
                   description: 'Preencha o formulário, anexe documentos e envie sua proposta.',
-                  dotColor: 'bg-brand-500 ring-brand-100',
+                  bgColor: 'bg-brand-50',
+                  iconColor: 'text-brand-600',
+                  ringColor: 'ring-brand-100',
                 },
                 {
-                  icon: IconCheck,
+                  Icon: IconCheck,
                   label: 'Resultado',
                   title: 'Acompanhe o resultado',
                   description: 'Receba notificações sobre habilitação, avaliação e resultado final.',
-                  dotColor: 'bg-brand-500 ring-brand-100',
+                  bgColor: 'bg-brand-50',
+                  iconColor: 'text-brand-600',
+                  ringColor: 'ring-brand-100',
                 },
               ].map((item) => (
-                <StaggerItem key={item.label} className="relative">
-                  <div className={`h-10 w-10 rounded-full ${item.dotColor} ring-4 flex items-center justify-center mb-4 relative z-10 bg-white`}>
-                    <div className={`h-3 w-3 rounded-full ${item.dotColor.split(' ')[0]}`} />
+                <StaggerItem key={item.label} className="relative group">
+                  <div className={`h-10 w-10 rounded-xl ${item.bgColor} flex items-center justify-center mb-4 relative z-10 transition-transform duration-300 group-hover:scale-110`}>
+                    <item.Icon className={`h-5 w-5 ${item.iconColor}`} />
                   </div>
                   <p className="section-label text-brand-600 mb-1">
                     {item.label}
@@ -204,67 +255,59 @@ export default async function HomePage() {
             </div>
           </FadeIn>
 
-          <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" staggerDelay={0.12}>
-            {[
-              {
-                title: 'Edital de Audiovisual 2026',
-                category: 'Audiovisual',
-                status: 'Aberto' as const,
-                deadline: 'Até 30/04/2026',
-                value: 'R$ 150.000,00',
-              },
-              {
-                title: 'Edital de Artes Cênicas 2026',
-                category: 'Teatro / Dança',
-                status: 'Aberto' as const,
-                deadline: 'Até 15/05/2026',
-                value: 'R$ 200.000,00',
-              },
-              {
-                title: 'Edital de Patrimônio Cultural 2026',
-                category: 'Patrimônio',
-                status: 'Em breve' as const,
-                deadline: 'Abertura: 01/04/2026',
-                value: 'R$ 120.000,00',
-              },
-            ].map((edital, index) => (
-              <StaggerItem key={edital.title}>
-                <Card
-                  hover
-                  padding="md"
-                  className={[
-                    'flex flex-col h-full hover:-translate-y-0.5 transition-all duration-200',
-                    index === 0 ? 'border-l-4 border-l-accent-500' : 'border-l-4 border-l-brand-500',
-                  ].join(' ')}
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="section-label text-slate-500">
-                      {edital.category}
-                    </span>
-                    <Badge variant={edital.status === 'Aberto' ? 'success' : 'warning'} dot>
-                      {edital.status}
-                    </Badge>
-                  </div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2">
-                    {edital.title}
-                  </h3>
-                  <div className="mt-auto pt-4 space-y-2 text-sm text-slate-600">
-                    <p className="flex items-center gap-2">
-                      <IconCalendar className="h-4 w-4 text-slate-400 shrink-0" />
-                      {edital.deadline}
-                    </p>
-                    <p className="flex items-center gap-2">
-                      <IconCurrency className="h-4 w-4 text-slate-400 shrink-0" />
-                      {edital.value}
-                    </p>
-                  </div>
-                  <Button href="/editais" variant="outline" size="md" className="mt-4 w-full">
-                    Ver detalhes
-                  </Button>
-                </Card>
-              </StaggerItem>
-            ))}
-          </StaggerContainer>
+          {editaisDestaque.length > 0 ? (
+            <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" staggerDelay={0.12}>
+              {editaisDestaque.map((edital, index) => {
+                const statusInfo = getStatusDisplay(edital.status)
+                const nextDeadline = getNextDeadline(edital.cronograma)
+                const categoria = edital.categorias[0] ?? '—'
+
+                return (
+                  <StaggerItem key={edital.id}>
+                    <Card
+                      hover
+                      padding="md"
+                      className={[
+                        'flex flex-col h-full hover:-translate-y-0.5 transition-all duration-200',
+                        index === 0 ? 'border-l-4 border-l-accent-500' : 'border-l-4 border-l-brand-500',
+                      ].join(' ')}
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="section-label text-slate-500">
+                          {categoria}
+                        </span>
+                        <Badge variant={statusInfo.badgeVariant} dot>
+                          {statusInfo.label}
+                        </Badge>
+                      </div>
+                      <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                        {edital.titulo}
+                      </h3>
+                      <div className="mt-auto pt-4 space-y-2 text-sm text-slate-600">
+                        {nextDeadline && (
+                          <p className="flex items-center gap-2">
+                            <IconCalendar className="h-4 w-4 text-slate-400 shrink-0" />
+                            {nextDeadline.label}: {formatDate(nextDeadline.dataHora)}
+                          </p>
+                        )}
+                        <p className="flex items-center gap-2">
+                          <IconCurrency className="h-4 w-4 text-slate-400 shrink-0" />
+                          {formatCurrency(edital.valorTotal)}
+                        </p>
+                      </div>
+                      <Button href={`/editais/${edital.slug}`} variant="outline" size="md" className="mt-4 w-full">
+                        Ver detalhes
+                      </Button>
+                    </Card>
+                  </StaggerItem>
+                )
+              })}
+            </StaggerContainer>
+          ) : (
+            <div className="text-center py-12 text-slate-500">
+              <p>Nenhum edital publicado no momento.</p>
+            </div>
+          )}
 
           <div className="mt-8 text-center sm:hidden">
             <Link
@@ -281,15 +324,23 @@ export default async function HomePage() {
       {/* Transparência + Atendimento */}
       <section className="bg-white py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <StaggerContainer className="grid grid-cols-1 lg:grid-cols-2 gap-12" staggerDelay={0.2}>
+          <StaggerContainer className="grid grid-cols-1 lg:grid-cols-2 gap-8" staggerDelay={0.2}>
             {/* Transparência */}
             <StaggerItem>
-              <div className="bg-brand-50/50 rounded-2xl p-8 border-t-4 border-brand-500">
-                <div className="flex items-center gap-3 mb-3">
-                  <IconEye className="h-6 w-6 text-brand-600" />
-                  <h2 className="text-xl font-bold text-slate-900">
-                    Transparência
-                  </h2>
+              <div className="relative bg-brand-50/50 rounded-2xl p-8 lg:p-10 border border-brand-100 overflow-hidden group hover:shadow-lg hover:shadow-brand-100/50 transition-shadow duration-300">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-400 to-brand-600" />
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="flex-shrink-0 h-12 w-12 rounded-xl bg-brand-100 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <IconEye className="h-6 w-6 text-brand-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-slate-900">
+                      Transparência
+                    </h2>
+                    <p className="text-sm text-slate-500 mt-0.5">
+                      Prestação de contas pública
+                    </p>
+                  </div>
                 </div>
                 <p className="text-slate-600 mb-6 leading-relaxed">
                   Consulte os projetos culturais apoiados pela PNAB em Irecê.
@@ -303,12 +354,20 @@ export default async function HomePage() {
 
             {/* Atendimento */}
             <StaggerItem>
-              <div className="bg-accent-50/50 rounded-2xl p-8 border-t-4 border-accent-500">
-                <div className="flex items-center gap-3 mb-3">
-                  <IconMail className="h-6 w-6 text-accent-600" />
-                  <h2 className="text-xl font-bold text-slate-900">
-                    Atendimento
-                  </h2>
+              <div className="relative bg-accent-50/50 rounded-2xl p-8 lg:p-10 border border-accent-100 overflow-hidden group hover:shadow-lg hover:shadow-accent-100/50 transition-shadow duration-300">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-accent-400 to-accent-600" />
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="flex-shrink-0 h-12 w-12 rounded-xl bg-accent-100 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <IconMail className="h-6 w-6 text-accent-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-slate-900">
+                      Atendimento
+                    </h2>
+                    <p className="text-sm text-slate-500 mt-0.5">
+                      Suporte e acompanhamento
+                    </p>
+                  </div>
                 </div>
                 <p className="text-slate-600 mb-6 leading-relaxed">
                   Tem dúvidas sobre editais ou inscrições? Envie sua mensagem
