@@ -7,19 +7,14 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.VM_HOST }}
-          username: ${{ secrets.VM_USER }}
-          key: ${{ secrets.VM_SSH_KEY }}
-          script: |
-            cd /mnt/ssd4t/Code/plataforma-pnab
-            git pull origin main
-            make install
-            make build
-            pkill -f "next start" || true
-            nohup npm run start > app.log 2>&1 &
+      - name: Deploy
+        run: |
+          cd /mnt/ssd4t/Code/plataforma-pnab
+          git pull origin main
+          make install
+          make build
+          pkill -f "next start" || true
+          nohup npm run start > app.log 2>&1 &
