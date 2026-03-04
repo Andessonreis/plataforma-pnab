@@ -163,9 +163,9 @@ export default async function AdminEditaisPage({ searchParams }: Props) {
                             href={`/editais/${edital.slug}`}
                             className="text-slate-500 hover:text-slate-700 font-medium text-xs"
                             target="_blank"
-                              title={edital.status === 'RASCUNHO' ? 'Pré-visualizar rascunho (visível só para admins)' : 'Ver página pública'}
-                            >
-                              {edital.status === 'RASCUNHO' ? 'Preview' : 'Ver'}
+                            title={edital.status === 'RASCUNHO' ? 'Pré-visualizar rascunho (visível só para admins)' : 'Ver página pública'}
+                          >
+                            {edital.status === 'RASCUNHO' ? 'Preview' : 'Ver'}
                           </Link>
                         </div>
                       </td>

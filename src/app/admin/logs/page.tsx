@@ -51,7 +51,7 @@ export default async function AdminLogsPage({ searchParams }: Props) {
     where.createdAt = createdAt
   }
 
-  const [logs, total, distinctActions, distinctEntities] = await Promise.all([
+  const [logs, total, distinctActions, distinctEntities, totalAllLogs] = await Promise.all([
     prisma.auditLog.findMany({
       where,
       orderBy: { createdAt: 'desc' },
@@ -71,6 +71,7 @@ export default async function AdminLogsPage({ searchParams }: Props) {
       where: { entity: { not: null } },
       orderBy: { entity: 'asc' },
     }),
+    prisma.auditLog.count(),
   ])
 
   const totalPages = Math.ceil(total / pageSize)
@@ -96,7 +97,7 @@ export default async function AdminLogsPage({ searchParams }: Props) {
               {total} registro(s) encontrado(s) &middot; Retenção: {retentionDays} dias
             </p>
           </div>
-          <PurgeButton retentionDays={retentionDays} />
+          <PurgeButton retentionDays={retentionDays} totalLogs={totalAllLogs} />
         </div>
       </FadeIn>
 
