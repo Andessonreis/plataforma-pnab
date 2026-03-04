@@ -79,10 +79,10 @@ function AccessibilityControls() {
   }
 
   return (
-    <div className="hidden sm:flex items-center gap-4">
+    <div className="hidden sm:flex items-center gap-1">
       <button
         type="button"
-        className="text-xs hover:text-brand-300 transition-colors"
+        className="inline-flex items-center justify-center rounded px-2 py-1 text-[11px] font-medium text-white/80 hover:text-white hover:bg-white/10 transition-colors min-h-[28px]"
         aria-label="Aumentar fonte"
         onClick={handleIncrease}
       >
@@ -90,18 +90,28 @@ function AccessibilityControls() {
       </button>
       <button
         type="button"
-        className="text-xs hover:text-brand-300 transition-colors"
+        className="inline-flex items-center justify-center rounded px-2 py-1 text-[11px] font-medium text-white/80 hover:text-white hover:bg-white/10 transition-colors min-h-[28px]"
         aria-label="Diminuir fonte"
         onClick={handleDecrease}
       >
         A-
       </button>
+      <span className="h-3 w-px bg-white/20 mx-1" aria-hidden="true" />
       <button
         type="button"
-        className="text-xs hover:text-brand-300 transition-colors"
+        className={[
+          'inline-flex items-center justify-center gap-1.5 rounded px-2 py-1 text-[11px] font-medium transition-colors min-h-[28px]',
+          highContrast
+            ? 'text-white bg-white/15'
+            : 'text-white/80 hover:text-white hover:bg-white/10',
+        ].join(' ')}
         aria-label="Alto contraste"
+        aria-pressed={highContrast}
         onClick={handleContrast}
       >
+        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
+        </svg>
         Contraste
       </button>
     </div>

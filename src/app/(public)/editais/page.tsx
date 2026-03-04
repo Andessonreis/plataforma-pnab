@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import type { EditalStatus } from '@prisma/client'
 import { prisma } from '@/lib/db'
 import { Badge, Button, Card, PageHeader, FilterTabs, EmptyState, Pagination } from '@/components/ui'
@@ -62,10 +61,14 @@ function truncate(text: string, maxLength: number): string {
   return (lastSpace > 0 ? truncated.slice(0, lastSpace) : truncated) + '...'
 }
 
+function isEncerrado(status: EditalStatus): boolean {
+  return CLOSED_STATUSES.includes(status)
+}
+
 function getStatusBorderClass(status: EditalStatus): string {
   if (status === 'INSCRICOES_ABERTAS') return 'border-l-4 border-l-brand-500'
   if (status === 'PUBLICADO') return 'border-l-4 border-l-accent-500'
-  if (CLOSED_STATUSES.includes(status)) return 'border-l-4 border-l-slate-300'
+  if (isEncerrado(status)) return 'border-l-4 border-l-slate-300'
   return ''
 }
 
@@ -125,12 +128,15 @@ export default async function EditaisPage({
       {/* Conteúdo */}
       <section className="bg-slate-50 py-10 sm:py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
             <FilterTabs
               tabs={tabs}
               activeKey={activeTab}
               ariaLabel="Filtrar editais por status"
             />
+            <p className="text-sm text-slate-500">
+              {total} {total === 1 ? 'edital encontrado' : 'editais encontrados'}
+            </p>
           </div>
 
           {editais.length > 0 ? (
@@ -139,20 +145,25 @@ export default async function EditaisPage({
                 {editais.map((edital) => {
                   const statusDisplay = getStatusDisplay(edital.status)
                   const nextDeadline = getNextDeadline(edital.cronograma)
+                  const encerrado = isEncerrado(edital.status)
 
                   return (
                     <Card
                       key={edital.id}
                       hover
                       padding="md"
-                      className={`flex flex-col hover:-translate-y-0.5 transition-all duration-200 ${getStatusBorderClass(edital.status)}`}
+                      className={[
+                        'flex flex-col hover:-translate-y-0.5 transition-all duration-200',
+                        getStatusBorderClass(edital.status),
+                        encerrado ? 'opacity-75 hover:opacity-100' : '',
+                      ].join(' ')}
                     >
                       <div className="flex items-start justify-between gap-2 mb-3">
                         <div className="flex flex-wrap gap-1.5">
                           {edital.categorias.slice(0, 3).map((cat) => (
                             <span
                               key={cat}
-                              className="section-labeltext-slate-500"
+                              className="inline-block rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600"
                             >
                               {cat}
                             </span>
