@@ -7,6 +7,8 @@ import { logAudit } from '@/lib/audit'
 
 export const runtime = 'nodejs'
 
+const FAQ_ROLES_PERMITIDOS = ['ADMIN', 'ATENDIMENTO']
+
 // -- Schema de validacao -------------------------------------------------------
 
 const faqSchema = z.object({
@@ -25,7 +27,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const session = await auth()
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || !FAQ_ROLES_PERMITIDOS.includes(session.user.role)) {
       const res = NextResponse.json(
         { error: 'FORBIDDEN', message: 'Acesso negado.', requestId },
         { status: 403 },
@@ -108,7 +110,7 @@ export async function PUT(req: NextRequest) {
 
   try {
     const session = await auth()
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || !FAQ_ROLES_PERMITIDOS.includes(session.user.role)) {
       const res = NextResponse.json(
         { error: 'FORBIDDEN', message: 'Acesso negado.', requestId },
         { status: 403 },

@@ -14,6 +14,7 @@ import {
   IconInfo,
   IconClose,
   IconLogout,
+  IconTicket,
 } from '@/components/ui'
 
 interface AdminSidebarProps {
@@ -65,6 +66,23 @@ const navSections: NavSection[] = [
     ],
   },
   {
+    title: 'Atendimento',
+    items: [
+      {
+        label: 'Tickets',
+        href: '/admin/tickets',
+        roles: ['ADMIN', 'ATENDIMENTO'],
+        icon: <IconTicket className="h-5 w-5" />,
+      },
+      {
+        label: 'FAQ',
+        href: '/admin/faq',
+        roles: ['ADMIN', 'ATENDIMENTO'],
+        icon: <IconQuestion className="h-5 w-5" />,
+      },
+    ],
+  },
+  {
     title: 'Conteúdo',
     items: [
       {
@@ -78,12 +96,6 @@ const navSections: NavSection[] = [
         href: '/admin/cms',
         roles: ['ADMIN'],
         icon: <IconDocument className="h-5 w-5" />,
-      },
-      {
-        label: 'FAQ',
-        href: '/admin/faq',
-        roles: ['ADMIN'],
-        icon: <IconQuestion className="h-5 w-5" />,
       },
     ],
   },

@@ -72,4 +72,7 @@ export {
   IconClose,
   IconInfo,
   IconExport,
+  IconTicket,
+  IconReply,
+  IconChatBubble,
 } from './icons'

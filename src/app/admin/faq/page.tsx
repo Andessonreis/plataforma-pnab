@@ -15,7 +15,8 @@ interface Props {
 
 export default async function AdminFaqPage({ searchParams }: Props) {
   const session = await auth()
-  if (!session || session.user.role !== 'ADMIN') redirect('/')
+  const role = session?.user?.role
+  if (!session || (role !== 'ADMIN' && role !== 'ATENDIMENTO')) redirect('/')
 
   const params = await searchParams
   const page = Math.max(1, Number(params.page) || 1)
@@ -59,10 +60,11 @@ export default async function AdminFaqPage({ searchParams }: Props) {
     return parts.length > 0 ? `/admin/faq?${parts.join('&')}` : '/admin/faq'
   }
 
-  function buildFilterUrl(filters: { editalId?: string; publicado?: string }) {
+  function buildFilterUrl(filters: { editalId?: string | null; publicado?: string | null }) {
     const parts: string[] = []
-    const eid = filters.editalId ?? editalFilter
-    const pub = filters.publicado ?? publicadoFilter
+    // undefined = não especificado, manter atual | null = limpar filtro
+    const eid = 'editalId' in filters ? filters.editalId : editalFilter
+    const pub = 'publicado' in filters ? filters.publicado : publicadoFilter
     if (eid) parts.push(`editalId=${eid}`)
     if (pub) parts.push(`publicado=${pub}`)
     return parts.length > 0 ? `/admin/faq?${parts.join('&')}` : '/admin/faq'
