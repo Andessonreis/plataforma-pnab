@@ -15,13 +15,13 @@ interface StatCardProps {
 function StatCardContent({ icon, label, value, sub, color, iconColor }: StatCardProps) {
   return (
     <div className="flex items-center gap-4">
-      <div className={`rounded-lg p-3 ${color}`}>
+      <div className={`rounded-xl p-2.5 ${color}`}>
         <span className={iconColor}>{icon}</span>
       </div>
-      <div>
-        <p className="text-2xl font-bold text-slate-900">{value}</p>
-        <p className="text-sm font-medium text-slate-900">{label}</p>
-        {sub && <p className="text-xs text-slate-500">{sub}</p>}
+      <div className="min-w-0">
+        <p className="text-2xl font-bold text-slate-900 leading-tight">{value}</p>
+        <p className="text-sm font-medium text-slate-700">{label}</p>
+        {sub && <p className="text-xs text-slate-400 mt-0.5">{sub}</p>}
       </div>
     </div>
   )
