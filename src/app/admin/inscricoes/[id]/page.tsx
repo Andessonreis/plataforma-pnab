@@ -5,8 +5,10 @@ import { redirect, notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { Card, Badge } from '@/components/ui'
 import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
+import { CRITERIOS_AVALIACAO_PADRAO, type CriterioAvaliacao } from '@/lib/avaliacao-criterios'
 import type { InscricaoStatus } from '@prisma/client'
 import { HabilitacaoActions } from './habilitacao-actions'
+import { AvaliacaoForm } from './avaliacao-form'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -22,17 +24,21 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
   if (!session) redirect('/login')
 
   const { id } = await params
+  const userRole = session.user.role
+  const isAvaliador = userRole === 'AVALIADOR'
+  const isAdmin = userRole === 'ADMIN'
 
   const inscricao = await prisma.inscricao.findUnique({
     where: { id },
     include: {
-      edital: { select: { titulo: true, slug: true, ano: true } },
+      edital: { select: { titulo: true, slug: true, ano: true, criteriosAvaliacao: true } },
       proponente: {
         select: { nome: true, cpfCnpj: true, email: true, telefone: true, tipoProponente: true },
       },
       anexos: true,
       avaliacoes: {
         include: { avaliador: { select: { nome: true } } },
+        orderBy: { createdAt: 'asc' },
       },
       recursos: {
         orderBy: { createdAt: 'desc' },
@@ -41,6 +47,41 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
   })
 
   if (!inscricao) notFound()
+
+  // AVALIADOR só acessa inscrições atribuídas a ele
+  if (isAvaliador) {
+    const assignedById = await prisma.avaliacao.findUnique({
+      where: { inscricaoId_avaliadorId: { inscricaoId: id, avaliadorId: session.user.id } },
+      select: { id: true },
+    })
+    if (!assignedById) {
+      redirect('/admin/inscricoes?aviso=nao-atribuido')
+    }
+  }
+
+  // Buscar avaliação do usuário atual (AVALIADOR ou ADMIN avaliando)
+  const meuAvaliacao = (isAvaliador || isAdmin)
+    ? await prisma.avaliacao.findUnique({
+      where: { inscricaoId_avaliadorId: { inscricaoId: id, avaliadorId: session.user.id } },
+      select: {
+        id: true,
+        notas: true,
+        parecer: true,
+        notaTotal: true,
+        finalizada: true,
+        updatedAt: true,
+      },
+    })
+    : null
+
+  // Resolver critérios de avaliação
+  const criteriosEdital = Array.isArray(inscricao.edital.criteriosAvaliacao)
+    ? (inscricao.edital.criteriosAvaliacao as CriterioAvaliacao[])
+    : []
+  const criterios: CriterioAvaliacao[] =
+    criteriosEdital.length > 0
+      ? criteriosEdital
+      : [...CRITERIOS_AVALIACAO_PADRAO]
 
   const rawCampos = inscricao.campos
   const campos: Record<string, unknown> =
@@ -167,10 +208,12 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
             </Card>
           )}
 
-          {/* Avaliacoes */}
-          {inscricao.avaliacoes.length > 0 && (
+          {/* Avaliacoes — visível apenas para ADMIN (avaliação cega entre avaliadores) */}
+          {inscricao.avaliacoes.length > 0 && !isAvaliador && (
             <Card padding="sm" className="sm:p-6">
-              <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Avaliacoes</h2>
+              <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">
+                Avaliações ({inscricao.avaliacoes.length})
+              </h2>
               <div className="space-y-3 sm:space-y-4">
                 {inscricao.avaliacoes.map((avaliacao) => (
                   <div key={avaliacao.id} className="p-3 sm:p-4 bg-slate-50 rounded-lg">
@@ -178,12 +221,19 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
                       <span className="text-sm font-medium text-slate-700">
                         {avaliacao.avaliador.nome}
                       </span>
-                      <span className="text-xl font-bold text-brand-700">
-                        {String(avaliacao.notaTotal)}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        {(avaliacao as unknown as { finalizada: boolean }).finalizada && (
+                          <span className="text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                            Finalizada
+                          </span>
+                        )}
+                        <span className="text-xl font-bold text-brand-700 tabular-nums">
+                          {parseFloat(String(avaliacao.notaTotal)).toFixed(1)}
+                        </span>
+                      </div>
                     </div>
                     {avaliacao.parecer && (
-                      <p className="text-sm text-slate-600 mt-2">{avaliacao.parecer}</p>
+                      <p className="text-sm text-slate-600 mt-2 leading-relaxed">{avaliacao.parecer}</p>
                     )}
                     <p className="text-xs text-slate-400 mt-2">
                       {new Date(avaliacao.createdAt).toLocaleDateString('pt-BR')}
@@ -226,14 +276,14 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
           )}
         </div>
 
-        {/* Coluna lateral — Acoes */}
+        {/* Coluna lateral — Ações */}
         <div className="space-y-4 sm:space-y-6">
           {/* Resumo */}
           <Card padding="sm" className="sm:p-6">
             <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Resumo</h2>
             <dl className="space-y-3">
               <div>
-                <dt className="text-xs font-medium text-slate-500 uppercase">Numero</dt>
+                <dt className="text-xs font-medium text-slate-500 uppercase">Número</dt>
                 <dd className="text-sm text-slate-900 font-mono">{inscricao.numero}</dd>
               </div>
               <div>
@@ -241,23 +291,47 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
                 <dd className="text-sm text-slate-900">
                   {inscricao.submittedAt
                     ? new Date(inscricao.submittedAt).toLocaleDateString('pt-BR', {
-                        day: '2-digit',
-                        month: 'long',
-                        year: 'numeric',
-                      })
-                    : 'Nao enviada'}
+                      day: '2-digit',
+                      month: 'long',
+                      year: 'numeric',
+                    })
+                    : 'Não enviada'}
                 </dd>
               </div>
               {inscricao.notaFinal && (
                 <div>
                   <dt className="text-xs font-medium text-slate-500 uppercase">Nota Final</dt>
-                  <dd className="text-2xl font-bold text-brand-700">{String(inscricao.notaFinal)}</dd>
+                  <dd className="text-2xl font-bold text-brand-700 tabular-nums">
+                    {parseFloat(String(inscricao.notaFinal)).toFixed(1)}
+                  </dd>
                 </div>
               )}
             </dl>
           </Card>
 
-          {/* Habilitacao */}
+          {/* Formulário de avaliação — AVALIADOR e ADMIN */}
+          {(isAvaliador || isAdmin) && (
+            <AvaliacaoForm
+              inscricaoId={inscricao.id}
+              inscricaoNumero={inscricao.numero}
+              criterios={criterios}
+              initialAvaliacao={
+                meuAvaliacao
+                  ? {
+                    id: meuAvaliacao.id,
+                    notas: meuAvaliacao.notas as { criterio: string; nota: number; peso: number }[],
+                    parecer: meuAvaliacao.parecer,
+                    notaTotal: String(meuAvaliacao.notaTotal),
+                    finalizada: meuAvaliacao.finalizada,
+                    updatedAt: meuAvaliacao.updatedAt.toISOString(),
+                  }
+                  : null
+              }
+              isAdmin={isAdmin}
+            />
+          )}
+
+          {/* Habilitação */}
           {canHabilitar && isHabilitacaoStatus && (
             <HabilitacaoActions
               inscricaoId={inscricao.id}
@@ -266,10 +340,10 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
             />
           )}
 
-          {/* Motivo inabilitacao */}
+          {/* Motivo inabilitação */}
           {inscricao.motivoInabilitacao && (
             <Card padding="sm" className="sm:p-6 border-red-200 bg-red-50">
-              <h2 className="text-base sm:text-lg font-semibold text-red-800 mb-2">Motivo da Inabilitacao</h2>
+              <h2 className="text-base sm:text-lg font-semibold text-red-800 mb-2">Motivo da Inabilitação</h2>
               <p className="text-sm text-red-700">{inscricao.motivoInabilitacao}</p>
             </Card>
           )}

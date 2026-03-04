@@ -173,6 +173,8 @@ model Edital {
   cronograma          Json         @default("[]")
   // Definição dinâmica dos campos do formulário de inscrição
   camposFormulario    Json         @default("[]")
+  // Critérios de avaliação: [{ criterio: string, peso: number, descricao?: string, notaMax: number }]
+  criteriosAvaliacao  Json         @default("[]")
   createdAt           DateTime     @default(now())
   updatedAt           DateTime     @updatedAt
 
@@ -246,7 +248,9 @@ model Avaliacao {
   notas       Json     @default("[]")
   parecer     String?
   notaTotal   Decimal  @db.Decimal(5, 2)
+  finalizada  Boolean  @default(false)
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   inscricao Inscricao @relation(fields: [inscricaoId], references: [id])
   avaliador User      @relation(fields: [avaliadorId], references: [id])

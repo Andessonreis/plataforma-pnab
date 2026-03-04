@@ -75,4 +75,5 @@ export {
   IconTicket,
   IconReply,
   IconChatBubble,
+  IconStar,
 } from './icons'

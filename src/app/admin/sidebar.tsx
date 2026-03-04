@@ -15,6 +15,7 @@ import {
   IconClose,
   IconLogout,
   IconTicket,
+  IconStar,
 } from '@/components/ui'
 
 interface AdminSidebarProps {
@@ -54,8 +55,14 @@ const navSections: NavSection[] = [
       {
         label: 'Inscrições',
         href: '/admin/inscricoes',
-        roles: ['ADMIN', 'HABILITADOR', 'AVALIADOR', 'ATENDIMENTO'],
+        roles: ['ADMIN', 'HABILITADOR', 'ATENDIMENTO'],
         icon: <IconClipboard className="h-5 w-5" />,
+      },
+      {
+        label: 'Minhas Avaliações',
+        href: '/admin/inscricoes',
+        roles: ['AVALIADOR'],
+        icon: <IconStar className="h-5 w-5" />,
       },
       {
         label: 'Contemplados',
