@@ -2,19 +2,25 @@ name: Deploy
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+  workflow_dispatch:
 
 jobs:
   deploy:
-    runs-on: self-hosted
+    name: Deploy na VPS
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy
-        run: |
-          cd /mnt/ssd4t/Code/plataforma-pnab
-          git pull origin main
-          make install
-          make db-seed
-          pkill -f "next dev" || true
-          nohup npm run dev > app.log 2>&1 &
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script: |
+            cd ${{ secrets.VPS_APP_DIR }}
+            git pull origin main
+            docker compose down
+            docker compose up -d --build
+            docker image prune -f
