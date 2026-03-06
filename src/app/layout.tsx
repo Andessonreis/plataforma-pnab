@@ -1,3 +1,6 @@
+// Força SSR em todas as rotas — banco não disponível no build
+export const dynamic = 'force-dynamic'
+
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { VLibras } from '@/components/layout/vlibras'
