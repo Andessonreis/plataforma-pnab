@@ -1,10 +1,26 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+let _supabase: SupabaseClient | null = null
 
-// Client com service role — usar apenas no servidor, nunca expor ao browser
-export const supabase = createClient(supabaseUrl, supabaseServiceKey)
+// Client com service role — inicializado sob demanda para não quebrar o build
+function getSupabase(): SupabaseClient {
+  if (!_supabase) {
+    const supabaseUrl = process.env.SUPABASE_URL
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error('SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY são obrigatórios')
+    }
+    _supabase = createClient(supabaseUrl, supabaseServiceKey)
+  }
+  return _supabase
+}
+
+// Mantém export para compatibilidade, mas agora é lazy
+export const supabase = new Proxy({} as SupabaseClient, {
+  get(_, prop) {
+    return (getSupabase() as Record<string | symbol, unknown>)[prop]
+  },
+})
 
 /**
  * Faz upload de um arquivo e retorna a URL pública.
