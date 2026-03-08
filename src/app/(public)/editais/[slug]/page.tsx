@@ -525,6 +525,36 @@ export default async function EditalPage({ params }: Props) {
                   </div>
                 )}
 
+                {/* Link para versão acessível */}
+                {edital.conteudoAcessivel && (
+                  <Link
+                    href={`/editais/${slug}/acessivel`}
+                    className="flex items-center gap-3 rounded-xl border border-brand-200 bg-brand-50 p-4 text-sm font-medium text-brand-700 hover:bg-brand-100 transition-colors"
+                  >
+                    <IconAccessible className="h-5 w-5 shrink-0" />
+                    <span>Ver versão acessível deste edital</span>
+                  </Link>
+                )}
+
+                {/* Link para Resultados (quando publicados) */}
+                {['RESULTADO_PRELIMINAR', 'RECURSO', 'RESULTADO_FINAL', 'ENCERRADO'].includes(edital.status) && (
+                  <div className="bg-brand-50 rounded-xl border border-brand-200 p-6">
+                    <h3 className="text-base font-semibold text-brand-900 mb-2">
+                      Resultados Publicados
+                    </h3>
+                    <p className="text-sm text-brand-700 mb-3">
+                      Confira a lista de classificação deste edital.
+                    </p>
+                    <Link
+                      href={`/editais/${slug}/resultados`}
+                      className="inline-flex items-center gap-2 text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors"
+                    >
+                      Ver Resultados
+                      <IconArrowRight className="h-4 w-4" />
+                    </Link>
+                  </div>
+                )}
+
                 {/* Link de volta */}
                 <Link
                   href="/editais"

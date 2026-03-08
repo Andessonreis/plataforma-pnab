@@ -175,6 +175,8 @@ model Edital {
   camposFormulario    Json         @default("[]")
   // Critérios de avaliação: [{ criterio: string, peso: number, descricao?: string, notaMax: number }]
   criteriosAvaliacao  Json         @default("[]")
+  // Versão acessível do edital em HTML (WCAG AA)
+  conteudoAcessivel   String?
   createdAt           DateTime     @default(now())
   updatedAt           DateTime     @updatedAt
 

@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth'
 import { redirect, notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { EditalForm } from '../edital-form'
+import { AcessivelEditor } from './acessivel-editor'
 import type { EditalStatus } from '@prisma/client'
 
 interface Props {
@@ -66,6 +67,25 @@ export default async function EditarEditalPage({ params }: Props) {
           status: edital.status as EditalStatus,
         }}
       />
+
+      {/* Seção de Conteúdo Acessível */}
+      <div className="mt-8">
+        <AcessivelEditor
+          editalId={edital.id}
+          initialContent={edital.conteudoAcessivel ?? ''}
+          editalSlug={edital.slug}
+        />
+      </div>
+
+      {/* Link para Resultados */}
+      <div className="mt-6 flex gap-3">
+        <Link
+          href={`/admin/editais/${edital.id}/resultados`}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+        >
+          Ver Resultados
+        </Link>
+      </div>
     </section>
   )
 }
