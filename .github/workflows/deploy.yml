@@ -21,6 +21,15 @@ jobs:
           script: |
             cd ${{ secrets.VPS_APP_DIR }}
             git pull origin main
-            docker compose -f docker-compose.prod.yml down
-            docker compose -f docker-compose.prod.yml up -d --build
+
+            # Build das imagens
+            docker compose -f docker-compose.prod.yml build
+
+            # Executa migrations (banco já rodando do deploy anterior)
+            docker compose -f docker-compose.prod.yml run --rm migrate
+
+            # Reinicia app e worker com as novas imagens
+            docker compose -f docker-compose.prod.yml up -d app worker pnab-postgres pnab-redis
+
+            # Limpa imagens antigas
             docker image prune -f

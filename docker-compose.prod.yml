@@ -1,0 +1,85 @@
+services:
+  # ── Aplicação Next.js ────────────────────────────────────────────────────────
+  app:
+    build: .
+    ports:
+      - "3001:3000"
+    env_file: .env
+    depends_on:
+      pnab-postgres:
+        condition: service_healthy
+      pnab-redis:
+        condition: service_healthy
+    networks:
+      - pnab-network
+    restart: unless-stopped
+
+  # ── Worker BullMQ (email, PDF) ──────────────────────────────────────────────
+  worker:
+    build: .
+    command: ["node", "worker.cjs"]
+    env_file: .env
+    depends_on:
+      pnab-postgres:
+        condition: service_healthy
+      pnab-redis:
+        condition: service_healthy
+    networks:
+      - pnab-network
+    restart: unless-stopped
+
+  # ── Migration (on-demand) ───────────────────────────────────────────────────
+  migrate:
+    build:
+      context: .
+      target: builder
+    command: ["npx", "prisma", "db", "push", "--skip-generate"]
+    env_file: .env
+    depends_on:
+      pnab-postgres:
+        condition: service_healthy
+    networks:
+      - pnab-network
+    profiles:
+      - tools
+
+  # ── PostgreSQL (isolado) ────────────────────────────────────────────────────
+  pnab-postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pnab_postgres_data:/var/lib/postgresql/data
+    networks:
+      - pnab-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ── Redis (isolado) ─────────────────────────────────────────────────────────
+  pnab-redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - pnab_redis_data:/data
+    networks:
+      - pnab-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  pnab_postgres_data:
+  pnab_redis_data:
+
+networks:
+  pnab-network:
+    driver: bridge
