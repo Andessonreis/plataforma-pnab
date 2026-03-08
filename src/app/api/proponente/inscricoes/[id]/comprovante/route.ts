@@ -93,7 +93,7 @@ export async function GET(
       },
     })
   } catch (err) {
-    console.error({ requestId, error: err instanceof Error ? err.message : 'Unknown' })
+    console.error({ requestId, error: err instanceof Error ? err.message : 'Unknown', stack: err instanceof Error ? err.stack : undefined })
     return NextResponse.json(
       { error: 'INTERNAL_ERROR', message: 'Erro ao gerar comprovante.', requestId },
       { status: 500 },

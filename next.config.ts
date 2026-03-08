@@ -3,6 +3,7 @@ import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   output: 'standalone',
+  serverExternalPackages: ['pdfkit'],
   typescript: {
     // Erros de tipo pré-existentes no Prisma — corrigir depois
     ignoreBuildErrors: true,

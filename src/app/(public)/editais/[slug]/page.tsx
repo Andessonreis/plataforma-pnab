@@ -433,24 +433,48 @@ export default async function EditalPage({ params }: Props) {
                     <h3 className="text-lg font-semibold mb-2">
                       Inscrições Abertas
                     </h3>
-                    <p className="text-brand-100 text-sm mb-5 leading-relaxed">
-                      Cadastre-se ou acesse sua conta para inscrever seu projeto
-                      cultural neste edital.
-                    </p>
-                    <Button
-                      href="/login"
-                      variant="ghost"
-                      size="lg"
-                      className="w-full bg-white text-brand-700 hover:bg-brand-50 hover:text-brand-800 shadow-md font-semibold"
-                    >
-                      Inscrever-se
-                    </Button>
-                    <p className="mt-3 text-center text-xs text-brand-200">
-                      Ainda não tem conta?{' '}
-                      <Link href="/cadastro" className="underline hover:text-white">
-                        Cadastre-se
-                      </Link>
-                    </p>
+                    {session?.user?.role === 'PROPONENTE' ? (
+                      <>
+                        <p className="text-brand-100 text-sm mb-5 leading-relaxed">
+                          Inscreva seu projeto cultural neste edital. Você poderá
+                          salvar como rascunho e enviar quando estiver pronto.
+                        </p>
+                        <Button
+                          href={`/proponente/inscricoes/nova?editalId=${edital.id}`}
+                          variant="ghost"
+                          size="lg"
+                          className="w-full bg-white text-brand-700 hover:bg-brand-50 hover:text-brand-800 shadow-md font-semibold"
+                        >
+                          Inscrever-se
+                        </Button>
+                      </>
+                    ) : session ? (
+                      <p className="text-brand-100 text-sm leading-relaxed">
+                        Apenas proponentes podem se inscrever em editais. Acesse
+                        sua conta de proponente para se inscrever.
+                      </p>
+                    ) : (
+                      <>
+                        <p className="text-brand-100 text-sm mb-5 leading-relaxed">
+                          Cadastre-se ou acesse sua conta para inscrever seu projeto
+                          cultural neste edital.
+                        </p>
+                        <Button
+                          href={`/login?callbackUrl=/proponente/inscricoes/nova?editalId=${edital.id}`}
+                          variant="ghost"
+                          size="lg"
+                          className="w-full bg-white text-brand-700 hover:bg-brand-50 hover:text-brand-800 shadow-md font-semibold"
+                        >
+                          Inscrever-se
+                        </Button>
+                        <p className="mt-3 text-center text-xs text-brand-200">
+                          Ainda não tem conta?{' '}
+                          <Link href="/cadastro" className="underline hover:text-white">
+                            Cadastre-se
+                          </Link>
+                        </p>
+                      </>
+                    )}
                   </div>
                 )}
 
