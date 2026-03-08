@@ -16,6 +16,7 @@ import {
   IconLogout,
   IconTicket,
   IconStar,
+  IconChatBubble,
 } from '@/components/ui'
 
 interface AdminSidebarProps {
@@ -69,6 +70,12 @@ const navSections: NavSection[] = [
         href: '/admin/contemplados',
         roles: ['ADMIN'],
         icon: <IconCheck className="h-5 w-5" />,
+      },
+      {
+        label: 'Recursos',
+        href: '/admin/recursos',
+        roles: ['ADMIN'],
+        icon: <IconChatBubble className="h-5 w-5" />,
       },
     ],
   },

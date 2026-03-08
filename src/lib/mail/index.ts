@@ -17,6 +17,8 @@ export type EmailTemplate =
   | 'protocolo_atendimento'
   | 'notificacao_prazo'
   | 'recuperacao_senha'
+  | 'recurso_submetido'
+  | 'recurso_decidido'
 
 export interface SendEmailOptions {
   to: string
@@ -80,6 +82,18 @@ function renderTemplate(template: EmailTemplate, data: Record<string, unknown>):
       <p style="font-size:12px;color:#94a3b8;margin-top:24px;">
         Se o botão não funcionar, copie e cole o link: ${data.resetUrl}
       </p>
+    `,
+    recurso_submetido: `
+      <h2>Novo Recurso Recebido</h2>
+      <p>Um recurso foi interposto para o edital <strong>${data.edital}</strong>.</p>
+      <p>Fase: <strong>${data.fase}</strong></p>
+      <p>Acesse o painel para analisar: <a href="${data.url}">${data.url}</a></p>
+    `,
+    recurso_decidido: `
+      <h2>Recurso Analisado</h2>
+      <p>Seu recurso referente ao edital <strong>${data.edital}</strong> foi analisado.</p>
+      <p>Decisão: <strong>${data.decisao}</strong></p>
+      <p>Acesse sua área para mais detalhes: <a href="${data.url}">${data.url}</a></p>
     `,
   }
 

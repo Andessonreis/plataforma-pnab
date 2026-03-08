@@ -6,6 +6,7 @@ import { prisma } from '@/lib/db'
 import { Card, Badge } from '@/components/ui'
 import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
 import type { InscricaoStatus } from '@prisma/client'
+import { RecursoForm } from './recurso/recurso-form'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -260,6 +261,34 @@ export default async function InscricaoDetailPage({ params }: Props) {
                   </div>
                 ))}
               </div>
+            </Card>
+          )}
+
+          {/* Interpor Recurso */}
+          {['INABILITADA', 'RESULTADO_PRELIMINAR', 'NAO_CONTEMPLADA', 'SUPLENTE'].includes(inscricao.status) && (
+            <Card>
+              <RecursoForm
+                inscricaoId={inscricao.id}
+                fase={
+                  inscricao.status === 'INABILITADA' ? 'HABILITACAO' :
+                  inscricao.status === 'RESULTADO_PRELIMINAR' ? 'RESULTADO_PRELIMINAR' :
+                  'RESULTADO_FINAL'
+                }
+              />
+            </Card>
+          )}
+
+          {/* Comprovante */}
+          {inscricao.status !== 'RASCUNHO' && (
+            <Card>
+              <h2 className="text-lg font-semibold text-slate-900 mb-3">Comprovante</h2>
+              <a
+                href={`/api/proponente/inscricoes/${inscricao.id}/comprovante`}
+                className="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-lg border border-brand-300 text-brand-700 text-sm font-medium hover:bg-brand-50 transition-colors min-h-[44px]"
+                download
+              >
+                Baixar Comprovante (PDF)
+              </a>
             </Card>
           )}
 

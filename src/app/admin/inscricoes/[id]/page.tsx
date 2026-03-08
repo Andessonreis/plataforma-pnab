@@ -9,6 +9,7 @@ import { CRITERIOS_AVALIACAO_PADRAO, type CriterioAvaliacao } from '@/lib/avalia
 import type { InscricaoStatus } from '@prisma/client'
 import { HabilitacaoActions } from './habilitacao-actions'
 import { AvaliacaoForm } from './avaliacao-form'
+import { RecursoDecision } from './recurso-decision'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -269,6 +270,16 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
                     <p className="text-xs text-slate-400 mt-2">
                       {new Date(recurso.createdAt).toLocaleDateString('pt-BR')}
                     </p>
+                    {/* Formulário de decisão para recursos pendentes */}
+                    {!recurso.decisao && (isAdmin || userRole === 'HABILITADOR') && (
+                      <div className="mt-3">
+                        <RecursoDecision
+                          inscricaoId={inscricao.id}
+                          recursoId={recurso.id}
+                          fase={recurso.fase}
+                        />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
