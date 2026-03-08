@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { randomUUID } from 'crypto'
 import { prisma } from '@/lib/db'
+import { rateLimit } from '@/lib/rate-limit'
+import { RATE_LIMITS } from '@/lib/rate-limit/config'
 
 export const runtime = 'nodejs'
 
@@ -28,6 +30,10 @@ export async function POST(req: NextRequest) {
   const start = Date.now()
 
   try {
+    // Rate limiting: 5 req/min
+    const limited = await rateLimit(req, 'contato', RATE_LIMITS['contato'])
+    if (limited) return limited
+
     const body = await req.json()
     const data = contatoSchema.parse(body)
 

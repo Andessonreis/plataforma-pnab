@@ -4,6 +4,8 @@ import { randomUUID } from 'crypto'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/db'
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
+import { rateLimit } from '@/lib/rate-limit'
+import { RATE_LIMITS } from '@/lib/rate-limit/config'
 
 export const runtime = 'nodejs'
 
@@ -28,6 +30,10 @@ export async function POST(req: NextRequest) {
   const start = Date.now()
 
   try {
+    // Rate limiting: 5 req/min
+    const limited = await rateLimit(req, 'auth/register', RATE_LIMITS['auth/register'])
+    if (limited) return limited
+
     const body = await req.json()
     const data = registerSchema.parse(body)
 

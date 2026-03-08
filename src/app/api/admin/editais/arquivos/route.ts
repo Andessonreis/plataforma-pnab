@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { uploadFile, deleteFile } from '@/lib/storage'
+import { validateMagicBytes } from '@/lib/upload/validate'
 
 export const runtime = 'nodejs'
 
@@ -142,6 +143,17 @@ export async function POST(req: NextRequest) {
 
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
+
+    // Validação por magic bytes — previne arquivos com extensão falsificada
+    if (!validateMagicBytes(buffer, file.type)) {
+      const res = NextResponse.json(
+        { error: 'BAD_REQUEST', message: 'O conteúdo do arquivo não corresponde ao tipo declarado.', requestId },
+        { status: 400 },
+      )
+      res.headers.set('X-Request-Id', requestId)
+      res.headers.set('Cache-Control', 'no-store')
+      return res
+    }
 
     const publicUrl = await uploadFile('editais', storagePath, buffer, file.type)
 

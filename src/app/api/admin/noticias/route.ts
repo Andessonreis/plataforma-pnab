@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { logAudit } from '@/lib/audit'
+import { sanitizeContent } from '@/lib/sanitize'
 
 export const runtime = 'nodejs'
 
@@ -63,7 +64,7 @@ export async function POST(req: NextRequest) {
       data: {
         titulo: data.titulo,
         slug,
-        corpo: data.corpo,
+        corpo: sanitizeContent(data.corpo),
         tags: data.tags,
         imagemUrl: data.imagemUrl ?? null,
         publicado: data.publicado,
@@ -188,7 +189,7 @@ export async function PUT(req: NextRequest) {
       data: {
         titulo: data.titulo,
         slug,
-        corpo: data.corpo,
+        corpo: sanitizeContent(data.corpo),
         tags: data.tags,
         imagemUrl: data.imagemUrl ?? null,
         publicado: data.publicado,

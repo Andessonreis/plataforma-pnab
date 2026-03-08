@@ -4,6 +4,8 @@ import { randomUUID, randomBytes } from 'crypto'
 import { prisma } from '@/lib/db'
 import { sendEmail } from '@/lib/mail'
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
+import { rateLimit } from '@/lib/rate-limit'
+import { RATE_LIMITS } from '@/lib/rate-limit/config'
 
 export const runtime = 'nodejs'
 
@@ -24,6 +26,10 @@ export async function POST(req: NextRequest) {
     'Se os dados estiverem cadastrados, você receberá um e-mail com instruções para redefinir sua senha.'
 
   try {
+    // Rate limiting: 3 req/min
+    const limited = await rateLimit(req, 'auth/forgot-password', RATE_LIMITS['auth/forgot-password'])
+    if (limited) return limited
+
     const body = await req.json()
     const data = forgotPasswordSchema.parse(body)
 

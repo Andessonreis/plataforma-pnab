@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import { uploadFile } from '@/lib/storage'
+import { validateMagicBytes } from '@/lib/upload/validate'
 
 export const runtime = 'nodejs'
 
@@ -52,6 +53,17 @@ export async function POST(req: NextRequest) {
     // Converte o File para Buffer para upload no Supabase
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
+
+    // Validação por magic bytes — previne PDFs falsificados
+    if (!validateMagicBytes(buffer, ALLOWED_MIME)) {
+      const res = NextResponse.json(
+        { error: 'BAD_REQUEST', message: 'O conteúdo do arquivo não corresponde a um PDF válido.', requestId },
+        { status: 400 },
+      )
+      res.headers.set('X-Request-Id', requestId)
+      res.headers.set('Cache-Control', 'no-store')
+      return res
+    }
 
     const storagePath = `declaracoes/${userId}/declaracao.pdf`
     const publicUrl = await uploadFile('propostas', storagePath, buffer, ALLOWED_MIME)
