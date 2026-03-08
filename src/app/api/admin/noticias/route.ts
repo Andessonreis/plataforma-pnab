@@ -67,7 +67,11 @@ export async function POST(req: NextRequest) {
         tags: data.tags,
         imagemUrl: data.imagemUrl ?? null,
         publicado: data.publicado,
-        publicadoEm: data.publicadoEm ? new Date(data.publicadoEm) : null,
+        publicadoEm: data.publicadoEm
+          ? new Date(data.publicadoEm)
+          : data.publicado
+            ? new Date()
+            : null,
       },
     })
 
@@ -188,7 +192,11 @@ export async function PUT(req: NextRequest) {
         tags: data.tags,
         imagemUrl: data.imagemUrl ?? null,
         publicado: data.publicado,
-        publicadoEm: data.publicadoEm ? new Date(data.publicadoEm) : null,
+        publicadoEm: data.publicadoEm
+          ? new Date(data.publicadoEm)
+          : data.publicado
+            ? new Date()
+            : null,
       },
     })
 

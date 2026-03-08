@@ -280,14 +280,17 @@ async function main() {
   // Arquivos dos editais
   // ─────────────────────────────────────────────────────────────────────────
 
+  // URLs placeholder — em produção serão substituídas por uploads reais via admin
+  const PLACEHOLDER_URL = '/arquivos-indisponiveis'
+
   const arquivosData = [
-    { editalSlug: 'pnab-2025-fomento-artes', tipo: 'PDF', titulo: 'Edital Completo — Fomento às Artes 2025', url: '#', acessivel: true },
-    { editalSlug: 'pnab-2025-fomento-artes', tipo: 'PDF', titulo: 'Edital em versão acessível (HTML)', url: '#', acessivel: true },
-    { editalSlug: 'pnab-2025-fomento-artes', tipo: 'MODELO', titulo: 'Modelo de Plano de Trabalho', url: '#', acessivel: false },
-    { editalSlug: 'pnab-2025-fomento-artes', tipo: 'DECLARACAO', titulo: 'Declaração de Residência', url: '#', acessivel: false },
-    { editalSlug: 'pnab-2025-fomento-artes', tipo: 'PLANILHA', titulo: 'Planilha Orçamentária', url: '#', acessivel: false },
-    { editalSlug: 'pnab-2025-audiovisual', tipo: 'PDF', titulo: 'Edital Audiovisual 2025', url: '#', acessivel: true },
-    { editalSlug: 'pnab-2025-audiovisual', tipo: 'MODELO', titulo: 'Roteiro de Pré-Produção', url: '#', acessivel: false },
+    { editalSlug: 'pnab-2025-fomento-artes', tipo: 'PDF', titulo: 'Edital Completo — Fomento às Artes 2025', url: PLACEHOLDER_URL, acessivel: true },
+    { editalSlug: 'pnab-2025-fomento-artes', tipo: 'PDF', titulo: 'Edital em versão acessível (HTML)', url: PLACEHOLDER_URL, acessivel: true },
+    { editalSlug: 'pnab-2025-fomento-artes', tipo: 'MODELO', titulo: 'Modelo de Plano de Trabalho', url: PLACEHOLDER_URL, acessivel: false },
+    { editalSlug: 'pnab-2025-fomento-artes', tipo: 'DECLARACAO', titulo: 'Declaração de Residência', url: PLACEHOLDER_URL, acessivel: false },
+    { editalSlug: 'pnab-2025-fomento-artes', tipo: 'PLANILHA', titulo: 'Planilha Orçamentária', url: PLACEHOLDER_URL, acessivel: false },
+    { editalSlug: 'pnab-2025-audiovisual', tipo: 'PDF', titulo: 'Edital Audiovisual 2025', url: PLACEHOLDER_URL, acessivel: true },
+    { editalSlug: 'pnab-2025-audiovisual', tipo: 'MODELO', titulo: 'Roteiro de Pré-Produção', url: PLACEHOLDER_URL, acessivel: false },
   ]
 
   // Limpa arquivos existentes para evitar duplicatas em re-seeds
@@ -327,9 +330,9 @@ async function main() {
     { pergunta: 'Como acompanho o resultado?', resposta: 'Todos os resultados são publicados nesta plataforma e os proponentes inscritos recebem notificação por e-mail. Você também pode acompanhar pelo painel do proponente após fazer login.' },
   ]
 
-  // Limpa FAQs existentes para evitar duplicatas de execuções anteriores
+  // Limpa apenas FAQs do seed para evitar duplicatas em re-seeds
   await prisma.faqItem.deleteMany({
-    where: { id: { not: { startsWith: 'keep-' } } },
+    where: { id: { startsWith: 'seed-' } },
   })
 
   for (let i = 0; i < faqGeral.length; i++) {
@@ -449,11 +452,11 @@ async function main() {
   // ─────────────────────────────────────────────────────────────────────────
 
   const manuais = [
-    { titulo: 'Guia do Proponente — Como se inscrever', categoria: 'Guias', url: '#guia-proponente.pdf', versao: '2.0' },
-    { titulo: 'Manual de Elaboração de Projetos Culturais', categoria: 'Guias', url: '#manual-projetos.pdf', versao: '1.0' },
-    { titulo: 'Manual de Prestação de Contas', categoria: 'Prestação de Contas', url: '#prestacao-contas.pdf', versao: '1.2' },
-    { titulo: 'Modelo de Relatório de Execução', categoria: 'Prestação de Contas', url: '#modelo-relatorio.docx', versao: '1.0' },
-    { titulo: 'Regimento da Comissão de Seleção', categoria: 'Documentos Institucionais', url: '#regimento-comissao.pdf', versao: '1.0' },
+    { titulo: 'Guia do Proponente — Como se inscrever', categoria: 'Guias', url: PLACEHOLDER_URL, versao: '2.0' },
+    { titulo: 'Manual de Elaboração de Projetos Culturais', categoria: 'Guias', url: PLACEHOLDER_URL, versao: '1.0' },
+    { titulo: 'Manual de Prestação de Contas', categoria: 'Prestação de Contas', url: PLACEHOLDER_URL, versao: '1.2' },
+    { titulo: 'Modelo de Relatório de Execução', categoria: 'Prestação de Contas', url: PLACEHOLDER_URL, versao: '1.0' },
+    { titulo: 'Regimento da Comissão de Seleção', categoria: 'Documentos Institucionais', url: PLACEHOLDER_URL, versao: '1.0' },
   ]
 
   for (const m of manuais) {
