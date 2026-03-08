@@ -54,7 +54,14 @@ export default async function InscricaoDetailPage({ params }: Props) {
   }
 
   const currentStatusIndex = statusTimeline.indexOf(inscricao.status as InscricaoStatus)
-  const campos = inscricao.campos as Record<string, unknown>
+  // Parsear campos com segurança — Prisma Json pode retornar string em vez de objeto
+  let camposParsed = inscricao.campos
+  if (typeof camposParsed === 'string') {
+    try { camposParsed = JSON.parse(camposParsed) } catch { camposParsed = {} }
+  }
+  const campos = (camposParsed && typeof camposParsed === 'object' && !Array.isArray(camposParsed))
+    ? camposParsed as Record<string, unknown>
+    : {} as Record<string, unknown>
 
   return (
     <section>

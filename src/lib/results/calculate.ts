@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db'
+import type { InscricaoStatus } from '@prisma/client'
 import type { CriterioAvaliacao } from '@/lib/avaliacao-criterios'
 import { CRITERIOS_AVALIACAO_PADRAO } from '@/lib/avaliacao-criterios'
 
@@ -96,17 +97,23 @@ export async function calculateResults(editalId: string): Promise<ResultadoInscr
  */
 export async function saveResults(
   resultados: ResultadoInscricao[],
-  newStatus: 'RESULTADO_PRELIMINAR' | 'RESULTADO_FINAL',
+  fase: 'RESULTADO_PRELIMINAR' | 'RESULTADO_FINAL',
 ): Promise<void> {
-  const updates = resultados.map((r) =>
-    prisma.inscricao.update({
+  const updates = resultados.map((r) => {
+    let status: InscricaoStatus = fase
+    if (fase === 'RESULTADO_FINAL') {
+      status = r.notaFinal > 0 && r.totalAvaliacoes > 0
+        ? 'CONTEMPLADA'
+        : 'NAO_CONTEMPLADA'
+    }
+    return prisma.inscricao.update({
       where: { id: r.inscricaoId },
       data: {
         notaFinal: r.notaFinal,
-        status: newStatus,
+        status,
       },
-    }),
-  )
+    })
+  })
 
   await prisma.$transaction(updates)
 }

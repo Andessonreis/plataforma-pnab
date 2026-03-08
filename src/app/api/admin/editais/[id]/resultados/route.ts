@@ -54,7 +54,7 @@ export async function GET(
           select: { notaTotal: true, avaliadorId: true },
         },
       },
-      orderBy: { notaFinal: 'desc' },
+      orderBy: { notaFinal: { sort: 'desc', nulls: 'last' } },
     })
 
     const resultados = inscricoes

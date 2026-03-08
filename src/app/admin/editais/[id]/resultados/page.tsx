@@ -38,7 +38,7 @@ export default async function AdminResultadosPage({ params }: Props) {
         select: { notaTotal: true },
       },
     },
-    orderBy: { notaFinal: 'desc' },
+    orderBy: { notaFinal: { sort: 'desc', nulls: 'last' } },
   })
 
   return (
