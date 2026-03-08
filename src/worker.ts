@@ -4,13 +4,14 @@
  * Em produção, roda como serviço `worker` no docker-compose.yml
  */
 import { emailWorker } from '@/lib/queue/workers/email.worker'
+import { pdfWorker } from '@/lib/queue/workers/pdf.worker'
 
 console.log('[Worker] Iniciado — aguardando jobs nas filas...')
-console.log('[Worker] Filas ativas:', emailWorker.name)
+console.log('[Worker] Filas ativas:', emailWorker.name, pdfWorker.name)
 
 const gracefulShutdown = async (signal: string) => {
   console.log(`[Worker] Recebido ${signal}, encerrando...`)
-  await emailWorker.close()
+  await Promise.all([emailWorker.close(), pdfWorker.close()])
   process.exit(0)
 }
 
