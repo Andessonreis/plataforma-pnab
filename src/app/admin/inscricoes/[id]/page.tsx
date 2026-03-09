@@ -10,6 +10,7 @@ import type { InscricaoStatus } from '@prisma/client'
 import { HabilitacaoActions } from './habilitacao-actions'
 import { AvaliacaoForm } from './avaliacao-form'
 import { RecursoDecision } from './recurso-decision'
+import { AnexoViewer } from './anexo-viewer'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -185,27 +186,16 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
               <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">
                 Anexos ({inscricao.anexos.length})
               </h2>
-              <div className="space-y-2">
-                {inscricao.anexos.map((anexo) => (
-                  <div key={anexo.id} className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-slate-50 rounded-lg">
-                    <svg className="h-5 w-5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                    </svg>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-slate-900 truncate">{anexo.titulo}</p>
-                      <p className="text-xs text-slate-500">{anexo.tipo}</p>
-                    </div>
-                    {anexo.valido !== null && (
-                      <Badge variant={anexo.valido ? 'success' : 'error'}>
-                        {anexo.valido ? 'Valido' : 'Invalido'}
-                      </Badge>
-                    )}
-                    {anexo.observacao && (
-                      <span className="text-xs text-slate-500">{anexo.observacao}</span>
-                    )}
-                  </div>
-                ))}
-              </div>
+              <AnexoViewer
+                inscricaoId={inscricao.id}
+                anexos={inscricao.anexos.map((a) => ({
+                  id: a.id,
+                  tipo: a.tipo,
+                  titulo: a.titulo,
+                  valido: a.valido,
+                  observacao: a.observacao,
+                }))}
+              />
             </Card>
           )}
 
