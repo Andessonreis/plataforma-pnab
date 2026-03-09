@@ -11,7 +11,7 @@ import { IconArrowLeft, IconArrowRight, IconCheck, IconDocument } from '@/compon
 interface CampoFormulario {
   nome: string
   label: string
-  tipo: 'texto' | 'textarea' | 'select' | 'numero' | 'data' | 'arquivo'
+  tipo: 'texto' | 'text' | 'textarea' | 'select' | 'numero' | 'number' | 'data' | 'date' | 'arquivo'
   obrigatorio?: boolean
   placeholder?: string
   opcoes?: string[]
@@ -254,6 +254,7 @@ export default function InscricaoForm({
 
     switch (campo.tipo) {
       case 'texto':
+      case 'text':
         return (
           <Input
             key={campo.nome}
@@ -291,6 +292,7 @@ export default function InscricaoForm({
           />
         )
       case 'numero':
+      case 'number':
         return (
           <Input
             key={campo.nome}
@@ -304,6 +306,7 @@ export default function InscricaoForm({
           />
         )
       case 'data':
+      case 'date':
         return (
           <Input
             key={campo.nome}
