@@ -47,6 +47,10 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 # Dependências de produção para o worker (sobrescreve subset do standalone)
 COPY --from=prod-deps --chown=nextjs:nodejs /app/node_modules ./node_modules
 
+# Prisma Client gerado (prod-deps não roda prisma generate, então copia do builder)
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma/client ./node_modules/@prisma/client
+
 # Worker BullMQ compilado
 COPY --from=builder --chown=nextjs:nodejs /app/dist/worker.cjs ./worker.cjs
 
