@@ -11,6 +11,7 @@ import { HabilitacaoActions } from './habilitacao-actions'
 import { AvaliacaoForm } from './avaliacao-form'
 import { RecursoDecision } from './recurso-decision'
 import { AnexoViewer } from './anexo-viewer'
+import { DistribuicaoAvaliadores } from './distribuicao-avaliadores'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -309,6 +310,18 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
               )}
             </dl>
           </Card>
+
+          {/* Distribuição de avaliadores — ADMIN */}
+          {isAdmin && (inscricao.status === 'HABILITADA' || inscricao.status === 'EM_AVALIACAO') && (
+            <DistribuicaoAvaliadores
+              inscricaoId={inscricao.id}
+              avaliacoes={inscricao.avaliacoes.map((a) => ({
+                avaliador: { id: a.avaliadorId, nome: a.avaliador.nome },
+                finalizada: (a as unknown as { finalizada: boolean }).finalizada,
+                notaTotal: a.notaTotal,
+              }))}
+            />
+          )}
 
           {/* Formulário de avaliação — AVALIADOR e ADMIN */}
           {(isAvaliador || isAdmin) && (

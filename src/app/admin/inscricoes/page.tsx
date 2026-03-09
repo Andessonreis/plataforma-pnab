@@ -60,12 +60,16 @@ export default async function AdminInscricoesPage({ searchParams }: Props) {
       include: {
         edital: { select: { titulo: true, slug: true } },
         proponente: { select: { nome: true, cpfCnpj: true, email: true } },
-        ...(isAvaliador && {
-          avaliacoes: {
-            where: { avaliadorId: session.user.id },
-            select: { finalizada: true, notaTotal: true },
-          },
-        }),
+        ...(isAvaliador
+          ? {
+              avaliacoes: {
+                where: { avaliadorId: session.user.id },
+                select: { finalizada: true, notaTotal: true },
+              },
+            }
+          : {
+              _count: { select: { avaliacoes: true } },
+            }),
       },
     }),
     prisma.inscricao.count({ where }),
@@ -235,11 +239,24 @@ export default async function AdminInscricoesPage({ searchParams }: Props) {
                   <p className="text-xs text-slate-500 leading-snug mb-2 line-clamp-1">{inscricao.edital.titulo}</p>
                   <div className="flex items-center justify-between text-[11px] text-slate-500">
                     <span className="font-mono">{inscricao.numero}</span>
-                    <span>
-                      {inscricao.submittedAt
-                        ? new Date(inscricao.submittedAt).toLocaleDateString('pt-BR')
-                        : '—'}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      {!isAvaliador && (() => {
+                        const count = (inscricao as unknown as { _count?: { avaliacoes: number } })._count?.avaliacoes ?? 0
+                        return count > 0 ? (
+                          <span className="inline-flex items-center gap-0.5 text-brand-700">
+                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            {count}
+                          </span>
+                        ) : null
+                      })()}
+                      <span>
+                        {inscricao.submittedAt
+                          ? new Date(inscricao.submittedAt).toLocaleDateString('pt-BR')
+                          : '—'}
+                      </span>
+                    </div>
                   </div>
                 </Link>
               )
@@ -259,7 +276,10 @@ export default async function AdminInscricoesPage({ searchParams }: Props) {
                     {isAvaliador ? (
                       <th className="text-left py-3 px-4 font-medium text-slate-600">Avaliação</th>
                     ) : (
-                      <th className="text-left py-3 px-4 font-medium text-slate-600">Status</th>
+                      <>
+                        <th className="text-left py-3 px-4 font-medium text-slate-600">Status</th>
+                        <th className="text-left py-3 px-4 font-medium text-slate-600">Avaliadores</th>
+                      </>
                     )}
                     <th className="text-left py-3 px-4 font-medium text-slate-600">Enviada em</th>
                     <th className="text-right py-3 px-4 font-medium text-slate-600">Ações</th>
@@ -300,11 +320,25 @@ export default async function AdminInscricoesPage({ searchParams }: Props) {
                             )}
                           </td>
                         ) : (
-                          <td className="py-3 px-4">
-                            <Badge variant={inscricaoStatusVariant[inscricao.status as InscricaoStatus]}>
-                              {inscricaoStatusLabel[inscricao.status as InscricaoStatus]}
-                            </Badge>
-                          </td>
+                          <>
+                            <td className="py-3 px-4">
+                              <Badge variant={inscricaoStatusVariant[inscricao.status as InscricaoStatus]}>
+                                {inscricaoStatusLabel[inscricao.status as InscricaoStatus]}
+                              </Badge>
+                            </td>
+                            <td className="py-3 px-4">
+                              {(() => {
+                                const count = (inscricao as unknown as { _count?: { avaliacoes: number } })._count?.avaliacoes ?? 0
+                                return count > 0 ? (
+                                  <span className="inline-flex items-center justify-center text-xs font-medium bg-brand-50 text-brand-700 rounded-full px-2 py-0.5 min-w-[24px]">
+                                    {count}
+                                  </span>
+                                ) : (
+                                  <span className="text-xs text-slate-400">—</span>
+                                )
+                              })()}
+                            </td>
+                          </>
                         )}
                         <td className="py-3 px-4 text-slate-500">
                           {inscricao.submittedAt
