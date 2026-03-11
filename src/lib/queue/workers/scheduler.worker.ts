@@ -18,7 +18,7 @@ interface CronogramaItem {
  * Normaliza texto para matching fuzzy de labels do cronograma.
  * Remove acentos, converte para minúsculas e remove espaços extras.
  */
-function normalize(text: string): string {
+export function normalize(text: string): string {
   return text
     .toLowerCase()
     .normalize('NFD')
@@ -30,13 +30,13 @@ function normalize(text: string): string {
 /**
  * Verifica se o label do cronograma corresponde a uma fase esperada.
  */
-function matchLabel(label: string, patterns: string[]): boolean {
+export function matchLabel(label: string, patterns: string[]): boolean {
   const normalized = normalize(label)
   return patterns.some((p) => normalized.includes(p))
 }
 
 // Padrões de labels para cada transição
-const INICIO_INSCRICOES_PATTERNS = [
+export const INICIO_INSCRICOES_PATTERNS = [
   'inicio das inscricoes',
   'inicio inscricoes',
   'abertura das inscricoes',
@@ -44,7 +44,7 @@ const INICIO_INSCRICOES_PATTERNS = [
   'inscricoes abertas',
 ]
 
-const ENCERRAMENTO_INSCRICOES_PATTERNS = [
+export const ENCERRAMENTO_INSCRICOES_PATTERNS = [
   'encerramento das inscricoes',
   'encerramento inscricoes',
   'fim das inscricoes',
@@ -52,71 +52,78 @@ const ENCERRAMENTO_INSCRICOES_PATTERNS = [
   'inscricoes encerradas',
 ]
 
+/**
+ * Lógica principal do scheduler — extraída para testabilidade.
+ */
+export async function processSchedulerJob(): Promise<number> {
+  const now = new Date()
+
+  // Busca editais que podem ter transição automática
+  const editais = await prisma.edital.findMany({
+    where: {
+      status: { in: ['PUBLICADO', 'INSCRICOES_ABERTAS'] },
+    },
+    select: {
+      id: true,
+      titulo: true,
+      status: true,
+      cronograma: true,
+    },
+  })
+
+  let transicoes = 0
+
+  for (const edital of editais) {
+    const cronograma = (edital.cronograma as unknown as CronogramaItem[]) || []
+
+    let novoStatus: EditalStatus | null = null
+
+    if (edital.status === 'PUBLICADO') {
+      // Verificar se a data de início das inscrições já passou
+      const item = cronograma.find((c) => matchLabel(c.label, INICIO_INSCRICOES_PATTERNS))
+      if (item?.dataHora && new Date(item.dataHora) <= now) {
+        novoStatus = 'INSCRICOES_ABERTAS'
+      }
+    } else if (edital.status === 'INSCRICOES_ABERTAS') {
+      // Verificar se a data de encerramento das inscrições já passou
+      const item = cronograma.find((c) => matchLabel(c.label, ENCERRAMENTO_INSCRICOES_PATTERNS))
+      if (item?.dataHora && new Date(item.dataHora) <= now) {
+        novoStatus = 'INSCRICOES_ENCERRADAS'
+      }
+    }
+
+    if (novoStatus) {
+      await prisma.edital.update({
+        where: { id: edital.id },
+        data: { status: novoStatus },
+      })
+
+      await logAudit({
+        action: AUDIT_ACTIONS.STATUS_ALTERADO,
+        entity: 'Edital',
+        entityId: edital.id,
+        details: {
+          titulo: edital.titulo,
+          statusAnterior: edital.status,
+          novoStatus,
+          automatico: true,
+        },
+      })
+
+      console.log(`[Scheduler] Edital "${edital.titulo}": ${edital.status} → ${novoStatus}`)
+      transicoes++
+    }
+  }
+
+  console.log(`[Scheduler] Concluído — ${transicoes} transição(ões) realizada(s)`)
+  return transicoes
+}
+
 export const schedulerWorker = new Worker<SchedulerJobData>(
   'scheduler',
   async (job) => {
     console.log(`[Scheduler] Verificando transições de status (job ${job.id})`)
-
-    const now = new Date()
-
-    // Busca editais que podem ter transição automática
-    const editais = await prisma.edital.findMany({
-      where: {
-        status: { in: ['PUBLICADO', 'INSCRICOES_ABERTAS'] },
-      },
-      select: {
-        id: true,
-        titulo: true,
-        status: true,
-        cronograma: true,
-      },
-    })
-
-    let transicoes = 0
-
-    for (const edital of editais) {
-      const cronograma = (edital.cronograma as unknown as CronogramaItem[]) || []
-
-      let novoStatus: EditalStatus | null = null
-
-      if (edital.status === 'PUBLICADO') {
-        // Verificar se a data de início das inscrições já passou
-        const item = cronograma.find((c) => matchLabel(c.label, INICIO_INSCRICOES_PATTERNS))
-        if (item?.dataHora && new Date(item.dataHora) <= now) {
-          novoStatus = 'INSCRICOES_ABERTAS'
-        }
-      } else if (edital.status === 'INSCRICOES_ABERTAS') {
-        // Verificar se a data de encerramento das inscrições já passou
-        const item = cronograma.find((c) => matchLabel(c.label, ENCERRAMENTO_INSCRICOES_PATTERNS))
-        if (item?.dataHora && new Date(item.dataHora) <= now) {
-          novoStatus = 'INSCRICOES_ENCERRADAS'
-        }
-      }
-
-      if (novoStatus) {
-        await prisma.edital.update({
-          where: { id: edital.id },
-          data: { status: novoStatus },
-        })
-
-        await logAudit({
-          action: AUDIT_ACTIONS.STATUS_ALTERADO,
-          entity: 'Edital',
-          entityId: edital.id,
-          details: {
-            titulo: edital.titulo,
-            statusAnterior: edital.status,
-            novoStatus,
-            automatico: true,
-          },
-        })
-
-        console.log(`[Scheduler] Edital "${edital.titulo}": ${edital.status} → ${novoStatus}`)
-        transicoes++
-      }
-    }
-
-    console.log(`[Scheduler] Concluído — ${transicoes} transição(ões) realizada(s)`)
+    await processSchedulerJob()
   },
   {
     connection: redis,

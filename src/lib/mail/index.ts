@@ -39,7 +39,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<void> {
 }
 
 // Renderização básica — substituir por react-email ou mjml quando necessário
-function renderTemplate(template: EmailTemplate, data: Record<string, unknown>): string {
+export function renderTemplate(template: EmailTemplate, data: Record<string, unknown>): string {
   const templates: Record<EmailTemplate, string> = {
     comprovante_inscricao: `
       <h2>Inscrição recebida com sucesso!</h2>

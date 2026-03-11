@@ -1,11 +1,9 @@
-import { withSentryConfig } from '@sentry/nextjs'
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   output: 'standalone',
   serverExternalPackages: ['pdfkit'],
   typescript: {
-    // Erros de tipo pré-existentes no Prisma — corrigir depois
     ignoreBuildErrors: true,
   },
   eslint: {
@@ -29,11 +27,16 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default withSentryConfig(nextConfig, {
-  // Suprime logs do Sentry no build
-  silent: true,
+// Sentry só em produção com DSN configurado
+let exportedConfig = nextConfig
+if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { withSentryConfig } = require('@sentry/nextjs')
+  exportedConfig = withSentryConfig(nextConfig, {
+    silent: true,
+    org: process.env.SENTRY_ORG,
+    project: process.env.SENTRY_PROJECT,
+  })
+}
 
-  // Source maps — configurar quando tiver DSN
-  org: process.env.SENTRY_ORG,
-  project: process.env.SENTRY_PROJECT,
-})
+export default exportedConfig

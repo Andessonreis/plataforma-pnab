@@ -148,7 +148,7 @@ export async function saveResults(
   await prisma.$transaction(updates)
 }
 
-function parseCriterios(raw: unknown): CriterioAvaliacao[] {
+export function parseCriterios(raw: unknown): CriterioAvaliacao[] {
   let data = raw
   if (typeof data === 'string') {
     try { data = JSON.parse(data) } catch { return [...CRITERIOS_AVALIACAO_PADRAO] }
@@ -157,7 +157,7 @@ function parseCriterios(raw: unknown): CriterioAvaliacao[] {
   return data as CriterioAvaliacao[]
 }
 
-function parseNotas(raw: unknown): NotaAvaliacao[] {
+export function parseNotas(raw: unknown): NotaAvaliacao[] {
   let data = raw
   if (typeof data === 'string') {
     try { data = JSON.parse(data) } catch { return [] }
@@ -166,7 +166,7 @@ function parseNotas(raw: unknown): NotaAvaliacao[] {
   return data as NotaAvaliacao[]
 }
 
-function calculateWeightedAverage(notas: NotaAvaliacao[], criterios: CriterioAvaliacao[]): number {
+export function calculateWeightedAverage(notas: NotaAvaliacao[], criterios: CriterioAvaliacao[]): number {
   let totalPeso = 0
   let totalPonderado = 0
 
