@@ -177,6 +177,10 @@ model Edital {
   criteriosAvaliacao  Json         @default("[]")
   // Versão acessível do edital em HTML (WCAG AA)
   conteudoAcessivel   String?
+  // Número de vagas para contemplados (null = ilimitado)
+  vagasContemplados   Int?
+  // Número de vagas para suplentes (null = todos restantes com nota)
+  vagasSuplentes      Int?
   createdAt           DateTime     @default(now())
   updatedAt           DateTime     @updatedAt
 

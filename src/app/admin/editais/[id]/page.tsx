@@ -65,6 +65,8 @@ export default async function EditarEditalPage({ params }: Props) {
           regrasElegibilidade: edital.regrasElegibilidade ?? '',
           cronograma,
           status: edital.status as EditalStatus,
+          vagasContemplados: edital.vagasContemplados,
+          vagasSuplentes: edital.vagasSuplentes,
         }}
       />
 

@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { logAudit } from '@/lib/audit'
+import { enqueueEmail } from '@/lib/queue'
 import type { UserRole } from '@prisma/client'
 
 export const runtime = 'nodejs'
@@ -46,7 +47,13 @@ export async function PUT(
 
     const inscricao = await prisma.inscricao.findUnique({
       where: { id },
-      select: { id: true, numero: true, status: true },
+      select: {
+        id: true,
+        numero: true,
+        status: true,
+        proponente: { select: { email: true, nome: true } },
+        edital: { select: { titulo: true } },
+      },
     })
 
     if (!inscricao) {
@@ -90,6 +97,26 @@ export async function PUT(
       },
       ip: req.headers.get('x-forwarded-for') ?? undefined,
     })
+
+    // Notificar proponente por e-mail
+    try {
+      const baseUrl = process.env.NEXTAUTH_URL ?? 'http://localhost:3000'
+      await enqueueEmail({
+        to: inscricao.proponente.email,
+        subject: `Resultado da Habilitação — ${inscricao.edital.titulo}`,
+        template: 'habilitacao',
+        data: {
+          nome: inscricao.proponente.nome,
+          numero: inscricao.numero,
+          edital: inscricao.edital.titulo,
+          resultado: data.status,
+          motivo: data.motivo ?? null,
+          url: `${baseUrl}/proponente/inscricoes`,
+        },
+      })
+    } catch {
+      console.error({ requestId, message: 'Falha ao enfileirar e-mail de habilitação' })
+    }
 
     const res = NextResponse.json({
       message: `Inscricao ${data.status === 'HABILITADA' ? 'habilitada' : 'inabilitada'} com sucesso.`,

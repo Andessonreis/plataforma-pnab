@@ -111,7 +111,7 @@ export async function POST(
 
     const edital = await prisma.edital.findUnique({
       where: { id },
-      select: { id: true, titulo: true, slug: true, status: true },
+      select: { id: true, titulo: true, slug: true, status: true, vagasContemplados: true, vagasSuplentes: true },
     })
 
     if (!edital) {
@@ -132,7 +132,10 @@ export async function POST(
     }
 
     // Salva notas e atualiza status das inscrições
-    await saveResults(resultados, fase)
+    await saveResults(resultados, fase, {
+      contemplados: edital.vagasContemplados,
+      suplentes: edital.vagasSuplentes,
+    })
 
     // Atualiza status do edital
     const editalStatus = fase === 'RESULTADO_FINAL' ? 'RESULTADO_FINAL' : 'RESULTADO_PRELIMINAR'

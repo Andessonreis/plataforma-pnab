@@ -18,6 +18,10 @@ export interface PdfJobData {
   outputPath: string
 }
 
+export interface SchedulerJobData {
+  trigger: 'cron'
+}
+
 // ─── Filas ────────────────────────────────────────────────────────────────────
 
 export const emailQueue = new Queue<EmailJobData>('email', {
@@ -40,6 +44,15 @@ export const pdfQueue = new Queue<PdfJobData>('pdf', {
   },
 })
 
+export const schedulerQueue = new Queue<SchedulerJobData>('scheduler', {
+  connection: redis,
+  defaultJobOptions: {
+    attempts: 1,
+    removeOnComplete: 10,
+    removeOnFail: 50,
+  },
+})
+
 // ─── Helpers para enfileirar jobs ─────────────────────────────────────────────
 
 export async function enqueueEmail(data: EmailJobData) {
@@ -48,4 +61,17 @@ export async function enqueueEmail(data: EmailJobData) {
 
 export async function enqueuePdf(data: PdfJobData) {
   return pdfQueue.add('generate', data)
+}
+
+/**
+ * Configura o job repetível do scheduler (a cada 30 minutos).
+ * Seguro chamar múltiplas vezes — BullMQ deduplica por jobId.
+ */
+export async function initSchedulerRepeatableJobs() {
+  await schedulerQueue.upsertJobScheduler(
+    'edital-status-check',
+    { every: 30 * 60 * 1000 }, // 30 minutos
+    { name: 'check', data: { trigger: 'cron' as const } },
+  )
+  console.log('[Queue] Scheduler configurado — verificação a cada 30 minutos')
 }

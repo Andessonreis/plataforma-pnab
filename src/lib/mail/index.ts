@@ -19,6 +19,7 @@ export type EmailTemplate =
   | 'recuperacao_senha'
   | 'recurso_submetido'
   | 'recurso_decidido'
+  | 'habilitacao'
 
 export interface SendEmailOptions {
   to: string
@@ -94,6 +95,20 @@ function renderTemplate(template: EmailTemplate, data: Record<string, unknown>):
       <p>Seu recurso referente ao edital <strong>${data.edital}</strong> foi analisado.</p>
       <p>Decisão: <strong>${data.decisao}</strong></p>
       <p>Acesse sua área para mais detalhes: <a href="${data.url}">${data.url}</a></p>
+    `,
+    habilitacao: `
+      <h2>Resultado da Habilitação</h2>
+      <p>Olá, <strong>${data.nome}</strong>!</p>
+      <p>Sua inscrição <strong>${data.numero}</strong> no edital <strong>${data.edital}</strong> foi analisada na fase de habilitação.</p>
+      <p>Resultado: <strong>${data.resultado === 'HABILITADA' ? 'HABILITADA' : 'INABILITADA'}</strong></p>
+      ${data.resultado === 'INABILITADA' ? `
+        <p>Motivo: ${data.motivo}</p>
+        <p style="margin-top:16px;padding:12px;background-color:#fef3c7;border-radius:8px;font-size:14px;">
+          <strong>Atenção:</strong> Você pode interpor recurso contra esta decisão dentro do prazo previsto no cronograma do edital.
+          Acesse sua área para mais detalhes.
+        </p>
+      ` : ''}
+      <p style="margin-top:16px;">Acesse sua área: <a href="${data.url}">${data.url}</a></p>
     `,
   }
 

@@ -92,20 +92,50 @@ export async function calculateResults(editalId: string): Promise<ResultadoInscr
   return resultados
 }
 
+export interface VagasConfig {
+  contemplados?: number | null
+  suplentes?: number | null
+}
+
 /**
  * Salva as notas finais calculadas nas inscrições.
+ *
+ * Na fase RESULTADO_FINAL, aplica lógica de ranking:
+ * - Se vagasContemplados definido: posições 1..N → CONTEMPLADA, N+1..N+M → SUPLENTE, restantes → NAO_CONTEMPLADA
+ * - Se vagasContemplados é null: comportamento anterior (todos com nota > 0 = CONTEMPLADA)
  */
 export async function saveResults(
   resultados: ResultadoInscricao[],
   fase: 'RESULTADO_PRELIMINAR' | 'RESULTADO_FINAL',
+  vagas?: VagasConfig,
 ): Promise<void> {
-  const updates = resultados.map((r) => {
+  const updates = resultados.map((r, index) => {
     let status: InscricaoStatus = fase
+
     if (fase === 'RESULTADO_FINAL') {
-      status = r.notaFinal > 0 && r.totalAvaliacoes > 0
-        ? 'CONTEMPLADA'
-        : 'NAO_CONTEMPLADA'
+      const temNota = r.notaFinal > 0 && r.totalAvaliacoes > 0
+
+      if (!temNota) {
+        status = 'NAO_CONTEMPLADA'
+      } else if (vagas?.contemplados != null) {
+        // Ranking com vagas definidas (resultados já vêm ordenados por nota desc)
+        const posicao = index + 1
+        if (posicao <= vagas.contemplados) {
+          status = 'CONTEMPLADA'
+        } else if (vagas.suplentes != null && posicao <= vagas.contemplados + vagas.suplentes) {
+          status = 'SUPLENTE'
+        } else if (vagas.suplentes == null) {
+          // Sem limite de suplentes: todos restantes com nota são suplentes
+          status = 'SUPLENTE'
+        } else {
+          status = 'NAO_CONTEMPLADA'
+        }
+      } else {
+        // Sem vagas definidas: comportamento anterior
+        status = 'CONTEMPLADA'
+      }
     }
+
     return prisma.inscricao.update({
       where: { id: r.inscricaoId },
       data: {

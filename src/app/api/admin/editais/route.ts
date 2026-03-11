@@ -30,6 +30,8 @@ const editalSchema = z.object({
   ]).default('RASCUNHO'),
   cronograma: z.array(cronogramaItemSchema).default([]),
   camposFormulario: z.array(z.record(z.string(), z.unknown())).default([]),
+  vagasContemplados: z.number().int().min(1).nullable().optional(),
+  vagasSuplentes: z.number().int().min(0).nullable().optional(),
 })
 
 // ── Gerar slug a partir do titulo ───────────────────────────────────────────
@@ -86,6 +88,8 @@ export async function POST(req: NextRequest) {
         regrasElegibilidade: data.regrasElegibilidade ?? null,
         cronograma: data.cronograma,
         camposFormulario: data.camposFormulario as unknown as import('@prisma/client').Prisma.InputJsonValue,
+        vagasContemplados: data.vagasContemplados ?? null,
+        vagasSuplentes: data.vagasSuplentes ?? null,
       },
     })
 
@@ -211,6 +215,8 @@ export async function PUT(req: NextRequest) {
         regrasElegibilidade: data.regrasElegibilidade ?? null,
         cronograma: data.cronograma,
         camposFormulario: data.camposFormulario as unknown as import('@prisma/client').Prisma.InputJsonValue,
+        vagasContemplados: data.vagasContemplados ?? null,
+        vagasSuplentes: data.vagasSuplentes ?? null,
       },
     })
 

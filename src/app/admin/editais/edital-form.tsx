@@ -24,6 +24,8 @@ interface EditalFormProps {
     regrasElegibilidade: string
     cronograma: CronogramaItem[]
     status: EditalStatus
+    vagasContemplados: number | null
+    vagasSuplentes: number | null
   }
 }
 
@@ -116,6 +118,12 @@ export function EditalForm({ initialData }: EditalFormProps) {
   const [cronograma, setCronograma] = useState<CronogramaItem[]>(
     initialData?.cronograma ?? [{ label: '', dataHora: '', destaque: false }]
   )
+  const [vagasContemplados, setVagasContemplados] = useState(
+    initialData?.vagasContemplados != null ? String(initialData.vagasContemplados) : ''
+  )
+  const [vagasSuplentes, setVagasSuplentes] = useState(
+    initialData?.vagasSuplentes != null ? String(initialData.vagasSuplentes) : ''
+  )
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -161,6 +169,8 @@ export function EditalForm({ initialData }: EditalFormProps) {
       acoesAfirmativas,
       status,
       cronograma: cronogramaFiltrado,
+      vagasContemplados: vagasContemplados.trim() ? Number(vagasContemplados) : null,
+      vagasSuplentes: vagasSuplentes.trim() ? Number(vagasSuplentes) : null,
     }
 
     try {
@@ -252,6 +262,24 @@ export function EditalForm({ initialData }: EditalFormProps) {
             options={STATUS_OPTIONS}
             onChange={e => setStatus(e.target.value as EditalStatus)}
           />
+          <div className="grid grid-cols-2 gap-3 sm:gap-5">
+            <Input
+              label="Vagas Contemplados"
+              type="number"
+              min={1}
+              value={vagasContemplados}
+              onChange={e => setVagasContemplados(e.target.value)}
+              placeholder="Ilimitado"
+            />
+            <Input
+              label="Vagas Suplentes"
+              type="number"
+              min={0}
+              value={vagasSuplentes}
+              onChange={e => setVagasSuplentes(e.target.value)}
+              placeholder="Ilimitado"
+            />
+          </div>
         </div>
       </Card>
 

@@ -44,6 +44,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
           select: {
             id: true,
             titulo: true,
+            status: true,
             categorias: true,
             camposFormulario: true,
           },
@@ -78,6 +79,16 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     if (inscricao.status !== 'RASCUNHO') {
       const res = NextResponse.json(
         { error: 'FORBIDDEN', message: 'Esta inscrição já foi enviada.', requestId },
+        { status: 403 },
+      )
+      res.headers.set('X-Request-Id', requestId)
+      res.headers.set('Cache-Control', 'no-store')
+      return res
+    }
+
+    if (inscricao.edital.status !== 'INSCRICOES_ABERTAS') {
+      const res = NextResponse.json(
+        { error: 'FORBIDDEN', message: 'O prazo de inscrições para este edital foi encerrado.', requestId },
         { status: 403 },
       )
       res.headers.set('X-Request-Id', requestId)
