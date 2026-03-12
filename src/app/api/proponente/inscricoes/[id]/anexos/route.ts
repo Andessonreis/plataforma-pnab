@@ -129,16 +129,27 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     const storagePath = `inscricoes/${id}/${safeName}`
     const url = await uploadFile('propostas', storagePath, buffer, file.type)
 
-    // Criar registro no banco
-    const anexo = await prisma.anexoInscricao.create({
-      data: {
-        inscricaoId: id,
-        tipo,
-        titulo,
-        url,
-      },
-      select: { id: true, url: true, titulo: true, tipo: true, createdAt: true },
-    })
+    // Criar registro no banco — com rollback do arquivo se falhar
+    let anexo: { id: string; url: string; titulo: string; tipo: string; createdAt: Date }
+    try {
+      anexo = await prisma.anexoInscricao.create({
+        data: {
+          inscricaoId: id,
+          tipo,
+          titulo,
+          url,
+        },
+        select: { id: true, url: true, titulo: true, tipo: true, createdAt: true },
+      })
+    } catch (dbError) {
+      // Rollback: remover arquivo órfão do storage
+      try {
+        await deleteFile('propostas', storagePath)
+      } catch {
+        console.error({ requestId, message: 'Falha ao remover arquivo órfão do storage', storagePath })
+      }
+      throw dbError
+    }
 
     await logAudit({
       userId: session.user.id,

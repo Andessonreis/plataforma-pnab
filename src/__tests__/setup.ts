@@ -14,14 +14,97 @@ vi.mock('@/lib/db', () => ({
     inscricao: {
       findMany: vi.fn(),
       findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      update: vi.fn(),
+      create: vi.fn(),
+      count: vi.fn(),
+    },
+    user: {
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+    },
+    passwordResetToken: {
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+    },
+    recurso: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      count: vi.fn(),
+    },
+    ticket: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
       update: vi.fn(),
       count: vi.fn(),
     },
+    noticia: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn(),
+    },
+    faqItem: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn(),
+    },
+    cmsPage: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+    },
+    projetoApoiado: {
+      upsert: vi.fn(),
+    },
     auditLog: {
+      findMany: vi.fn(),
       create: vi.fn(),
       deleteMany: vi.fn(),
+      count: vi.fn(),
+      findRaw: vi.fn(),
+      groupBy: vi.fn(),
     },
-    $transaction: vi.fn((ops: Promise<unknown>[]) => Promise.all(ops)),
+    newsletterSubscriber: {
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+    },
+    avaliacao: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      createMany: vi.fn(),
+      update: vi.fn(),
+      upsert: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn(),
+    },
+    anexoInscricao: {
+      create: vi.fn(),
+      delete: vi.fn(),
+      findUnique: vi.fn(),
+    },
+    $transaction: vi.fn((ops: unknown) => {
+      if (typeof ops === 'function') return ops({ /* proxy prisma */ })
+      return Promise.all(ops as Promise<unknown>[])
+    }),
   },
 }))
 
@@ -73,6 +156,57 @@ vi.mock('@/lib/audit', () => ({
   actionBadgeVariant: vi.fn().mockReturnValue('neutral'),
   getRetentionDays: vi.fn().mockReturnValue(365),
   purgeOldAuditLogs: vi.fn().mockResolvedValue(0),
+}))
+
+// Mock rate-limit
+vi.mock('@/lib/rate-limit', () => ({
+  rateLimit: vi.fn().mockResolvedValue(null),
+}))
+
+// Mock rate-limit config
+vi.mock('@/lib/rate-limit/config', () => ({
+  RATE_LIMITS: {
+    'auth/register': { window: 60, max: 5 },
+    'auth/forgot-password': { window: 60, max: 3 },
+    'auth/login': { window: 60, max: 10 },
+    'contato': { window: 60, max: 5 },
+    'newsletter': { window: 60, max: 5 },
+  },
+}))
+
+// Mock storage
+vi.mock('@/lib/storage', () => ({
+  uploadFile: vi.fn().mockResolvedValue('https://storage.example.com/file.pdf'),
+  deleteFile: vi.fn().mockResolvedValue(undefined),
+  getSignedUrl: vi.fn().mockResolvedValue('https://storage.example.com/signed-url'),
+}))
+
+// Mock upload validation
+vi.mock('@/lib/upload/validate', () => ({
+  validateMagicBytes: vi.fn().mockReturnValue(true),
+  sanitizeFilename: vi.fn((name: string) => name.replace(/[^a-zA-Z0-9._-]/g, '_')),
+}))
+
+// Mock bcryptjs
+vi.mock('bcryptjs', () => ({
+  default: {
+    hash: vi.fn().mockResolvedValue('$2a$12$hashedpassword'),
+    compare: vi.fn().mockResolvedValue(true),
+  },
+}))
+
+// Mock mail — preserva renderTemplate real para testes de template
+vi.mock('@/lib/mail', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/mail')>()
+  return {
+    ...actual,
+    sendEmail: vi.fn().mockResolvedValue(undefined),
+  }
+})
+
+// Mock sanitize
+vi.mock('@/lib/sanitize', () => ({
+  sanitizeContent: vi.fn((html: string) => html),
 }))
 
 // Mock queue

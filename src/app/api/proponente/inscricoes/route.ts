@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
       const count = await prisma.inscricao.count({
         where: { numero: { startsWith: `PNAB-${edital.ano}-` } },
       })
-      const numero = `PNAB-${edital.ano}-${String(count + 1 + attempt).padStart(4, '0')}`
+      const numero = `PNAB-${edital.ano}-${String(count + 1).padStart(4, '0')}`
 
       try {
         inscricao = await prisma.inscricao.create({

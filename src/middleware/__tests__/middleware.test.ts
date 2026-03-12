@@ -70,11 +70,6 @@ describe('middleware RBAC', () => {
     expect(NextResponse.next).toHaveBeenCalled()
   })
 
-  it('/admin com AVALIADOR → permite', () => {
-    middlewareFn(makeReq('/admin', { user: { role: 'AVALIADOR' } }))
-    expect(NextResponse.next).toHaveBeenCalled()
-  })
-
   it('/proponente sem sessão → redirect /login', () => {
     middlewareFn(makeReq('/proponente'))
     expect(NextResponse.redirect).toHaveBeenCalledWith(
@@ -82,17 +77,63 @@ describe('middleware RBAC', () => {
     )
   })
 
-  it('/proponente com ADMIN → redirect /', () => {
-    // O middleware não redireciona ADMIN de /proponente — ele só verifica sessão
-    // Na verdade, o middleware permite qualquer role em /proponente (só exige sessão)
+  it('/proponente com ADMIN → redirect / (bug 1 fix)', () => {
     middlewareFn(makeReq('/proponente', { user: { role: 'ADMIN' } }))
-    // Admin tem sessão, então passa /proponente (middleware não valida role para /proponente)
-    expect(NextResponse.next).toHaveBeenCalled()
+    expect(NextResponse.redirect).toHaveBeenCalledWith(
+      expect.objectContaining({ pathname: '/' }),
+    )
+  })
+
+  it('/proponente com AVALIADOR → redirect /', () => {
+    middlewareFn(makeReq('/proponente', { user: { role: 'AVALIADOR' } }))
+    expect(NextResponse.redirect).toHaveBeenCalledWith(
+      expect.objectContaining({ pathname: '/' }),
+    )
+  })
+
+  it('/proponente com HABILITADOR → redirect /', () => {
+    middlewareFn(makeReq('/proponente', { user: { role: 'HABILITADOR' } }))
+    expect(NextResponse.redirect).toHaveBeenCalledWith(
+      expect.objectContaining({ pathname: '/' }),
+    )
+  })
+
+  it('/proponente com ATENDIMENTO → redirect /', () => {
+    middlewareFn(makeReq('/proponente', { user: { role: 'ATENDIMENTO' } }))
+    expect(NextResponse.redirect).toHaveBeenCalledWith(
+      expect.objectContaining({ pathname: '/' }),
+    )
   })
 
   it('/proponente com PROPONENTE → permite', () => {
     middlewareFn(makeReq('/proponente', { user: { role: 'PROPONENTE' } }))
     expect(NextResponse.next).toHaveBeenCalled()
+  })
+
+  it('/avaliador sem sessão → redirect /login', () => {
+    middlewareFn(makeReq('/avaliador'))
+    expect(NextResponse.redirect).toHaveBeenCalledWith(
+      expect.objectContaining({ pathname: '/login' }),
+    )
+  })
+
+  it('/avaliador com PROPONENTE → redirect /', () => {
+    middlewareFn(makeReq('/avaliador', { user: { role: 'PROPONENTE' } }))
+    expect(NextResponse.redirect).toHaveBeenCalledWith(
+      expect.objectContaining({ pathname: '/' }),
+    )
+  })
+
+  it('/avaliador com AVALIADOR → permite', () => {
+    middlewareFn(makeReq('/avaliador', { user: { role: 'AVALIADOR' } }))
+    expect(NextResponse.next).toHaveBeenCalled()
+  })
+
+  it('/admin com AVALIADOR → redirect /avaliador', () => {
+    middlewareFn(makeReq('/admin', { user: { role: 'AVALIADOR' } }))
+    expect(NextResponse.redirect).toHaveBeenCalledWith(
+      expect.objectContaining({ pathname: '/avaliador' }),
+    )
   })
 
   it('rotas públicas (/, /editais) → permite sem sessão', () => {
