@@ -54,6 +54,18 @@ const navSections: NavSection[] = [
         icon: <IconNews className="h-5 w-5" />,
       },
       {
+        label: 'Categorias',
+        href: '/admin/categorias',
+        roles: ['ADMIN'],
+        icon: <IconDocument className="h-5 w-5" />,
+      },
+      {
+        label: 'Tipos de Documento',
+        href: '/admin/tipos-documento',
+        roles: ['ADMIN'],
+        icon: <IconDocument className="h-5 w-5" />,
+      },
+      {
         label: 'Inscrições',
         href: '/admin/inscricoes',
         roles: ['ADMIN', 'HABILITADOR', 'ATENDIMENTO'],

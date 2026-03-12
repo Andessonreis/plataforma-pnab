@@ -64,18 +64,33 @@ export const CRONOGRAMA_FASES_FORMULARIO: EditalStatus[] = [
   'ENCERRADO',
 ]
 
-// ── Fases automatizáveis pelo scheduler ─────────────────────────────────────
+// ── Fases automatizáveis pelo scheduler (relógio) ──────────────────────────
+// Apenas fases públicas com deadline rígido são automáticas.
 
-export const FASES_AUTOMATIZAVEIS: EditalStatus[] = [
-  'INSCRICOES_ABERTAS',
-  'INSCRICOES_ENCERRADAS',
-  'HABILITACAO',
-  'AVALIACAO',
-  'RESULTADO_PRELIMINAR',       // → RECURSO
-  'RESULTADO_FINAL',            // → ENCERRADO (na prática: RECURSO → nada, mas RESULTADO_FINAL pode)
+export const FASES_AUTOMATICAS: EditalStatus[] = [
+  'INSCRICOES_ABERTAS',     // PUBLICADO → INSCRICOES_ABERTAS (data de abertura)
+  'INSCRICOES_ENCERRADAS',  // INSCRICOES_ABERTAS → INSCRICOES_ENCERRADAS (deadline 23:59)
 ]
 
-// ── Mapa de transições automáticas ──────────────────────────────────────────
+// ── Fases manuais (botão do Admin) ──────────────────────────────────────────
+// Fases internas que dependem do trabalho humano.
+
+export const FASES_MANUAIS: EditalStatus[] = [
+  'HABILITACAO',            // INSCRICOES_ENCERRADAS → HABILITACAO
+  'AVALIACAO',              // HABILITACAO → AVALIACAO
+  'RESULTADO_PRELIMINAR',   // AVALIACAO → RESULTADO_PRELIMINAR
+  'RECURSO',                // RESULTADO_PRELIMINAR → RECURSO
+  'RESULTADO_FINAL',        // RECURSO → RESULTADO_FINAL
+  'ENCERRADO',              // RESULTADO_FINAL → ENCERRADO
+]
+
+/** @deprecated Use FASES_AUTOMATICAS para o scheduler. Mantido para backward compat. */
+export const FASES_AUTOMATIZAVEIS: EditalStatus[] = [
+  ...FASES_AUTOMATICAS,
+  ...FASES_MANUAIS,
+]
+
+// ── Mapa COMPLETO de transições (auto + manual) ────────────────────────────
 
 export interface FaseTransicao {
   de: EditalStatus
@@ -87,16 +102,30 @@ export const FASE_TRANSICOES: Partial<Record<EditalStatus, FaseTransicao>> = {
   INSCRICOES_ENCERRADAS: { de: 'INSCRICOES_ABERTAS', para: 'INSCRICOES_ENCERRADAS' },
   HABILITACAO: { de: 'INSCRICOES_ENCERRADAS', para: 'HABILITACAO' },
   AVALIACAO: { de: 'HABILITACAO', para: 'AVALIACAO' },
+  RESULTADO_PRELIMINAR: { de: 'AVALIACAO', para: 'RESULTADO_PRELIMINAR' },
   RECURSO: { de: 'RESULTADO_PRELIMINAR', para: 'RECURSO' },
+  RESULTADO_FINAL: { de: 'RECURSO', para: 'RESULTADO_FINAL' },
   ENCERRADO: { de: 'RESULTADO_FINAL', para: 'ENCERRADO' },
 }
 
-// Status que o scheduler deve buscar para verificar transições
+// Apenas transições controladas pelo scheduler (relógio)
+export const TRANSICOES_AUTOMATICAS: Partial<Record<EditalStatus, FaseTransicao>> = {
+  INSCRICOES_ABERTAS: FASE_TRANSICOES.INSCRICOES_ABERTAS!,
+  INSCRICOES_ENCERRADAS: FASE_TRANSICOES.INSCRICOES_ENCERRADAS!,
+}
+
+// Transições acionadas pelo Admin via botão
+export const TRANSICOES_MANUAIS: Partial<Record<EditalStatus, FaseTransicao>> = {
+  HABILITACAO: FASE_TRANSICOES.HABILITACAO!,
+  AVALIACAO: FASE_TRANSICOES.AVALIACAO!,
+  RESULTADO_PRELIMINAR: FASE_TRANSICOES.RESULTADO_PRELIMINAR!,
+  RECURSO: FASE_TRANSICOES.RECURSO!,
+  RESULTADO_FINAL: FASE_TRANSICOES.RESULTADO_FINAL!,
+  ENCERRADO: FASE_TRANSICOES.ENCERRADO!,
+}
+
+// Status que o scheduler deve buscar (apenas os automáticos)
 export const STATUS_ELEGIVEIS_SCHEDULER: EditalStatus[] = [
   'PUBLICADO',
   'INSCRICOES_ABERTAS',
-  'INSCRICOES_ENCERRADAS',
-  'HABILITACAO',
-  'RESULTADO_PRELIMINAR',
-  'RESULTADO_FINAL',
 ]

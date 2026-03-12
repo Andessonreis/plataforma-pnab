@@ -107,6 +107,65 @@ async function main() {
   console.log(`✔ ${users.length} usuários criados/atualizados`)
 
   // ─────────────────────────────────────────────────────────────────────────
+  // Categorias culturais
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const categoriasDefault = [
+    'Artes Visuais', 'Música', 'Teatro', 'Dança', 'Literatura', 'Circo',
+    'Audiovisual', 'Artesanato', 'Cultura Popular', 'Patrimônio Cultural',
+    'Cultura Digital', 'Gastronomia', 'Moda', 'Hip Hop',
+    'Culturas Indígenas', 'Culturas Afro-Brasileiras',
+  ]
+
+  for (let i = 0; i < categoriasDefault.length; i++) {
+    await prisma.categoria.upsert({
+      where: { nome: categoriasDefault[i] },
+      update: {},
+      create: { nome: categoriasDefault[i], ordem: i },
+    })
+  }
+
+  console.log(`✔ ${categoriasDefault.length} categorias culturais criadas`)
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Tipos de Documento
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const tiposDocEdital = [
+    { valor: 'PDF', label: 'PDF do Edital' },
+    { valor: 'ANEXO', label: 'Anexo' },
+    { valor: 'MODELO', label: 'Modelo' },
+    { valor: 'PLANILHA', label: 'Planilha' },
+    { valor: 'DECLARACAO', label: 'Declaração' },
+  ]
+  const tiposDocInscricao = [
+    { valor: 'DOCUMENTO_PESSOAL', label: 'Documento Pessoal' },
+    { valor: 'COMPROVANTE_ENDERECO', label: 'Comprovante de Endereço' },
+    { valor: 'PORTFOLIO', label: 'Portfólio / Currículo' },
+    { valor: 'PROJETO', label: 'Projeto / Proposta' },
+    { valor: 'ORCAMENTO', label: 'Orçamento' },
+    { valor: 'DECLARACAO', label: 'Declaração' },
+    { valor: 'OUTRO', label: 'Outro' },
+  ]
+
+  for (let i = 0; i < tiposDocEdital.length; i++) {
+    await prisma.tipoDocumento.upsert({
+      where: { valor_escopo: { valor: tiposDocEdital[i].valor, escopo: 'EDITAL' } },
+      update: {},
+      create: { ...tiposDocEdital[i], escopo: 'EDITAL', ordem: i },
+    })
+  }
+  for (let i = 0; i < tiposDocInscricao.length; i++) {
+    await prisma.tipoDocumento.upsert({
+      where: { valor_escopo: { valor: tiposDocInscricao[i].valor, escopo: 'INSCRICAO' } },
+      update: {},
+      create: { ...tiposDocInscricao[i], escopo: 'INSCRICAO', ordem: i },
+    })
+  }
+
+  console.log(`✔ ${tiposDocEdital.length + tiposDocInscricao.length} tipos de documento criados`)
+
+  // ─────────────────────────────────────────────────────────────────────────
   // Banners
   // ─────────────────────────────────────────────────────────────────────────
 

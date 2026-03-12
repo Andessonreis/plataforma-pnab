@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, type FormEvent } from 'react'
+import { useState, useRef, useEffect, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { Input, Button, Card, Textarea, Select } from '@/components/ui'
 import type { EditalStatus } from '@prisma/client'
@@ -49,24 +49,7 @@ interface EditalFormProps {
   }
 }
 
-export const CATEGORIAS_OPCOES = [
-  'Artes Visuais',
-  'Música',
-  'Teatro',
-  'Dança',
-  'Literatura',
-  'Circo',
-  'Audiovisual',
-  'Artesanato',
-  'Cultura Popular',
-  'Patrimônio Cultural',
-  'Cultura Digital',
-  'Gastronomia',
-  'Moda',
-  'Hip Hop',
-  'Culturas Indígenas',
-  'Culturas Afro-Brasileiras',
-]
+export const CATEGORIAS_OPCOES: string[] = [] // @deprecated — agora carregado da API
 
 const TEMPLATE_REGRAS = [
   '• Ser pessoa física ou jurídica residente ou com sede no município de Irecê/BA',
@@ -165,6 +148,20 @@ export function EditalForm({ initialData }: EditalFormProps) {
   )
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [categoriasOpcoes, setCategoriasOpcoes] = useState<string[]>([])
+  const [templates, setTemplates] = useState<{ id: string; nome: string; camposFormulario: CampoFormulario[] }[]>([])
+  const [templateNome, setTemplateNome] = useState('')
+
+  useEffect(() => {
+    fetch('/api/admin/categorias')
+      .then(r => r.ok ? r.json() : [])
+      .then((data: { nome: string }[]) => setCategoriasOpcoes(data.map(c => c.nome)))
+      .catch(() => {})
+    fetch('/api/admin/form-templates')
+      .then(r => r.ok ? r.json() : [])
+      .then(setTemplates)
+      .catch(() => {})
+  }, [])
 
   function toggleCategoria(cat: string) {
     setCategorias(prev =>
@@ -208,6 +205,30 @@ export function EditalForm({ initialData }: EditalFormProps) {
     setCamposFormulario(prev =>
       prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
     )
+  }
+
+  async function salvarTemplate() {
+    const nome = templateNome.trim()
+    if (!nome || camposFormulario.length === 0) return
+    try {
+      const res = await fetch('/api/admin/form-templates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome, camposFormulario }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setTemplates(prev => [...prev, data])
+        setTemplateNome('')
+      }
+    } catch { /* silencioso */ }
+  }
+
+  function carregarTemplate(id: string) {
+    const tpl = templates.find(t => t.id === id)
+    if (!tpl) return
+    const campos = tpl.camposFormulario as CampoFormulario[]
+    setCamposFormulario(campos)
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -384,7 +405,10 @@ export function EditalForm({ initialData }: EditalFormProps) {
           Selecione todas as categorias contempladas por este edital.
         </p>
         <div className="flex flex-wrap gap-2">
-          {CATEGORIAS_OPCOES.map(cat => {
+          {categoriasOpcoes.length === 0 && (
+            <p className="text-sm text-slate-400 italic">Carregando categorias...</p>
+          )}
+          {categoriasOpcoes.map(cat => {
             const selected = categorias.includes(cat)
             return (
               <button
@@ -478,6 +502,37 @@ export function EditalForm({ initialData }: EditalFormProps) {
         <p className="text-sm text-slate-500 mb-4">
           Configure os campos que o proponente deverá preencher ao se inscrever.
         </p>
+
+        {/* Template save/load */}
+        <div className="flex flex-wrap items-end gap-2 mb-4 p-3 rounded-lg bg-slate-50 border border-slate-200">
+          {templates.length > 0 && (
+            <Select
+              label="Carregar template"
+              value=""
+              onChange={(e) => { if (e.target.value) carregarTemplate(e.target.value) }}
+              options={[
+                { value: '', label: 'Selecione um template...' },
+                ...templates.map(t => ({ value: t.id, label: t.nome })),
+              ]}
+            />
+          )}
+          <Input
+            label="Salvar como template"
+            placeholder="Nome do template"
+            value={templateNome}
+            onChange={(e) => setTemplateNome(e.target.value)}
+            className="flex-1"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={salvarTemplate}
+            disabled={!templateNome.trim() || camposFormulario.length === 0}
+          >
+            Salvar Template
+          </Button>
+        </div>
 
         {camposFormulario.length === 0 ? (
           <p className="text-sm text-slate-500 text-center py-4">

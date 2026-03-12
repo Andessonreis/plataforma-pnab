@@ -79,7 +79,7 @@ export function addHeader(doc: PDFKit.PDFDocument, title: string): void {
  * Adiciona o footer com número de página.
  */
 export function addFooter(doc: PDFKit.PDFDocument, pageNumber: number): void {
-  const y = doc.page.height - MARGINS.bottom + 20
+  const y = doc.page.height - MARGINS.bottom - 20
 
   doc
     .moveTo(MARGINS.left, y)

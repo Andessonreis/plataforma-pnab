@@ -16,140 +16,140 @@ export default function TermsOfUsePage() {
             Termos de Uso
           </h1>
           <p className="text-sm text-slate-500">
-            Ultima atualizacao: 01 de marco de 2026
+            Última atualização: 01 de março de 2026
           </p>
         </header>
 
         {/* Introducao */}
         <section className="mb-8">
           <p className="text-slate-600 leading-relaxed">
-            Bem-vindo ao Portal da Politica Nacional Aldir Blanc (PNAB) do
-            municipio de Irece/BA. Este portal e mantido pela Secretaria de
-            Arte e Cultura da Prefeitura Municipal de Irece e tem como
+            Bem-vindo ao Portal da Política Nacional Aldir Blanc (PNAB) do
+            município de Irecê/BA. Este portal é mantido pela Secretaria de
+            Arte e Cultura da Prefeitura Municipal de Irecê e tem como
             finalidade viabilizar o acesso a editais de fomento a cultura,
-            inscricoes de projetos culturais e a transparencia dos resultados.
+            inscrições de projetos culturais e a transparência dos resultados.
           </p>
           <p className="text-slate-600 leading-relaxed mt-4">
-            Ao acessar e utilizar este portal, voce concorda com os presentes
-            Termos de Uso. Caso nao concorde com alguma das condicoes aqui
-            estabelecidas, recomendamos que nao utilize os servicos
+            Ao acessar e utilizar este portal, você concorda com os presentes
+            Termos de Uso. Caso não concorde com alguma das condições aqui
+            estabelecidas, recomendamos que não utilize os servicos
             disponibilizados.
           </p>
         </section>
 
-        {/* Secao 1 — Aceitacao dos Termos */}
+        {/* Seção 1 — Aceitação dos Termos */}
         <section className="mb-8">
           <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">
-            1. Aceitacao dos Termos
+            1. Aceitação dos Termos
           </h2>
           <p className="text-slate-600 leading-relaxed">
-            O uso do Portal PNAB Irece implica a aceitacao integral e
-            irrestrita de todos os itens destes Termos de Uso, em sua versao
+            O uso do Portal PNAB Irecê implica a aceitação integral e
+            irrestrita de todos os itens destes Termos de Uso, em sua versão
             mais recente. A Secretaria de Arte e Cultura reserva-se o direito
             de atualizar estes termos a qualquer momento, sendo
-            responsabilidade do usuario consultar esta pagina periodicamente.
+            responsabilidade do usuário consultar esta página periodicamente.
           </p>
         </section>
 
-        {/* Secao 2 — Uso do Portal */}
+        {/* Seção 2 — Uso do Portal */}
         <section className="mb-8">
           <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">
             2. Uso do Portal
           </h2>
           <p className="text-slate-600 leading-relaxed mb-4">
-            O Portal PNAB Irece destina-se a:
+            O Portal PNAB Irecê destina-se a:
           </p>
           <ul className="list-disc pl-6 space-y-2 text-slate-600 leading-relaxed">
             <li>
-              Publicacao e consulta de editais de fomento a cultura no ambito
-              da Politica Nacional Aldir Blanc;
+              Públicacao e consulta de editais de fomento a cultura no ambito
+              da Política Nacional Aldir Blanc;
             </li>
             <li>
-              Cadastro de proponentes (pessoas fisicas, juridicas e coletivos
+              Cadastro de proponentes (pessoas físicas, jurídicas e coletivos
               culturais) para submissao de projetos;
             </li>
             <li>
               Inscricao, acompanhamento e gestao de propostas culturais;
             </li>
             <li>
-              Divulgacao de resultados, habilitacoes e recursos;
+              Divulgacao de resultados, habilitações e recursos;
             </li>
             <li>
-              Transparencia publica sobre projetos apoiados e valores
+              Transparência pública sobre projetos apoiados e valores
               destinados.
             </li>
           </ul>
           <p className="text-slate-600 leading-relaxed mt-4">
-            O usuario compromete-se a utilizar o portal de forma licita,
+            O usuário compromete-se a utilizar o portal de forma licita,
             respeitando a legislacao vigente, a moral, os bons costumes e a
-            ordem publica. E vedado o uso do portal para fins ilegais,
+            ordem pública. É vedado o uso do portal para fins ilegais,
             fraudulentos ou que possam causar danos a terceiros ou ao
-            municipio de Irece.
+            município de Irecê.
           </p>
         </section>
 
-        {/* Secao 3 — Cadastro e Conta do Usuario */}
+        {/* Seção 3 — Cadastro e Conta do Usuário */}
         <section className="mb-8">
           <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">
-            3. Cadastro e Conta do Usuario
+            3. Cadastro e Conta do Usuário
           </h2>
           <p className="text-slate-600 leading-relaxed mb-4">
             Para utilizar funcionalidades restritas do portal (como inscrever
-            projetos em editais), o usuario devera criar uma conta
-            fornecendo informacoes verdadeiras e atualizadas, incluindo CPF ou
-            CNPJ conforme aplicavel.
+            projetos em editais), o usuário devera criar uma conta
+            fornecendo informações verdadeiras e atualizadas, incluindo CPF ou
+            CNPJ conforme aplicável.
           </p>
           <ul className="list-disc pl-6 space-y-2 text-slate-600 leading-relaxed">
             <li>
-              O usuario e responsavel pela veracidade de todas as informacoes
-              fornecidas no cadastro e nas inscricoes;
+              O usuário e responsável pela veracidade de todas as informações
+              fornecidas no cadastro e nas inscrições;
             </li>
             <li>
-              A senha de acesso e pessoal e intransferivel, cabendo ao usuario
+              A senha de acesso é pessoal e intransferivel, cabendo ao usuário
               sua guarda e sigilo;
             </li>
             <li>
               A Secretaria podera suspender ou cancelar contas que apresentem
-              informacoes falsas, incompletas ou que violem estes Termos;
+              informações falsas, incompletas ou que violem estes Termos;
             </li>
             <li>
-              O usuario deve comunicar imediatamente qualquer uso nao
+              O usuário deve comunicar imediatamente qualquer uso nao
               autorizado de sua conta.
             </li>
           </ul>
         </section>
 
-        {/* Secao 4 — Propriedade Intelectual */}
+        {/* Seção 4 — Propriedade Intelectual */}
         <section className="mb-8">
           <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">
             4. Propriedade Intelectual
           </h2>
           <p className="text-slate-600 leading-relaxed mb-4">
-            Todo o conteudo disponibilizado neste portal — incluindo textos,
-            imagens, logotipos, layouts, codigos-fonte e demais elementos
-            visuais — e de propriedade da Prefeitura Municipal de Irece ou
+            Todo o conteúdo disponibilizado neste portal — incluindo textos,
+            imagens, logotipos, layouts, códigos-fonte e demais elementos
+            visuais — e de propriedade da Prefeitura Municipal de Irecê ou
             de seus respectivos titulares, sendo protegido pela legislacao
             brasileira de propriedade intelectual.
           </p>
           <ul className="list-disc pl-6 space-y-2 text-slate-600 leading-relaxed">
             <li>
-              E proibida a reproducao, distribuicao ou modificacao do conteudo
-              do portal sem autorizacao previa;
+              É proibida a reprodução, distribuição ou modificação do conteúdo
+              do portal sem autorização previa;
             </li>
             <li>
               Os projetos culturais submetidos pelos proponentes permanecem de
               autoria de seus respectivos titulares, ressalvado o direito de
-              divulgacao pela Secretaria para fins de transparencia publica;
+              divulgação pela Secretaria para fins de transparência pública;
             </li>
             <li>
               Os documentos oficiais dos editais (regulamentos, anexos e
               modelos) podem ser baixados e utilizados exclusivamente para fins
-              de inscricao.
+              de inscrição.
             </li>
           </ul>
         </section>
 
-        {/* Secao 5 — Responsabilidades */}
+        {/* Seção 5 — Responsabilidades */}
         <section className="mb-8">
           <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">
             5. Responsabilidades
@@ -159,25 +159,25 @@ export default function TermsOfUsePage() {
           </h3>
           <ul className="list-disc pl-6 space-y-2 text-slate-600 leading-relaxed">
             <li>
-              Manter o portal disponivel e funcional, ressalvadas
-              interrupcoes para manutencao ou por motivos de forca maior;
+              Manter o portal disponível e funcional, ressalvadas
+              interrupções para manutenção ou por motivos de forca maior;
             </li>
             <li>
-              Garantir a seguranca dos dados pessoais conforme a Lei Geral de
-              Protecao de Dados (LGPD — Lei 13.709/2018);
+              Garantir a segurança dos dados pessoais conforme a Lei Geral de
+              Proteção de Dados (LGPD — Lei 13.709/2018);
             </li>
             <li>
-              Divulgar informacoes oficiais e atualizadas sobre os editais e
+              Divulgar informações oficiais e atualizadas sobre os editais e
               seus resultados.
             </li>
           </ul>
 
           <h3 className="text-lg font-medium text-slate-800 mt-6 mb-3">
-            5.2. Do Usuario
+            5.2. Do Usuário
           </h3>
           <ul className="list-disc pl-6 space-y-2 text-slate-600 leading-relaxed">
             <li>
-              Fornecer informacoes verdadeiras, completas e atualizadas;
+              Fornecer informações verdadeiras, completas e atualizadas;
             </li>
             <li>
               Manter a confidencialidade de suas credenciais de acesso;
@@ -186,7 +186,7 @@ export default function TermsOfUsePage() {
               Respeitar os prazos estabelecidos nos editais;
             </li>
             <li>
-              Nao tentar acessar areas restritas do sistema sem autorizacao;
+              Não tentar acessar areas restritas do sistema sem autorização;
             </li>
             <li>
               Responder por quaisquer danos decorrentes do uso indevido do
@@ -195,44 +195,44 @@ export default function TermsOfUsePage() {
           </ul>
         </section>
 
-        {/* Secao 6 — Limitacao de Responsabilidade */}
+        {/* Seção 6 — Limitação de Responsabilidade */}
         <section className="mb-8">
           <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">
-            6. Limitacao de Responsabilidade
+            6. Limitação de Responsabilidade
           </h2>
           <p className="text-slate-600 leading-relaxed">
-            A Secretaria de Arte e Cultura nao se responsabiliza por danos
-            decorrentes de interrupcoes temporarias no acesso ao portal,
-            falhas tecnicas, ataques ciberneticos ou eventos de forca maior.
-            O portal e fornecido &ldquo;como esta&rdquo;, sem garantias de
-            disponibilidade ininterrupta. Recomenda-se que o usuario nao
-            deixe para realizar inscricoes nos ultimos momentos antes do
+            A Secretaria de Arte e Cultura não se responsabiliza por danos
+            decorrentes de interrupções temporarias no acesso ao portal,
+            falhas tecnicas, ataques cibernéticos ou eventos de forca maior.
+            O portal é fornecido &ldquo;como esta&rdquo;, sem garantias de
+            disponibilidade ininterrupta. Recomenda-se que o usuário nao
+            deixe para realizar inscrições nos últimos momentos antes do
             encerramento dos prazos.
           </p>
         </section>
 
-        {/* Secao 7 — Alteracoes nos Termos */}
+        {/* Seção 7 — Alterações nos Termos */}
         <section className="mb-8">
           <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">
-            7. Alteracoes nos Termos
+            7. Alterações nos Termos
           </h2>
           <p className="text-slate-600 leading-relaxed">
             A Secretaria de Arte e Cultura podera modificar estes Termos de
-            Uso a qualquer tempo. As alteracoes entrarao em vigor na data de
-            sua publicacao nesta pagina. O uso continuado do portal apos a
-            publicacao de alteracoes implica a aceitacao dos novos termos.
-            Recomendamos a consulta periodica desta pagina.
+            Uso a qualquer tempo. As alterações entrarao em vigor na data de
+            sua públicacao nesta página. O uso contínuado do portal apos a
+            públicacao de alterações implica a aceitação dos novos termos.
+            Recomendamos a consulta periodica desta página.
           </p>
         </section>
 
-        {/* Secao 8 — Foro */}
+        {/* Seção 8 — Foro */}
         <section className="mb-8">
           <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">
             8. Foro
           </h2>
           <p className="text-slate-600 leading-relaxed">
-            Fica eleito o foro da Comarca de Irece, Estado da Bahia, para
-            dirimir quaisquer questoes oriundas da utilizacao deste portal,
+            Fica eleito o foro da Comarca de Irecê, Estado da Bahia, para
+            dirimir quaisquer questoes oriundas da utilização deste portal,
             com renuncia expressa a qualquer outro, por mais privilegiado que
             seja.
           </p>
@@ -244,12 +244,12 @@ export default function TermsOfUsePage() {
             Contato
           </h2>
           <p className="text-slate-600 leading-relaxed mb-4">
-            Para duvidas ou solicitacoes relacionadas a estes Termos de Uso,
+            Para dúvidas ou solicitações relacionadas a estes Termos de Uso,
             entre em contato:
           </p>
           <ul className="space-y-2 text-slate-600">
             <li>
-              <strong className="text-slate-900">Secretaria de Arte e Cultura de Irece</strong>
+              <strong className="text-slate-900">Secretaria de Arte e Cultura de Irecê</strong>
             </li>
             <li>
               E-mail:{' '}
@@ -273,12 +273,12 @@ export default function TermsOfUsePage() {
         </section>
 
         {/* Links relacionados */}
-        <nav className="mt-8 flex flex-wrap gap-4 text-sm" aria-label="Paginas relacionadas">
+        <nav className="mt-8 flex flex-wrap gap-4 text-sm" aria-label="Páginas relacionadas">
           <Link
             href="/privacidade"
             className="text-brand-600 hover:text-brand-700 underline"
           >
-            Politica de Privacidade
+            Política de Privacidade
           </Link>
           <Link
             href="/acessibilidade"

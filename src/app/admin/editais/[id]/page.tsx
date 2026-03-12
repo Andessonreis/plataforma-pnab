@@ -8,6 +8,7 @@ import { AcessivelEditor } from './acessivel-editor'
 import type { EditalStatus } from '@prisma/client'
 import type { CronogramaItem } from '@/types/cronograma'
 import { migrateLegacyCronograma } from '@/lib/utils/cronograma'
+import { AvancarFaseButton } from './avancar-fase-button'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -60,6 +61,8 @@ export default async function EditarEditalPage({ params }: Props) {
         <h1 className="text-2xl font-bold text-slate-900">Editar Edital</h1>
         <p className="text-slate-600 mt-1">{edital.titulo}</p>
       </div>
+
+      <AvancarFaseButton editalId={edital.id} statusAtual={edital.status as EditalStatus} />
 
       <EditalForm
         initialData={{

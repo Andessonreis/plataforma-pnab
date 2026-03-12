@@ -4,7 +4,7 @@ import { prisma } from '@/lib/db'
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
 import type { EditalStatus } from '@prisma/client'
 import {
-  FASE_TRANSICOES,
+  TRANSICOES_AUTOMATICAS,
   STATUS_ELEGIVEIS_SCHEDULER,
 } from '@/types/cronograma'
 
@@ -115,10 +115,10 @@ export function extractFaseItems(
   cronograma: CronogramaRawItem[],
   statusAtual: EditalStatus,
 ): { fase: EditalStatus; dataHora: string } | null {
-  // 1. Formato novo: busca item com tipo='fase' cuja transição corresponde ao status atual
+  // 1. Formato novo: busca item com tipo='fase' cuja transição AUTOMÁTICA corresponde ao status atual
   for (const item of cronograma) {
     if (item.tipo === 'fase' && item.fase) {
-      const transicao = FASE_TRANSICOES[item.fase as EditalStatus]
+      const transicao = TRANSICOES_AUTOMATICAS[item.fase as EditalStatus]
       if (transicao && transicao.de === statusAtual && item.dataHora) {
         return { fase: item.fase as EditalStatus, dataHora: item.dataHora }
       }
@@ -169,20 +169,6 @@ export async function processSchedulerJob(): Promise<number> {
     const match = extractFaseItems(cronograma, edital.status)
     if (!match || new Date(match.dataHora) > now) {
       continue
-    }
-
-    // Check de pendências: HABILITACAO → AVALIACAO
-    // Não avança se ainda houver inscrições com status ENVIADA (não habilitadas)
-    if (edital.status === 'HABILITACAO' && match.fase === 'AVALIACAO') {
-      const pendentes = await prisma.inscricao.count({
-        where: { editalId: edital.id, status: 'ENVIADA' },
-      })
-      if (pendentes > 0) {
-        console.log(
-          `[Scheduler] Edital "${edital.titulo}": HABILITACAO → AVALIACAO bloqueado — ${pendentes} inscrição(ões) ENVIADA(s) pendente(s)`,
-        )
-        continue
-      }
     }
 
     await prisma.edital.update({

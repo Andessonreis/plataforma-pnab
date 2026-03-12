@@ -1,10 +1,22 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button, Input, Select, Textarea, Card, Badge } from '@/components/ui'
 import type { SelectOption } from '@/components/ui'
 import { IconArrowLeft, IconArrowRight, IconCheck, IconDocument } from '@/components/ui/icons'
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function formatarMoeda(raw: string): string {
+  const digits = raw.replace(/\D/g, '')
+  if (!digits) return ''
+  const cents = parseInt(digits, 10)
+  return (cents / 100).toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+}
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -294,7 +306,22 @@ export default function InscricaoForm({
           />
         )
       case 'numero':
-      case 'number':
+      case 'number': {
+        const isCurrency = campo.label.includes('R$')
+        if (isCurrency) {
+          return (
+            <Input
+              key={campo.nome}
+              label={campo.label}
+              value={value}
+              onChange={(e) => updateCampo(campo.nome, formatarMoeda(e.target.value))}
+              placeholder={campo.placeholder || '0,00'}
+              required={campo.obrigatorio}
+              hint={campo.hint}
+              inputMode="numeric"
+            />
+          )
+        }
         return (
           <Input
             key={campo.nome}
@@ -307,6 +334,7 @@ export default function InscricaoForm({
             hint={campo.hint}
           />
         )
+      }
       case 'data':
       case 'date':
         return (
@@ -588,7 +616,7 @@ function AnexoUpload({
   const [localError, setLocalError] = useState('')
   const [localSuccess, setLocalSuccess] = useState('')
 
-  const tipoOptions: SelectOption[] = [
+  const tipoOptionsFallback: SelectOption[] = [
     { value: 'DOCUMENTO_PESSOAL', label: 'Documento Pessoal' },
     { value: 'COMPROVANTE_ENDERECO', label: 'Comprovante de Endereço' },
     { value: 'PORTFOLIO', label: 'Portfólio / Currículo' },
@@ -597,6 +625,16 @@ function AnexoUpload({
     { value: 'DECLARACAO', label: 'Declaração' },
     { value: 'OUTRO', label: 'Outro' },
   ]
+  const [tipoOptions, setTipoOptions] = useState(tipoOptionsFallback)
+
+  useEffect(() => {
+    fetch('/api/admin/tipos-documento?escopo=INSCRICAO')
+      .then(r => r.ok ? r.json() : [])
+      .then((data: { valor: string; label: string }[]) => {
+        if (data.length > 0) setTipoOptions(data.map(d => ({ value: d.valor, label: d.label })))
+      })
+      .catch(() => {})
+  }, [])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]

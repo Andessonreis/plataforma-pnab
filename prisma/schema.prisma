@@ -376,3 +376,51 @@ model Ticket {
 
   autor User? @relation(fields: [autorId], references: [id])
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Categorias culturais (fonte de verdade para opções de editais)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Categoria {
+  id        String   @id @default(cuid())
+  nome      String   @unique
+  ativo     Boolean  @default(true)
+  ordem     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Tipos de documento (fonte de verdade para uploads)
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum TipoDocumentoEscopo {
+  EDITAL     // Arquivos do edital (admin)
+  INSCRICAO  // Anexos da inscrição (proponente)
+}
+
+model TipoDocumento {
+  id        String              @id @default(cuid())
+  valor     String              // ex: "PDF", "DOCUMENTO_PESSOAL"
+  label     String              // ex: "PDF do Edital", "Documento Pessoal"
+  escopo    TipoDocumentoEscopo
+  ativo     Boolean             @default(true)
+  ordem     Int                 @default(0)
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  @@unique([valor, escopo])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Templates de formulário (modelos reutilizáveis de campos de inscrição)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model FormTemplate {
+  id              String   @id @default(cuid())
+  nome            String   @unique
+  descricao       String?
+  camposFormulario Json     @default("[]") // Array de CampoFormulario
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}

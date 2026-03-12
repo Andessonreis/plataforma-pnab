@@ -29,7 +29,7 @@ interface EditalArquivosProps {
   editalId?: string
 }
 
-const tipoOptions = [
+const tipoOptionsFallback = [
   { value: 'PDF', label: 'PDF do Edital' },
   { value: 'ANEXO', label: 'Anexo' },
   { value: 'MODELO', label: 'Modelo' },
@@ -58,6 +58,17 @@ export const EditalArquivos = forwardRef<EditalArquivosHandle, EditalArquivosPro
     const [tipo, setTipo] = useState('PDF')
     const [titulo, setTitulo] = useState('')
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const [tipoOptions, setTipoOptions] = useState(tipoOptionsFallback)
+
+    // Carrega tipos de documento do banco
+    useEffect(() => {
+      fetch('/api/admin/tipos-documento?escopo=EDITAL')
+        .then(r => r.ok ? r.json() : [])
+        .then((data: { valor: string; label: string }[]) => {
+          if (data.length > 0) setTipoOptions(data.map(d => ({ value: d.valor, label: d.label })))
+        })
+        .catch(() => {})
+    }, [])
 
     // Carrega arquivos existentes quando há editalId
     useEffect(() => {
