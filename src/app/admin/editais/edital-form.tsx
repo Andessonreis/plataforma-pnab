@@ -5,11 +5,30 @@ import { useRouter } from 'next/navigation'
 import { Input, Button, Card, Textarea, Select } from '@/components/ui'
 import type { EditalStatus } from '@prisma/client'
 import { EditalArquivos, type EditalArquivosHandle } from './edital-arquivos'
+import type { CronogramaItem } from '@/types/cronograma'
+import { CRONOGRAMA_FASES_FORMULARIO } from '@/types/cronograma'
+import { editalCronogramaLabel } from '@/lib/status-maps'
+import { extractFases, extractCustomItems } from '@/lib/utils/cronograma'
 
-interface CronogramaItem {
+interface FaseState {
+  dataHora: string
+  destaque: boolean
+}
+
+interface CustomItemState {
   label: string
   dataHora: string
   destaque: boolean
+}
+
+interface CampoFormulario {
+  nome: string
+  label: string
+  tipo: 'texto' | 'textarea' | 'select' | 'numero' | 'data' | 'arquivo'
+  obrigatorio: boolean
+  placeholder: string
+  opcoes: string[]
+  hint: string
 }
 
 interface EditalFormProps {
@@ -23,6 +42,7 @@ interface EditalFormProps {
     acoesAfirmativas: string
     regrasElegibilidade: string
     cronograma: CronogramaItem[]
+    camposFormulario: CampoFormulario[]
     status: EditalStatus
     vagasContemplados: number | null
     vagasSuplentes: number | null
@@ -115,14 +135,33 @@ export function EditalForm({ initialData }: EditalFormProps) {
   const [regrasElegibilidade, setRegrasElegibilidade] = useState(initialData?.regrasElegibilidade ?? '')
   const [acoesAfirmativas, setAcoesAfirmativas] = useState(initialData?.acoesAfirmativas ?? '')
   const [status, setStatus] = useState<EditalStatus>(initialData?.status ?? 'RASCUNHO')
-  const [cronograma, setCronograma] = useState<CronogramaItem[]>(
-    initialData?.cronograma ?? [{ label: '', dataHora: '', destaque: false }]
-  )
+
+  // Cronograma: fases fixas + items customizados
+  const [fases, setFases] = useState<Record<string, FaseState>>(() => {
+    if (initialData?.cronograma) {
+      return extractFases(initialData.cronograma)
+    }
+    const initial: Record<string, FaseState> = {}
+    for (const fase of CRONOGRAMA_FASES_FORMULARIO) {
+      initial[fase] = { dataHora: '', destaque: false }
+    }
+    return initial
+  })
+  const [customItems, setCustomItems] = useState<CustomItemState[]>(() => {
+    if (initialData?.cronograma) {
+      return extractCustomItems(initialData.cronograma)
+    }
+    return []
+  })
+
   const [vagasContemplados, setVagasContemplados] = useState(
     initialData?.vagasContemplados != null ? String(initialData.vagasContemplados) : ''
   )
   const [vagasSuplentes, setVagasSuplentes] = useState(
     initialData?.vagasSuplentes != null ? String(initialData.vagasSuplentes) : ''
+  )
+  const [camposFormulario, setCamposFormulario] = useState<CampoFormulario[]>(
+    initialData?.camposFormulario ?? []
   )
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -133,16 +172,40 @@ export function EditalForm({ initialData }: EditalFormProps) {
     )
   }
 
-  function addCronogramaItem() {
-    setCronograma(prev => [...prev, { label: '', dataHora: '', destaque: false }])
+  function updateFase(fase: string, field: keyof FaseState, value: string | boolean) {
+    setFases(prev => ({
+      ...prev,
+      [fase]: { ...prev[fase], [field]: value },
+    }))
   }
 
-  function removeCronogramaItem(index: number) {
-    setCronograma(prev => prev.filter((_, i) => i !== index))
+  function addCustomItem() {
+    setCustomItems(prev => [...prev, { label: '', dataHora: '', destaque: false }])
   }
 
-  function updateCronogramaItem(index: number, field: keyof CronogramaItem, value: string | boolean) {
-    setCronograma(prev =>
+  function removeCustomItem(index: number) {
+    setCustomItems(prev => prev.filter((_, i) => i !== index))
+  }
+
+  function updateCustomItem(index: number, field: keyof CustomItemState, value: string | boolean) {
+    setCustomItems(prev =>
+      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
+    )
+  }
+
+  function addCampoFormulario() {
+    setCamposFormulario(prev => [
+      ...prev,
+      { nome: '', label: '', tipo: 'texto', obrigatorio: false, placeholder: '', opcoes: [], hint: '' },
+    ])
+  }
+
+  function removeCampoFormulario(index: number) {
+    setCamposFormulario(prev => prev.filter((_, i) => i !== index))
+  }
+
+  function updateCampoFormulario(index: number, field: keyof CampoFormulario, value: unknown) {
+    setCamposFormulario(prev =>
       prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
     )
   }
@@ -152,12 +215,40 @@ export function EditalForm({ initialData }: EditalFormProps) {
     setError(null)
     setLoading(true)
 
-    const cronogramaFiltrado = cronograma.filter(item => item.label.trim() !== '')
+    // Monta cronograma no formato novo
+    const cronogramaFiltrado: CronogramaItem[] = [
+      // Fases fixas (apenas as que têm data preenchida)
+      ...CRONOGRAMA_FASES_FORMULARIO
+        .filter(fase => fases[fase]?.dataHora?.trim())
+        .map(fase => ({
+          tipo: 'fase' as const,
+          fase: fase as EditalStatus,
+          dataHora: fases[fase].dataHora,
+          destaque: fases[fase].destaque,
+        })),
+      // Items customizados (apenas os que têm label)
+      ...customItems
+        .filter(item => item.label.trim())
+        .map(item => ({
+          tipo: 'custom' as const,
+          label: item.label,
+          dataHora: item.dataHora,
+          destaque: item.destaque,
+        })),
+    ]
 
     // Converte valorTotal para número (aceita vírgula como separador decimal)
     const valorTotalNum = valorTotal.trim()
       ? parseFloat(valorTotal.replace(/\./g, '').replace(',', '.'))
       : null
+
+    // Gerar nome automático a partir do label se não preenchido
+    const camposFiltrados = camposFormulario
+      .filter(c => c.label.trim() !== '')
+      .map(c => ({
+        ...c,
+        nome: c.nome.trim() || c.label.trim().toLowerCase().replace(/\s+/g, '_').normalize('NFD').replace(/[\u0300-\u036f]/g, ''),
+      }))
 
     const body = {
       titulo,
@@ -169,6 +260,7 @@ export function EditalForm({ initialData }: EditalFormProps) {
       acoesAfirmativas,
       status,
       cronograma: cronogramaFiltrado,
+      camposFormulario: camposFiltrados,
       vagasContemplados: vagasContemplados.trim() ? Number(vagasContemplados) : null,
       vagasSuplentes: vagasSuplentes.trim() ? Number(vagasSuplentes) : null,
     }
@@ -373,10 +465,114 @@ export function EditalForm({ initialData }: EditalFormProps) {
         </div>
       </Card>
 
-      {/* Secao 4 - Arquivos */}
+      {/* Secao 4 - Campos do Formulário de Inscrição */}
+      <Card padding="sm" className="sm:p-6">
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-base sm:text-lg font-semibold text-slate-800">
+            4. Campos do Formulário de Inscrição
+          </h2>
+          <Button type="button" variant="outline" size="sm" onClick={addCampoFormulario}>
+            + Adicionar campo
+          </Button>
+        </div>
+        <p className="text-sm text-slate-500 mb-4">
+          Configure os campos que o proponente deverá preencher ao se inscrever.
+        </p>
+
+        {camposFormulario.length === 0 ? (
+          <p className="text-sm text-slate-500 text-center py-4">
+            Nenhum campo configurado. O formulário de inscrição ficará vazio.
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {camposFormulario.map((campo, idx) => (
+              <div key={idx} className="rounded-lg border border-slate-200 bg-white p-4 space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <span className="text-xs font-medium text-slate-400">Campo {idx + 1}</span>
+                  <Button
+                    type="button"
+                    variant="danger"
+                    size="sm"
+                    onClick={() => removeCampoFormulario(idx)}
+                    aria-label={`Remover campo ${idx + 1}`}
+                  >
+                    Remover
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Input
+                    label="Label (exibido ao proponente)"
+                    required
+                    value={campo.label}
+                    onChange={e => updateCampoFormulario(idx, 'label', e.target.value)}
+                    placeholder="Ex.: Nome do Projeto"
+                  />
+                  <Select
+                    label="Tipo do campo"
+                    required
+                    value={campo.tipo}
+                    options={[
+                      { value: 'texto', label: 'Texto curto' },
+                      { value: 'textarea', label: 'Texto longo' },
+                      { value: 'numero', label: 'Número' },
+                      { value: 'data', label: 'Data' },
+                      { value: 'select', label: 'Seleção (dropdown)' },
+                      { value: 'arquivo', label: 'Arquivo' },
+                    ]}
+                    onChange={e => updateCampoFormulario(idx, 'tipo', e.target.value)}
+                  />
+                </div>
+
+                {campo.tipo === 'arquivo' && (
+                  <div className="rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-700">
+                    Campos do tipo <strong>arquivo</strong> aparecem na etapa de <strong>Anexos</strong> da inscrição, não em &quot;Dados do Projeto&quot;. Para campos de preenchimento, use outro tipo.
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Input
+                    label="Placeholder"
+                    value={campo.placeholder}
+                    onChange={e => updateCampoFormulario(idx, 'placeholder', e.target.value)}
+                    placeholder="Texto de exemplo no campo"
+                  />
+                  <Input
+                    label="Dica (hint)"
+                    value={campo.hint}
+                    onChange={e => updateCampoFormulario(idx, 'hint', e.target.value)}
+                    placeholder="Texto de ajuda abaixo do campo"
+                  />
+                </div>
+
+                {campo.tipo === 'select' && (
+                  <Input
+                    label="Opções (separadas por vírgula)"
+                    value={campo.opcoes.join(', ')}
+                    onChange={e => updateCampoFormulario(idx, 'opcoes', e.target.value.split(',').map(o => o.trim()).filter(Boolean))}
+                    placeholder="Opção 1, Opção 2, Opção 3"
+                  />
+                )}
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={campo.obrigatorio}
+                    onChange={e => updateCampoFormulario(idx, 'obrigatorio', e.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                  />
+                  <span className="text-sm text-slate-700">Campo obrigatório</span>
+                </label>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      {/* Secao 5 - Arquivos */}
       <Card padding="sm" className="sm:p-6">
         <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-4 sm:mb-5">
-          4. Documentos e Arquivos
+          5. Documentos e Arquivos
         </h2>
         <EditalArquivos
           ref={arquivosRef}
@@ -384,64 +580,55 @@ export function EditalForm({ initialData }: EditalFormProps) {
         />
       </Card>
 
-      {/* Secao 5 - Cronograma */}
+      {/* Secao 6 - Cronograma */}
       <Card padding="sm" className="sm:p-6">
-        <div className="flex items-center justify-between mb-4 sm:mb-5">
-          <h2 className="text-base sm:text-lg font-semibold text-slate-800">
-            5. Cronograma
-          </h2>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={addCronogramaItem}
-          >
-            + Adicionar etapa
-          </Button>
-        </div>
+        <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-4 sm:mb-5">
+          6. Cronograma
+        </h2>
 
-        {cronograma.length === 0 ? (
-          <p className="text-sm text-slate-500 text-center py-4">
-            Nenhuma etapa adicionada ainda.
+        {/* Fases fixas do edital */}
+        <div className="rounded-lg border border-slate-200 bg-slate-50/50 p-4 mb-5">
+          <h3 className="text-sm font-semibold text-slate-700 mb-3">
+            Fases do Edital
+          </h3>
+          <p className="text-xs text-slate-500 mb-4">
+            Preencha as datas das fases que se aplicam a este edital. Fases sem data não serão salvas.
           </p>
-        ) : (
           <div className="space-y-3">
-            {cronograma.map((item, idx) => (
-              <div
-                key={idx}
-                className={[
-                  'rounded-lg border p-3 transition-colors',
-                  item.destaque
-                    ? 'border-blue-200 bg-blue-50'
-                    : 'border-slate-200 bg-white',
-                ].join(' ')}
-              >
-                <Input
-                  label="Etapa"
-                  value={item.label}
-                  onChange={e => updateCronogramaItem(idx, 'label', e.target.value)}
-                  placeholder="Ex.: Inscrições abertas"
-                />
-
-                <div className="mt-3 flex flex-col sm:flex-row sm:items-end gap-3">
-                  <div className="flex-1">
-                    <Input
-                      label="Data / Hora"
-                      type="datetime-local"
-                      value={item.dataHora}
-                      onChange={e => updateCronogramaItem(idx, 'dataHora', e.target.value)}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between sm:justify-start gap-3 pb-0.5">
+            {CRONOGRAMA_FASES_FORMULARIO.map((fase) => {
+              const faseState = fases[fase] ?? { dataHora: '', destaque: false }
+              return (
+                <div
+                  key={fase}
+                  className={[
+                    'rounded-lg border p-3 transition-colors',
+                    faseState.destaque
+                      ? 'border-blue-200 bg-blue-50'
+                      : 'border-slate-200 bg-white',
+                  ].join(' ')}
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                    <span className="text-sm font-medium text-slate-700 sm:w-64 shrink-0">
+                      {editalCronogramaLabel[fase]}
+                    </span>
+                    <div className="flex-1">
+                      <input
+                        type="datetime-local"
+                        value={faseState.dataHora}
+                        onChange={e => updateFase(fase, 'dataHora', e.target.value)}
+                        aria-label={`Data de ${editalCronogramaLabel[fase]}`}
+                        className="block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-0 focus:border-brand-500 focus:ring-brand-200"
+                      />
+                    </div>
                     <button
                       type="button"
                       role="switch"
-                      aria-checked={item.destaque}
-                      onClick={() => updateCronogramaItem(idx, 'destaque', !item.destaque)}
+                      aria-checked={faseState.destaque}
+                      aria-label={`Destaque para ${editalCronogramaLabel[fase]}`}
+                      onClick={() => updateFase(fase, 'destaque', !faseState.destaque)}
                       className={[
-                        'flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors',
-                        item.destaque
+                        'flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors shrink-0',
+                        faseState.destaque
                           ? 'border-blue-300 bg-blue-100 text-blue-700'
                           : 'border-slate-300 bg-white text-slate-600 hover:border-slate-400',
                       ].join(' ')}
@@ -449,34 +636,114 @@ export function EditalForm({ initialData }: EditalFormProps) {
                       <span
                         className={[
                           'inline-flex h-4 w-7 rounded-full border transition-colors',
-                          item.destaque ? 'border-blue-600 bg-blue-600' : 'border-slate-300 bg-slate-200',
+                          faseState.destaque ? 'border-blue-600 bg-blue-600' : 'border-slate-300 bg-slate-200',
                         ].join(' ')}
                       >
                         <span
                           className={[
                             'my-auto block h-3 w-3 rounded-full bg-white shadow transition-transform',
-                            item.destaque ? 'translate-x-3.5' : 'translate-x-0.5',
+                            faseState.destaque ? 'translate-x-3.5' : 'translate-x-0.5',
                           ].join(' ')}
                         />
                       </span>
                       Destaque
                     </button>
-
-                    <Button
-                      type="button"
-                      variant="danger"
-                      size="sm"
-                      onClick={() => removeCronogramaItem(idx)}
-                      aria-label={`Remover etapa ${idx + 1}`}
-                    >
-                      Remover
-                    </Button>
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
-        )}
+        </div>
+
+        {/* Etapas personalizadas */}
+        <div className="rounded-lg border border-slate-200 bg-slate-50/50 p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-slate-700">
+              Etapas Personalizadas
+            </h3>
+            <Button type="button" variant="outline" size="sm" onClick={addCustomItem}>
+              + Adicionar etapa
+            </Button>
+          </div>
+
+          {customItems.length === 0 ? (
+            <p className="text-sm text-slate-500 text-center py-3">
+              Nenhuma etapa personalizada.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {customItems.map((item, idx) => (
+                <div
+                  key={idx}
+                  className={[
+                    'rounded-lg border p-3 transition-colors',
+                    item.destaque
+                      ? 'border-blue-200 bg-blue-50'
+                      : 'border-slate-200 bg-white',
+                  ].join(' ')}
+                >
+                  <Input
+                    label="Etapa"
+                    value={item.label}
+                    onChange={e => updateCustomItem(idx, 'label', e.target.value)}
+                    placeholder="Ex.: Oficina de capacitação"
+                  />
+
+                  <div className="mt-3 flex flex-col sm:flex-row sm:items-end gap-3">
+                    <div className="flex-1">
+                      <Input
+                        label="Data / Hora"
+                        type="datetime-local"
+                        value={item.dataHora}
+                        onChange={e => updateCustomItem(idx, 'dataHora', e.target.value)}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between sm:justify-start gap-3 pb-0.5">
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={item.destaque}
+                        onClick={() => updateCustomItem(idx, 'destaque', !item.destaque)}
+                        className={[
+                          'flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors',
+                          item.destaque
+                            ? 'border-blue-300 bg-blue-100 text-blue-700'
+                            : 'border-slate-300 bg-white text-slate-600 hover:border-slate-400',
+                        ].join(' ')}
+                      >
+                        <span
+                          className={[
+                            'inline-flex h-4 w-7 rounded-full border transition-colors',
+                            item.destaque ? 'border-blue-600 bg-blue-600' : 'border-slate-300 bg-slate-200',
+                          ].join(' ')}
+                        >
+                          <span
+                            className={[
+                              'my-auto block h-3 w-3 rounded-full bg-white shadow transition-transform',
+                              item.destaque ? 'translate-x-3.5' : 'translate-x-0.5',
+                            ].join(' ')}
+                          />
+                        </span>
+                        Destaque
+                      </button>
+
+                      <Button
+                        type="button"
+                        variant="danger"
+                        size="sm"
+                        onClick={() => removeCustomItem(idx)}
+                        aria-label={`Remover etapa personalizada ${idx + 1}`}
+                      >
+                        Remover
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </Card>
 
       {/* Acoes do formulario */}

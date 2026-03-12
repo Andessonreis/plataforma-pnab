@@ -9,11 +9,36 @@ export const runtime = 'nodejs'
 
 // ── Schema de validacao ─────────────────────────────────────────────────────
 
-const cronogramaItemSchema = z.object({
+const cronogramaFaseSchema = z.object({
+  tipo: z.literal('fase'),
+  fase: z.enum([
+    'PUBLICADO', 'INSCRICOES_ABERTAS', 'INSCRICOES_ENCERRADAS',
+    'HABILITACAO', 'AVALIACAO', 'RESULTADO_PRELIMINAR', 'RECURSO',
+    'RESULTADO_FINAL', 'ENCERRADO',
+  ]),
+  dataHora: z.string().default(''),
+  destaque: z.boolean().default(false),
+})
+
+const cronogramaCustomSchema = z.object({
+  tipo: z.literal('custom'),
   label: z.string().min(1, 'Descrição do marco é obrigatória'),
   dataHora: z.string().default(''),
   destaque: z.boolean().default(false),
 })
+
+// Aceita formato novo (discriminated union) E formato legado (sem tipo)
+const cronogramaLegacySchema = z.object({
+  label: z.string().min(1),
+  dataHora: z.string().default(''),
+  destaque: z.boolean().default(false),
+})
+
+const cronogramaItemSchema = z.union([
+  cronogramaFaseSchema,
+  cronogramaCustomSchema,
+  cronogramaLegacySchema,
+])
 
 const editalSchema = z.object({
   titulo: z.string().min(3, 'Titulo deve ter no minimo 3 caracteres'),
@@ -90,6 +115,7 @@ export async function POST(req: NextRequest) {
         camposFormulario: data.camposFormulario as unknown as import('@prisma/client').Prisma.InputJsonValue,
         vagasContemplados: data.vagasContemplados ?? null,
         vagasSuplentes: data.vagasSuplentes ?? null,
+        ...(data.status !== 'RASCUNHO' ? { publishedAt: new Date() } : {}),
       },
     })
 
@@ -201,6 +227,10 @@ export async function PUT(req: NextRequest) {
       }
     }
 
+    // Se saiu de RASCUNHO pela primeira vez, registrar data de publicação
+    const isPublishing = existing.status === 'RASCUNHO' && data.status !== 'RASCUNHO'
+    const publishedAt = isPublishing && !existing.publishedAt ? new Date() : undefined
+
     const edital = await prisma.edital.update({
       where: { id },
       data: {
@@ -217,6 +247,7 @@ export async function PUT(req: NextRequest) {
         camposFormulario: data.camposFormulario as unknown as import('@prisma/client').Prisma.InputJsonValue,
         vagasContemplados: data.vagasContemplados ?? null,
         vagasSuplentes: data.vagasSuplentes ?? null,
+        ...(publishedAt ? { publishedAt } : {}),
       },
     })
 

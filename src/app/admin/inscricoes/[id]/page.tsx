@@ -318,7 +318,7 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
               avaliacoes={inscricao.avaliacoes.map((a) => ({
                 avaliador: { id: a.avaliadorId, nome: a.avaliador.nome },
                 finalizada: (a as unknown as { finalizada: boolean }).finalizada,
-                notaTotal: a.notaTotal,
+                notaTotal: a.notaTotal ? Number(a.notaTotal) : null,
               }))}
             />
           )}

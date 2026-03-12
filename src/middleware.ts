@@ -2,11 +2,12 @@ import { auth } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 import type { UserRole } from '@prisma/client'
 
-const ROLES_ADMIN: UserRole[] = ['ADMIN', 'ATENDIMENTO', 'HABILITADOR', 'AVALIADOR']
+const ROLES_ADMIN: UserRole[] = ['ADMIN', 'ATENDIMENTO', 'HABILITADOR']
 
 export default auth((req) => {
   const { pathname } = req.nextUrl
   const session = req.auth
+  const role = session?.user?.role as UserRole | undefined
 
   // ── Área do Proponente ───────────────────────────────────────────────────────
   if (pathname.startsWith('/proponente')) {
@@ -15,13 +16,26 @@ export default auth((req) => {
     }
   }
 
+  // ── Área do Avaliador ──────────────────────────────────────────────────────
+  if (pathname.startsWith('/avaliador')) {
+    if (!session) {
+      return NextResponse.redirect(new URL('/login', req.url))
+    }
+    if (role !== 'AVALIADOR') {
+      return NextResponse.redirect(new URL('/', req.url))
+    }
+  }
+
   // ── Área Admin / Backoffice ──────────────────────────────────────────────────
   if (pathname.startsWith('/admin')) {
     if (!session) {
       return NextResponse.redirect(new URL('/login', req.url))
     }
-    const role = session.user?.role as UserRole | undefined
     if (!role || !ROLES_ADMIN.includes(role)) {
+      // Avaliador tentando acessar /admin → redireciona para /avaliador
+      if (role === 'AVALIADOR') {
+        return NextResponse.redirect(new URL('/avaliador', req.url))
+      }
       return NextResponse.redirect(new URL('/', req.url))
     }
   }

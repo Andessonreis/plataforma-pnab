@@ -5,6 +5,7 @@ import { Badge, Button, Card, PageHeader, FilterTabs, EmptyState, Pagination } f
 import { IconCalendar, IconCurrency, IconDocument } from '@/components/ui/icons'
 import { getStatusDisplay, OPEN_STATUSES, CLOSED_STATUSES } from '@/lib/utils/edital-status'
 import { formatCurrency, formatDate } from '@/lib/utils/format'
+import { getNextDeadline } from '@/lib/utils/cronograma'
 
 export const metadata: Metadata = {
   title: 'Editais',
@@ -14,12 +15,6 @@ export const metadata: Metadata = {
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
 type FilterTab = 'todos' | 'abertos' | 'encerrados'
-
-interface CronogramaItem {
-  label: string
-  dataHora: string
-  destaque?: boolean
-}
 
 interface SearchParams {
   status?: string
@@ -39,19 +34,6 @@ function getStatusFilter(tab: FilterTab): EditalStatus[] | undefined {
     default:
       return undefined
   }
-}
-
-function getNextDeadline(cronograma: unknown): CronogramaItem | null {
-  if (!Array.isArray(cronograma)) return null
-
-  const now = new Date()
-  const items = cronograma as CronogramaItem[]
-
-  const future = items
-    .filter((item) => item.dataHora && new Date(item.dataHora) > now)
-    .sort((a, b) => new Date(a.dataHora).getTime() - new Date(b.dataHora).getTime())
-
-  return future[0] ?? null
 }
 
 function truncate(text: string, maxLength: number): string {

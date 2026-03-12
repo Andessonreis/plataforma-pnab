@@ -6,6 +6,8 @@ import { prisma } from '@/lib/db'
 import { EditalForm } from '../edital-form'
 import { AcessivelEditor } from './acessivel-editor'
 import type { EditalStatus } from '@prisma/client'
+import type { CronogramaItem } from '@/types/cronograma'
+import { migrateLegacyCronograma } from '@/lib/utils/cronograma'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -20,10 +22,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: `Editar: ${edital?.titulo ?? id} — Portal PNAB Irece` }
 }
 
-interface CronogramaItem {
+interface CampoFormulario {
+  nome: string
   label: string
-  dataHora: string
-  destaque: boolean
+  tipo: 'texto' | 'textarea' | 'select' | 'numero' | 'data' | 'arquivo'
+  obrigatorio: boolean
+  placeholder: string
+  opcoes: string[]
+  hint: string
 }
 
 export default async function EditarEditalPage({ params }: Props) {
@@ -35,7 +41,9 @@ export default async function EditarEditalPage({ params }: Props) {
 
   if (!edital) notFound()
 
-  const cronograma = (Array.isArray(edital.cronograma) ? edital.cronograma : []) as unknown as CronogramaItem[]
+  // Migra cronograma legado para formato novo (se necessário)
+  const cronograma = migrateLegacyCronograma(edital.cronograma) as CronogramaItem[]
+  const camposFormulario = (Array.isArray(edital.camposFormulario) ? edital.camposFormulario : []) as unknown as CampoFormulario[]
 
   return (
     <section>
@@ -64,6 +72,7 @@ export default async function EditarEditalPage({ params }: Props) {
           acoesAfirmativas: edital.acoesAfirmativas ?? '',
           regrasElegibilidade: edital.regrasElegibilidade ?? '',
           cronograma,
+          camposFormulario,
           status: edital.status as EditalStatus,
           vagasContemplados: edital.vagasContemplados,
           vagasSuplentes: edital.vagasSuplentes,

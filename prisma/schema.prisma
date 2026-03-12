@@ -181,6 +181,8 @@ model Edital {
   vagasContemplados   Int?
   // Número de vagas para suplentes (null = todos restantes com nota)
   vagasSuplentes      Int?
+  // Data real de publicação (preenchida quando status sai de RASCUNHO)
+  publishedAt         DateTime?
   createdAt           DateTime     @default(now())
   updatedAt           DateTime     @updatedAt
 

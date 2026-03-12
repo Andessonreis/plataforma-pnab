@@ -22,32 +22,12 @@ import {
 } from '@/components/ui/icons'
 import { getStatusDisplay } from '@/lib/utils/edital-status'
 import { formatCurrency, formatDate } from '@/lib/utils/format'
+import { getNextDeadline } from '@/lib/utils/cronograma'
 
 export const metadata: Metadata = {
   title: 'Início',
   description:
     'Portal oficial da Política Nacional Aldir Blanc de Fomento à Cultura — Secretaria de Arte e Cultura de Irecê/BA.',
-}
-
-// ── Helpers ─────────────────────────────────────────────────────────────────
-
-interface CronogramaItem {
-  label: string
-  dataHora: string
-  destaque?: boolean
-}
-
-function getNextDeadline(cronograma: unknown): CronogramaItem | null {
-  if (!Array.isArray(cronograma)) return null
-
-  const now = new Date()
-  const items = cronograma as CronogramaItem[]
-
-  const future = items
-    .filter((item) => item.dataHora && new Date(item.dataHora) > now)
-    .sort((a, b) => new Date(a.dataHora).getTime() - new Date(b.dataHora).getTime())
-
-  return future[0] ?? null
 }
 
 // ── Página ──────────────────────────────────────────────────────────────────

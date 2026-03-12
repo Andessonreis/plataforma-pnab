@@ -33,8 +33,9 @@ export function LoginForm() {
       } else {
         const session = await getSession()
         const role = session?.user?.role
-        const ROLES_ADMIN = ['ADMIN', 'ATENDIMENTO', 'HABILITADOR', 'AVALIADOR']
-        const dest = role && ROLES_ADMIN.includes(role) ? '/admin' : '/proponente'
+        let dest = '/proponente'
+        if (role === 'AVALIADOR') dest = '/avaliador'
+        else if (['ADMIN', 'ATENDIMENTO', 'HABILITADOR'].includes(role ?? '')) dest = '/admin'
         router.push(dest)
         router.refresh()
       }

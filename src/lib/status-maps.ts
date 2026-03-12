@@ -46,6 +46,19 @@ export const editalStatusLabel: Record<EditalStatus, string> = {
   ENCERRADO: 'Encerrado',
 }
 
+export const editalCronogramaLabel: Record<EditalStatus, string> = {
+  RASCUNHO: 'Rascunho',
+  PUBLICADO: 'Publicação do Edital',
+  INSCRICOES_ABERTAS: 'Início das Inscrições',
+  INSCRICOES_ENCERRADAS: 'Encerramento das Inscrições',
+  HABILITACAO: 'Início da Habilitação',
+  AVALIACAO: 'Início da Avaliação',
+  RESULTADO_PRELIMINAR: 'Publicação do Resultado Preliminar',
+  RECURSO: 'Início da Fase de Recursos',
+  RESULTADO_FINAL: 'Publicação do Resultado Final',
+  ENCERRADO: 'Encerramento do Edital',
+}
+
 export const editalStatusVariant: Record<EditalStatus, BadgeVariant> = {
   RASCUNHO: 'neutral',
   PUBLICADO: 'info',

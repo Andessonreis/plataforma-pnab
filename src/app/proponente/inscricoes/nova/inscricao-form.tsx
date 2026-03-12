@@ -139,13 +139,13 @@ export default function InscricaoForm({
 
   // ─── Upload de anexo ──────────────────────────────────────────────────────
 
-  const handleUpload = useCallback(async (file: File, tipo: string, titulo: string) => {
+  const handleUpload = useCallback(async (file: File, tipo: string, titulo: string): Promise<boolean> => {
     setUploading(true)
     setError('')
 
     try {
       const id = await createInscricao()
-      if (!id) return
+      if (!id) return false
 
       const formData = new FormData()
       formData.append('file', file)
@@ -161,8 +161,10 @@ export default function InscricaoForm({
       if (!res.ok) throw new Error(data.message || 'Erro no upload')
 
       setAnexos((prev) => [...prev, data.data])
+      return true
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro no upload')
+      return false
     } finally {
       setUploading(false)
     }
@@ -576,13 +578,15 @@ function AnexoUpload({
   onUpload,
   uploading,
 }: {
-  onUpload: (file: File, tipo: string, titulo: string) => Promise<void>
+  onUpload: (file: File, tipo: string, titulo: string) => Promise<boolean>
   uploading: boolean
 }) {
   const [tipo, setTipo] = useState('')
   const [titulo, setTitulo] = useState('')
   const [file, setFile] = useState<File | null>(null)
   const [dragOver, setDragOver] = useState(false)
+  const [localError, setLocalError] = useState('')
+  const [localSuccess, setLocalSuccess] = useState('')
 
   const tipoOptions: SelectOption[] = [
     { value: 'DOCUMENTO_PESSOAL', label: 'Documento Pessoal' },
@@ -598,6 +602,8 @@ function AnexoUpload({
     const f = e.target.files?.[0]
     if (f) {
       setFile(f)
+      setLocalError('')
+      setLocalSuccess('')
       if (!titulo) setTitulo(f.name.replace(/\.[^.]+$/, ''))
     }
   }
@@ -608,23 +614,45 @@ function AnexoUpload({
     const f = e.dataTransfer.files?.[0]
     if (f) {
       setFile(f)
+      setLocalError('')
+      setLocalSuccess('')
       if (!titulo) setTitulo(f.name.replace(/\.[^.]+$/, ''))
     }
   }
 
   const handleSubmit = async () => {
     if (!file || !tipo || !titulo) return
-    await onUpload(file, tipo, titulo)
-    setFile(null)
-    setTitulo('')
-    setTipo('')
-    // Reset file input
-    const input = document.getElementById('anexo-file') as HTMLInputElement
-    if (input) input.value = ''
+    setLocalError('')
+    setLocalSuccess('')
+
+    const ok = await onUpload(file, tipo, titulo)
+
+    if (ok) {
+      setLocalSuccess(`"${titulo}" enviado com sucesso!`)
+      setTimeout(() => setLocalSuccess(''), 4000)
+      setFile(null)
+      setTitulo('')
+      setTipo('')
+      const input = document.getElementById('anexo-file') as HTMLInputElement
+      if (input) input.value = ''
+    } else {
+      setLocalError('Falha ao enviar o anexo. Verifique o arquivo e tente novamente.')
+    }
   }
 
   return (
     <div className="space-y-4">
+      {localError && (
+        <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700" role="alert">
+          {localError}
+        </div>
+      )}
+      {localSuccess && (
+        <div className="rounded-lg bg-green-50 border border-green-200 p-3 text-sm text-green-700" role="status">
+          {localSuccess}
+        </div>
+      )}
+
       {/* Drop zone */}
       <div
         onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}

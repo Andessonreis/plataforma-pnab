@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
+import { Prisma } from '@prisma/client'
 
 export const runtime = 'nodejs'
 
@@ -91,21 +92,36 @@ export async function POST(req: NextRequest) {
       return res
     }
 
-    // Gerar número sequencial: PNAB-{ano}-{sequencial 3 dígitos}
-    const count = await prisma.inscricao.count({ where: { editalId: data.editalId } })
-    const numero = `PNAB-${edital.ano}-${String(count + 1).padStart(3, '0')}`
+    // Gerar número sequencial: PNAB-{ano}-{sequencial 4 dígitos}
+    // Conta globalmente por ano para evitar colisão entre editais do mesmo ano
+    // Retry em caso de race condition no unique constraint
+    let inscricao!: { id: string; numero: string }
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const count = await prisma.inscricao.count({
+        where: { numero: { startsWith: `PNAB-${edital.ano}-` } },
+      })
+      const numero = `PNAB-${edital.ano}-${String(count + 1 + attempt).padStart(4, '0')}`
 
-    const inscricao = await prisma.inscricao.create({
-      data: {
-        numero,
-        editalId: data.editalId,
-        proponenteId: userId,
-        status: 'RASCUNHO',
-        categoria: data.categoria ?? null,
-        campos: {},
-      },
-      select: { id: true, numero: true },
-    })
+      try {
+        inscricao = await prisma.inscricao.create({
+          data: {
+            numero,
+            editalId: data.editalId,
+            proponenteId: userId,
+            status: 'RASCUNHO',
+            categoria: data.categoria ?? null,
+            campos: {},
+          },
+          select: { id: true, numero: true },
+        })
+        break
+      } catch (e) {
+        if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002' && attempt < 2) {
+          continue
+        }
+        throw e
+      }
+    }
 
     await logAudit({
       userId,

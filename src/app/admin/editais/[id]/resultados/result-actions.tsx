@@ -42,7 +42,7 @@ export function ResultActions({ editalId, editalStatus }: ResultActionsProps) {
     }
   }
 
-  const canPublishPreliminar = ['AVALIACAO', 'HABILITACAO'].includes(editalStatus)
+  const canPublishPreliminar = ['INSCRICOES_ENCERRADAS', 'HABILITACAO', 'AVALIACAO'].includes(editalStatus)
   const canPublishFinal = ['RESULTADO_PRELIMINAR', 'RECURSO'].includes(editalStatus)
 
   return (

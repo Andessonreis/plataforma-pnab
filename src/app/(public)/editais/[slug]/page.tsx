@@ -21,17 +21,12 @@ import {
 } from '@/components/ui/icons'
 import { getStatusDisplay } from '@/lib/utils/edital-status'
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/utils/format'
+import { parseCronogramaPublico, getNextDeadline, isFaseCompleted } from '@/lib/utils/cronograma'
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
 interface Props {
   params: Promise<{ slug: string }>
-}
-
-interface CronogramaItem {
-  label: string
-  dataHora: string
-  destaque?: boolean
 }
 
 interface FaqItemData {
@@ -86,11 +81,11 @@ export default async function EditalPage({ params }: Props) {
   }
 
   const statusDisplay = getStatusDisplay(edital.status)
-  const cronograma = parseCronograma(edital.cronograma)
+  const cronograma = parseCronogramaPublico(edital.cronograma, edital.status, edital.publishedAt)
   const now = new Date()
   const isOpen = edital.status === 'INSCRICOES_ABERTAS'
 
-  const nextDeadline = cronograma.find((item) => new Date(item.dataHora) > now)
+  const nextDeadline = getNextDeadline(edital.cronograma)
 
   return (
     <>
@@ -192,7 +187,12 @@ export default async function EditalPage({ params }: Props) {
                     <ol className="space-y-1">
                       {cronograma.map((item, index) => {
                         const itemDate = new Date(item.dataHora)
-                        const isPast = itemDate < now
+                        const datePast = itemDate < now
+                        // Para fases fixas: só marca concluído se o edital realmente passou por ela
+                        // Para items custom: usa apenas a data
+                        const isPast = item.fase
+                          ? isFaseCompleted(item.fase, edital.status)
+                          : datePast
                         const isHighlight = item.destaque === true
 
                         return (
@@ -597,22 +597,6 @@ export default async function EditalPage({ params }: Props) {
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
-
-function parseCronograma(raw: unknown): CronogramaItem[] {
-  // Suporta tanto array direto quanto JSON string (double-serialized)
-  let data = raw
-  if (typeof data === 'string') {
-    try { data = JSON.parse(data) } catch { return [] }
-  }
-  if (!Array.isArray(data)) return []
-  return data.filter(
-    (item): item is CronogramaItem =>
-      typeof item === 'object' &&
-      item !== null &&
-      typeof item.label === 'string' &&
-      typeof item.dataHora === 'string',
-  )
-}
 
 function getFileBadgeVariant(tipo: string): 'info' | 'warning' | 'success' | 'neutral' {
   switch (tipo.toUpperCase()) {
