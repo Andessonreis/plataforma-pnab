@@ -27,6 +27,9 @@ const statusTimeline: InscricaoStatus[] = [
   'RESULTADO_FINAL',
 ]
 
+// Status do edital em que as notas/avaliacoes podem ser exibidas ao proponente
+const RESULTADO_VISIVEL = ['RESULTADO_PRELIMINAR', 'RECURSO', 'RESULTADO_FINAL', 'ENCERRADO']
+
 export default async function InscricaoDetailPage({ params }: Props) {
   const session = await auth()
   if (!session) redirect('/login')
@@ -36,7 +39,7 @@ export default async function InscricaoDetailPage({ params }: Props) {
   const inscricao = await prisma.inscricao.findUnique({
     where: { id },
     include: {
-      edital: { select: { titulo: true, slug: true, ano: true, categorias: true } },
+      edital: { select: { titulo: true, slug: true, ano: true, categorias: true, status: true } },
       anexos: true,
       avaliacoes: {
         select: { notaTotal: true, parecer: true, createdAt: true },
@@ -157,7 +160,7 @@ export default async function InscricaoDetailPage({ params }: Props) {
                     : 'Nao enviada'}
                 </dd>
               </div>
-              {inscricao.notaFinal && (
+              {RESULTADO_VISIVEL.includes(inscricao.edital.status) && inscricao.notaFinal && (
                 <div>
                   <dt className="text-sm font-medium text-slate-500">Nota Final</dt>
                   <dd className="text-sm text-slate-900 font-bold">{String(inscricao.notaFinal)}</dd>
@@ -222,7 +225,7 @@ export default async function InscricaoDetailPage({ params }: Props) {
         {/* Sidebar — avaliacoes e recursos */}
         <div className="space-y-6">
           {/* Avaliacoes */}
-          {inscricao.avaliacoes.length > 0 && (
+          {RESULTADO_VISIVEL.includes(inscricao.edital.status) && inscricao.avaliacoes.length > 0 && (
             <Card>
               <h2 className="text-lg font-semibold text-slate-900 mb-4">Avaliacoes</h2>
               <div className="space-y-3">
