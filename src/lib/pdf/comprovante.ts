@@ -1,6 +1,17 @@
-import { createDocument, addHeader, addFooter, addField, addSection, docToBuffer, MARGINS, COLORS } from './shared'
+import { createDocument, docToBuffer } from './shared'
+import {
+  addCompactHeader,
+  addProtocolBadge,
+  addCompactSection,
+  addInfoBlock,
+  addDivider,
+  addLegalNotice,
+  addCompactFooter,
+} from './layout-helpers'
 
-interface ComprovanteData {
+// ─── Tipos ───────────────────────────────────────────────────────────────────
+
+export interface ComprovanteData {
   numero: string
   proponente: {
     nome: string
@@ -17,99 +28,136 @@ interface ComprovanteData {
   campos?: Record<string, unknown>
 }
 
+// Número máximo de campos do formulário exibidos no comprovante.
+// Campos adicionais ficam disponíveis na plataforma.
+const MAX_CAMPOS_EXIBIDOS = 6
+
+// ─── Geração do comprovante ──────────────────────────────────────────────────
+
 /**
- * Gera PDF de comprovante de inscrição.
+ * Gera PDF de comprovante de inscrição em layout compacto (1 página A4).
+ * Usa helpers modulares de layout-helpers.ts.
  */
 export async function generateComprovante(data: ComprovanteData): Promise<Buffer> {
   const doc = createDocument()
 
-  addHeader(doc, 'Comprovante de Inscrição')
+  addCompactHeader(doc, 'Comprovante de Inscrição')
+  addProtocolBadge(doc, data.numero)
+  addDivider(doc)
 
-  // Protocolo em destaque
-  doc
-    .rect(MARGINS.left, doc.y, 495.28, 40)
-    .fill('#f0fdf4')
+  // ── Edital ────────────────────────────────────────────────────────────────
+  addCompactSection(doc, 'Edital')
+  addInfoBlock(doc, [
+    { label: 'Título', value: data.edital.titulo },
+    { label: 'Ano', value: String(data.edital.ano) },
+    ...(data.categoria ? [{ label: 'Categoria', value: data.categoria }] : []),
+  ])
+  addDivider(doc)
 
-  doc
-    .font('Helvetica-Bold')
-    .fontSize(14)
-    .fillColor(COLORS.brand)
-    .text(`Protocolo: ${data.numero}`, MARGINS.left + 10, doc.y - 30, {
-      width: 475,
-      align: 'center',
-    })
+  // ── Proponente ────────────────────────────────────────────────────────────
+  addCompactSection(doc, 'Proponente')
+  addInfoBlock(doc, [
+    { label: 'Nome', value: data.proponente.nome },
+    { label: 'CPF/CNPJ', value: maskCpfCnpj(data.proponente.cpfCnpj) },
+    { label: 'E-mail', value: data.proponente.email },
+    { label: 'Tipo', value: formatTipoProponente(data.proponente.tipoProponente) },
+  ])
+  addDivider(doc)
 
-  doc.y += 20
-  doc.moveDown(1)
+  // ── Data de envio ─────────────────────────────────────────────────────────
+  addCompactSection(doc, 'Inscrição')
+  addInfoBlock(doc, [
+    {
+      label: 'Data de Envio',
+      value: data.submittedAt.toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+    },
+    { label: 'Protocolo', value: data.numero },
+  ])
 
-  // Dados do Edital
-  addSection(doc, 'Edital')
-  addField(doc, 'Título', data.edital.titulo)
-  addField(doc, 'Ano', String(data.edital.ano))
-  if (data.categoria) {
-    addField(doc, 'Categoria', data.categoria)
-  }
+  // ── Resumo dos campos (max MAX_CAMPOS_EXIBIDOS) ───────────────────────────
+  const camposRelevantes = buildCamposResumo(data.campos, MAX_CAMPOS_EXIBIDOS)
+  if (camposRelevantes.length > 0) {
+    addDivider(doc)
+    addCompactSection(doc, 'Dados do Projeto (resumo)')
+    addInfoBlock(doc, camposRelevantes)
 
-  // Dados do Proponente
-  addSection(doc, 'Proponente')
-  addField(doc, 'Nome', data.proponente.nome)
-  addField(doc, 'CPF/CNPJ', maskCpfCnpj(data.proponente.cpfCnpj))
-  addField(doc, 'E-mail', data.proponente.email)
-  addField(doc, 'Tipo', formatTipoProponente(data.proponente.tipoProponente))
-
-  // Dados da Inscrição
-  addSection(doc, 'Informações da Inscrição')
-  addField(doc, 'Data de Envio', data.submittedAt.toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }))
-
-  // Resumo dos campos preenchidos
-  if (data.campos && Object.keys(data.campos).length > 0) {
-    addSection(doc, 'Resumo dos Campos')
-    for (const [key, value] of Object.entries(data.campos)) {
-      if (value !== null && value !== undefined && value !== '') {
-        const displayValue = typeof value === 'object' ? JSON.stringify(value) : String(value)
-        addField(doc, key, displayValue.length > 200 ? `${displayValue.slice(0, 200)}...` : displayValue)
-      }
+    const total = Object.values(data.campos ?? {}).filter(
+      (v) => v !== null && v !== undefined && v !== '',
+    ).length
+    if (total > MAX_CAMPOS_EXIBIDOS) {
+      doc
+        .font('Helvetica-Oblique')
+        .fontSize(7.5)
+        .fillColor('#64748b')
+        .text(
+          `* Exibindo ${MAX_CAMPOS_EXIBIDOS} de ${total} campos. Consulte os dados completos na plataforma.`,
+          50,
+          doc.y + 2,
+        )
     }
   }
 
-  // Aviso legal
-  doc.moveDown(2)
-  doc
-    .font('Helvetica')
-    .fontSize(8)
-    .fillColor(COLORS.textLight)
-    .text(
-      'Este documento é o comprovante oficial de inscrição no edital acima referido. ' +
-      'Guarde este protocolo para acompanhamento. A inscrição será analisada conforme critérios do edital.',
-      MARGINS.left,
-      doc.y,
-      { width: 495.28, align: 'justify' },
-    )
-
-  addFooter(doc, 1)
+  // ── Aviso legal e footer ──────────────────────────────────────────────────
+  addLegalNotice(
+    doc,
+    'Este documento é o comprovante oficial de inscrição no edital acima referido. ' +
+    'Guarde este protocolo para acompanhamento e apresentação quando solicitado. ' +
+    'A inscrição será analisada conforme os critérios estabelecidos no edital.',
+  )
+  addCompactFooter(doc, 1)
 
   return docToBuffer(doc)
 }
 
+// ─── Helpers privados ────────────────────────────────────────────────────────
+
 function maskCpfCnpj(value: string): string {
   if (!value) return '—'
-  if (value.length <= 6) return value
-  // Mostra apenas últimos 4 dígitos
-  return `***${value.slice(-4)}`
+  const digits = value.replace(/\D/g, '')
+  if (digits.length <= 6) return value
+  // Oculta dígitos do meio, mantém 3 primeiros e 2 últimos
+  return `${digits.slice(0, 3)}.***.***-${digits.slice(-2)}`
 }
 
 function formatTipoProponente(tipo: string): string {
   const map: Record<string, string> = {
     PF: 'Pessoa Física',
     PJ: 'Pessoa Jurídica',
-    MEI: 'Microempreendedor Individual',
+    MEI: 'Microempreendedor Individual (MEI)',
     COLETIVO: 'Coletivo Cultural',
   }
   return map[tipo] ?? tipo
+}
+
+/**
+ * Filtra e formata os campos do formulário para exibição resumida no comprovante.
+ * Exclui campos vazios e limita ao máximo definido.
+ */
+function buildCamposResumo(
+  campos: Record<string, unknown> | undefined,
+  max: number,
+): Array<{ label: string; value: string }> {
+  if (!campos) return []
+
+  return Object.entries(campos)
+    .filter(([, v]) => v !== null && v !== undefined && v !== '')
+    .slice(0, max)
+    .map(([key, value]) => {
+      const rawStr = typeof value === 'object' ? JSON.stringify(value) : String(value)
+      // Truncar valores muito longos para não quebrar layout
+      const truncated = rawStr.length > 80 ? `${rawStr.slice(0, 77)}...` : rawStr
+      // Converter camelCase/snake_case para label legível
+      const label = key
+        .replace(/([A-Z])/g, ' $1')
+        .replace(/_/g, ' ')
+        .replace(/^\w/, (c) => c.toUpperCase())
+        .trim()
+      return { label, value: truncated }
+    })
 }

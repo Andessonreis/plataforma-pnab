@@ -4,6 +4,9 @@ export type { ButtonProps } from './button'
 export { Input } from './input'
 export type { InputProps } from './input'
 
+export { CurrencyInput, formatCurrencyBRL } from './currency-input'
+export type { CurrencyInputProps } from './currency-input'
+
 export { Badge } from './badge'
 export type { BadgeProps, BadgeVariant } from './badge'
 

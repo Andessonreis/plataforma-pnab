@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button, Input, Select, Textarea, Card, Badge } from '@/components/ui'
+import { Button, Input, Select, Textarea, Card, Badge, CurrencyInput, formatCurrencyBRL } from '@/components/ui'
 import type { SelectOption } from '@/components/ui'
 import { IconArrowLeft, IconArrowRight, IconCheck, IconDocument } from '@/components/ui/icons'
 
@@ -11,7 +11,7 @@ import { IconArrowLeft, IconArrowRight, IconCheck, IconDocument } from '@/compon
 interface CampoFormulario {
   nome: string
   label: string
-  tipo: 'texto' | 'text' | 'textarea' | 'select' | 'numero' | 'number' | 'data' | 'date' | 'arquivo'
+  tipo: 'texto' | 'text' | 'textarea' | 'select' | 'numero' | 'number' | 'moeda' | 'currency' | 'data' | 'date' | 'arquivo'
   obrigatorio?: boolean
   placeholder?: string
   opcoes?: string[]
@@ -293,8 +293,36 @@ export default function InscricaoForm({
             hint={campo.hint}
           />
         )
+      case 'moeda':
+      case 'currency':
+        return (
+          <CurrencyInput
+            key={campo.nome}
+            label={campo.label}
+            value={value}
+            onChange={(rawValue) => updateCampo(campo.nome, rawValue)}
+            placeholder={campo.placeholder}
+            required={campo.obrigatorio}
+            hint={campo.hint}
+          />
+        )
       case 'numero':
-      case 'number':
+      case 'number': {
+        // Campos cujo nome sugere valor monetário recebem máscara BRL automaticamente
+        const isCurrency = /valor|preco|preço|custo|orcamento|orçamento/i.test(campo.nome)
+        if (isCurrency) {
+          return (
+            <CurrencyInput
+              key={campo.nome}
+              label={campo.label}
+              value={value}
+              onChange={(rawValue) => updateCampo(campo.nome, rawValue)}
+              placeholder={campo.placeholder}
+              required={campo.obrigatorio}
+              hint={campo.hint}
+            />
+          )
+        }
         return (
           <Input
             key={campo.nome}
@@ -307,6 +335,7 @@ export default function InscricaoForm({
             hint={campo.hint}
           />
         )
+      }
       case 'data':
       case 'date':
         return (
@@ -508,7 +537,17 @@ export default function InscricaoForm({
                           {campo.obrigatorio && <span className="text-red-500 ml-1">*</span>}
                         </dt>
                         <dd className={`text-sm mt-0.5 ${isEmpty ? 'text-red-500 italic' : 'text-slate-900'}`}>
-                          {isEmpty ? 'Não preenchido' : String(valor)}
+                          {isEmpty
+                            ? 'Não preenchido'
+                            : (() => {
+                              const isCurrency =
+                                campo.tipo === 'moeda' ||
+                                campo.tipo === 'currency' ||
+                                (/valor|preco|preço|custo|orcamento|orçamento/i.test(campo.nome) &&
+                                  (campo.tipo === 'numero' || campo.tipo === 'number'))
+                              return isCurrency ? formatCurrencyBRL(valor as string) : String(valor)
+                            })()
+                          }
                         </dd>
                       </div>
                     )
