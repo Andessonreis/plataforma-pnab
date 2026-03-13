@@ -56,7 +56,17 @@ export default async function InscricaoDetailPage({ params }: Props) {
     notFound()
   }
 
-  const currentStatusIndex = statusTimeline.indexOf(inscricao.status as InscricaoStatus)
+  // Status terminais (CONTEMPLADA, NAO_CONTEMPLADA, SUPLENTE, RECURSO_ABERTO)
+  // já passaram por toda a timeline — mapear para posição correta
+  const statusIndexMap: Partial<Record<InscricaoStatus, number>> = {
+    CONTEMPLADA: statusTimeline.length,
+    NAO_CONTEMPLADA: statusTimeline.length,
+    SUPLENTE: statusTimeline.length,
+    INABILITADA: 1, // Passou por RASCUNHO e ENVIADA, mas não por HABILITADA
+    RECURSO_ABERTO: statusTimeline.indexOf('RESULTADO_PRELIMINAR'),
+  }
+  const currentStatusIndex = statusIndexMap[inscricao.status as InscricaoStatus]
+    ?? statusTimeline.indexOf(inscricao.status as InscricaoStatus)
   // Parsear campos com segurança — Prisma Json pode retornar string em vez de objeto
   let camposParsed = inscricao.campos
   if (typeof camposParsed === 'string') {
