@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/icons'
 import { getStatusDisplay } from '@/lib/utils/edital-status'
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/utils/format'
-import { parseCronogramaPublico, getNextDeadline, isFaseCompleted } from '@/lib/utils/cronograma'
+import { parseCronogramaPublico, getNextDeadline, isFaseCompleted, isFaseCurrent } from '@/lib/utils/cronograma'
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
@@ -188,11 +188,13 @@ export default async function EditalPage({ params }: Props) {
                       {cronograma.map((item, index) => {
                         const itemDate = new Date(item.dataHora)
                         const datePast = itemDate < now
-                        // Para fases fixas: só marca concluído se o edital realmente passou por ela
-                        // Para items custom: usa apenas a data
+                        // 3 estados: concluído (já passou), em andamento (fase atual), futuro
                         const isPast = item.fase
                           ? isFaseCompleted(item.fase, edital.status)
                           : datePast
+                        const isCurrent = item.fase
+                          ? isFaseCurrent(item.fase, edital.status)
+                          : false
                         const isHighlight = item.destaque === true
 
                         return (
@@ -202,9 +204,11 @@ export default async function EditalPage({ params }: Props) {
                                 'absolute left-2.5 top-4 h-3 w-3 rounded-full border-2 z-10',
                                 isPast
                                   ? 'bg-brand-200 border-brand-300'
-                                  : isHighlight
-                                    ? 'bg-brand-600 border-brand-600 shadow-sm shadow-brand-600/30'
-                                    : 'bg-white border-brand-400',
+                                  : isCurrent
+                                    ? 'bg-accent-400 border-accent-500 animate-pulse'
+                                    : isHighlight
+                                      ? 'bg-brand-600 border-brand-600 shadow-sm shadow-brand-600/30'
+                                      : 'bg-white border-brand-400',
                               ].join(' ')}
                               aria-hidden="true"
                             />
@@ -214,9 +218,11 @@ export default async function EditalPage({ params }: Props) {
                                 'rounded-lg p-3 transition-colors',
                                 isPast
                                   ? 'opacity-60'
-                                  : isHighlight
-                                    ? 'bg-brand-50 border border-brand-200'
-                                    : 'hover:bg-slate-50',
+                                  : isCurrent
+                                    ? 'bg-accent-50 border border-accent-200'
+                                    : isHighlight
+                                      ? 'bg-brand-50 border border-brand-200'
+                                      : 'hover:bg-slate-50',
                               ].join(' ')}
                             >
                               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
@@ -224,7 +230,7 @@ export default async function EditalPage({ params }: Props) {
                                   className={[
                                     'font-medium',
                                     isPast ? 'text-slate-500' : 'text-slate-900',
-                                    isHighlight && !isPast ? 'font-semibold' : '',
+                                    (isCurrent || (isHighlight && !isPast)) ? 'font-semibold' : '',
                                   ].join(' ')}
                                 >
                                   {item.label}
@@ -233,7 +239,11 @@ export default async function EditalPage({ params }: Props) {
                                   dateTime={item.dataHora}
                                   className={[
                                     'text-sm font-medium tabular-nums',
-                                    isPast ? 'text-slate-400' : 'text-brand-700',
+                                    isPast
+                                      ? 'text-slate-400'
+                                      : isCurrent
+                                        ? 'text-accent-700'
+                                        : 'text-brand-700',
                                   ].join(' ')}
                                 >
                                   {formatDateTime(item.dataHora)}
@@ -243,6 +253,12 @@ export default async function EditalPage({ params }: Props) {
                                 <span className="inline-flex items-center gap-1 text-xs text-slate-400 mt-1">
                                   <IconCheckSimple className="h-3 w-3" />
                                   Concluído
+                                </span>
+                              )}
+                              {isCurrent && (
+                                <span className="inline-flex items-center gap-1 text-xs text-accent-600 mt-1 font-medium">
+                                  <IconClock className="h-3 w-3" />
+                                  Em andamento
                                 </span>
                               )}
                             </div>
