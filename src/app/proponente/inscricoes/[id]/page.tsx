@@ -30,6 +30,13 @@ const statusTimeline: InscricaoStatus[] = [
 // Status do edital em que as notas/avaliacoes podem ser exibidas ao proponente
 const RESULTADO_VISIVEL = ['RESULTADO_PRELIMINAR', 'RECURSO', 'RESULTADO_FINAL', 'ENCERRADO']
 
+// Labels legíveis para campos dinâmicos conhecidos
+const campoLabels: Record<string, string> = {
+  nomeProjeto: 'Nome do Projeto',
+  descricao: 'Descrição',
+  valorSolicitado: 'Valor Solicitado',
+}
+
 export default async function InscricaoDetailPage({ params }: Props) {
   const session = await auth()
   if (!session) redirect('/login')
@@ -184,16 +191,27 @@ export default async function InscricaoDetailPage({ params }: Props) {
             <Card>
               <h2 className="text-lg font-semibold text-slate-900 mb-4">Dados da Proposta</h2>
               <dl className="space-y-3">
-                {Object.entries(campos).map(([key, value]) => (
-                  <div key={key} className="border-b border-slate-100 pb-3 last:border-0 last:pb-0">
-                    <dt className="text-sm font-medium text-slate-500 capitalize">
-                      {key.replace(/_/g, ' ')}
-                    </dt>
-                    <dd className="text-sm text-slate-900 mt-0.5 whitespace-pre-wrap">
-                      {typeof value === 'string' ? value : JSON.stringify(value)}
-                    </dd>
-                  </div>
-                ))}
+                {Object.entries(campos).map(([key, value]) => {
+                  // Label legível para campos conhecidos
+                  const label = campoLabels[key] ?? key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').replace(/^\w/, (c) => c.toUpperCase()).trim()
+                  // Formatar valor monetário
+                  const isValor = key.toLowerCase().includes('valor')
+                  const raw = typeof value === 'string' ? value : JSON.stringify(value)
+                  const display = isValor && !isNaN(Number(raw))
+                    ? Number(raw).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                    : raw
+
+                  return (
+                    <div key={key} className="border-b border-slate-100 pb-3 last:border-0 last:pb-0">
+                      <dt className="text-sm font-medium text-slate-500">
+                        {label}
+                      </dt>
+                      <dd className="text-sm text-slate-900 mt-0.5 whitespace-pre-wrap">
+                        {display}
+                      </dd>
+                    </div>
+                  )
+                })}
               </dl>
             </Card>
           )}
