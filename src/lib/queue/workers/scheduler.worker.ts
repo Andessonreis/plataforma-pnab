@@ -165,45 +165,57 @@ export async function processSchedulerJob(): Promise<number> {
 
   for (const edital of editais) {
     const cronograma = (edital.cronograma as unknown as CronogramaRawItem[]) || []
+    let currentStatus = edital.status
 
-    const match = extractFaseItems(cronograma, edital.status)
-    if (!match || new Date(match.dataHora) > now) {
-      continue
-    }
+    // Loop: avança por todas as fases cujas datas já passaram numa única execução
+    // Evita atraso quando várias datas passam entre runs do scheduler
+    let advancing = true
+    while (advancing) {
+      advancing = false
 
-    // Check de pendências: HABILITACAO → AVALIACAO
-    // Não avança se ainda houver inscrições com status ENVIADA (não habilitadas)
-    if (edital.status === 'HABILITACAO' && match.fase === 'AVALIACAO') {
-      const pendentes = await prisma.inscricao.count({
-        where: { editalId: edital.id, status: 'ENVIADA' },
-      })
-      if (pendentes > 0) {
-        console.log(
-          `[Scheduler] Edital "${edital.titulo}": HABILITACAO → AVALIACAO bloqueado — ${pendentes} inscrição(ões) ENVIADA(s) pendente(s)`,
-        )
-        continue
+      const match = extractFaseItems(cronograma, currentStatus)
+      if (!match || new Date(match.dataHora) > now) {
+        break
       }
+
+      // Check de pendências: HABILITACAO → AVALIACAO
+      // Não avança se ainda houver inscrições com status ENVIADA (não habilitadas)
+      if (currentStatus === 'HABILITACAO' && match.fase === 'AVALIACAO') {
+        const pendentes = await prisma.inscricao.count({
+          where: { editalId: edital.id, status: 'ENVIADA' },
+        })
+        if (pendentes > 0) {
+          console.log(
+            `[Scheduler] Edital "${edital.titulo}": HABILITACAO → AVALIACAO bloqueado — ${pendentes} inscrição(ões) ENVIADA(s) pendente(s)`,
+          )
+          break
+        }
+      }
+
+      const statusAnterior = currentStatus
+
+      await prisma.edital.update({
+        where: { id: edital.id },
+        data: { status: match.fase },
+      })
+
+      await logAudit({
+        action: AUDIT_ACTIONS.STATUS_ALTERADO,
+        entity: 'Edital',
+        entityId: edital.id,
+        details: {
+          titulo: edital.titulo,
+          statusAnterior,
+          novoStatus: match.fase,
+          automatico: true,
+        },
+      })
+
+      console.log(`[Scheduler] Edital "${edital.titulo}": ${statusAnterior} → ${match.fase}`)
+      currentStatus = match.fase
+      transicoes++
+      advancing = true
     }
-
-    await prisma.edital.update({
-      where: { id: edital.id },
-      data: { status: match.fase },
-    })
-
-    await logAudit({
-      action: AUDIT_ACTIONS.STATUS_ALTERADO,
-      entity: 'Edital',
-      entityId: edital.id,
-      details: {
-        titulo: edital.titulo,
-        statusAnterior: edital.status,
-        novoStatus: match.fase,
-        automatico: true,
-      },
-    })
-
-    console.log(`[Scheduler] Edital "${edital.titulo}": ${edital.status} → ${match.fase}`)
-    transicoes++
   }
 
   console.log(`[Scheduler] Concluído — ${transicoes} transição(ões) realizada(s)`)

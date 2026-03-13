@@ -64,14 +64,18 @@ export async function enqueuePdf(data: PdfJobData) {
 }
 
 /**
- * Configura o job repetível do scheduler (a cada 30 minutos).
+ * Configura o job repetível do scheduler.
+ * Intervalo configurável via SCHEDULER_INTERVAL_MS (padrão: 1 min em dev, 30 min em prod).
  * Seguro chamar múltiplas vezes — BullMQ deduplica por jobId.
  */
 export async function initSchedulerRepeatableJobs() {
+  const defaultInterval = process.env.NODE_ENV === 'production' ? 30 * 60 * 1000 : 60 * 1000
+  const interval = Number(process.env.SCHEDULER_INTERVAL_MS) || defaultInterval
+
   await schedulerQueue.upsertJobScheduler(
     'edital-status-check',
-    { every: 30 * 60 * 1000 }, // 30 minutos
+    { every: interval },
     { name: 'check', data: { trigger: 'cron' as const } },
   )
-  console.log('[Queue] Scheduler configurado — verificação a cada 30 minutos')
+  console.log(`[Queue] Scheduler configurado — verificação a cada ${Math.round(interval / 1000)}s`)
 }

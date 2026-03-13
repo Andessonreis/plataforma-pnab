@@ -206,14 +206,15 @@ const STATUS_ORDER: EditalStatus[] = [
  * Verifica se uma fase do cronograma foi efetivamente concluída,
  * baseando-se no status atual do edital (não apenas na data).
  *
- * Uma fase é "concluída" quando o edital já avançou ALÉM dela.
- * Ex: PUBLICADO é concluído quando status >= INSCRICOES_ABERTAS.
+ * Uma fase é "concluída" quando o edital já está nela ou avançou além.
+ * Ex: INSCRICOES_ABERTAS é concluído quando status >= INSCRICOES_ABERTAS,
+ * pois o evento "Início das Inscrições" já aconteceu.
  */
 export function isFaseCompleted(fase: EditalStatus, currentStatus: EditalStatus): boolean {
   const faseIndex = STATUS_ORDER.indexOf(fase)
   const currentIndex = STATUS_ORDER.indexOf(currentStatus)
   if (faseIndex === -1 || currentIndex === -1) return false
-  return currentIndex > faseIndex
+  return currentIndex >= faseIndex
 }
 
 // ── migrateLegacyCronograma — converte formato antigo para novo ─────────────

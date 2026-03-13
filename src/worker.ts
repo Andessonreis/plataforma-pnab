@@ -3,6 +3,7 @@
  * Executar separadamente: npm run worker
  * Em produção, roda como serviço `worker` no docker-compose.yml
  */
+import 'dotenv/config'
 import { emailWorker } from '@/lib/queue/workers/email.worker'
 import { pdfWorker } from '@/lib/queue/workers/pdf.worker'
 import { schedulerWorker } from '@/lib/queue/workers/scheduler.worker'
