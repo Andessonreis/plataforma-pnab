@@ -88,12 +88,28 @@ describe('extractFaseItems', () => {
     expect(result).toEqual({ fase: 'AVALIACAO', dataHora: '2026-05-01T10:00' })
   })
 
+  it('formato novo: AVALIACAO → RESULTADO_PRELIMINAR', () => {
+    const cronograma = [
+      { tipo: 'fase' as const, fase: 'RESULTADO_PRELIMINAR', dataHora: '2026-05-15T10:00' },
+    ]
+    const result = extractFaseItems(cronograma, 'AVALIACAO')
+    expect(result).toEqual({ fase: 'RESULTADO_PRELIMINAR', dataHora: '2026-05-15T10:00' })
+  })
+
   it('formato novo: RESULTADO_PRELIMINAR → RECURSO', () => {
     const cronograma = [
       { tipo: 'fase' as const, fase: 'RECURSO', dataHora: '2026-06-01T10:00' },
     ]
     const result = extractFaseItems(cronograma, 'RESULTADO_PRELIMINAR')
     expect(result).toEqual({ fase: 'RECURSO', dataHora: '2026-06-01T10:00' })
+  })
+
+  it('formato novo: RECURSO → RESULTADO_FINAL', () => {
+    const cronograma = [
+      { tipo: 'fase' as const, fase: 'RESULTADO_FINAL', dataHora: '2026-06-15T10:00' },
+    ]
+    const result = extractFaseItems(cronograma, 'RECURSO')
+    expect(result).toEqual({ fase: 'RESULTADO_FINAL', dataHora: '2026-06-15T10:00' })
   })
 
   it('formato novo: RESULTADO_FINAL → ENCERRADO', () => {
@@ -273,7 +289,29 @@ describe('processSchedulerJob', () => {
     expect(mockPrisma.edital.update).not.toHaveBeenCalled()
   })
 
-  // ── Transição 5: RESULTADO_PRELIMINAR → RECURSO ──────────────────────
+  // ── Transição 5: AVALIACAO → RESULTADO_PRELIMINAR ────────────────────
+
+  it('AVALIACAO + data passada → RESULTADO_PRELIMINAR', async () => {
+    const ontem = new Date(Date.now() - 86400000).toISOString()
+    mockPrisma.edital.findMany.mockResolvedValue([
+      {
+        id: 'e1',
+        titulo: 'Edital 1',
+        status: 'AVALIACAO',
+        cronograma: [{ tipo: 'fase', fase: 'RESULTADO_PRELIMINAR', dataHora: ontem }],
+      },
+    ] as never)
+
+    const transicoes = await processSchedulerJob()
+
+    expect(transicoes).toBe(1)
+    expect(mockPrisma.edital.update).toHaveBeenCalledWith({
+      where: { id: 'e1' },
+      data: { status: 'RESULTADO_PRELIMINAR' },
+    })
+  })
+
+  // ── Transição 6: RESULTADO_PRELIMINAR → RECURSO ──────────────────────
 
   it('RESULTADO_PRELIMINAR + data passada → RECURSO', async () => {
     const ontem = new Date(Date.now() - 86400000).toISOString()
@@ -295,7 +333,29 @@ describe('processSchedulerJob', () => {
     })
   })
 
-  // ── Transição 6: RESULTADO_FINAL → ENCERRADO ─────────────────────────
+  // ── Transição 7: RECURSO → RESULTADO_FINAL ──────────────────────────
+
+  it('RECURSO + data passada → RESULTADO_FINAL', async () => {
+    const ontem = new Date(Date.now() - 86400000).toISOString()
+    mockPrisma.edital.findMany.mockResolvedValue([
+      {
+        id: 'e1',
+        titulo: 'Edital 1',
+        status: 'RECURSO',
+        cronograma: [{ tipo: 'fase', fase: 'RESULTADO_FINAL', dataHora: ontem }],
+      },
+    ] as never)
+
+    const transicoes = await processSchedulerJob()
+
+    expect(transicoes).toBe(1)
+    expect(mockPrisma.edital.update).toHaveBeenCalledWith({
+      where: { id: 'e1' },
+      data: { status: 'RESULTADO_FINAL' },
+    })
+  })
+
+  // ── Transição 8: RESULTADO_FINAL → ENCERRADO ─────────────────────────
 
   it('RESULTADO_FINAL + data passada → ENCERRADO', async () => {
     const ontem = new Date(Date.now() - 86400000).toISOString()

@@ -76,11 +76,23 @@ const AVALIACAO_PATTERNS = [
   'fase de avaliacao',
 ]
 
+const RESULTADO_PRELIMINAR_PATTERNS = [
+  'resultado preliminar',
+  'publicacao do resultado preliminar',
+  'publicacao resultado preliminar',
+]
+
 const RECURSO_PATTERNS = [
   'inicio da fase de recursos',
   'fase de recursos',
   'recursos',
   'inicio recursos',
+]
+
+const RESULTADO_FINAL_PATTERNS = [
+  'resultado final',
+  'publicacao do resultado final',
+  'publicacao resultado final',
 ]
 
 const ENCERRADO_PATTERNS = [
@@ -101,7 +113,9 @@ const LEGACY_TRANSITIONS: Array<{
   { statusAtual: 'INSCRICOES_ABERTAS', patterns: ENCERRAMENTO_INSCRICOES_PATTERNS, novoStatus: 'INSCRICOES_ENCERRADAS' },
   { statusAtual: 'INSCRICOES_ENCERRADAS', patterns: HABILITACAO_PATTERNS, novoStatus: 'HABILITACAO' },
   { statusAtual: 'HABILITACAO', patterns: AVALIACAO_PATTERNS, novoStatus: 'AVALIACAO' },
+  { statusAtual: 'AVALIACAO', patterns: RESULTADO_PRELIMINAR_PATTERNS, novoStatus: 'RESULTADO_PRELIMINAR' },
   { statusAtual: 'RESULTADO_PRELIMINAR', patterns: RECURSO_PATTERNS, novoStatus: 'RECURSO' },
+  { statusAtual: 'RECURSO', patterns: RESULTADO_FINAL_PATTERNS, novoStatus: 'RESULTADO_FINAL' },
   { statusAtual: 'RESULTADO_FINAL', patterns: ENCERRADO_PATTERNS, novoStatus: 'ENCERRADO' },
 ]
 
