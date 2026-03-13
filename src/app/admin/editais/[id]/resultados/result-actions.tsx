@@ -42,8 +42,8 @@ export function ResultActions({ editalId, editalStatus }: ResultActionsProps) {
     }
   }
 
-  const canPublishPreliminar = ['INSCRICOES_ENCERRADAS', 'HABILITACAO', 'AVALIACAO'].includes(editalStatus)
-  const canPublishFinal = ['RESULTADO_PRELIMINAR', 'RECURSO'].includes(editalStatus)
+  const canPublishPreliminar = ['INSCRICOES_ENCERRADAS', 'HABILITACAO', 'AVALIACAO', 'RESULTADO_PRELIMINAR'].includes(editalStatus)
+  const canPublishFinal = ['RESULTADO_PRELIMINAR', 'RECURSO', 'RESULTADO_FINAL'].includes(editalStatus)
 
   return (
     <div className="space-y-4">
