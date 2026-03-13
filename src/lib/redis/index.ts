@@ -5,12 +5,29 @@ const getRedisUrl = () => {
   return `redis://${process.env.REDIS_HOST ?? 'localhost'}:${process.env.REDIS_PORT ?? 6379}`
 }
 
-// maxRetriesPerRequest: null é obrigatório para BullMQ
-export const redis = new Redis(getRedisUrl(), {
-  maxRetriesPerRequest: null,
-  enableReadyCheck: false,
-})
+// ── Inicialização lazy — evita conexão durante `next build` ─────────────
+// Durante o build do Docker, o hostname `pnab-redis` não existe.
+// O Proxy garante que a conexão só é criada quando alguém chama um método.
 
-redis.on('error', (err) => {
-  console.error('[Redis] Erro de conexão:', err)
+let _instance: Redis | null = null
+
+function getInstance(): Redis {
+  if (!_instance) {
+    _instance = new Redis(getRedisUrl(), {
+      maxRetriesPerRequest: null, // obrigatório para BullMQ
+      enableReadyCheck: false,
+    })
+    _instance.on('error', (err) => {
+      console.error('[Redis] Erro de conexão:', err)
+    })
+  }
+  return _instance
+}
+
+export const redis: Redis = new Proxy({} as Redis, {
+  get(_, prop: string | symbol) {
+    const instance = getInstance()
+    const value = Reflect.get(instance, prop, instance)
+    return typeof value === 'function' ? value.bind(instance) : value
+  },
 })
