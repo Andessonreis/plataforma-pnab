@@ -16,6 +16,7 @@ function getInstance(): Redis {
     _instance = new Redis(getRedisUrl(), {
       maxRetriesPerRequest: null, // obrigatório para BullMQ
       enableReadyCheck: false,
+      lazyConnect: true, // só conecta no primeiro comando, não no new Redis()
     })
     _instance.on('error', (err) => {
       console.error('[Redis] Erro de conexão:', err)

@@ -213,13 +213,17 @@ export function isFaseCompleted(fase: EditalStatus, currentStatus: EditalStatus)
   const faseIndex = STATUS_ORDER.indexOf(fase)
   const currentIndex = STATUS_ORDER.indexOf(currentStatus)
   if (faseIndex === -1 || currentIndex === -1) return false
+  // ENCERRADO é terminal — se chegou nele, está concluído
+  if (fase === 'ENCERRADO' && currentIndex === faseIndex) return true
   return currentIndex > faseIndex
 }
 
 /**
  * Verifica se o edital está ATUALMENTE nessa fase (em andamento).
+ * ENCERRADO é estado terminal — nunca é "em andamento", vai direto pra concluído.
  */
 export function isFaseCurrent(fase: EditalStatus, currentStatus: EditalStatus): boolean {
+  if (fase === 'ENCERRADO') return false
   const faseIndex = STATUS_ORDER.indexOf(fase)
   const currentIndex = STATUS_ORDER.indexOf(currentStatus)
   if (faseIndex === -1 || currentIndex === -1) return false

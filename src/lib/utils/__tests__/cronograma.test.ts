@@ -14,6 +14,10 @@ describe('isFaseCompleted', () => {
     expect(isFaseCompleted('AVALIACAO', 'AVALIACAO')).toBe(false)
   })
 
+  it('ENCERRADO é terminal — concluído quando edital está ENCERRADO', () => {
+    expect(isFaseCompleted('ENCERRADO', 'ENCERRADO')).toBe(true)
+  })
+
   it('fase posterior ao status atual → false', () => {
     expect(isFaseCompleted('RESULTADO_FINAL', 'INSCRICOES_ABERTAS')).toBe(false)
     expect(isFaseCompleted('ENCERRADO', 'HABILITACAO')).toBe(false)
@@ -31,6 +35,10 @@ describe('isFaseCurrent', () => {
     expect(isFaseCurrent('HABILITACAO', 'HABILITACAO')).toBe(true)
     expect(isFaseCurrent('AVALIACAO', 'AVALIACAO')).toBe(true)
     expect(isFaseCurrent('RECURSO', 'RECURSO')).toBe(true)
+  })
+
+  it('ENCERRADO nunca é "em andamento" — é estado terminal', () => {
+    expect(isFaseCurrent('ENCERRADO', 'ENCERRADO')).toBe(false)
   })
 
   it('fase diferente do status atual → false', () => {
