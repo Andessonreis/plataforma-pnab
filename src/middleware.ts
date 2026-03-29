@@ -1,13 +1,38 @@
 import { auth } from '@/lib/auth'
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 import type { UserRole } from '@prisma/client'
+import { corsHeaders, handlePreflight } from '@/lib/api/cors'
 
 const ROLES_ADMIN: UserRole[] = ['ADMIN', 'ATENDIMENTO', 'HABILITADOR']
+
+function handleV1Cors(req: NextRequest): NextResponse | null {
+  const { pathname } = req.nextUrl
+
+  if (!pathname.startsWith('/api/v1/')) return null
+
+  // Preflight OPTIONS
+  if (req.method === 'OPTIONS') {
+    return handlePreflight(req)
+  }
+
+  // Para requests normais, adiciona headers CORS na response
+  const response = NextResponse.next()
+  const headers = corsHeaders(req)
+  for (const [key, value] of Object.entries(headers)) {
+    if (value) response.headers.set(key, value)
+  }
+  return response
+}
 
 export default auth((req) => {
   const { pathname } = req.nextUrl
   const session = req.auth
   const role = session?.user?.role as UserRole | undefined
+
+  // ── CORS para /api/v1/* ──────────────────────────────────────────────────────
+  const corsResponse = handleV1Cors(req)
+  if (corsResponse) return corsResponse
 
   // ── Área do Proponente ───────────────────────────────────────────────────────
   if (pathname.startsWith('/proponente')) {
@@ -47,6 +72,8 @@ export default auth((req) => {
 })
 
 export const config = {
-  // Não aplicar middleware a assets estáticos e internals do Next
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|public).*)'],
+  // Inclui /api/v1/* no matcher para CORS, além das páginas protegidas
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|public).*)',
+  ],
 }

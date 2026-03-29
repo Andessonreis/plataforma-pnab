@@ -16,4 +16,8 @@ export const RATE_LIMITS: Record<string, RateLimitConfig> = {
   // Público
   contato: { window: 60, max: 5 },
   newsletter: { window: 60, max: 5 },
+
+  // API v1 — por API key
+  'v1:read': { window: 60, max: 60 },
+  'v1:write': { window: 60, max: 20 },
 }

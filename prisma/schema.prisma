@@ -88,6 +88,28 @@ model User {
   tickets             Ticket[]
   passwordResetTokens PasswordResetToken[]
   auditLogs           AuditLog[]
+  apiKeys             ApiKey[]
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// API Keys — Autenticação para consumidores externos
+// ─────────────────────────────────────────────────────────────────────────────
+
+model ApiKey {
+  id         String    @id @default(cuid())
+  userId     String
+  label      String
+  keyHash    String    @unique   // SHA-256 da chave
+  prefix     String              // primeiros 12 caracteres (ex: pnab_abc12345)
+  scopes     String[]
+  revokedAt  DateTime?
+  lastUsedAt DateTime?
+  expiresAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

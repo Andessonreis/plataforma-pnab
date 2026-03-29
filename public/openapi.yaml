@@ -1,0 +1,1156 @@
+openapi: 3.1.0
+info:
+  title: Portal PNAB Irecê — API v1
+  version: 1.0.0
+  description: |
+    API REST do Portal da Política Nacional Aldir Blanc (PNAB) de Irecê/BA.
+
+    ## Autenticação
+
+    A API suporta dois métodos de autenticação:
+
+    - **Session (Cookie):** Autenticação via NextAuth para o portal web.
+    - **API Key (Bearer):** Para consumidores externos (app mobile, serviços web).
+
+    Para usar API Key, envie o header:
+    ```
+    Authorization: Bearer pnab_<sua-chave>
+    ```
+
+    API Keys são criadas via `POST /api/v1/auth/api-keys` e exibidas apenas uma vez.
+
+    ## Rate Limiting
+
+    | Tipo | Limite |
+    |------|--------|
+    | Leitura (GET) | 60 req/min por chave |
+    | Escrita (POST/PUT/DELETE) | 20 req/min por chave |
+
+    Headers de resposta: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`.
+
+    ## Envelope de Resposta
+
+    Todas as respostas seguem o formato:
+    ```json
+    {
+      "data": {},
+      "meta": { "page": 1, "pageSize": 20, "total": 100 },
+      "requestId": "uuid"
+    }
+    ```
+
+    Erros:
+    ```json
+    {
+      "error": "CÓDIGO",
+      "message": "Descrição",
+      "requestId": "uuid"
+    }
+    ```
+  contact:
+    name: Secretaria de Arte e Cultura — Irecê/BA
+  license:
+    name: Proprietário
+
+servers:
+  - url: /api/v1
+    description: API v1
+
+security:
+  - BearerAuth: []
+  - CookieAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: 'API Key no formato: pnab_<chave>'
+    CookieAuth:
+      type: apiKey
+      in: cookie
+      name: authjs.session-token
+      description: Cookie de sessão NextAuth
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        requestId:
+          type: string
+
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+
+    Edital:
+      type: object
+      properties:
+        id:
+          type: string
+        titulo:
+          type: string
+        slug:
+          type: string
+        objeto:
+          type: string
+        status:
+          type: string
+          enum: [RASCUNHO, PUBLICADO, INSCRICOES_ABERTAS, INSCRICOES_ENCERRADAS, EM_AVALIACAO, RESULTADO_PARCIAL, RESULTADO_FINAL, ENCERRADO]
+        valorTotal:
+          type: number
+        dataPublicacao:
+          type: string
+          format: date-time
+        dataInicioInscricao:
+          type: string
+          format: date-time
+        dataFimInscricao:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    Inscricao:
+      type: object
+      properties:
+        id:
+          type: string
+        editalId:
+          type: string
+        proponenteId:
+          type: string
+        status:
+          type: string
+          enum: [RASCUNHO, ENVIADA, HABILITADA, INABILITADA, EM_AVALIACAO, AVALIADA, CONTEMPLADA, NAO_CONTEMPLADA, DESCLASSIFICADA, CANCELADA]
+        nomeProjeto:
+          type: string
+        categoriaProjeto:
+          type: string
+        valorSolicitado:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+
+    Noticia:
+      type: object
+      properties:
+        id:
+          type: string
+        titulo:
+          type: string
+        slug:
+          type: string
+        resumo:
+          type: string
+        conteudo:
+          type: string
+        publicada:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    CmsPage:
+      type: object
+      properties:
+        id:
+          type: string
+        titulo:
+          type: string
+        slug:
+          type: string
+        conteudo:
+          type: string
+        publicada:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    Faq:
+      type: object
+      properties:
+        id:
+          type: string
+        pergunta:
+          type: string
+        resposta:
+          type: string
+        ordem:
+          type: integer
+        ativa:
+          type: boolean
+
+    Ticket:
+      type: object
+      properties:
+        id:
+          type: string
+        nome:
+          type: string
+        email:
+          type: string
+        assunto:
+          type: string
+        mensagem:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    ApiKey:
+      type: object
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        prefix:
+          type: string
+        scopes:
+          type: array
+          items:
+            type: string
+        lastUsedAt:
+          type: string
+          format: date-time
+          nullable: true
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        nome:
+          type: string
+        email:
+          type: string
+        cpfCnpj:
+          type: string
+        role:
+          type: string
+
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PageSizeParam:
+      name: pageSize
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 50
+        default: 20
+    IdParam:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+
+paths:
+  # ── Editais ──────────────────────────────────────────────────────────
+  /editais:
+    get:
+      tags: [Editais]
+      summary: Listar editais
+      description: Lista editais publicados com paginação. Endpoint público.
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de editais
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Edital'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+    post:
+      tags: [Editais]
+      summary: Criar edital
+      description: Cria um novo edital. Requer role ADMIN.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [titulo, objeto]
+              properties:
+                titulo:
+                  type: string
+                objeto:
+                  type: string
+                status:
+                  type: string
+                valorTotal:
+                  type: number
+                dataPublicacao:
+                  type: string
+                  format: date-time
+                dataInicioInscricao:
+                  type: string
+                  format: date-time
+                dataFimInscricao:
+                  type: string
+                  format: date-time
+      responses:
+        '201':
+          description: Edital criado
+        '401':
+          description: Não autenticado
+        '403':
+          description: Sem permissão
+
+  /editais/{id}:
+    get:
+      tags: [Editais]
+      summary: Detalhe do edital
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Edital encontrado
+        '404':
+          description: Edital não encontrado
+    put:
+      tags: [Editais]
+      summary: Atualizar edital
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                titulo:
+                  type: string
+                objeto:
+                  type: string
+                status:
+                  type: string
+                valorTotal:
+                  type: number
+      responses:
+        '200':
+          description: Edital atualizado
+        '403':
+          description: Sem permissão
+        '404':
+          description: Edital não encontrado
+
+  /editais/{id}/resultados:
+    get:
+      tags: [Editais]
+      summary: Obter resultados do edital
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Resultados do edital
+    post:
+      tags: [Editais]
+      summary: Publicar resultados
+      description: Publica resultados do edital. Requer role ADMIN.
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tipo:
+                  type: string
+                  enum: [PARCIAL, FINAL]
+      responses:
+        '200':
+          description: Resultados publicados
+        '403':
+          description: Sem permissão
+
+  /editais/{id}/acessivel:
+    put:
+      tags: [Editais]
+      summary: Atualizar versão acessível
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                conteudoAcessivel:
+                  type: string
+      responses:
+        '200':
+          description: Versão acessível atualizada
+
+  # ── Inscrições ───────────────────────────────────────────────────────
+  /inscricoes:
+    get:
+      tags: [Inscrições]
+      summary: Listar inscrições (admin)
+      description: Lista todas as inscrições. Requer role admin.
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+        - name: editalId
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de inscrições
+
+  /inscricoes/{id}:
+    get:
+      tags: [Inscrições]
+      summary: Detalhe da inscrição
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Inscrição encontrada
+    put:
+      tags: [Inscrições]
+      summary: Atualizar inscrição
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nomeProjeto:
+                  type: string
+                categoriaProjeto:
+                  type: string
+                valorSolicitado:
+                  type: number
+      responses:
+        '200':
+          description: Inscrição atualizada
+
+  /inscricoes/{id}/submit:
+    post:
+      tags: [Inscrições]
+      summary: Submeter inscrição
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Inscrição submetida
+        '422':
+          description: Inscrição não pode ser submetida
+
+  /inscricoes/{id}/habilitacao:
+    put:
+      tags: [Inscrições]
+      summary: Atualizar habilitação
+      description: Marca inscrição como habilitada ou inabilitada. Requer role HABILITADOR ou ADMIN.
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [resultado]
+              properties:
+                resultado:
+                  type: string
+                  enum: [HABILITADA, INABILITADA]
+                motivo:
+                  type: string
+      responses:
+        '200':
+          description: Habilitação atualizada
+
+  /inscricoes/{id}/avaliacao:
+    get:
+      tags: [Inscrições]
+      summary: Obter avaliação
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Avaliação encontrada
+    put:
+      tags: [Inscrições]
+      summary: Salvar avaliação
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                notas:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      criterio:
+                        type: string
+                      nota:
+                        type: number
+                parecer:
+                  type: string
+      responses:
+        '200':
+          description: Avaliação salva
+
+  /inscricoes/{id}/avaliadores:
+    post:
+      tags: [Inscrições]
+      summary: Atribuir avaliadores
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [avaliadorIds]
+              properties:
+                avaliadorIds:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Avaliadores atribuídos
+    delete:
+      tags: [Inscrições]
+      summary: Remover avaliador
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+        - name: avaliadorId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Avaliador removido
+
+  /inscricoes/{id}/recursos:
+    get:
+      tags: [Inscrições]
+      summary: Listar recursos da inscrição
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Lista de recursos
+    post:
+      tags: [Inscrições]
+      summary: Submeter recurso
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fundamentacao]
+              properties:
+                fundamentacao:
+                  type: string
+      responses:
+        '201':
+          description: Recurso criado
+
+  /inscricoes/{id}/recursos/{rid}:
+    put:
+      tags: [Inscrições]
+      summary: Decidir recurso
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+        - name: rid
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [resultado, justificativa]
+              properties:
+                resultado:
+                  type: string
+                  enum: [DEFERIDO, INDEFERIDO]
+                justificativa:
+                  type: string
+      responses:
+        '200':
+          description: Recurso decidido
+
+  /inscricoes/export:
+    get:
+      tags: [Inscrições]
+      summary: Exportar inscrições em CSV
+      parameters:
+        - name: editalId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Arquivo CSV
+          content:
+            text/csv:
+              schema:
+                type: string
+
+  # ── Meu Perfil ──────────────────────────────────────────────────────
+  /me:
+    get:
+      tags: [Perfil]
+      summary: Obter meu perfil
+      responses:
+        '200':
+          description: Perfil do usuário
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/UserProfile'
+    put:
+      tags: [Perfil]
+      summary: Atualizar meu perfil
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nome:
+                  type: string
+                email:
+                  type: string
+                telefone:
+                  type: string
+      responses:
+        '200':
+          description: Perfil atualizado
+
+  /me/inscricoes:
+    get:
+      tags: [Perfil]
+      summary: Minhas inscrições
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+      responses:
+        '200':
+          description: Lista de inscrições do proponente
+    post:
+      tags: [Perfil]
+      summary: Criar inscrição
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [editalId, nomeProjeto, categoriaProjeto]
+              properties:
+                editalId:
+                  type: string
+                nomeProjeto:
+                  type: string
+                categoriaProjeto:
+                  type: string
+                valorSolicitado:
+                  type: number
+      responses:
+        '201':
+          description: Inscrição criada
+
+  # ── Notícias ─────────────────────────────────────────────────────────
+  /noticias:
+    get:
+      tags: [Notícias]
+      summary: Listar notícias
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+      responses:
+        '200':
+          description: Lista de notícias
+    post:
+      tags: [Notícias]
+      summary: Criar notícia
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [titulo, conteudo]
+              properties:
+                titulo:
+                  type: string
+                resumo:
+                  type: string
+                conteudo:
+                  type: string
+                publicada:
+                  type: boolean
+      responses:
+        '201':
+          description: Notícia criada
+
+  /noticias/{id}:
+    get:
+      tags: [Notícias]
+      summary: Detalhe da notícia
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Notícia encontrada
+    put:
+      tags: [Notícias]
+      summary: Atualizar notícia
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                titulo:
+                  type: string
+                conteudo:
+                  type: string
+                publicada:
+                  type: boolean
+      responses:
+        '200':
+          description: Notícia atualizada
+    delete:
+      tags: [Notícias]
+      summary: Excluir notícia
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '204':
+          description: Notícia excluída
+
+  # ── CMS ──────────────────────────────────────────────────────────────
+  /cms:
+    get:
+      tags: [CMS]
+      summary: Listar páginas CMS
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+      responses:
+        '200':
+          description: Lista de páginas
+    post:
+      tags: [CMS]
+      summary: Criar página CMS
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [titulo, conteudo]
+              properties:
+                titulo:
+                  type: string
+                conteudo:
+                  type: string
+                publicada:
+                  type: boolean
+      responses:
+        '201':
+          description: Página criada
+
+  /cms/{id}:
+    get:
+      tags: [CMS]
+      summary: Detalhe da página
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Página encontrada
+    put:
+      tags: [CMS]
+      summary: Atualizar página
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                titulo:
+                  type: string
+                conteudo:
+                  type: string
+                publicada:
+                  type: boolean
+      responses:
+        '200':
+          description: Página atualizada
+    delete:
+      tags: [CMS]
+      summary: Excluir página
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '204':
+          description: Página excluída
+
+  # ── FAQ ──────────────────────────────────────────────────────────────
+  /faq:
+    get:
+      tags: [FAQ]
+      summary: Listar perguntas frequentes
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+      responses:
+        '200':
+          description: Lista de FAQs
+    post:
+      tags: [FAQ]
+      summary: Criar FAQ
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pergunta, resposta]
+              properties:
+                pergunta:
+                  type: string
+                resposta:
+                  type: string
+                ordem:
+                  type: integer
+                ativa:
+                  type: boolean
+      responses:
+        '201':
+          description: FAQ criada
+
+  /faq/{id}:
+    put:
+      tags: [FAQ]
+      summary: Atualizar FAQ
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pergunta:
+                  type: string
+                resposta:
+                  type: string
+                ordem:
+                  type: integer
+                ativa:
+                  type: boolean
+      responses:
+        '200':
+          description: FAQ atualizada
+    delete:
+      tags: [FAQ]
+      summary: Excluir FAQ
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '204':
+          description: FAQ excluída
+
+  # ── Tickets ──────────────────────────────────────────────────────────
+  /tickets:
+    get:
+      tags: [Tickets]
+      summary: Listar tickets
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de tickets
+    post:
+      tags: [Tickets]
+      summary: Criar ticket (contato)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nome, email, assunto, mensagem]
+              properties:
+                nome:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                telefone:
+                  type: string
+                assunto:
+                  type: string
+                mensagem:
+                  type: string
+      responses:
+        '201':
+          description: Ticket criado
+
+  /tickets/{id}:
+    get:
+      tags: [Tickets]
+      summary: Detalhe do ticket
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Ticket encontrado
+    put:
+      tags: [Tickets]
+      summary: Atualizar ticket
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                resposta:
+                  type: string
+      responses:
+        '200':
+          description: Ticket atualizado
+
+  # ── Logs ─────────────────────────────────────────────────────────────
+  /logs:
+    get:
+      tags: [Auditoria]
+      summary: Consultar logs de auditoria
+      description: Requer role ADMIN.
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+        - name: userId
+          in: query
+          schema:
+            type: string
+        - name: action
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de logs
+
+  # ── Avaliadores ──────────────────────────────────────────────────────
+  /avaliadores:
+    get:
+      tags: [Avaliadores]
+      summary: Listar avaliadores
+      description: Requer role ADMIN.
+      responses:
+        '200':
+          description: Lista de avaliadores
+
+  # ── Contemplados ─────────────────────────────────────────────────────
+  /contemplados/import:
+    post:
+      tags: [Contemplados]
+      summary: Importar contemplados via CSV
+      description: Requer role ADMIN.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                editalId:
+                  type: string
+      responses:
+        '200':
+          description: Contemplados importados
+
+  # ── Auth ─────────────────────────────────────────────────────────────
+  /auth/register:
+    post:
+      tags: [Autenticação]
+      summary: Registrar novo usuário
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nome, email, cpfCnpj, password]
+              properties:
+                nome:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                cpfCnpj:
+                  type: string
+                password:
+                  type: string
+                  format: password
+                telefone:
+                  type: string
+      responses:
+        '201':
+          description: Usuário registrado
+        '409':
+          description: CPF/CNPJ ou e-mail já cadastrado
+
+  /auth/api-keys:
+    get:
+      tags: [Autenticação]
+      summary: Listar API keys do usuário
+      responses:
+        '200':
+          description: Lista de API keys
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApiKey'
+    post:
+      tags: [Autenticação]
+      summary: Criar API key
+      description: A chave completa é retornada apenas nesta resposta.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [label]
+              properties:
+                label:
+                  type: string
+                scopes:
+                  type: array
+                  items:
+                    type: string
+                expiresAt:
+                  type: string
+                  format: date-time
+      responses:
+        '201':
+          description: API key criada (chave visível apenas aqui)
+
+  /auth/api-keys/{id}:
+    delete:
+      tags: [Autenticação]
+      summary: Revogar API key
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: API key revogada

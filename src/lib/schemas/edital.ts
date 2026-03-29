@@ -1,0 +1,72 @@
+import { z } from 'zod'
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Cronograma
+// ─────────────────────────────────────────────────────────────────────────────
+
+const cronogramaFaseSchema = z.object({
+  tipo: z.literal('fase'),
+  fase: z.enum([
+    'PUBLICADO', 'INSCRICOES_ABERTAS', 'INSCRICOES_ENCERRADAS',
+    'HABILITACAO', 'AVALIACAO', 'RESULTADO_PRELIMINAR', 'RECURSO',
+    'RESULTADO_FINAL', 'ENCERRADO',
+  ]),
+  dataHora: z.string().default(''),
+  destaque: z.boolean().default(false),
+})
+
+const cronogramaCustomSchema = z.object({
+  tipo: z.literal('custom'),
+  label: z.string().min(1, 'Descrição do marco é obrigatória'),
+  dataHora: z.string().default(''),
+  destaque: z.boolean().default(false),
+})
+
+const cronogramaLegacySchema = z.object({
+  label: z.string().min(1),
+  dataHora: z.string().default(''),
+  destaque: z.boolean().default(false),
+})
+
+export const cronogramaItemSchema = z.union([
+  cronogramaFaseSchema,
+  cronogramaCustomSchema,
+  cronogramaLegacySchema,
+])
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Edital
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const editalSchema = z.object({
+  titulo: z.string().min(3, 'Titulo deve ter no minimo 3 caracteres'),
+  resumo: z.string().nullable().optional(),
+  ano: z.number().int().min(2020).max(2099),
+  valorTotal: z.number().nullable().optional(),
+  categorias: z.array(z.string()).default([]),
+  acoesAfirmativas: z.string().nullable().optional(),
+  regrasElegibilidade: z.string().nullable().optional(),
+  status: z.enum([
+    'RASCUNHO', 'PUBLICADO', 'INSCRICOES_ABERTAS', 'INSCRICOES_ENCERRADAS',
+    'HABILITACAO', 'AVALIACAO', 'RESULTADO_PRELIMINAR', 'RECURSO',
+    'RESULTADO_FINAL', 'ENCERRADO',
+  ]).default('RASCUNHO'),
+  cronograma: z.array(cronogramaItemSchema).default([]),
+  camposFormulario: z.array(z.record(z.string(), z.unknown())).default([]),
+  vagasContemplados: z.number().int().min(1).nullable().optional(),
+  vagasSuplentes: z.number().int().min(0).nullable().optional(),
+})
+
+export type EditalInput = z.infer<typeof editalSchema>
+
+export const editalQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(50).default(12),
+  status: z.string().optional(),
+})
+
+export const editalAcessivelSchema = z.object({
+  conteudoAcessivel: z.string().min(1, 'Conteúdo acessível é obrigatório'),
+})
+
+export type EditalAcessivelInput = z.infer<typeof editalAcessivelSchema>
