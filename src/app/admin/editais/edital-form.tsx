@@ -428,7 +428,7 @@ export function EditalForm({ initialData }: EditalFormProps) {
               onClick={() => setRegrasElegibilidade(TEMPLATE_REGRAS)}
               className="text-xs text-brand-600 hover:text-brand-700 underline-offset-2 hover:underline"
             >
-              Usar template
+              Usar modelo padrão
             </button>
           </div>
           <textarea
@@ -451,7 +451,7 @@ export function EditalForm({ initialData }: EditalFormProps) {
               onClick={() => setAcoesAfirmativas(TEMPLATE_ACOES)}
               className="text-xs text-brand-600 hover:text-brand-700 underline-offset-2 hover:underline"
             >
-              Usar template
+              Usar modelo padrão
             </button>
           </div>
           <textarea
