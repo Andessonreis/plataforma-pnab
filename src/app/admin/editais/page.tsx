@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { Card, Badge, Pagination, Button, EmptyState, FadeIn, IconPlus, IconNews } from '@/components/ui'
 import { editalStatusLabel, editalStatusVariant } from '@/lib/status-maps'
+import { GerarListasModal } from './gerar-listas-modal'
 import type { EditalStatus } from '@prisma/client'
 
 export const metadata: Metadata = {
@@ -106,12 +107,16 @@ export default async function AdminEditaisPage({ searchParams }: Props) {
           {/* Mobile: cards */}
           <div className="sm:hidden space-y-3">
             {editais.map((edital) => (
-              <Link
+              <div
                 key={edital.id}
-                href={`/admin/editais/${edital.id}`}
-                className="block overflow-hidden rounded-lg border border-slate-200 bg-white p-3.5 hover:bg-slate-50 transition-colors shadow-sm"
+                className="overflow-hidden rounded-lg border border-slate-200 bg-white p-3.5 shadow-sm"
               >
-                <p className="text-[13px] font-medium text-slate-900 leading-snug mb-2 line-clamp-2">{edital.titulo}</p>
+                <Link
+                  href={`/admin/editais/${edital.id}`}
+                  className="block hover:text-brand-700 transition-colors"
+                >
+                  <p className="text-[13px] font-medium text-slate-900 leading-snug mb-2 line-clamp-2">{edital.titulo}</p>
+                </Link>
                 <div className="flex items-center flex-wrap gap-1.5 mb-2.5 overflow-hidden">
                   <Badge variant={editalStatusVariant[edital.status as EditalStatus]}>
                     {editalStatusLabel[edital.status as EditalStatus]}
@@ -123,7 +128,7 @@ export default async function AdminEditaisPage({ searchParams }: Props) {
                     <Badge variant="neutral">+{edital.categorias.length - 1}</Badge>
                   )}
                 </div>
-                <div className="flex items-center justify-between text-[11px] text-slate-500">
+                <div className="flex items-center justify-between text-[11px] text-slate-500 mb-2.5">
                   <span>{edital.ano} · <span className="font-mono">
                     {edital.valorTotal
                       ? `R$ ${Number(edital.valorTotal).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
@@ -131,7 +136,23 @@ export default async function AdminEditaisPage({ searchParams }: Props) {
                   </span></span>
                   <span>{edital._count.inscricoes} inscr.</span>
                 </div>
-              </Link>
+                <div className="flex items-center gap-3 pt-2 border-t border-slate-100 text-xs">
+                  <Link
+                    href={`/admin/editais/${edital.id}`}
+                    className="text-brand-600 hover:text-brand-700 font-medium"
+                  >
+                    Editar
+                  </Link>
+                  <GerarListasModal editalId={edital.id} editalTitulo={edital.titulo} editalStatus={edital.status as EditalStatus} />
+                  <Link
+                    href={`/editais/${edital.slug}`}
+                    className="text-slate-500 hover:text-slate-700 font-medium"
+                    target="_blank"
+                  >
+                    {edital.status === 'RASCUNHO' ? 'Preview' : 'Ver'}
+                  </Link>
+                </div>
+              </div>
             ))}
           </div>
 
@@ -193,6 +214,7 @@ export default async function AdminEditaisPage({ searchParams }: Props) {
                           >
                             Editar
                           </Link>
+                          <GerarListasModal editalId={edital.id} editalTitulo={edital.titulo} editalStatus={edital.status as EditalStatus} />
                           <Link
                             href={`/editais/${edital.slug}`}
                             className="text-slate-500 hover:text-slate-700 font-medium text-xs"

@@ -31,6 +31,25 @@ export const inscricaoStatusVariant: Record<InscricaoStatus, BadgeVariant> = {
   SUPLENTE: 'warning',
 }
 
+// ── Listas cumulativas ─────────────────────────────────────────────────────
+// Ao gerar "Lista de Habilitados", inclui todos que passaram pela habilitação
+// (mesmo que já estejam em fases posteriores como Contemplada).
+// Status terminais (Inabilitada, Contemplada, etc.) usam correspondência exata.
+
+export const cumulativeStatuses: Record<InscricaoStatus, InscricaoStatus[]> = {
+  RASCUNHO: ['RASCUNHO'],
+  ENVIADA: ['ENVIADA'],
+  HABILITADA: ['HABILITADA', 'EM_AVALIACAO', 'RESULTADO_PRELIMINAR', 'RECURSO_ABERTO', 'RESULTADO_FINAL', 'CONTEMPLADA', 'NAO_CONTEMPLADA', 'SUPLENTE'],
+  INABILITADA: ['INABILITADA'],
+  EM_AVALIACAO: ['EM_AVALIACAO', 'RESULTADO_PRELIMINAR', 'RECURSO_ABERTO', 'RESULTADO_FINAL', 'CONTEMPLADA', 'NAO_CONTEMPLADA', 'SUPLENTE'],
+  RESULTADO_PRELIMINAR: ['RESULTADO_PRELIMINAR', 'RECURSO_ABERTO', 'RESULTADO_FINAL', 'CONTEMPLADA', 'NAO_CONTEMPLADA', 'SUPLENTE'],
+  RECURSO_ABERTO: ['RECURSO_ABERTO'],
+  RESULTADO_FINAL: ['RESULTADO_FINAL', 'CONTEMPLADA', 'NAO_CONTEMPLADA', 'SUPLENTE'],
+  CONTEMPLADA: ['CONTEMPLADA'],
+  NAO_CONTEMPLADA: ['NAO_CONTEMPLADA'],
+  SUPLENTE: ['SUPLENTE'],
+}
+
 // ── Edital Status ───────────────────────────────────────────────────────────
 
 export const editalStatusLabel: Record<EditalStatus, string> = {

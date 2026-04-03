@@ -54,6 +54,7 @@ export const AUDIT_ACTIONS = {
 
   // Admin — dados
   EXPORTACAO_CSV: 'EXPORTACAO_CSV',
+  EXPORTACAO_LISTA_PDF: 'EXPORTACAO_LISTA_PDF',
   IMPORTACAO_CONTEMPLADOS: 'IMPORTACAO_CONTEMPLADOS',
 } as const
 
@@ -94,6 +95,7 @@ export const ACTION_LABELS: Record<string, string> = {
   RECURSO_SUBMETIDO: 'Recurso submetido',
   RECURSO_DECIDIDO: 'Recurso decidido',
   EXPORTACAO_CSV: 'Exportação CSV',
+  EXPORTACAO_LISTA_PDF: 'Exportação lista PDF',
   IMPORTACAO_CONTEMPLADOS: 'Importação contemplados',
 }
 

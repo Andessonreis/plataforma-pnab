@@ -3,6 +3,8 @@ import { randomUUID } from 'crypto'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { logAudit } from '@/lib/audit'
+import { cumulativeStatuses } from '@/lib/status-maps'
+import type { InscricaoStatus } from '@prisma/client'
 
 export const runtime = 'nodejs'
 
@@ -28,7 +30,10 @@ export async function GET(req: NextRequest) {
 
     const where: Record<string, unknown> = {}
     if (editalId) where.editalId = editalId
-    if (status) where.status = status
+    if (status) {
+      const cumulative = cumulativeStatuses[status as InscricaoStatus]
+      where.status = cumulative ? { in: cumulative } : status
+    }
 
     const inscricoes = await prisma.inscricao.findMany({
       where,
