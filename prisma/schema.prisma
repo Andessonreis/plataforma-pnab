@@ -378,6 +378,25 @@ model CmsPage {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Slides de Destaque (Carrossel da Home)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model SlideDestaque {
+  id          String    @id @default(cuid())
+  titulo      String
+  descricao   String?
+  imagemUrl   String?
+  ctaLabel    String?
+  ctaUrl      String?
+  ordem       Int       @default(0)
+  ativo       Boolean   @default(true)
+  inicioEm    DateTime?
+  fimEm       DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Atendimento
 // ─────────────────────────────────────────────────────────────────────────────
 

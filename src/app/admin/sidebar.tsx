@@ -17,6 +17,7 @@ import {
   IconTicket,
   IconStar,
   IconChatBubble,
+  IconSlides,
 } from '@/components/ui'
 
 interface AdminSidebarProps {
@@ -110,6 +111,12 @@ const navSections: NavSection[] = [
         href: '/admin/cms',
         roles: ['ADMIN'],
         icon: <IconDocument className="h-5 w-5" />,
+      },
+      {
+        label: 'Banner Destaque',
+        href: '/admin/slides',
+        roles: ['ADMIN'],
+        icon: <IconSlides className="h-5 w-5" />,
       },
     ],
   },

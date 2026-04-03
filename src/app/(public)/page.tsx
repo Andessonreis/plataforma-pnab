@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import Image from 'next/image'
 import Link from 'next/link'
 import { prisma } from '@/lib/db'
 import { Badge, Button, Card } from '@/components/ui'
@@ -23,6 +22,7 @@ import {
 import { getStatusDisplay } from '@/lib/utils/edital-status'
 import { formatCurrency, formatDate } from '@/lib/utils/format'
 import { getNextDeadline } from '@/lib/utils/cronograma'
+import { HeroCarousel, type SlideData } from '@/components/home/hero-carousel'
 
 export const metadata: Metadata = {
   title: 'Início',
@@ -61,6 +61,84 @@ export default async function HomePage() {
     }),
   ])
 
+  // ── Montar slides do carrossel ──────────────────────────────────────────
+
+  // Slide 1: Hero principal (sempre presente)
+  const heroSlides: SlideData[] = [
+    {
+      id: 'hero-principal',
+      tipo: 'hero',
+      titulo: 'Portal da Política Nacional',
+      subtitulo: 'Aldir Blanc — Irecê',
+      descricao:
+        'Acesse editais, inscreva seus projetos culturais, acompanhe resultados e consulte informações sobre o fomento à cultura no município de Irecê/BA.',
+      imagemUrl: '/images/hero-irece.jpg',
+      badge: 'Editais PNAB 2026',
+      badgeVariant: 'warning',
+      ctaLabel: 'Ver Editais Abertos',
+      ctaUrl: '/editais',
+      ctaSecondaryLabel: 'Cadastrar-se como Proponente',
+      ctaSecondaryUrl: '/cadastro',
+    },
+  ]
+
+  // Slides 2+: editais reais do banco
+  for (const ed of editaisDestaque) {
+    const statusInfo = getStatusDisplay(ed.status)
+    const nextDeadline = getNextDeadline(ed.cronograma)
+    const desc = [
+      nextDeadline ? `${nextDeadline.label}: ${formatDate(nextDeadline.dataHora)}` : null,
+      ed.valorTotal ? `Valor: ${formatCurrency(ed.valorTotal)}` : null,
+    ].filter(Boolean).join(' · ')
+
+    heroSlides.push({
+      id: `edital-${ed.id}`,
+      tipo: 'edital',
+      titulo: ed.titulo,
+      descricao: desc || 'Confira o edital completo e inscreva seu projeto cultural.',
+      badge: statusInfo.label,
+      badgeVariant: statusInfo.badgeVariant as SlideData['badgeVariant'],
+      ctaLabel: 'Ver edital',
+      ctaUrl: `/editais/${ed.slug}`,
+    })
+  }
+
+  // Se não há editais reais, adicionar editais fictícios de exemplo
+  if (editaisDestaque.length === 0) {
+    heroSlides.push(
+      {
+        id: 'ficticio-1',
+        tipo: 'edital',
+        titulo: 'Edital de Fomento à Cultura — Audiovisual 2026',
+        descricao: 'Inscrições abertas até 30/06/2026 · Valor: R$ 500.000',
+        badge: 'Inscrições Abertas',
+        badgeVariant: 'success',
+        ctaLabel: 'Ver edital',
+        ctaUrl: '/editais',
+      },
+      {
+        id: 'ficticio-2',
+        tipo: 'edital',
+        titulo: 'Prêmio Irecê de Cultura Popular',
+        descricao: 'Valorização das manifestações culturais tradicionais do município · Valor: R$ 200.000',
+        badge: 'Em breve',
+        badgeVariant: 'warning',
+        ctaLabel: 'Ver edital',
+        ctaUrl: '/editais',
+      },
+      {
+        id: 'ficticio-3',
+        tipo: 'edital',
+        titulo: 'Fomento a Espaços Culturais Independentes',
+        descricao: 'Apoio à manutenção de espaços culturais comunitários · Valor: R$ 300.000',
+        badge: 'Publicado',
+        badgeVariant: 'neutral',
+        ctaLabel: 'Ver edital',
+        ctaUrl: '/editais',
+      },
+    )
+  }
+
   const valorTotal = totalFomento._sum.valorTotal
     ? Number(totalFomento._sum.valorTotal)
     : 0
@@ -70,51 +148,8 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* Hero */}
-      <section className="relative min-h-[480px] sm:min-h-[600px] text-white overflow-hidden">
-        <Image
-          src="/images/hero-irece.jpg"
-          alt="Cidade de Irecê — Cultura e tradição"
-          fill
-          priority
-          className="object-cover"
-          sizes="100vw"
-        />
-
-        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/55 to-black/40" />
-
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-28 lg:py-32">
-          <FadeIn direction="up" delay={0.1}>
-            <div className="max-w-3xl">
-              <Badge variant="warning" className="mb-6 text-sm">
-                Editais PNAB 2026
-              </Badge>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.1]">
-                Portal da Política Nacional
-                <br />
-                Aldir Blanc — Irecê
-              </h1>
-              <p className="mt-6 text-lg sm:text-xl text-white/85 leading-relaxed max-w-2xl">
-                Acesse editais, inscreva seus projetos culturais, acompanhe resultados
-                e consulte informações sobre o fomento à cultura no município de Irecê/BA.
-              </p>
-              <div className="mt-10 flex flex-col sm:flex-row gap-4">
-                <Button href="/editais" variant="secondary" size="lg" className="shadow-lg shadow-accent-500/25">
-                  Ver Editais Abertos
-                </Button>
-                <Button
-                  href="/cadastro"
-                  variant="ghost"
-                  size="lg"
-                  className="bg-white/15 backdrop-blur-sm border border-white/25 text-white hover:bg-white/25 hover:text-white"
-                >
-                  Cadastrar-se como Proponente
-                </Button>
-              </div>
-            </div>
-          </FadeIn>
-        </div>
-      </section>
+      {/* Hero Carrossel */}
+      <HeroCarousel slides={heroSlides} />
 
       {/* Barra de Números */}
       <section className="bg-white border-b border-slate-100">
