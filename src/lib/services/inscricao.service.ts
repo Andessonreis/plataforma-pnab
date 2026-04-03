@@ -3,6 +3,7 @@ import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
 import { enqueueEmail } from '@/lib/queue'
 import { Prisma } from '@prisma/client'
 import { ServiceError } from './errors'
+import { resolveCharLimits } from '@/lib/campo-limits'
 import type { CreateInscricaoInput, UpdateInscricaoInput } from '@/lib/schemas/inscricao'
 
 interface CampoFormulario {
@@ -10,6 +11,8 @@ interface CampoFormulario {
   tipo: string
   obrigatorio?: boolean
   label?: string
+  minLength?: number | null
+  maxLength?: number | null
 }
 
 export async function createInscricao(data: CreateInscricaoInput, userId: string, ip?: string) {
@@ -144,6 +147,34 @@ export async function submitInscricao(id: string, userId: string, ip?: string) {
 
   if (camposFaltando.length > 0) {
     throw new ServiceError('BAD_REQUEST', `Campos obrigatórios não preenchidos: ${camposFaltando.join(', ')}`)
+  }
+
+  // Valida limites de caracteres
+  const camposExcedidos: string[] = []
+  const camposCurtos: string[] = []
+
+  for (const campo of camposFormulario) {
+    if (campo.tipo === 'arquivo') continue
+    const valor = campos[campo.nome]
+    if (valor === undefined || valor === null || valor === '') continue
+
+    const limits = resolveCharLimits(campo)
+    if (!limits) continue
+
+    const strValue = String(valor)
+    if (strValue.length > limits.maxLength) {
+      camposExcedidos.push(`${campo.label || campo.nome} (máx. ${limits.maxLength})`)
+    }
+    if (limits.minLength > 0 && strValue.length < limits.minLength) {
+      camposCurtos.push(`${campo.label || campo.nome} (mín. ${limits.minLength})`)
+    }
+  }
+
+  if (camposExcedidos.length > 0) {
+    throw new ServiceError('BAD_REQUEST', `Campos excedem o limite de caracteres: ${camposExcedidos.join(', ')}`)
+  }
+  if (camposCurtos.length > 0) {
+    throw new ServiceError('BAD_REQUEST', `Campos abaixo do mínimo de caracteres: ${camposCurtos.join(', ')}`)
   }
 
   if (inscricao.anexos.length === 0) {

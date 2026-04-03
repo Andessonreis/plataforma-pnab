@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
 import { enqueueEmail } from '@/lib/queue'
+import { resolveCharLimits } from '@/lib/campo-limits'
 
 export const runtime = 'nodejs'
 
@@ -12,6 +13,8 @@ interface CampoFormulario {
   tipo: string
   obrigatorio?: boolean
   label?: string
+  minLength?: number | null
+  maxLength?: number | null
 }
 
 interface RouteParams {
@@ -127,6 +130,57 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
           error: 'VALIDATION_ERROR',
           message: `Campos obrigatórios não preenchidos: ${camposFaltando.join(', ')}`,
           camposFaltando,
+          requestId,
+        },
+        { status: 400 },
+      )
+      res.headers.set('X-Request-Id', requestId)
+      res.headers.set('Cache-Control', 'no-store')
+      return res
+    }
+
+    // Validação: limites de caracteres
+    const camposExcedidos: string[] = []
+    const camposCurtos: string[] = []
+
+    for (const campo of camposFormulario) {
+      if (campo.tipo === 'arquivo') continue
+      const valor = campos[campo.nome]
+      if (valor === undefined || valor === null || valor === '') continue
+
+      const limits = resolveCharLimits(campo)
+      if (!limits) continue
+
+      const strValue = String(valor)
+      if (strValue.length > limits.maxLength) {
+        camposExcedidos.push(`${campo.label || campo.nome} (máx. ${limits.maxLength})`)
+      }
+      if (limits.minLength > 0 && strValue.length < limits.minLength) {
+        camposCurtos.push(`${campo.label || campo.nome} (mín. ${limits.minLength})`)
+      }
+    }
+
+    if (camposExcedidos.length > 0) {
+      const res = NextResponse.json(
+        {
+          error: 'VALIDATION_ERROR',
+          message: `Campos excedem o limite de caracteres: ${camposExcedidos.join(', ')}`,
+          camposExcedidos,
+          requestId,
+        },
+        { status: 400 },
+      )
+      res.headers.set('X-Request-Id', requestId)
+      res.headers.set('Cache-Control', 'no-store')
+      return res
+    }
+
+    if (camposCurtos.length > 0) {
+      const res = NextResponse.json(
+        {
+          error: 'VALIDATION_ERROR',
+          message: `Campos abaixo do mínimo de caracteres: ${camposCurtos.join(', ')}`,
+          camposCurtos,
           requestId,
         },
         { status: 400 },

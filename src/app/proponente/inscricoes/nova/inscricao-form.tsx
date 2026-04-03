@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Button, Input, Select, Textarea, Card, Badge, CurrencyInput, formatCurrencyBRL } from '@/components/ui'
 import type { SelectOption } from '@/components/ui'
 import { IconArrowLeft, IconArrowRight, IconCheck, IconDocument } from '@/components/ui/icons'
+import { resolveCharLimits } from '@/lib/campo-limits'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -16,6 +17,36 @@ interface CampoFormulario {
   placeholder?: string
   opcoes?: string[]
   hint?: string
+  minLength?: number | null
+  maxLength?: number | null
+}
+
+// ─── Contador de caracteres ──────────────────────────────────────────────────
+
+function CharCounter({ current, max, min }: { current: number; max: number; min?: number }) {
+  const remaining = max - current
+  const isTooLong = remaining < 0
+  const isNearLimit = remaining >= 0 && remaining <= Math.ceil(max * 0.1)
+  const isTooShort = min != null && min > 0 && current > 0 && current < min
+
+  return (
+    <div className="flex justify-between mt-1 text-xs" aria-live="polite">
+      {isTooShort ? (
+        <span className="text-amber-600">
+          Mínimo de {min} caracteres ({min! - current} restantes)
+        </span>
+      ) : <span />}
+      <span
+        className={
+          isTooLong ? 'text-red-600 font-medium' :
+          isNearLimit ? 'text-amber-600' :
+          'text-slate-400'
+        }
+      >
+        {current}/{max}
+      </span>
+    </div>
+  )
 }
 
 interface Anexo {
@@ -256,30 +287,44 @@ export default function InscricaoForm({
 
     switch (campo.tipo) {
       case 'texto':
-      case 'text':
+      case 'text': {
+        const limits = resolveCharLimits(campo)
         return (
-          <Input
-            key={campo.nome}
-            label={campo.label}
-            value={value}
-            onChange={(e) => updateCampo(campo.nome, e.target.value)}
-            placeholder={campo.placeholder}
-            required={campo.obrigatorio}
-            hint={campo.hint}
-          />
+          <div key={campo.nome}>
+            <Input
+              label={campo.label}
+              value={value}
+              onChange={(e) => updateCampo(campo.nome, e.target.value)}
+              placeholder={campo.placeholder}
+              required={campo.obrigatorio}
+              hint={campo.hint}
+              maxLength={limits?.maxLength}
+            />
+            {limits && (
+              <CharCounter current={value.length} max={limits.maxLength} min={limits.minLength} />
+            )}
+          </div>
         )
-      case 'textarea':
+      }
+      case 'textarea': {
+        const limits = resolveCharLimits(campo)
         return (
-          <Textarea
-            key={campo.nome}
-            label={campo.label}
-            value={value}
-            onChange={(e) => updateCampo(campo.nome, e.target.value)}
-            placeholder={campo.placeholder}
-            required={campo.obrigatorio}
-            hint={campo.hint}
-          />
+          <div key={campo.nome}>
+            <Textarea
+              label={campo.label}
+              value={value}
+              onChange={(e) => updateCampo(campo.nome, e.target.value)}
+              placeholder={campo.placeholder}
+              required={campo.obrigatorio}
+              hint={campo.hint}
+              maxLength={limits?.maxLength}
+            />
+            {limits && (
+              <CharCounter current={value.length} max={limits.maxLength} min={limits.minLength} />
+            )}
+          </div>
         )
+      }
       case 'select':
         return (
           <Select
@@ -323,17 +368,22 @@ export default function InscricaoForm({
             />
           )
         }
+        const limits = resolveCharLimits(campo)
         return (
-          <Input
-            key={campo.nome}
-            label={campo.label}
-            type="number"
-            value={value}
-            onChange={(e) => updateCampo(campo.nome, e.target.value)}
-            placeholder={campo.placeholder}
-            required={campo.obrigatorio}
-            hint={campo.hint}
-          />
+          <div key={campo.nome}>
+            <Input
+              label={campo.label}
+              type="number"
+              value={value}
+              onChange={(e) => updateCampo(campo.nome, e.target.value)}
+              placeholder={campo.placeholder}
+              required={campo.obrigatorio}
+              hint={campo.hint}
+            />
+            {limits && (
+              <CharCounter current={value.length} max={limits.maxLength} min={limits.minLength} />
+            )}
+          </div>
         )
       }
       case 'data':

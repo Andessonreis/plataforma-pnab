@@ -9,6 +9,7 @@ import type { CronogramaItem } from '@/types/cronograma'
 import { CRONOGRAMA_FASES_FORMULARIO } from '@/types/cronograma'
 import { editalCronogramaLabel } from '@/lib/status-maps'
 import { extractFases, extractCustomItems } from '@/lib/utils/cronograma'
+import { CHAR_LIMIT_DEFAULTS } from '@/lib/campo-limits'
 
 interface FaseState {
   dataHora: string
@@ -29,6 +30,8 @@ interface CampoFormulario {
   placeholder: string
   opcoes: string[]
   hint: string
+  minLength?: number | null
+  maxLength?: number | null
 }
 
 interface EditalFormProps {
@@ -520,7 +523,12 @@ export function EditalForm({ initialData }: EditalFormProps) {
                       { value: 'select', label: 'Seleção (dropdown)' },
                       { value: 'arquivo', label: 'Arquivo' },
                     ]}
-                    onChange={e => updateCampoFormulario(idx, 'tipo', e.target.value)}
+                    onChange={e => {
+                      updateCampoFormulario(idx, 'tipo', e.target.value)
+                      // Limpar limites customizados ao trocar tipo
+                      updateCampoFormulario(idx, 'minLength', null)
+                      updateCampoFormulario(idx, 'maxLength', null)
+                    }}
                   />
                 </div>
 
@@ -553,6 +561,42 @@ export function EditalForm({ initialData }: EditalFormProps) {
                     placeholder="Opção 1, Opção 2, Opção 3"
                   />
                 )}
+
+                {(['texto', 'textarea', 'numero'] as const).includes(campo.tipo as 'texto' | 'textarea' | 'numero') && (() => {
+                  const defaults = CHAR_LIMIT_DEFAULTS[campo.tipo]
+                  return (
+                    <div className="rounded-md bg-slate-50 border border-slate-200 px-3 py-3 space-y-2">
+                      <p className="text-xs font-medium text-slate-600">
+                        Limite de caracteres
+                        <span className="ml-1 font-normal text-slate-400">— deixe vazio para usar o padrão</span>
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <Input
+                          label="Mínimo"
+                          type="number"
+                          min={0}
+                          value={campo.minLength != null ? String(campo.minLength) : ''}
+                          onChange={e => {
+                            const v = e.target.value.trim()
+                            updateCampoFormulario(idx, 'minLength', v === '' ? null : Number(v))
+                          }}
+                          placeholder={`Padrão: ${defaults?.minLength ?? 0}`}
+                        />
+                        <Input
+                          label="Máximo"
+                          type="number"
+                          min={1}
+                          value={campo.maxLength != null ? String(campo.maxLength) : ''}
+                          onChange={e => {
+                            const v = e.target.value.trim()
+                            updateCampoFormulario(idx, 'maxLength', v === '' ? null : Number(v))
+                          }}
+                          placeholder={`Padrão: ${defaults?.maxLength ?? 200}`}
+                        />
+                      </div>
+                    </div>
+                  )
+                })()}
 
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input

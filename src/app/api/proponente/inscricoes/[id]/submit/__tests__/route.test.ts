@@ -172,6 +172,151 @@ describe('POST /api/proponente/inscricoes/[id]/submit', () => {
     )
   })
 
+  it('campo texto excedendo maxLength default → 400', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-1', role: 'PROPONENTE' } } as never)
+    mockPrisma.inscricao.findUnique.mockResolvedValue({
+      ...baseInscricao,
+      campos: { nome_projeto: 'A'.repeat(201) }, // default texto = 200
+    } as never)
+
+    const res = await POST(makeRequest(), makeParams())
+
+    expect(res.status).toBe(400)
+    const body = await res.json()
+    expect(body.error).toBe('VALIDATION_ERROR')
+    expect(body.message).toContain('excedem')
+    expect(body.camposExcedidos).toBeDefined()
+  })
+
+  it('campo textarea excedendo maxLength custom → 400', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-1', role: 'PROPONENTE' } } as never)
+    mockPrisma.inscricao.findUnique.mockResolvedValue({
+      ...baseInscricao,
+      campos: { nome_projeto: 'Texto longo'.repeat(100) },
+      edital: {
+        ...baseInscricao.edital,
+        camposFormulario: [{
+          nome: 'nome_projeto',
+          tipo: 'textarea',
+          obrigatorio: true,
+          label: 'Nome do Projeto',
+          maxLength: 500,
+        }],
+      },
+    } as never)
+
+    const res = await POST(makeRequest(), makeParams())
+
+    expect(res.status).toBe(400)
+    const body = await res.json()
+    expect(body.camposExcedidos).toContain('Nome do Projeto (máx. 500)')
+  })
+
+  it('campo abaixo de minLength custom → 400', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-1', role: 'PROPONENTE' } } as never)
+    mockPrisma.inscricao.findUnique.mockResolvedValue({
+      ...baseInscricao,
+      campos: { nome_projeto: 'Cur' },
+      edital: {
+        ...baseInscricao.edital,
+        camposFormulario: [{
+          nome: 'nome_projeto',
+          tipo: 'texto',
+          obrigatorio: true,
+          label: 'Nome do Projeto',
+          minLength: 10,
+        }],
+      },
+    } as never)
+
+    const res = await POST(makeRequest(), makeParams())
+
+    expect(res.status).toBe(400)
+    const body = await res.json()
+    expect(body.message).toContain('abaixo do mínimo')
+    expect(body.camposCurtos).toContain('Nome do Projeto (mín. 10)')
+  })
+
+  it('campo dentro do limite → 200 (sem erro)', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-1', role: 'PROPONENTE' } } as never)
+    mockPrisma.inscricao.findUnique.mockResolvedValue({
+      ...baseInscricao,
+      campos: { nome_projeto: 'Projeto Cultural de Música' },
+    } as never)
+
+    const res = await POST(makeRequest(), makeParams())
+
+    expect(res.status).toBe(200)
+  })
+
+  it('campo sem limite (select) ignora validação de caracteres → 200', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-1', role: 'PROPONENTE' } } as never)
+    mockPrisma.inscricao.findUnique.mockResolvedValue({
+      ...baseInscricao,
+      campos: { nome_projeto: 'Opção selecionada' },
+      edital: {
+        ...baseInscricao.edital,
+        camposFormulario: [{
+          nome: 'nome_projeto',
+          tipo: 'select',
+          obrigatorio: true,
+          label: 'Categoria',
+        }],
+      },
+    } as never)
+
+    const res = await POST(makeRequest(), makeParams())
+
+    expect(res.status).toBe(200)
+  })
+
+  it('campo vazio não aciona validação de maxLength', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-1', role: 'PROPONENTE' } } as never)
+    mockPrisma.inscricao.findUnique.mockResolvedValue({
+      ...baseInscricao,
+      campos: { nome_projeto: '' },
+      edital: {
+        ...baseInscricao.edital,
+        camposFormulario: [{
+          nome: 'nome_projeto',
+          tipo: 'texto',
+          obrigatorio: false, // não obrigatório
+          label: 'Nome do Projeto',
+          maxLength: 10,
+        }],
+      },
+    } as never)
+
+    const res = await POST(makeRequest(), makeParams())
+
+    expect(res.status).toBe(200)
+  })
+
+  it('edital antigo sem maxLength/minLength usa defaults', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-1', role: 'PROPONENTE' } } as never)
+    // Campo sem minLength/maxLength definidos (edital antigo)
+    mockPrisma.inscricao.findUnique.mockResolvedValue({
+      ...baseInscricao,
+      campos: { nome_projeto: 'A'.repeat(201) },
+      edital: {
+        ...baseInscricao.edital,
+        camposFormulario: [{
+          nome: 'nome_projeto',
+          tipo: 'texto',
+          obrigatorio: true,
+          label: 'Nome do Projeto',
+          // sem minLength/maxLength → usa default 200
+        }],
+      },
+    } as never)
+
+    const res = await POST(makeRequest(), makeParams())
+
+    expect(res.status).toBe(400)
+    const body = await res.json()
+    expect(body.camposExcedidos).toContain('Nome do Projeto (máx. 200)')
+  })
+
   it('audit log registrado', async () => {
     mockAuth.mockResolvedValue({ user: { id: 'user-1', role: 'PROPONENTE' } } as never)
     mockPrisma.inscricao.findUnique.mockResolvedValue(baseInscricao as never)
