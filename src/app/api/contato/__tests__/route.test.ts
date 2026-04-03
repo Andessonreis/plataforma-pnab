@@ -29,9 +29,9 @@ describe('POST /api/contato', () => {
   })
 
   it('dados validos → 201 + protocolo', async () => {
-    mockPrisma.ticket.findUnique.mockResolvedValue(null)
-    mockPrisma.ticket.create.mockResolvedValue({
-      id: 'ticket-1',
+    mockPrisma.atendimento.findUnique.mockResolvedValue(null)
+    mockPrisma.atendimento.create.mockResolvedValue({
+      id: 'atd-1',
       protocolo: 'PNAB-2025-ABC123',
       status: 'ABERTO',
     } as never)
@@ -46,9 +46,9 @@ describe('POST /api/contato', () => {
   })
 
   it('protocolo retornado no body', async () => {
-    mockPrisma.ticket.findUnique.mockResolvedValue(null)
-    mockPrisma.ticket.create.mockResolvedValue({
-      id: 'ticket-2',
+    mockPrisma.atendimento.findUnique.mockResolvedValue(null)
+    mockPrisma.atendimento.create.mockResolvedValue({
+      id: 'atd-2',
       protocolo: 'PNAB-2025-XYZ789',
       status: 'ABERTO',
     } as never)
@@ -60,17 +60,17 @@ describe('POST /api/contato', () => {
     expect(typeof body.protocolo).toBe('string')
   })
 
-  it('ticket criado com status ABERTO', async () => {
-    mockPrisma.ticket.findUnique.mockResolvedValue(null)
-    mockPrisma.ticket.create.mockResolvedValue({
-      id: 'ticket-3',
+  it('atendimento criado com status ABERTO', async () => {
+    mockPrisma.atendimento.findUnique.mockResolvedValue(null)
+    mockPrisma.atendimento.create.mockResolvedValue({
+      id: 'atd-3',
       protocolo: 'PNAB-2025-DEF456',
       status: 'ABERTO',
     } as never)
 
     await POST(makePostRequest(validContatoBody))
 
-    expect(mockPrisma.ticket.create).toHaveBeenCalledWith({
+    expect(mockPrisma.atendimento.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         status: 'ABERTO',
         nomeContato: validContatoBody.nomeContato,
@@ -82,7 +82,7 @@ describe('POST /api/contato', () => {
   })
 
   it('editalId inexistente → 404', async () => {
-    mockPrisma.ticket.findUnique.mockResolvedValue(null)
+    mockPrisma.atendimento.findUnique.mockResolvedValue(null)
     mockPrisma.edital.findUnique.mockResolvedValue(null)
 
     const res = await POST(
@@ -92,14 +92,14 @@ describe('POST /api/contato', () => {
     expect(res.status).toBe(404)
     const body = await res.json()
     expect(body.error).toBe('NOT_FOUND')
-    expect(mockPrisma.ticket.create).not.toHaveBeenCalled()
+    expect(mockPrisma.atendimento.create).not.toHaveBeenCalled()
   })
 
   it('editalId valido → 201', async () => {
-    mockPrisma.ticket.findUnique.mockResolvedValue(null)
+    mockPrisma.atendimento.findUnique.mockResolvedValue(null)
     mockPrisma.edital.findUnique.mockResolvedValue({ id: 'ed-1' } as never)
-    mockPrisma.ticket.create.mockResolvedValue({
-      id: 'ticket-4',
+    mockPrisma.atendimento.create.mockResolvedValue({
+      id: 'atd-4',
       protocolo: 'PNAB-2025-GHI012',
       status: 'ABERTO',
     } as never)
@@ -145,6 +145,6 @@ describe('POST /api/contato', () => {
     const res = await POST(makePostRequest(validContatoBody))
 
     expect(res.status).toBe(429)
-    expect(mockPrisma.ticket.create).not.toHaveBeenCalled()
+    expect(mockPrisma.atendimento.create).not.toHaveBeenCalled()
   })
 })

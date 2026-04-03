@@ -52,14 +52,14 @@ function getActionStyle(action: string): { Icon: IconComponent; bg: string; colo
   return { Icon: IconInfo, bg: 'bg-slate-100', color: 'text-slate-500', badge: 'neutral' }
 }
 
-function ticketStatusBadge(status: string): BadgeVariant {
+function atendimentoStatusBadge(status: string): BadgeVariant {
   if (status === 'ABERTO') return 'warning'
   if (status === 'EM_ATENDIMENTO') return 'info'
   if (status === 'FECHADO') return 'success'
   return 'neutral'
 }
 
-function ticketStatusLabel(status: string) {
+function atendimentoStatusLabel(status: string) {
   if (status === 'ABERTO') return 'Aberto'
   if (status === 'EM_ATENDIMENTO') return 'Em Atendimento'
   if (status === 'FECHADO') return 'Fechado'
@@ -84,13 +84,13 @@ export default async function AdminDashboardPage() {
     const startOfToday = new Date()
     startOfToday.setHours(0, 0, 0, 0)
 
-    const [ticketsAbertos, ticketsEmAtendimento, ticketsFechadosHoje, totalFaq, ticketsRecentes] =
+    const [atdAbertos, atdEmAtendimento, atdFechadosHoje, totalFaq, atdRecentes] =
       await Promise.all([
-        prisma.ticket.count({ where: { status: 'ABERTO' } }),
-        prisma.ticket.count({ where: { status: 'EM_ATENDIMENTO' } }),
-        prisma.ticket.count({ where: { status: 'FECHADO', updatedAt: { gte: startOfToday } } }),
+        prisma.atendimento.count({ where: { status: 'ABERTO' } }),
+        prisma.atendimento.count({ where: { status: 'EM_ATENDIMENTO' } }),
+        prisma.atendimento.count({ where: { status: 'FECHADO', updatedAt: { gte: startOfToday } } }),
         prisma.faqItem.count({ where: { publicado: true } }),
-        prisma.ticket.findMany({
+        prisma.atendimento.findMany({
           where: { status: { in: ['ABERTO', 'EM_ATENDIMENTO'] } },
           orderBy: { createdAt: 'asc' },
           take: 8,
@@ -100,8 +100,8 @@ export default async function AdminDashboardPage() {
     const stats = [
       {
         label: 'Aguardando',
-        value: ticketsAbertos,
-        sub: 'tickets abertos',
+        value: atdAbertos,
+        sub: 'abertos',
         color: 'bg-amber-50',
         iconColor: 'text-amber-600',
         icon: <IconTicket className="h-6 w-6" />,
@@ -109,7 +109,7 @@ export default async function AdminDashboardPage() {
       },
       {
         label: 'Em Andamento',
-        value: ticketsEmAtendimento,
+        value: atdEmAtendimento,
         sub: 'em atendimento',
         color: 'bg-blue-50',
         iconColor: 'text-blue-600',
@@ -118,7 +118,7 @@ export default async function AdminDashboardPage() {
       },
       {
         label: 'Fechados Hoje',
-        value: ticketsFechadosHoje,
+        value: atdFechadosHoje,
         sub: 'resolvidos hoje',
         color: 'bg-green-50',
         iconColor: 'text-green-600',
@@ -143,7 +143,7 @@ export default async function AdminDashboardPage() {
             <p className="text-sm text-slate-500 capitalize mb-1">{today}</p>
             <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Central de Atendimento</h1>
             <p className="text-sm text-slate-500 mt-1">
-              Tickets pendentes e base de conhecimento do portal.
+              Atendimentos pendentes e base de conhecimento do portal.
             </p>
           </div>
         </FadeIn>
@@ -162,11 +162,11 @@ export default async function AdminDashboardPage() {
           <div className="flex flex-wrap gap-3 mb-6 sm:mb-8">
             <Button href="/admin/tickets" size="sm">
               <IconTicket className="h-4 w-4 mr-1.5" />
-              Ver Tickets
+              Ver Atendimentos
             </Button>
             <Button href="/admin/tickets?status=ABERTO" variant="outline" size="sm">
               <IconClock className="h-4 w-4 mr-1.5" />
-              Pendentes ({ticketsAbertos})
+              Pendentes ({atdAbertos})
             </Button>
             <Button href="/admin/faq" variant="ghost" size="sm">
               <IconQuestion className="h-4 w-4 mr-1.5" />
@@ -180,7 +180,7 @@ export default async function AdminDashboardPage() {
           <Card>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base sm:text-lg font-semibold text-slate-900">
-                Tickets Pendentes
+                Atendimentos Pendentes
               </h2>
               <Link
                 href="/admin/tickets"
@@ -190,17 +190,17 @@ export default async function AdminDashboardPage() {
               </Link>
             </div>
 
-            {ticketsRecentes.length === 0 ? (
+            {atdRecentes.length === 0 ? (
               <EmptyState
                 icon={<IconTicket className="h-8 w-8 text-slate-400" />}
-                title="Nenhum ticket pendente"
+                title="Nenhum atendimento pendente"
                 description="Todos os atendimentos estão em dia."
               />
             ) : (
               <>
                 {/* Mobile: cards */}
                 <div className="sm:hidden divide-y divide-slate-100 -mx-4">
-                  {ticketsRecentes.map((ticket) => (
+                  {atdRecentes.map((ticket) => (
                     <Link
                       key={ticket.id}
                       href={`/admin/tickets/${ticket.id}`}
@@ -212,8 +212,8 @@ export default async function AdminDashboardPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">
                           <p className="text-xs font-mono text-slate-400">{ticket.protocolo}</p>
-                          <Badge variant={ticketStatusBadge(ticket.status)}>
-                            {ticketStatusLabel(ticket.status)}
+                          <Badge variant={atendimentoStatusBadge(ticket.status)}>
+                            {atendimentoStatusLabel(ticket.status)}
                           </Badge>
                         </div>
                         <p className="text-sm font-medium text-slate-900 truncate">{ticket.assunto}</p>
@@ -231,7 +231,7 @@ export default async function AdminDashboardPage() {
 
                 {/* Desktop: lista */}
                 <div className="hidden sm:block divide-y divide-slate-100">
-                  {ticketsRecentes.map((ticket) => (
+                  {atdRecentes.map((ticket) => (
                     <Link
                       key={ticket.id}
                       href={`/admin/tickets/${ticket.id}`}
@@ -249,8 +249,8 @@ export default async function AdminDashboardPage() {
                         </p>
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
-                        <Badge variant={ticketStatusBadge(ticket.status)}>
-                          {ticketStatusLabel(ticket.status)}
+                        <Badge variant={atendimentoStatusBadge(ticket.status)}>
+                          {atendimentoStatusLabel(ticket.status)}
                         </Badge>
                         <span className="text-xs font-mono text-slate-400">{ticket.protocolo}</span>
                         <span className="text-xs text-slate-400 tabular-nums">

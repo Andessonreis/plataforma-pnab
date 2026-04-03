@@ -41,11 +41,11 @@ export async function POST(req: NextRequest) {
     let protocolo = generateProtocolo()
 
     // Verifica unicidade (improvavel, mas seguro)
-    let exists = await prisma.ticket.findUnique({ where: { protocolo } })
+    let exists = await prisma.atendimento.findUnique({ where: { protocolo } })
     let attempts = 0
     while (exists && attempts < 5) {
       protocolo = generateProtocolo()
-      exists = await prisma.ticket.findUnique({ where: { protocolo } })
+      exists = await prisma.atendimento.findUnique({ where: { protocolo } })
       attempts++
     }
 
@@ -66,8 +66,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Cria o ticket
-    await prisma.ticket.create({
+    // Cria o atendimento
+    await prisma.atendimento.create({
       data: {
         protocolo,
         nomeContato: data.nomeContato,

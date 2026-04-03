@@ -15,7 +15,7 @@ function makeGetRequest(params: Record<string, string> = {}) {
   return new NextRequest(url.toString(), { method: 'GET' })
 }
 
-const mockTickets = [
+const mockAtendimentos = [
   {
     id: 'tk-1',
     assunto: 'Dúvida sobre inscrição',
@@ -32,8 +32,8 @@ describe('GET /api/admin/tickets', () => {
 
   it('ADMIN → 200', async () => {
     mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
-    mockPrisma.ticket.findMany.mockResolvedValue(mockTickets as never)
-    mockPrisma.ticket.count.mockResolvedValue(1 as never)
+    mockPrisma.atendimento.findMany.mockResolvedValue(mockAtendimentos as never)
+    mockPrisma.atendimento.count.mockResolvedValue(1 as never)
 
     const res = await GET(makeGetRequest())
 
@@ -47,8 +47,8 @@ describe('GET /api/admin/tickets', () => {
 
   it('ATENDIMENTO → 200', async () => {
     mockAuth.mockResolvedValue({ user: { id: 'u2', role: 'ATENDIMENTO' } } as never)
-    mockPrisma.ticket.findMany.mockResolvedValue([] as never)
-    mockPrisma.ticket.count.mockResolvedValue(0 as never)
+    mockPrisma.atendimento.findMany.mockResolvedValue([] as never)
+    mockPrisma.atendimento.count.mockResolvedValue(0 as never)
 
     const res = await GET(makeGetRequest())
 
@@ -65,12 +65,12 @@ describe('GET /api/admin/tickets', () => {
 
   it('filtro status → where correto', async () => {
     mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
-    mockPrisma.ticket.findMany.mockResolvedValue([] as never)
-    mockPrisma.ticket.count.mockResolvedValue(0 as never)
+    mockPrisma.atendimento.findMany.mockResolvedValue([] as never)
+    mockPrisma.atendimento.count.mockResolvedValue(0 as never)
 
     await GET(makeGetRequest({ status: 'EM_ATENDIMENTO' }))
 
-    expect(mockPrisma.ticket.findMany).toHaveBeenCalledWith(
+    expect(mockPrisma.atendimento.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { status: 'EM_ATENDIMENTO' },
       }),
@@ -87,12 +87,12 @@ describe('GET /api/admin/tickets', () => {
 
   it('paginação → skip/take corretos', async () => {
     mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
-    mockPrisma.ticket.findMany.mockResolvedValue([] as never)
-    mockPrisma.ticket.count.mockResolvedValue(30 as never)
+    mockPrisma.atendimento.findMany.mockResolvedValue([] as never)
+    mockPrisma.atendimento.count.mockResolvedValue(30 as never)
 
     await GET(makeGetRequest({ page: '2', pageSize: '10' }))
 
-    expect(mockPrisma.ticket.findMany).toHaveBeenCalledWith(
+    expect(mockPrisma.atendimento.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         skip: 10,
         take: 10,

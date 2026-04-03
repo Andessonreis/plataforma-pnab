@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import type { UserRole, TicketStatus } from '@prisma/client'
+import type { UserRole, AtendimentoStatus } from '@prisma/client'
 import {
   Card,
   Badge,
@@ -17,12 +17,12 @@ import {
 } from '@/components/ui'
 
 export const metadata: Metadata = {
-  title: 'Tickets de Atendimento — Portal PNAB Irecê',
+  title: 'Atendimentos — Portal PNAB Irecê',
 }
 
 const ROLES_PERMITIDOS: UserRole[] = ['ADMIN', 'ATENDIMENTO']
 
-const STATUS_LABELS: Record<TicketStatus, string> = {
+const STATUS_LABELS: Record<AtendimentoStatus, string> = {
   ABERTO: 'Aberto',
   EM_ATENDIMENTO: 'Em Atendimento',
   FECHADO: 'Fechado',
@@ -30,7 +30,7 @@ const STATUS_LABELS: Record<TicketStatus, string> = {
 
 type BadgeVariant = 'success' | 'warning' | 'error' | 'info' | 'neutral'
 
-const STATUS_BADGE: Record<TicketStatus, BadgeVariant> = {
+const STATUS_BADGE: Record<AtendimentoStatus, BadgeVariant> = {
   ABERTO: 'warning',
   EM_ATENDIMENTO: 'info',
   FECHADO: 'success',
@@ -47,12 +47,12 @@ export default async function AdminTicketsPage({ searchParams }: Props) {
   const params = await searchParams
   const page = Math.max(1, Number(params.page) || 1)
   const pageSize = 15
-  const statusFilter = params.status as TicketStatus | undefined
+  const statusFilter = params.status as AtendimentoStatus | undefined
 
   const where = statusFilter ? { status: statusFilter } : {}
 
   const [tickets, total] = await Promise.all([
-    prisma.ticket.findMany({
+    prisma.atendimento.findMany({
       where,
       orderBy: [
         // Prioridade: ABERTO > EM_ATENDIMENTO > FECHADO, depois por data
@@ -61,14 +61,14 @@ export default async function AdminTicketsPage({ searchParams }: Props) {
       skip: (page - 1) * pageSize,
       take: pageSize,
     }),
-    prisma.ticket.count({ where }),
+    prisma.atendimento.count({ where }),
   ])
 
   // Contadores por status para os filtros
   const [countAberto, countEmAtendimento, countFechado] = await Promise.all([
-    prisma.ticket.count({ where: { status: 'ABERTO' } }),
-    prisma.ticket.count({ where: { status: 'EM_ATENDIMENTO' } }),
-    prisma.ticket.count({ where: { status: 'FECHADO' } }),
+    prisma.atendimento.count({ where: { status: 'ABERTO' } }),
+    prisma.atendimento.count({ where: { status: 'EM_ATENDIMENTO' } }),
+    prisma.atendimento.count({ where: { status: 'FECHADO' } }),
   ])
 
   const totalPages = Math.ceil(total / pageSize)
@@ -106,9 +106,9 @@ export default async function AdminTicketsPage({ searchParams }: Props) {
     <section>
       <FadeIn>
         <div className="mb-4 sm:mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Tickets de Atendimento</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Atendimentos</h1>
           <p className="text-xs sm:text-sm text-slate-600 mt-0.5 sm:mt-1">
-            {total} ticket(s) {statusFilter ? `com status "${STATUS_LABELS[statusFilter]}"` : 'no total'}
+            {total} atendimento(s) {statusFilter ? `com status "${STATUS_LABELS[statusFilter]}"` : 'no total'}
           </p>
         </div>
       </FadeIn>
@@ -148,11 +148,11 @@ export default async function AdminTicketsPage({ searchParams }: Props) {
         <Card>
           <EmptyState
             icon={<IconTicket className="h-8 w-8 text-slate-400" />}
-            title="Nenhum ticket encontrado"
+            title="Nenhum atendimento encontrado"
             description={
               statusFilter
-                ? `Não há tickets com status "${STATUS_LABELS[statusFilter]}".`
-                : 'Nenhum ticket de atendimento registrado ainda.'
+                ? `Não há atendimentos com status "${STATUS_LABELS[statusFilter]}".`
+                : 'Nenhum atendimento registrado ainda.'
             }
           />
         </Card>

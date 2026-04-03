@@ -196,7 +196,7 @@ components:
         ativa:
           type: boolean
 
-    Ticket:
+    Atendimento:
       type: object
       properties:
         id:
@@ -948,11 +948,11 @@ paths:
         '204':
           description: FAQ excluída
 
-  # ── Tickets ──────────────────────────────────────────────────────────
+  # ── Atendimentos ──────────────────────────────────────────────────────────
   /tickets:
     get:
-      tags: [Tickets]
-      summary: Listar tickets
+      tags: [Atendimentos]
+      summary: Listar atendimentos
       parameters:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/PageSizeParam'
@@ -962,10 +962,10 @@ paths:
             type: string
       responses:
         '200':
-          description: Lista de tickets
+          description: Lista de atendimentos
     post:
-      tags: [Tickets]
-      summary: Criar ticket (contato)
+      tags: [Atendimentos]
+      summary: Criar atendimento (contato)
       security: []
       requestBody:
         required: true
@@ -988,19 +988,19 @@ paths:
                   type: string
       responses:
         '201':
-          description: Ticket criado
+          description: Atendimento criado
 
   /tickets/{id}:
     get:
-      tags: [Tickets]
-      summary: Detalhe do ticket
+      tags: [Atendimentos]
+      summary: Detalhe do atendimento
       parameters:
         - $ref: '#/components/parameters/IdParam'
       responses:
         '200':
-          description: Ticket encontrado
+          description: Atendimento encontrado
     put:
-      tags: [Tickets]
+      tags: [Atendimentos]
       summary: Atualizar ticket
       parameters:
         - $ref: '#/components/parameters/IdParam'

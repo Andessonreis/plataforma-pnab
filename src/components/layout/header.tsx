@@ -45,8 +45,8 @@ function Header() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-9 items-center justify-between text-xs">
             <span className="font-medium tracking-wide truncate mr-2">
-              <span className="sm:hidden">Sec. Arte e Cultura — Irecê/BA</span>
-              <span className="hidden sm:inline">Secretaria de Arte e Cultura — Irecê/BA</span>
+              <span className="sm:hidden">Sec. de Cultura e Turismo — Irecê/BA</span>
+              <span className="hidden sm:inline">Secretaria de Cultura e Turismo — Irecê/BA</span>
             </span>
             <AccessibilityControls />
           </div>
@@ -58,22 +58,14 @@ function Header() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-3 shrink-0 group">
-              <div className="relative h-9 w-9 overflow-hidden rounded-md ring-1 ring-slate-200 group-hover:ring-brand-300 transition-all">
-                <Image
-                  src="https://www.irece.ba.gov.br/files/config/brasao.png"
-                  alt="Brasão de Irecê"
-                  width={36}
-                  height={36}
-                  className="h-9 w-9 object-contain"
-                />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-slate-900 leading-tight group-hover:text-brand-700 transition-colors">
-                  Portal PNAB
-                </p>
-                <p className="text-[11px] text-slate-400 leading-tight hidden sm:block">Irecê/BA</p>
-              </div>
+            <Link href="/" className="shrink-0 group">
+              <Image
+                src="/images/logo-irece-color.png"
+                alt="Prefeitura de Irecê — 100 Anos — Secretaria de Cultura e Turismo"
+                width={280}
+                height={40}
+                className="h-10 sm:h-12 w-auto object-contain"
+              />
             </Link>
 
             {/* Links desktop */}

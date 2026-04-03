@@ -58,7 +58,7 @@ function Footer() {
             <Link href="/" className="flex items-center gap-3 mb-5 group">
               <div className="relative h-10 w-10 overflow-hidden rounded-lg ring-1 ring-white/10 group-hover:ring-white/20 transition-all">
                 <Image
-                  src="https://www.irece.ba.gov.br/files/config/brasao.png"
+                  src="/images/brasao-irece.png"
                   alt="Brasão de Irecê"
                   width={40}
                   height={40}
@@ -88,17 +88,6 @@ function Footer() {
                   </svg>
                 </span>
                 cultura@irece.ba.gov.br
-              </a>
-              <a
-                href="tel:+557436413116"
-                className="flex items-center gap-2.5 text-slate-300 hover:text-white transition-colors group"
-              >
-                <span className="flex h-7 w-7 items-center justify-center rounded-md bg-white/5 group-hover:bg-white/10 transition-colors shrink-0">
-                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" />
-                  </svg>
-                </span>
-                (74) 3641-3116
               </a>
               <p className="flex items-center gap-2.5 text-slate-500">
                 <span className="flex h-7 w-7 items-center justify-center rounded-md bg-white/5 shrink-0">

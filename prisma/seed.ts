@@ -530,10 +530,10 @@ async function main() {
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // Tickets de exemplo
+  // Atendimentos de exemplo
   // ─────────────────────────────────────────────────────────────────────────
 
-  const tickets = [
+  const atendimentos = [
     {
       protocolo: 'ATD-2025-000001',
       nomeContato: 'Maria das Graças',
@@ -552,11 +552,11 @@ async function main() {
     },
   ]
 
-  for (const t of tickets) {
-    const existing = await prisma.ticket.findUnique({ where: { protocolo: t.protocolo } })
+  for (const t of atendimentos) {
+    const existing = await prisma.atendimento.findUnique({ where: { protocolo: t.protocolo } })
     if (existing) continue
 
-    await prisma.ticket.create({
+    await prisma.atendimento.create({
       data: {
         protocolo: t.protocolo,
         nomeContato: t.nomeContato,
@@ -569,7 +569,7 @@ async function main() {
     })
   }
 
-  console.log(`✔ ${tickets.length} tickets de exemplo criados`)
+  console.log(`✔ ${atendimentos.length} atendimentos de exemplo criados`)
 
   // ─────────────────────────────────────────────────────────────────────────
   // Resumo
@@ -594,7 +594,7 @@ async function main() {
   console.log(`    ${manuais.length} manuais`)
   console.log(`    ${faqGeral.length + faqEdital.length} FAQs`)
   console.log('    Inscrições + projetos apoiados')
-  console.log('    Tickets de atendimento')
+  console.log('    Atendimentos')
   console.log('════════════════════════════════════════════\n')
 }
 

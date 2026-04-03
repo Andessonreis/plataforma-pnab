@@ -37,7 +37,7 @@ vi.mock('@/lib/db', () => ({
       findUnique: vi.fn(),
       count: vi.fn(),
     },
-    ticket: {
+    atendimento: {
       findMany: vi.fn(),
       findUnique: vi.fn(),
       create: vi.fn(),

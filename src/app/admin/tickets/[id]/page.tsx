@@ -4,7 +4,7 @@ import { notFound, redirect } from 'next/navigation'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { Prisma } from '@prisma/client'
-import type { UserRole, TicketStatus } from '@prisma/client'
+import type { UserRole, AtendimentoStatus } from '@prisma/client'
 import {
   Card,
   Badge,
@@ -20,20 +20,20 @@ import {
 } from '@/components/ui'
 
 export const metadata: Metadata = {
-  title: 'Detalhe do Ticket — Portal PNAB Irecê',
+  title: 'Detalhe do Atendimento — Portal PNAB Irecê',
 }
 
 const ROLES_PERMITIDOS: UserRole[] = ['ADMIN', 'ATENDIMENTO']
 
 type BadgeVariant = 'success' | 'warning' | 'error' | 'info' | 'neutral'
 
-const STATUS_LABELS: Record<TicketStatus, string> = {
+const STATUS_LABELS: Record<AtendimentoStatus, string> = {
   ABERTO: 'Aberto',
   EM_ATENDIMENTO: 'Em Atendimento',
   FECHADO: 'Fechado',
 }
 
-const STATUS_BADGE: Record<TicketStatus, BadgeVariant> = {
+const STATUS_BADGE: Record<AtendimentoStatus, BadgeVariant> = {
   ABERTO: 'warning',
   EM_ATENDIMENTO: 'info',
   FECHADO: 'success',
@@ -55,7 +55,7 @@ export default async function TicketDetailPage({ params }: Props) {
 
   const { id } = await params
 
-  const ticket = await prisma.ticket.findUnique({
+  const ticket = await prisma.atendimento.findUnique({
     where: { id },
     include: {
       autor: { select: { nome: true, email: true } },
@@ -69,7 +69,7 @@ export default async function TicketDetailPage({ params }: Props) {
   async function responder(formData: FormData) {
     'use server'
     const texto = (formData.get('texto') as string)?.trim()
-    const novoStatus = formData.get('novoStatus') as TicketStatus | null
+    const novoStatus = formData.get('novoStatus') as AtendimentoStatus | null
 
     if (!texto || texto.length < 5) return
 
@@ -83,11 +83,11 @@ export default async function TicketDetailPage({ params }: Props) {
     }
 
     // Busca o ticket atual para obter o histórico existente
-    const ticketAtual = await prisma.ticket.findUnique({ where: { id }, select: { historico: true } })
+    const ticketAtual = await prisma.atendimento.findUnique({ where: { id }, select: { historico: true } })
     const historicoAtual = (ticketAtual?.historico ?? []) as unknown as HistoricoItem[]
     const novoHistorico = [...historicoAtual, entrada]
 
-    await prisma.ticket.update({
+    await prisma.atendimento.update({
       where: { id },
       data: {
         historico: novoHistorico as unknown as Prisma.InputJsonValue[],
@@ -110,7 +110,7 @@ export default async function TicketDetailPage({ params }: Props) {
           className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors mb-4 sm:mb-6"
         >
           <IconArrowLeft className="h-4 w-4" />
-          Voltar para Tickets
+          Voltar para Atendimentos
         </Link>
 
         {/* Cabeçalho */}
@@ -246,7 +246,7 @@ export default async function TicketDetailPage({ params }: Props) {
                     {podeFechar && (
                       <Button type="submit" name="novoStatus" value="FECHADO" variant="outline" size="sm">
                         <IconCheck className="h-4 w-4 mr-1.5" />
-                        Encerrar Ticket
+                        Encerrar Atendimento
                       </Button>
                     )}
                   </div>
@@ -259,7 +259,7 @@ export default async function TicketDetailPage({ params }: Props) {
             <FadeIn delay={0.15}>
               <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
                 <IconCheck className="h-4 w-4 shrink-0" />
-                Este ticket foi encerrado.
+                Este atendimento foi encerrado.
               </div>
             </FadeIn>
           )}
@@ -370,7 +370,7 @@ export default async function TicketDetailPage({ params }: Props) {
                 <div className="space-y-2">
                   {ticket.status === 'ABERTO' && (
                     <form action={responder}>
-                      <input type="hidden" name="texto" value="Ticket recebido. Em análise." />
+                      <input type="hidden" name="texto" value="Atendimento recebido. Em análise." />
                       <input type="hidden" name="novoStatus" value="EM_ATENDIMENTO" />
                       <button
                         type="submit"
@@ -382,14 +382,14 @@ export default async function TicketDetailPage({ params }: Props) {
                     </form>
                   )}
                   <form action={responder}>
-                    <input type="hidden" name="texto" value="Ticket encerrado pela equipe de atendimento." />
+                    <input type="hidden" name="texto" value="Atendimento encerrado pela equipe." />
                     <input type="hidden" name="novoStatus" value="FECHADO" />
                     <button
                       type="submit"
                       className="w-full text-left flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-green-700 bg-green-50 hover:bg-green-100 transition-colors min-h-[44px]"
                     >
                       <IconCheck className="h-4 w-4 shrink-0" />
-                      Encerrar Ticket
+                      Encerrar Atendimento
                     </button>
                   </form>
                 </div>

@@ -1,8 +1,8 @@
 import { prisma } from '@/lib/db'
 import { ServiceError } from './errors'
-import type { TicketStatus, Prisma } from '@prisma/client'
+import type { AtendimentoStatus, Prisma } from '@prisma/client'
 
-interface CreateTicketData {
+interface CreateAtendimentoData {
   nomeContato: string
   emailContato: string
   assunto: string
@@ -11,10 +11,10 @@ interface CreateTicketData {
   autorId?: string
 }
 
-export async function createTicket(data: CreateTicketData) {
-  const protocolo = `TKT-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`
+export async function createAtendimento(data: CreateAtendimentoData) {
+  const protocolo = `ATD-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`
 
-  return prisma.ticket.create({
+  return prisma.atendimento.create({
     data: {
       protocolo,
       nomeContato: data.nomeContato,
@@ -28,29 +28,29 @@ export async function createTicket(data: CreateTicketData) {
   })
 }
 
-export async function listTickets(page: number, pageSize: number, status?: string) {
-  const where = status ? { status: status as TicketStatus } : {}
+export async function listAtendimentos(page: number, pageSize: number, status?: string) {
+  const where = status ? { status: status as AtendimentoStatus } : {}
   const [data, total] = await Promise.all([
-    prisma.ticket.findMany({
+    prisma.atendimento.findMany({
       where,
       orderBy: { createdAt: 'asc' },
       skip: (page - 1) * pageSize,
       take: pageSize,
       include: { autor: { select: { nome: true, email: true } } },
     }),
-    prisma.ticket.count({ where }),
+    prisma.atendimento.count({ where }),
   ])
 
   return { data, meta: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } }
 }
 
-export async function getTicketById(id: string) {
-  const ticket = await prisma.ticket.findUnique({
+export async function getAtendimentoById(id: string) {
+  const atendimento = await prisma.atendimento.findUnique({
     where: { id },
     include: { autor: { select: { nome: true, email: true } } },
   })
-  if (!ticket) throw new ServiceError('NOT_FOUND', 'Ticket não encontrado.')
-  return ticket
+  if (!atendimento) throw new ServiceError('NOT_FOUND', 'Atendimento não encontrado.')
+  return atendimento
 }
 
 interface HistoricoItem {
@@ -59,13 +59,13 @@ interface HistoricoItem {
   criadoEm: string
 }
 
-export async function updateTicket(
+export async function updateAtendimento(
   id: string,
   update: { status?: string; resposta?: { texto: string } },
   attendantName: string,
 ) {
-  const ticket = await prisma.ticket.findUnique({ where: { id } })
-  if (!ticket) throw new ServiceError('NOT_FOUND', 'Ticket não encontrado.')
+  const atendimento = await prisma.atendimento.findUnique({ where: { id } })
+  if (!atendimento) throw new ServiceError('NOT_FOUND', 'Atendimento não encontrado.')
 
   const updateData: Record<string, unknown> = {}
 
@@ -79,9 +79,9 @@ export async function updateTicket(
       texto: update.resposta.texto,
       criadoEm: new Date().toISOString(),
     }
-    const historicoAtual = (ticket.historico ?? []) as unknown as HistoricoItem[]
+    const historicoAtual = (atendimento.historico ?? []) as unknown as HistoricoItem[]
     updateData.historico = [...historicoAtual, novaEntrada] as unknown as Prisma.InputJsonValue[]
   }
 
-  return prisma.ticket.update({ where: { id }, data: updateData })
+  return prisma.atendimento.update({ where: { id }, data: updateData })
 }

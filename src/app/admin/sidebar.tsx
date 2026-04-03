@@ -83,7 +83,7 @@ const navSections: NavSection[] = [
     title: 'Atendimento',
     items: [
       {
-        label: 'Tickets',
+        label: 'Atendimentos',
         href: '/admin/tickets',
         roles: ['ADMIN', 'ATENDIMENTO'],
         icon: <IconTicket className="h-5 w-5" />,

@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { randomUUID } from 'crypto'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import type { UserRole, TicketStatus } from '@prisma/client'
+import type { UserRole, AtendimentoStatus } from '@prisma/client'
 
 export const runtime = 'nodejs'
 
@@ -36,10 +36,10 @@ export async function GET(req: NextRequest) {
     const params = querySchema.parse(Object.fromEntries(new URL(req.url).searchParams))
     const { page, pageSize, status } = params
 
-    const where = status ? { status: status as TicketStatus } : {}
+    const where = status ? { status: status as AtendimentoStatus } : {}
 
     const [data, total] = await Promise.all([
-      prisma.ticket.findMany({
+      prisma.atendimento.findMany({
         where,
         orderBy: { createdAt: 'asc' },
         skip: (page - 1) * pageSize,
@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
           autor: { select: { nome: true, email: true } },
         },
       }),
-      prisma.ticket.count({ where }),
+      prisma.atendimento.count({ where }),
     ])
 
     const res = NextResponse.json({

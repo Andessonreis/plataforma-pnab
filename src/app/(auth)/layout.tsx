@@ -34,7 +34,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             <div className="flex items-center gap-4 mb-8">
               <div className="relative h-16 w-16 flex-shrink-0 rounded-xl bg-white/10 backdrop-blur-sm p-2 ring-1 ring-white/20">
                 <Image
-                  src="https://www.irece.ba.gov.br/files/config/brasao.png"
+                  src="/images/brasao-irece.png"
                   alt="Brasão de Irecê"
                   fill
                   className="object-contain p-1"
@@ -102,7 +102,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             <div className="lg:hidden flex items-center gap-3 mb-8">
               <div className="relative h-11 w-11 flex-shrink-0 rounded-xl bg-brand-50 p-1.5 ring-1 ring-brand-100">
                 <Image
-                  src="https://www.irece.ba.gov.br/files/config/brasao.png"
+                  src="/images/brasao-irece.png"
                   alt="Brasão de Irecê"
                   fill
                   className="object-contain p-0.5"

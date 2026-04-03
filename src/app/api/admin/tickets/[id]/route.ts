@@ -48,14 +48,14 @@ export async function GET(
 
     const { id } = await params
 
-    const ticket = await prisma.ticket.findUnique({
+    const ticket = await prisma.atendimento.findUnique({
       where: { id },
       include: { autor: { select: { nome: true, email: true } } },
     })
 
     if (!ticket) {
       const res = NextResponse.json(
-        { error: 'NOT_FOUND', message: 'Ticket não encontrado.', requestId },
+        { error: 'NOT_FOUND', message: 'Atendimento não encontrado.', requestId },
         { status: 404 },
       )
       res.headers.set('X-Request-Id', requestId)
@@ -104,10 +104,10 @@ export async function PATCH(
 
     const { id } = await params
 
-    const ticket = await prisma.ticket.findUnique({ where: { id } })
+    const ticket = await prisma.atendimento.findUnique({ where: { id } })
     if (!ticket) {
       const res = NextResponse.json(
-        { error: 'NOT_FOUND', message: 'Ticket não encontrado.', requestId },
+        { error: 'NOT_FOUND', message: 'Atendimento não encontrado.', requestId },
         { status: 404 },
       )
       res.headers.set('X-Request-Id', requestId)
@@ -134,7 +134,7 @@ export async function PATCH(
       updateData.historico = [...historicoAtual, novaEntrada] as unknown as Prisma.InputJsonValue[]
     }
 
-    const updated = await prisma.ticket.update({
+    const updated = await prisma.atendimento.update({
       where: { id },
       data: updateData,
     })

@@ -53,7 +53,7 @@ enum InscricaoStatus {
   SUPLENTE
 }
 
-enum TicketStatus {
+enum AtendimentoStatus {
   ABERTO
   EM_ATENDIMENTO
   FECHADO
@@ -85,7 +85,7 @@ model User {
 
   inscricoes          Inscricao[]
   avaliacoes          Avaliacao[]
-  tickets             Ticket[]
+  atendimentos        Atendimento[]
   passwordResetTokens PasswordResetToken[]
   auditLogs           AuditLog[]
   apiKeys             ApiKey[]
@@ -378,23 +378,23 @@ model CmsPage {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Atendimento / Tickets
+// Atendimento
 // ─────────────────────────────────────────────────────────────────────────────
 
-model Ticket {
-  id           String       @id @default(cuid())
-  protocolo    String       @unique
+model Atendimento {
+  id           String             @id @default(cuid())
+  protocolo    String             @unique
   editalId     String?
   autorId      String?
   nomeContato  String
   emailContato String
   assunto      String
   mensagem     String
-  status       TicketStatus @default(ABERTO)
+  status       AtendimentoStatus  @default(ABERTO)
   // [{ de: string, texto: string, criadoEm: string }]
   historico    Json[]
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
 
   autor User? @relation(fields: [autorId], references: [id])
 }

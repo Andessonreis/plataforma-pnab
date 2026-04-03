@@ -4,7 +4,6 @@ import { prisma } from '@/lib/db'
 import { PageHeader } from '@/components/ui'
 import {
   IconMail,
-  IconPhone,
   IconMapPin,
   IconClock,
   IconArrowRight,
@@ -94,20 +93,6 @@ export default async function ContatoPage() {
                         </div>
                       </div>
 
-                      <div className="flex items-start gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
-                          <IconPhone className="h-4 w-4" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-slate-900">Telefone</p>
-                          <a
-                            href="tel:+557436413116"
-                            className="text-sm text-brand-600 hover:text-brand-700 transition-colors"
-                          >
-                            (74) 3641-3116
-                          </a>
-                        </div>
-                      </div>
 
                       <div className="flex items-start gap-3">
                         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600">

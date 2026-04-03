@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { createContext, ok, handleError, forbidden, logRequest } from '@/lib/api/response'
 import { resolveAuth, requireRole } from '@/lib/api/auth-resolver'
-import * as ticketService from '@/lib/services/ticket.service'
+import * as atendimentoService from '@/lib/services/ticket.service'
 
 export const runtime = 'nodejs'
 
@@ -19,9 +19,9 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     const caller = await resolveAuth(req)
     if (!requireRole(caller, 'ADMIN', 'ATENDIMENTO')) return forbidden(ctx)
     const { id } = await params
-    const ticket = await ticketService.getTicketById(id)
+    const atendimento = await atendimentoService.getAtendimentoById(id)
     logRequest(ctx, 'GET', `/api/v1/tickets/${id}`, 200)
-    return ok(ctx, ticket)
+    return ok(ctx, atendimento)
   } catch (err) {
     return handleError(ctx, err)
   }
@@ -34,7 +34,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     if (!requireRole(caller, 'ADMIN', 'ATENDIMENTO')) return forbidden(ctx)
     const { id } = await params
     const data = patchSchema.parse(await req.json())
-    const result = await ticketService.updateTicket(id, data, caller.userId)
+    const result = await atendimentoService.updateAtendimento(id, data, caller.userId)
     logRequest(ctx, 'PUT', `/api/v1/tickets/${id}`, 200)
     return ok(ctx, result)
   } catch (err) {

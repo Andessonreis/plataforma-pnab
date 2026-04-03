@@ -240,15 +240,6 @@ export default function AccessibilityPage() {
               </a>
             </li>
             <li>
-              Telefone:{' '}
-              <a
-                href="tel:+557436413116"
-                className="text-brand-600 hover:text-brand-700 underline"
-              >
-                (74) 3641-3116
-              </a>
-            </li>
-            <li>
               Assunto do e-mail: <em>&ldquo;Acessibilidade — Portal PNAB&rdquo;</em>
             </li>
           </ul>
