@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { generateComprovante } from '@/lib/pdf/comprovante'
+import { generateProjetoCompleto } from '@/lib/pdf/projeto-completo'
 
 export const runtime = 'nodejs'
 
@@ -42,7 +42,10 @@ export async function GET(
           select: { id: true, nome: true, cpfCnpj: true, email: true, tipoProponente: true },
         },
         edital: {
-          select: { titulo: true, ano: true },
+          select: { titulo: true, ano: true, camposFormulario: true },
+        },
+        anexos: {
+          select: { titulo: true, tipo: true, valido: true },
         },
       },
     })
@@ -64,32 +67,40 @@ export async function GET(
       )
     }
 
-    // Só gera comprovante para inscrições já enviadas
+    // Só gera PDF para inscrições já enviadas
     if (inscricao.status === 'RASCUNHO') {
       return NextResponse.json(
-        { error: 'BAD_REQUEST', message: 'Comprovante disponível apenas para inscrições enviadas.', requestId },
+        { error: 'BAD_REQUEST', message: 'PDF disponível apenas para inscrições enviadas.', requestId },
         { status: 400 },
       )
     }
 
-    const pdfBuffer = await generateComprovante({
+    // Parsear camposFormulario do edital (Json do Prisma)
+    const camposFormulario = Array.isArray(inscricao.edital.camposFormulario)
+      ? (inscricao.edital.camposFormulario as Array<{ nome: string; label: string; tipo: string }>)
+      : []
+
+    const pdfBuffer = await generateProjetoCompleto({
       numero: inscricao.numero,
+      status: inscricao.status,
       proponente: {
         nome: inscricao.proponente.nome,
         cpfCnpj: inscricao.proponente.cpfCnpj ?? '',
         email: inscricao.proponente.email,
         tipoProponente: inscricao.proponente.tipoProponente ?? 'PF',
       },
-      edital: inscricao.edital,
+      edital: { titulo: inscricao.edital.titulo, ano: inscricao.edital.ano },
       categoria: inscricao.categoria,
-      submittedAt: inscricao.submittedAt ?? inscricao.createdAt,
       campos: parseCampos(inscricao.campos),
+      camposFormulario,
+      anexos: inscricao.anexos,
+      submittedAt: inscricao.submittedAt ?? inscricao.createdAt,
     })
 
     console.log({
       requestId,
       method: 'GET',
-      path: `/api/proponente/inscricoes/${id}/comprovante`,
+      path: `/api/proponente/inscricoes/${id}/projeto-pdf`,
       status: 200,
       durationMs: Date.now() - start,
     })
@@ -98,7 +109,7 @@ export async function GET(
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="comprovante-${inscricao.numero}.pdf"`,
+        'Content-Disposition': `attachment; filename="projeto-${inscricao.numero}.pdf"`,
         'X-Request-Id': requestId,
         'Cache-Control': 'no-store',
       },
@@ -106,7 +117,7 @@ export async function GET(
   } catch (err) {
     console.error({ requestId, error: err instanceof Error ? err.message : 'Unknown', stack: err instanceof Error ? err.stack : undefined })
     return NextResponse.json(
-      { error: 'INTERNAL_ERROR', message: 'Erro ao gerar comprovante.', requestId },
+      { error: 'INTERNAL_ERROR', message: 'Erro ao gerar PDF do projeto.', requestId },
       { status: 500 },
     )
   }
