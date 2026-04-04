@@ -11,6 +11,15 @@ import { editalCronogramaLabel } from '@/lib/status-maps'
 import { extractFases, extractCustomItems } from '@/lib/utils/cronograma'
 import { CHAR_LIMIT_DEFAULTS } from '@/lib/campo-limits'
 import type { CriterioAvaliacao } from '@/lib/avaliacao-criterios'
+import type { CampoFormulario } from '@/types/campo-formulario'
+import type { TipoProponente } from '@prisma/client'
+
+const TIPO_PROPONENTE_OPTIONS: { value: TipoProponente; label: string }[] = [
+  { value: 'PF', label: 'Pessoa Física' },
+  { value: 'MEI', label: 'MEI' },
+  { value: 'PJ', label: 'Pessoa Jurídica' },
+  { value: 'COLETIVO', label: 'Coletivo' },
+]
 
 interface FaseState {
   dataHora: string
@@ -21,18 +30,6 @@ interface CustomItemState {
   label: string
   dataHora: string
   destaque: boolean
-}
-
-interface CampoFormulario {
-  nome: string
-  label: string
-  tipo: 'texto' | 'textarea' | 'select' | 'multiselect' | 'numero' | 'data' | 'arquivo'
-  obrigatorio: boolean
-  placeholder: string
-  opcoes: string[]
-  hint: string
-  minLength?: number | null
-  maxLength?: number | null
 }
 
 interface TipoAnexo {
@@ -229,7 +226,7 @@ export function EditalForm({ initialData }: EditalFormProps) {
   function addCampoFormulario() {
     setCamposFormulario(prev => [
       ...prev,
-      { nome: '', label: '', tipo: 'texto', obrigatorio: false, placeholder: '', opcoes: [], hint: '' },
+      { nome: '', label: '', tipo: 'texto', obrigatorio: false, placeholder: '', opcoes: [], hint: '', tiposProponente: [] },
     ])
   }
 
@@ -618,7 +615,7 @@ export function EditalForm({ initialData }: EditalFormProps) {
                 {(campo.tipo === 'select' || campo.tipo === 'multiselect') && (
                   <Input
                     label="Opções (separadas por vírgula)"
-                    value={campo.opcoes.join(', ')}
+                    value={(campo.opcoes ?? []).join(', ')}
                     onChange={e => updateCampoFormulario(idx, 'opcoes', e.target.value.split(',').map(o => o.trim()).filter(Boolean))}
                     placeholder="Opção 1, Opção 2, Opção 3"
                   />
@@ -669,6 +666,40 @@ export function EditalForm({ initialData }: EditalFormProps) {
                   />
                   <span className="text-sm text-slate-700">Campo obrigatório</span>
                 </label>
+
+                {/* Visibilidade por tipo de proponente */}
+                <div>
+                  <p className="text-xs font-medium text-slate-600 mb-1.5">
+                    Visível para tipos de proponente
+                    <span className="ml-1 font-normal text-slate-400">— vazio = todos</span>
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {TIPO_PROPONENTE_OPTIONS.map(opt => {
+                      const selected = campo.tiposProponente ?? []
+                      const isActive = selected.includes(opt.value)
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => {
+                            const current = campo.tiposProponente ?? []
+                            const next = isActive
+                              ? current.filter(t => t !== opt.value)
+                              : [...current, opt.value]
+                            updateCampoFormulario(idx, 'tiposProponente', next)
+                          }}
+                          className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                            isActive
+                              ? 'bg-brand-600 text-white border-brand-600'
+                              : 'bg-white text-slate-600 border-slate-300 hover:border-brand-400 hover:text-brand-700'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
               </div>
             ))}
           </div>

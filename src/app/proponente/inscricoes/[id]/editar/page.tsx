@@ -5,6 +5,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { IconArrowLeft } from '@/components/ui/icons'
 import InscricaoForm from '../../nova/inscricao-form'
+import type { CampoFormulario } from '@/types/campo-formulario'
 
 export const metadata: Metadata = {
   title: 'Editar Inscrição — Portal PNAB Irecê',
@@ -56,6 +57,12 @@ export default async function EditarInscricaoPage({ params }: Props) {
     redirect('/proponente/inscricoes')
   }
 
+  // Buscar tipo de proponente do usuário
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { tipoProponente: true },
+  })
+
   if (inscricao.status !== 'RASCUNHO') {
     redirect(`/proponente/inscricoes/${id}`)
   }
@@ -91,19 +98,12 @@ export default async function EditarInscricaoPage({ params }: Props) {
           id: inscricao.edital.id,
           titulo: inscricao.edital.titulo,
           categorias: inscricao.edital.categorias,
-          camposFormulario: camposFormulario as Array<{
-            nome: string
-            label: string
-            tipo: 'texto' | 'textarea' | 'select' | 'multiselect' | 'numero' | 'data' | 'arquivo'
-            obrigatorio?: boolean
-            placeholder?: string
-            opcoes?: string[]
-            hint?: string
-          }>,
+          camposFormulario: camposFormulario as unknown as CampoFormulario[],
           tiposAnexo: Array.isArray(inscricao.edital.tiposAnexo)
             ? (inscricao.edital.tiposAnexo as Array<{ tipo: string; label: string; obrigatorio: boolean }>)
             : null,
         }}
+        tipoProponente={user?.tipoProponente ?? null}
         inscricaoId={inscricao.id}
         initialCategoria={inscricao.categoria ?? ''}
         initialCampos={campos}

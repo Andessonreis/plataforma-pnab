@@ -10,6 +10,7 @@ import type { CronogramaItem } from '@/types/cronograma'
 import { migrateLegacyCronograma } from '@/lib/utils/cronograma'
 import { RelatorioFinalButton } from './relatorio-final-button'
 import type { CriterioAvaliacao } from '@/lib/avaliacao-criterios'
+import type { CampoFormulario } from '@/types/campo-formulario'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -22,16 +23,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     select: { titulo: true },
   })
   return { title: `Editar: ${edital?.titulo ?? id} — Portal PNAB Irece` }
-}
-
-interface CampoFormulario {
-  nome: string
-  label: string
-  tipo: 'texto' | 'textarea' | 'select' | 'multiselect' | 'numero' | 'data' | 'arquivo'
-  obrigatorio: boolean
-  placeholder: string
-  opcoes: string[]
-  hint: string
 }
 
 interface TipoAnexo {

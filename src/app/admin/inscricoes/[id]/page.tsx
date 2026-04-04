@@ -6,7 +6,8 @@ import { prisma } from '@/lib/db'
 import { Card, Badge } from '@/components/ui'
 import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
 import { CRITERIOS_AVALIACAO_PADRAO, type CriterioAvaliacao } from '@/lib/avaliacao-criterios'
-import type { InscricaoStatus } from '@prisma/client'
+import type { InscricaoStatus, TipoProponente } from '@prisma/client'
+import type { CampoFormulario } from '@/types/campo-formulario'
 import { HabilitacaoActions } from './habilitacao-actions'
 import { AvaliacaoForm } from './avaliacao-form'
 import { RecursoDecision } from './recurso-decision'
@@ -34,7 +35,7 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
   const inscricao = await prisma.inscricao.findUnique({
     where: { id },
     include: {
-      edital: { select: { titulo: true, slug: true, ano: true, criteriosAvaliacao: true } },
+      edital: { select: { titulo: true, slug: true, ano: true, criteriosAvaliacao: true, camposFormulario: true } },
       proponente: {
         select: { nome: true, cpfCnpj: true, email: true, telefone: true, tipoProponente: true },
       },
@@ -97,11 +98,15 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
   const isHabilitacaoStatus = inscricao.status === 'ENVIADA' || inscricao.status === 'HABILITADA' || inscricao.status === 'INABILITADA'
 
   const tipoLabels: Record<string, string> = {
-    PF: 'Pessoa Fisica',
-    PJ: 'Pessoa Juridica',
+    PF: 'Pessoa Física',
+    PJ: 'Pessoa Jurídica',
     MEI: 'MEI',
     COLETIVO: 'Coletivo',
   }
+
+  const camposFormulario = (Array.isArray(inscricao.edital.camposFormulario)
+    ? inscricao.edital.camposFormulario : []) as unknown as CampoFormulario[]
+  const camposMap = new Map(camposFormulario.map(c => [c.nome, c]))
 
   return (
     <section>
@@ -167,16 +172,25 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
             <Card padding="sm" className="sm:p-6">
               <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Dados da Proposta</h2>
               <dl className="space-y-3">
-                {Object.entries(campos).map(([key, value]) => (
-                  <div key={key} className="border-b border-slate-100 pb-3 last:border-0 last:pb-0">
-                    <dt className="text-sm font-medium text-slate-500 capitalize">
-                      {key.replace(/_/g, ' ')}
-                    </dt>
-                    <dd className="text-sm text-slate-900 mt-0.5 whitespace-pre-wrap">
-                      {typeof value === 'string' ? value : JSON.stringify(value)}
-                    </dd>
-                  </div>
-                ))}
+                {Object.entries(campos).map(([key, value]) => {
+                  const campoConfig = camposMap.get(key)
+                  const tiposRestritos = campoConfig?.tiposProponente
+                  return (
+                    <div key={key} className="border-b border-slate-100 pb-3 last:border-0 last:pb-0">
+                      <dt className="text-sm font-medium text-slate-500 flex items-center gap-2">
+                        <span className="capitalize">{campoConfig?.label ?? key.replace(/_/g, ' ')}</span>
+                        {tiposRestritos && tiposRestritos.length > 0 && (
+                          <span className="text-[10px] font-medium text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+                            {tiposRestritos.map((t: TipoProponente) => tipoLabels[t] ?? t).join(', ')}
+                          </span>
+                        )}
+                      </dt>
+                      <dd className="text-sm text-slate-900 mt-0.5 whitespace-pre-wrap">
+                        {typeof value === 'string' ? value : JSON.stringify(value)}
+                      </dd>
+                    </div>
+                  )
+                })}
               </dl>
             </Card>
           )}

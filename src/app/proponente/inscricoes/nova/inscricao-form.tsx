@@ -6,20 +6,8 @@ import { Button, Input, Select, Textarea, Card, Badge, CurrencyInput, formatCurr
 import type { SelectOption } from '@/components/ui'
 import { IconArrowLeft, IconArrowRight, IconCheck, IconDocument } from '@/components/ui/icons'
 import { resolveCharLimits } from '@/lib/campo-limits'
-
-// ─── Tipos ───────────────────────────────────────────────────────────────────
-
-interface CampoFormulario {
-  nome: string
-  label: string
-  tipo: 'texto' | 'text' | 'textarea' | 'select' | 'multiselect' | 'numero' | 'number' | 'moeda' | 'currency' | 'data' | 'date' | 'arquivo'
-  obrigatorio?: boolean
-  placeholder?: string
-  opcoes?: string[]
-  hint?: string
-  minLength?: number | null
-  maxLength?: number | null
-}
+import { filterCamposByTipo, type CampoFormulario } from '@/types/campo-formulario'
+import type { TipoProponente } from '@prisma/client'
 
 // ─── Contador de caracteres ──────────────────────────────────────────────────
 
@@ -73,6 +61,7 @@ interface EditalInfo {
 
 interface InscricaoFormProps {
   edital: EditalInfo
+  tipoProponente?: TipoProponente | null
   // Dados existentes para edição de rascunho
   inscricaoId?: string
   initialCategoria?: string
@@ -86,6 +75,7 @@ type Step = 'categoria' | 'dados' | 'anexos' | 'revisao'
 
 export default function InscricaoForm({
   edital,
+  tipoProponente,
   inscricaoId: existingId,
   initialCategoria = '',
   initialCampos = {},
@@ -93,7 +83,7 @@ export default function InscricaoForm({
 }: InscricaoFormProps) {
   const router = useRouter()
   const hasCategorias = edital.categorias.length > 0
-  const camposFormulario = edital.camposFormulario || []
+  const camposFormulario = filterCamposByTipo(edital.camposFormulario || [], tipoProponente)
 
   // Determinar etapas
   const steps: Step[] = [

@@ -5,17 +5,9 @@ import { prisma } from '@/lib/db'
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
 import { enqueueEmail } from '@/lib/queue'
 import { resolveCharLimits } from '@/lib/campo-limits'
+import { filterCamposByTipo, type CampoFormulario } from '@/types/campo-formulario'
 
 export const runtime = 'nodejs'
-
-interface CampoFormulario {
-  nome: string
-  tipo: string
-  obrigatorio?: boolean
-  label?: string
-  minLength?: number | null
-  maxLength?: number | null
-}
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -54,7 +46,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
         },
         anexos: true,
         proponente: {
-          select: { email: true, nome: true },
+          select: { email: true, nome: true, tipoProponente: true },
         },
       },
     })
@@ -110,8 +102,9 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
       return res
     }
 
-    // Validação: campos obrigatórios preenchidos
-    const camposFormulario = (inscricao.edital.camposFormulario as unknown as CampoFormulario[]) || []
+    // Validação: campos obrigatórios preenchidos (filtrados por tipo de proponente)
+    const allCampos = (inscricao.edital.camposFormulario as unknown as CampoFormulario[]) || []
+    const camposFormulario = filterCamposByTipo(allCampos, inscricao.proponente.tipoProponente)
     const campos = (inscricao.campos as Record<string, unknown>) || {}
     const camposFaltando: string[] = []
 

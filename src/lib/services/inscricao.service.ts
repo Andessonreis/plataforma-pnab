@@ -4,16 +4,8 @@ import { enqueueEmail } from '@/lib/queue'
 import { Prisma } from '@prisma/client'
 import { ServiceError } from './errors'
 import { resolveCharLimits } from '@/lib/campo-limits'
+import { filterCamposByTipo, type CampoFormulario } from '@/types/campo-formulario'
 import type { CreateInscricaoInput, UpdateInscricaoInput } from '@/lib/schemas/inscricao'
-
-interface CampoFormulario {
-  nome: string
-  tipo: string
-  obrigatorio?: boolean
-  label?: string
-  minLength?: number | null
-  maxLength?: number | null
-}
 
 export async function createInscricao(data: CreateInscricaoInput, userId: string, ip?: string) {
   const edital = await prisma.edital.findUnique({
@@ -116,7 +108,7 @@ export async function submitInscricao(id: string, userId: string, ip?: string) {
     include: {
       edital: { select: { id: true, titulo: true, status: true, categorias: true, camposFormulario: true } },
       anexos: true,
-      proponente: { select: { email: true, nome: true } },
+      proponente: { select: { email: true, nome: true, tipoProponente: true } },
     },
   })
 
@@ -131,8 +123,9 @@ export async function submitInscricao(id: string, userId: string, ip?: string) {
     throw new ServiceError('BAD_REQUEST', 'Selecione uma categoria antes de enviar.')
   }
 
-  // Valida campos obrigatórios
-  const camposFormulario = (inscricao.edital.camposFormulario as unknown as CampoFormulario[]) || []
+  // Valida campos obrigatórios (filtrados por tipo de proponente)
+  const allCampos = (inscricao.edital.camposFormulario as unknown as CampoFormulario[]) || []
+  const camposFormulario = filterCamposByTipo(allCampos, inscricao.proponente.tipoProponente)
   const campos = (inscricao.campos as Record<string, unknown>) || {}
   const camposFaltando: string[] = []
 
