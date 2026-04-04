@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, type FormEvent } from 'react'
+import { useState, useCallback, useMemo, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface CriterioConfig {
@@ -8,6 +8,7 @@ interface CriterioConfig {
   peso: number
   descricao?: string
   notaMax: number
+  bloco?: string
 }
 
 interface NotaItem {
@@ -88,6 +89,25 @@ export function AvaliacaoForm({
 
   const total = calcTotal(notas)
   const isLocked = finalizada && !isAdmin
+
+  const grupos = useMemo(() => {
+    const map: Record<string, Array<CriterioConfig & { originalIndex: number }>> = {}
+    criterios.forEach((c, i) => {
+      const bloco = c.bloco || 'Geral'
+      if (!map[bloco]) map[bloco] = []
+      map[bloco].push({ ...c, originalIndex: i })
+    })
+    return Object.entries(map)
+  }, [criterios])
+
+  const hasMultipleGroups = grupos.length > 1
+
+  function calcBlocoSubtotal(items: Array<{ originalIndex: number }>) {
+    const blocoNotas = items.map(item => notas[item.originalIndex]).filter(Boolean)
+    const totalPeso = blocoNotas.reduce((acc, n) => acc + n.peso, 0)
+    if (totalPeso === 0) return 0
+    return blocoNotas.reduce((acc, n) => acc + (n.nota * n.peso) / totalPeso, 0)
+  }
 
   function updateNota(criterio: string, value: number) {
     setNotas((prev) => prev.map((n) => (n.criterio === criterio ? { ...n, nota: value } : n)))
@@ -240,68 +260,86 @@ export function AvaliacaoForm({
           {/* Critérios */}
           <div className="space-y-4">
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Critérios de Avaliação</p>
-            {criterios.map((c, idx) => {
-              const notaItem = notas[idx]
-              const notaVal = notaItem?.nota ?? 0
-              return (
-                <div key={c.criterio} className="space-y-2">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <label
-                        htmlFor={`nota-${idx}`}
-                        className="text-sm font-medium text-slate-800"
-                      >
-                        {c.criterio}
-                      </label>
-                      {c.descricao && (
-                        <p className="text-xs text-slate-500 mt-0.5 leading-snug">{c.descricao}</p>
-                      )}
+            {grupos.map(([blocoName, items], gi) => (
+              <div key={blocoName}>
+                {hasMultipleGroups && (
+                  <>
+                    {gi > 0 && <hr className="border-slate-200 my-4" />}
+                    <div className="flex items-center justify-between rounded-lg bg-slate-50 border-l-4 border-brand-500 px-3.5 py-2.5 mb-3">
+                      <h3 className="text-sm font-semibold text-slate-800">{blocoName}</h3>
+                      <span className="text-xs text-slate-500">
+                        Subtotal: <strong className={totalColor(calcBlocoSubtotal(items))}>{calcBlocoSubtotal(items).toFixed(1)}</strong>/10
+                      </span>
                     </div>
-                    <span className="shrink-0 text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full mt-0.5">
-                      {c.peso}%
-                    </span>
-                  </div>
+                  </>
+                )}
+                <div className="space-y-4">
+                  {items.map((c) => {
+                    const idx = c.originalIndex
+                    const notaItem = notas[idx]
+                    const notaVal = notaItem?.nota ?? 0
+                    return (
+                      <div key={c.criterio} className="space-y-2">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <label
+                              htmlFor={`nota-${idx}`}
+                              className="text-sm font-medium text-slate-800"
+                            >
+                              {c.criterio}
+                            </label>
+                            {c.descricao && (
+                              <p className="text-xs text-slate-500 mt-0.5 leading-snug">{c.descricao}</p>
+                            )}
+                          </div>
+                          <span className="shrink-0 text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full mt-0.5">
+                            peso {c.peso}
+                          </span>
+                        </div>
 
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="range"
-                      id={`nota-${idx}`}
-                      min={0}
-                      max={c.notaMax}
-                      step={0.5}
-                      value={notaVal}
-                      onChange={(e) => updateNota(c.criterio, parseFloat(e.target.value))}
-                      className="flex-1 h-1.5 accent-brand-600 cursor-pointer"
-                      aria-label={`Nota para ${c.criterio}`}
-                    />
-                    <div className="flex items-center gap-1.5">
-                      <input
-                        type="number"
-                        min={0}
-                        max={c.notaMax}
-                        step={0.5}
-                        value={notaVal}
-                        onChange={(e) => {
-                          const v = parseFloat(e.target.value)
-                          if (!isNaN(v)) updateNota(c.criterio, Math.min(c.notaMax, Math.max(0, v)))
-                        }}
-                        className={[
-                          'w-14 text-center text-sm font-bold rounded-lg border px-1.5 py-1 tabular-nums',
-                          'focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-1',
-                          notaVal >= 7
-                            ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
-                            : notaVal >= 5
-                              ? 'border-amber-200 bg-amber-50 text-amber-800'
-                              : 'border-slate-200 bg-slate-50 text-slate-700',
-                        ].join(' ')}
-                        aria-label={`Valor numérico para ${c.criterio}`}
-                      />
-                      <span className="text-xs text-slate-400">/{c.notaMax}</span>
-                    </div>
-                  </div>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="range"
+                            id={`nota-${idx}`}
+                            min={0}
+                            max={c.notaMax}
+                            step={0.5}
+                            value={notaVal}
+                            onChange={(e) => updateNota(c.criterio, parseFloat(e.target.value))}
+                            className="flex-1 h-1.5 accent-brand-600 cursor-pointer"
+                            aria-label={`Nota para ${c.criterio}`}
+                          />
+                          <div className="flex items-center gap-1.5">
+                            <input
+                              type="number"
+                              min={0}
+                              max={c.notaMax}
+                              step={0.5}
+                              value={notaVal}
+                              onChange={(e) => {
+                                const v = parseFloat(e.target.value)
+                                if (!isNaN(v)) updateNota(c.criterio, Math.min(c.notaMax, Math.max(0, v)))
+                              }}
+                              className={[
+                                'w-14 text-center text-sm font-bold rounded-lg border px-1.5 py-1 tabular-nums',
+                                'focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-1',
+                                notaVal >= 7
+                                  ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                                  : notaVal >= 5
+                                    ? 'border-amber-200 bg-amber-50 text-amber-800'
+                                    : 'border-slate-200 bg-slate-50 text-slate-700',
+                              ].join(' ')}
+                              aria-label={`Valor numérico para ${c.criterio}`}
+                            />
+                            <span className="text-xs text-slate-400">/{c.notaMax}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
-              )
-            })}
+              </div>
+            ))}
           </div>
 
           {/* Parecer */}

@@ -37,4 +37,5 @@ export type CriterioAvaliacao = {
   peso: number
   descricao?: string
   notaMax: number
+  bloco?: string
 }
