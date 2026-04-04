@@ -32,6 +32,7 @@ export default async function NovaInscricaoPage({ searchParams }: Props) {
       titulo: true,
       categorias: true,
       camposFormulario: true,
+      tiposAnexo: true,
       status: true,
     },
   })
@@ -80,12 +81,15 @@ export default async function NovaInscricaoPage({ searchParams }: Props) {
           camposFormulario: camposFormulario as Array<{
             nome: string
             label: string
-            tipo: 'texto' | 'textarea' | 'select' | 'numero' | 'data' | 'arquivo'
+            tipo: 'texto' | 'textarea' | 'select' | 'multiselect' | 'numero' | 'data' | 'arquivo'
             obrigatorio?: boolean
             placeholder?: string
             opcoes?: string[]
             hint?: string
           }>,
+          tiposAnexo: Array.isArray(edital.tiposAnexo)
+            ? (edital.tiposAnexo as Array<{ tipo: string; label: string; obrigatorio: boolean }>)
+            : null,
         }}
       />
     </div>

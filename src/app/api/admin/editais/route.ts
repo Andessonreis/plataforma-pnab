@@ -57,6 +57,25 @@ const editalSchema = z.object({
   camposFormulario: z.array(z.record(z.string(), z.unknown())).default([]),
   vagasContemplados: z.number().int().min(1).nullable().optional(),
   vagasSuplentes: z.number().int().min(0).nullable().optional(),
+  criteriosAvaliacao: z.array(z.object({
+    criterio: z.string().min(1),
+    peso: z.number().min(0),
+    notaMax: z.number().min(0),
+    descricao: z.string().optional(),
+    bloco: z.string().optional(),
+  })).nullable().optional(),
+  tiposAnexo: z.array(z.object({
+    tipo: z.string().min(1),
+    label: z.string().min(1),
+    obrigatorio: z.boolean().default(false),
+  })).nullable().optional(),
+  notaMinima: z.number().min(0).nullable().optional(),
+  desempate: z.array(z.object({
+    descricao: z.string().min(1),
+    tipo: z.enum(['bloco', 'criterio']),
+    ref: z.string().min(1),
+    direcao: z.enum(['desc', 'asc']).default('desc'),
+  })).nullable().optional(),
 })
 
 // ── Gerar slug a partir do titulo ───────────────────────────────────────────
@@ -115,6 +134,10 @@ export async function POST(req: NextRequest) {
         camposFormulario: data.camposFormulario as unknown as import('@prisma/client').Prisma.InputJsonValue,
         vagasContemplados: data.vagasContemplados ?? null,
         vagasSuplentes: data.vagasSuplentes ?? null,
+        criteriosAvaliacao: (data.criteriosAvaliacao ?? null) as unknown as import('@prisma/client').Prisma.InputJsonValue,
+        tiposAnexo: (data.tiposAnexo ?? null) as unknown as import('@prisma/client').Prisma.InputJsonValue,
+        notaMinima: data.notaMinima ?? null,
+        desempate: (data.desempate ?? null) as unknown as import('@prisma/client').Prisma.InputJsonValue,
         ...(data.status !== 'RASCUNHO' ? { publishedAt: new Date() } : {}),
       },
     })
@@ -247,6 +270,10 @@ export async function PUT(req: NextRequest) {
         camposFormulario: data.camposFormulario as unknown as import('@prisma/client').Prisma.InputJsonValue,
         vagasContemplados: data.vagasContemplados ?? null,
         vagasSuplentes: data.vagasSuplentes ?? null,
+        criteriosAvaliacao: (data.criteriosAvaliacao ?? null) as unknown as import('@prisma/client').Prisma.InputJsonValue,
+        tiposAnexo: (data.tiposAnexo ?? null) as unknown as import('@prisma/client').Prisma.InputJsonValue,
+        notaMinima: data.notaMinima ?? null,
+        desempate: (data.desempate ?? null) as unknown as import('@prisma/client').Prisma.InputJsonValue,
         ...(publishedAt ? { publishedAt } : {}),
       },
     })

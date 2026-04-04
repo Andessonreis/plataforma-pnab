@@ -197,6 +197,12 @@ model Edital {
   camposFormulario    Json         @default("[]")
   // Critérios de avaliação: [{ criterio: string, peso: number, descricao?: string, notaMax: number }]
   criteriosAvaliacao  Json         @default("[]")
+  // Tipos de anexo aceitos: [{ tipo: string, label: string, obrigatorio: boolean }]
+  tiposAnexo          Json?
+  // Nota mínima para classificação (null = sem corte). Escala 0-10.
+  notaMinima          Decimal?     @db.Decimal(5, 2)
+  // Regras de desempate: [{ descricao: string, tipo: 'bloco'|'criterio', ref: string, direcao: 'desc'|'asc' }]
+  desempate           Json?
   // Versão acessível do edital em HTML (WCAG AA)
   conteudoAcessivel   String?
   // Número de vagas para contemplados (null = ilimitado)

@@ -8,6 +8,8 @@ import { AcessivelEditor } from './acessivel-editor'
 import type { EditalStatus } from '@prisma/client'
 import type { CronogramaItem } from '@/types/cronograma'
 import { migrateLegacyCronograma } from '@/lib/utils/cronograma'
+import { RelatorioFinalButton } from './relatorio-final-button'
+import type { CriterioAvaliacao } from '@/lib/avaliacao-criterios'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -25,11 +27,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 interface CampoFormulario {
   nome: string
   label: string
-  tipo: 'texto' | 'textarea' | 'select' | 'numero' | 'data' | 'arquivo'
+  tipo: 'texto' | 'textarea' | 'select' | 'multiselect' | 'numero' | 'data' | 'arquivo'
   obrigatorio: boolean
   placeholder: string
   opcoes: string[]
   hint: string
+}
+
+interface TipoAnexo {
+  tipo: string
+  label: string
+  obrigatorio: boolean
+}
+
+interface RegraDesempate {
+  descricao: string
+  tipo: 'bloco' | 'criterio'
+  ref: string
+  direcao: 'desc' | 'asc'
 }
 
 export default async function EditarEditalPage({ params }: Props) {
@@ -76,6 +91,13 @@ export default async function EditarEditalPage({ params }: Props) {
           status: edital.status as EditalStatus,
           vagasContemplados: edital.vagasContemplados,
           vagasSuplentes: edital.vagasSuplentes,
+          criteriosAvaliacao: (Array.isArray(edital.criteriosAvaliacao)
+            ? edital.criteriosAvaliacao : []) as CriterioAvaliacao[],
+          tiposAnexo: (Array.isArray(edital.tiposAnexo)
+            ? edital.tiposAnexo : null) as TipoAnexo[] | null,
+          notaMinima: edital.notaMinima ? Number(edital.notaMinima) : null,
+          desempate: (Array.isArray(edital.desempate)
+            ? edital.desempate : null) as RegraDesempate[] | null,
         }}
       />
 
@@ -105,6 +127,9 @@ export default async function EditarEditalPage({ params }: Props) {
           </svg>
           Gerar Listas
         </Link>
+        {(['RESULTADO_FINAL', 'ENCERRADO'] as EditalStatus[]).includes(edital.status as EditalStatus) && (
+          <RelatorioFinalButton editalId={edital.id} />
+        )}
       </div>
     </section>
   )

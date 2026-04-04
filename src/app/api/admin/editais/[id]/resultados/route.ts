@@ -111,7 +111,7 @@ export async function POST(
 
     const edital = await prisma.edital.findUnique({
       where: { id },
-      select: { id: true, titulo: true, slug: true, status: true, vagasContemplados: true, vagasSuplentes: true },
+      select: { id: true, titulo: true, slug: true, status: true, vagasContemplados: true, vagasSuplentes: true, notaMinima: true, desempate: true },
     })
 
     if (!edital) {
@@ -121,8 +121,13 @@ export async function POST(
       )
     }
 
+    // Parse regras de desempate do edital
+    const desempateRules = Array.isArray(edital.desempate) ? edital.desempate as {
+      descricao: string; tipo: 'bloco' | 'criterio'; ref: string; direcao: 'desc' | 'asc'
+    }[] : null
+
     // Calcula notas finais
-    const resultados = await calculateResults(id)
+    const resultados = await calculateResults(id, desempateRules)
 
     if (resultados.length === 0) {
       return NextResponse.json(
@@ -135,6 +140,7 @@ export async function POST(
     await saveResults(resultados, fase, {
       contemplados: edital.vagasContemplados,
       suplentes: edital.vagasSuplentes,
+      notaMinima: edital.notaMinima ? Number(edital.notaMinima) : null,
     })
 
     // Atualiza status do edital

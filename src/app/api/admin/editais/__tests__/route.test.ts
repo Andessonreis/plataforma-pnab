@@ -95,6 +95,50 @@ describe('POST /api/admin/editais', () => {
     expect(body.slug).toContain('edital-de-fomento-cultural')
   })
 
+  it('com criteriosAvaliacao no POST salva corretamente', async () => {
+    const criterios = [
+      { criterio: 'Critério 1', peso: 10, notaMax: 10, bloco: 'Bloco 1', descricao: 'Descrição do critério' },
+      { criterio: 'Critério 2', peso: 5, notaMax: 5, bloco: 'Bloco 1' },
+      { criterio: 'Critério 3', peso: 3, notaMax: 3, bloco: 'Bloco 2' },
+    ]
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockPrisma.edital.findUnique.mockResolvedValue(null)
+    mockPrisma.edital.create.mockResolvedValue({
+      id: 'new-id',
+      titulo: validEditalBody.titulo,
+      slug: 'edital-2025',
+      status: 'RASCUNHO',
+    } as never)
+
+    const res = await POST(makePostRequest({ ...validEditalBody, criteriosAvaliacao: criterios }))
+
+    expect(res.status).toBe(201)
+    expect(mockPrisma.edital.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        criteriosAvaliacao: criterios,
+      }),
+    })
+  })
+
+  it('sem criteriosAvaliacao salva null', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockPrisma.edital.findUnique.mockResolvedValue(null)
+    mockPrisma.edital.create.mockResolvedValue({
+      id: 'new-id',
+      titulo: validEditalBody.titulo,
+      slug: 'edital-2025',
+      status: 'RASCUNHO',
+    } as never)
+
+    await POST(makePostRequest(validEditalBody))
+
+    expect(mockPrisma.edital.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        criteriosAvaliacao: null,
+      }),
+    })
+  })
+
   it('com vagasContemplados salva corretamente (GAP 4)', async () => {
     mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
     mockPrisma.edital.findUnique.mockResolvedValue(null)
@@ -179,6 +223,175 @@ describe('PUT /api/admin/editais', () => {
       data: expect.objectContaining({
         vagasContemplados: 10,
         vagasSuplentes: 5,
+      }),
+    })
+  })
+
+  it('com criteriosAvaliacao customizados salva corretamente', async () => {
+    const criteriosCustom = [
+      { criterio: 'Critério A', peso: 10, notaMax: 10, bloco: 'Bloco 1' },
+      { criterio: 'Critério B', peso: 5, notaMax: 5, descricao: 'Desc B', bloco: 'Bloco 2' },
+    ]
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockPrisma.edital.findUnique.mockResolvedValue({
+      id: 'ed-1',
+      titulo: validEditalBody.titulo,
+      slug: 'edital-2025',
+    } as never)
+    mockPrisma.edital.update.mockResolvedValue({
+      id: 'ed-1',
+      titulo: validEditalBody.titulo,
+      slug: 'edital-2025',
+    } as never)
+
+    await PUT(makePutRequest({ ...validEditalBody, criteriosAvaliacao: criteriosCustom }, 'ed-1'))
+
+    expect(mockPrisma.edital.update).toHaveBeenCalledWith({
+      where: { id: 'ed-1' },
+      data: expect.objectContaining({
+        criteriosAvaliacao: criteriosCustom,
+      }),
+    })
+  })
+
+  it('criteriosAvaliacao null limpa critérios customizados', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockPrisma.edital.findUnique.mockResolvedValue({
+      id: 'ed-1',
+      titulo: validEditalBody.titulo,
+      slug: 'edital-2025',
+    } as never)
+    mockPrisma.edital.update.mockResolvedValue({
+      id: 'ed-1',
+      titulo: validEditalBody.titulo,
+      slug: 'edital-2025',
+    } as never)
+
+    await PUT(makePutRequest({ ...validEditalBody, criteriosAvaliacao: null }, 'ed-1'))
+
+    expect(mockPrisma.edital.update).toHaveBeenCalledWith({
+      where: { id: 'ed-1' },
+      data: expect.objectContaining({
+        criteriosAvaliacao: null,
+      }),
+    })
+  })
+
+  it('criteriosAvaliacao com critério inválido (sem nome) → 400', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockPrisma.edital.findUnique.mockResolvedValue({
+      id: 'ed-1',
+      titulo: validEditalBody.titulo,
+      slug: 'edital-2025',
+    } as never)
+
+    const criteriosInvalidos = [
+      { criterio: '', peso: 10, notaMax: 10 }, // criterio vazio
+    ]
+
+    const res = await PUT(makePutRequest({ ...validEditalBody, criteriosAvaliacao: criteriosInvalidos }, 'ed-1'))
+
+    expect(res.status).toBe(400)
+  })
+
+  it('com tiposAnexo salva corretamente', async () => {
+    const tiposAnexo = [
+      { tipo: 'CERTIFICADO', label: 'Certificado PNCV', obrigatorio: true },
+      { tipo: 'PLANO_TRABALHO', label: 'Plano de Trabalho', obrigatorio: false },
+    ]
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockPrisma.edital.findUnique.mockResolvedValue({
+      id: 'ed-1',
+      titulo: validEditalBody.titulo,
+      slug: 'edital-2025',
+    } as never)
+    mockPrisma.edital.update.mockResolvedValue({
+      id: 'ed-1',
+      titulo: validEditalBody.titulo,
+      slug: 'edital-2025',
+    } as never)
+
+    await PUT(makePutRequest({ ...validEditalBody, tiposAnexo }, 'ed-1'))
+
+    expect(mockPrisma.edital.update).toHaveBeenCalledWith({
+      where: { id: 'ed-1' },
+      data: expect.objectContaining({
+        tiposAnexo,
+      }),
+    })
+  })
+
+  it('com notaMinima salva corretamente', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockPrisma.edital.findUnique.mockResolvedValue({
+      id: 'ed-1',
+      titulo: validEditalBody.titulo,
+      slug: 'edital-2025',
+    } as never)
+    mockPrisma.edital.update.mockResolvedValue({
+      id: 'ed-1',
+      titulo: validEditalBody.titulo,
+      slug: 'edital-2025',
+    } as never)
+
+    await PUT(makePutRequest({ ...validEditalBody, notaMinima: 3.0 }, 'ed-1'))
+
+    expect(mockPrisma.edital.update).toHaveBeenCalledWith({
+      where: { id: 'ed-1' },
+      data: expect.objectContaining({
+        notaMinima: 3.0,
+      }),
+    })
+  })
+
+  it('com desempate salva corretamente', async () => {
+    const desempate = [
+      { descricao: 'Maior nota no Bloco 1', tipo: 'bloco', ref: 'Bloco 1', direcao: 'desc' },
+      { descricao: 'Maior nota no Bloco 2', tipo: 'bloco', ref: 'Bloco 2', direcao: 'desc' },
+    ]
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockPrisma.edital.findUnique.mockResolvedValue({
+      id: 'ed-1',
+      titulo: validEditalBody.titulo,
+      slug: 'edital-2025',
+    } as never)
+    mockPrisma.edital.update.mockResolvedValue({
+      id: 'ed-1',
+      titulo: validEditalBody.titulo,
+      slug: 'edital-2025',
+    } as never)
+
+    await PUT(makePutRequest({ ...validEditalBody, desempate }, 'ed-1'))
+
+    expect(mockPrisma.edital.update).toHaveBeenCalledWith({
+      where: { id: 'ed-1' },
+      data: expect.objectContaining({
+        desempate,
+      }),
+    })
+  })
+
+  it('tiposAnexo null limpa tipos customizados', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockPrisma.edital.findUnique.mockResolvedValue({
+      id: 'ed-1',
+      titulo: validEditalBody.titulo,
+      slug: 'edital-2025',
+    } as never)
+    mockPrisma.edital.update.mockResolvedValue({
+      id: 'ed-1',
+      titulo: validEditalBody.titulo,
+      slug: 'edital-2025',
+    } as never)
+
+    await PUT(makePutRequest({ ...validEditalBody, tiposAnexo: null, notaMinima: null, desempate: null }, 'ed-1'))
+
+    expect(mockPrisma.edital.update).toHaveBeenCalledWith({
+      where: { id: 'ed-1' },
+      data: expect.objectContaining({
+        tiposAnexo: null,
+        notaMinima: null,
+        desempate: null,
       }),
     })
   })

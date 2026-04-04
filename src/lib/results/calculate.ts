@@ -9,12 +9,20 @@ interface NotaAvaliacao {
   peso?: number
 }
 
+interface RegraDesempate {
+  descricao: string
+  tipo: 'bloco' | 'criterio'
+  ref: string
+  direcao: 'desc' | 'asc'
+}
+
 interface ResultadoInscricao {
   inscricaoId: string
   proponenteNome: string
   categoria: string | null
   notaFinal: number
   totalAvaliacoes: number
+  scoresBlocos?: Record<string, number>
 }
 
 /**
@@ -27,7 +35,10 @@ interface ResultadoInscricao {
  * 4. A nota final da inscrição é a média das notas dos avaliadores
  * 5. Ordena por nota final descendente
  */
-export async function calculateResults(editalId: string): Promise<ResultadoInscricao[]> {
+export async function calculateResults(
+  editalId: string,
+  desempateRules?: RegraDesempate[] | null,
+): Promise<ResultadoInscricao[]> {
   // Busca critérios do edital
   const edital = await prisma.edital.findUnique({
     where: { id: editalId },
@@ -37,6 +48,10 @@ export async function calculateResults(editalId: string): Promise<ResultadoInscr
   if (!edital) throw new Error(`Edital ${editalId} não encontrado`)
 
   const criterios = parseCriterios(edital.criteriosAvaliacao)
+
+  // Identificar blocos únicos se temos regras de desempate
+  const blocosDesempate = desempateRules?.filter(r => r.tipo === 'bloco').map(r => r.ref) ?? []
+  const criteriosDesempate = desempateRules?.filter(r => r.tipo === 'criterio').map(r => r.ref) ?? []
 
   // Busca inscrições avaliadas
   const inscricoes = await prisma.inscricao.findMany({
@@ -69,13 +84,25 @@ export async function calculateResults(editalId: string): Promise<ResultadoInscr
     }
 
     // Calcula média ponderada de cada avaliação
-    const notasAvaliadores = inscricao.avaliacoes.map((avaliacao) => {
-      const notas = parseNotas(avaliacao.notas)
-      return calculateWeightedAverage(notas, criterios)
-    })
+    const allNotas = inscricao.avaliacoes.map((avaliacao) => parseNotas(avaliacao.notas))
+    const notasAvaliadores = allNotas.map((notas) => calculateWeightedAverage(notas, criterios))
 
     // Nota final = média das notas dos avaliadores
     const notaFinal = notasAvaliadores.reduce((sum, n) => sum + n, 0) / notasAvaliadores.length
+
+    // Calcula scores de blocos/critérios para desempate (se necessário)
+    let scoresBlocos: Record<string, number> | undefined
+    if (desempateRules && desempateRules.length > 0) {
+      scoresBlocos = {}
+      for (const blocoRef of blocosDesempate) {
+        const scores = allNotas.map(notas => calculateBlockScore(notas, criterios, blocoRef))
+        scoresBlocos[blocoRef] = scores.reduce((s, n) => s + n, 0) / scores.length
+      }
+      for (const critRef of criteriosDesempate) {
+        const scores = allNotas.map(notas => calculateCriterioScore(notas, criterios, critRef))
+        scoresBlocos[critRef] = scores.reduce((s, n) => s + n, 0) / scores.length
+      }
+    }
 
     resultados.push({
       inscricaoId: inscricao.id,
@@ -83,11 +110,26 @@ export async function calculateResults(editalId: string): Promise<ResultadoInscr
       categoria: inscricao.categoria,
       notaFinal: Math.round(notaFinal * 100) / 100,
       totalAvaliacoes: inscricao.avaliacoes.length,
+      scoresBlocos,
     })
   }
 
-  // Ordena por nota final (descendente)
-  resultados.sort((a, b) => b.notaFinal - a.notaFinal)
+  // Ordena por nota final (descendente) + desempate multi-nível
+  resultados.sort((a, b) => {
+    const diff = b.notaFinal - a.notaFinal
+    if (diff !== 0) return diff
+
+    if (desempateRules && desempateRules.length > 0) {
+      for (const rule of desempateRules) {
+        const scoreA = a.scoresBlocos?.[rule.ref] ?? 0
+        const scoreB = b.scoresBlocos?.[rule.ref] ?? 0
+        const d = rule.direcao === 'desc' ? scoreB - scoreA : scoreA - scoreB
+        if (Math.abs(d) > 0.001) return d
+      }
+    }
+
+    return 0
+  })
 
   return resultados
 }
@@ -95,6 +137,7 @@ export async function calculateResults(editalId: string): Promise<ResultadoInscr
 export interface VagasConfig {
   contemplados?: number | null
   suplentes?: number | null
+  notaMinima?: number | null
 }
 
 /**
@@ -116,6 +159,9 @@ export async function saveResults(
       const temNota = r.notaFinal > 0 && r.totalAvaliacoes > 0
 
       if (!temNota) {
+        status = 'NAO_CONTEMPLADA'
+      } else if (vagas?.notaMinima != null && r.notaFinal < vagas.notaMinima) {
+        // Abaixo da nota mínima para classificação
         status = 'NAO_CONTEMPLADA'
       } else if (vagas?.contemplados != null) {
         // Ranking com vagas definidas (resultados já vêm ordenados por nota desc)
@@ -164,6 +210,29 @@ export function parseNotas(raw: unknown): NotaAvaliacao[] {
   }
   if (!Array.isArray(data)) return []
   return data as NotaAvaliacao[]
+}
+
+export function calculateBlockScore(
+  notas: NotaAvaliacao[],
+  criterios: CriterioAvaliacao[],
+  blocoRef: string,
+): number {
+  const critDoBloco = criterios.filter(c => c.bloco === blocoRef)
+  if (critDoBloco.length === 0) return 0
+  const notasDoBloco = notas.filter(n => critDoBloco.some(c => c.criterio === n.criterio))
+  return calculateWeightedAverage(notasDoBloco, critDoBloco)
+}
+
+export function calculateCriterioScore(
+  notas: NotaAvaliacao[],
+  criterios: CriterioAvaliacao[],
+  criterioRef: string,
+): number {
+  const criterio = criterios.find(c => c.criterio === criterioRef)
+  if (!criterio) return 0
+  const nota = notas.find(n => n.criterio === criterioRef)
+  if (!nota) return 0
+  return calculateWeightedAverage([nota], [criterio])
 }
 
 export function calculateWeightedAverage(notas: NotaAvaliacao[], criterios: CriterioAvaliacao[]): number {

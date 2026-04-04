@@ -12,7 +12,7 @@ import { resolveCharLimits } from '@/lib/campo-limits'
 interface CampoFormulario {
   nome: string
   label: string
-  tipo: 'texto' | 'text' | 'textarea' | 'select' | 'numero' | 'number' | 'moeda' | 'currency' | 'data' | 'date' | 'arquivo'
+  tipo: 'texto' | 'text' | 'textarea' | 'select' | 'multiselect' | 'numero' | 'number' | 'moeda' | 'currency' | 'data' | 'date' | 'arquivo'
   obrigatorio?: boolean
   placeholder?: string
   opcoes?: string[]
@@ -57,11 +57,18 @@ interface Anexo {
   createdAt: string
 }
 
+interface TipoAnexoEdital {
+  tipo: string
+  label: string
+  obrigatorio: boolean
+}
+
 interface EditalInfo {
   id: string
   titulo: string
   categorias: string[]
   camposFormulario: CampoFormulario[]
+  tiposAnexo?: TipoAnexoEdital[] | null
 }
 
 interface InscricaoFormProps {
@@ -399,6 +406,36 @@ export default function InscricaoForm({
             hint={campo.hint}
           />
         )
+      case 'multiselect': {
+        const selected = Array.isArray(campos[campo.nome]) ? campos[campo.nome] as string[] : []
+        return (
+          <div key={campo.nome}>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              {campo.label}
+              {campo.obrigatorio && <span className="text-red-500 ml-1">*</span>}
+            </label>
+            {campo.hint && <p className="text-xs text-slate-500 mb-2">{campo.hint}</p>}
+            <div className="space-y-2">
+              {(campo.opcoes || []).map((op) => (
+                <label key={op} className="flex items-center gap-2 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={selected.includes(op)}
+                    onChange={(e) => {
+                      const next = e.target.checked
+                        ? [...selected, op]
+                        : selected.filter((s) => s !== op)
+                      updateCampo(campo.nome, next)
+                    }}
+                    className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                  />
+                  {op}
+                </label>
+              ))}
+            </div>
+          </div>
+        )
+      }
       case 'arquivo':
         // Arquivos são tratados na etapa de anexos
         return null
@@ -513,7 +550,7 @@ export default function InscricaoForm({
           </p>
 
           {/* Upload */}
-          <AnexoUpload onUpload={handleUpload} uploading={uploading} />
+          <AnexoUpload onUpload={handleUpload} uploading={uploading} tiposAnexoEdital={edital.tiposAnexo} />
 
           {/* Lista de anexos */}
           {anexos.length > 0 && (
@@ -579,7 +616,8 @@ export default function InscricaoForm({
                   .filter((c) => c.tipo !== 'arquivo')
                   .map((campo) => {
                     const valor = campos[campo.nome]
-                    const isEmpty = valor === undefined || valor === null || valor === ''
+                    const isEmpty = valor === undefined || valor === null || valor === '' ||
+                      (Array.isArray(valor) && valor.length === 0)
                     return (
                       <div key={campo.nome} className="border-b border-slate-100 pb-3">
                         <dt className="text-sm text-slate-500">
@@ -590,6 +628,7 @@ export default function InscricaoForm({
                           {isEmpty
                             ? 'Não preenchido'
                             : (() => {
+                              if (Array.isArray(valor)) return (valor as string[]).join(', ')
                               const isCurrency =
                                 campo.tipo === 'moeda' ||
                                 campo.tipo === 'currency' ||
@@ -622,6 +661,20 @@ export default function InscricaoForm({
                   ))}
                 </ul>
               )}
+              {/* Alerta de anexos obrigatórios faltantes */}
+              {(() => {
+                const obrigatorios = edital.tiposAnexo?.filter(t => t.obrigatorio) ?? []
+                const faltantes = obrigatorios.filter(t =>
+                  !anexos.some(a => a.tipo === t.tipo)
+                )
+                if (faltantes.length === 0) return null
+                return (
+                  <div className="mt-3 rounded-lg bg-amber-50 border border-amber-200 p-3 text-sm text-amber-700" role="alert">
+                    <strong>Anexos obrigatórios faltantes:</strong>{' '}
+                    {faltantes.map(f => f.label).join(', ')}
+                  </div>
+                )
+              })()}
             </div>
           </div>
         </Card>
@@ -661,14 +714,27 @@ export default function InscricaoForm({
   )
 }
 
+// Tipos de anexo padrão (fallback quando o edital não define tipos customizados)
+const TIPOS_ANEXO_PADRAO: SelectOption[] = [
+  { value: 'DOCUMENTO_PESSOAL', label: 'Documento Pessoal' },
+  { value: 'COMPROVANTE_ENDERECO', label: 'Comprovante de Endereço' },
+  { value: 'PORTFOLIO', label: 'Portfólio / Currículo' },
+  { value: 'PROJETO', label: 'Projeto / Proposta' },
+  { value: 'ORCAMENTO', label: 'Orçamento' },
+  { value: 'DECLARACAO', label: 'Declaração' },
+  { value: 'OUTRO', label: 'Outro' },
+]
+
 // ─── Componente de Upload ────────────────────────────────────────────────────
 
 function AnexoUpload({
   onUpload,
   uploading,
+  tiposAnexoEdital,
 }: {
   onUpload: (file: File, tipo: string, titulo: string) => Promise<boolean>
   uploading: boolean
+  tiposAnexoEdital?: TipoAnexoEdital[] | null
 }) {
   const [tipo, setTipo] = useState('')
   const [titulo, setTitulo] = useState('')
@@ -677,15 +743,9 @@ function AnexoUpload({
   const [localError, setLocalError] = useState('')
   const [localSuccess, setLocalSuccess] = useState('')
 
-  const tipoOptions: SelectOption[] = [
-    { value: 'DOCUMENTO_PESSOAL', label: 'Documento Pessoal' },
-    { value: 'COMPROVANTE_ENDERECO', label: 'Comprovante de Endereço' },
-    { value: 'PORTFOLIO', label: 'Portfólio / Currículo' },
-    { value: 'PROJETO', label: 'Projeto / Proposta' },
-    { value: 'ORCAMENTO', label: 'Orçamento' },
-    { value: 'DECLARACAO', label: 'Declaração' },
-    { value: 'OUTRO', label: 'Outro' },
-  ]
+  const tipoOptions: SelectOption[] = tiposAnexoEdital?.length
+    ? tiposAnexoEdital.map(t => ({ value: t.tipo, label: t.label }))
+    : TIPOS_ANEXO_PADRAO
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]

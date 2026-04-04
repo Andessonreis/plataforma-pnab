@@ -10,6 +10,7 @@ import { CRONOGRAMA_FASES_FORMULARIO } from '@/types/cronograma'
 import { editalCronogramaLabel } from '@/lib/status-maps'
 import { extractFases, extractCustomItems } from '@/lib/utils/cronograma'
 import { CHAR_LIMIT_DEFAULTS } from '@/lib/campo-limits'
+import type { CriterioAvaliacao } from '@/lib/avaliacao-criterios'
 
 interface FaseState {
   dataHora: string
@@ -25,13 +26,26 @@ interface CustomItemState {
 interface CampoFormulario {
   nome: string
   label: string
-  tipo: 'texto' | 'textarea' | 'select' | 'numero' | 'data' | 'arquivo'
+  tipo: 'texto' | 'textarea' | 'select' | 'multiselect' | 'numero' | 'data' | 'arquivo'
   obrigatorio: boolean
   placeholder: string
   opcoes: string[]
   hint: string
   minLength?: number | null
   maxLength?: number | null
+}
+
+interface TipoAnexo {
+  tipo: string
+  label: string
+  obrigatorio: boolean
+}
+
+interface RegraDesempate {
+  descricao: string
+  tipo: 'bloco' | 'criterio'
+  ref: string
+  direcao: 'desc' | 'asc'
 }
 
 interface EditalFormProps {
@@ -49,6 +63,10 @@ interface EditalFormProps {
     status: EditalStatus
     vagasContemplados: number | null
     vagasSuplentes: number | null
+    criteriosAvaliacao?: CriterioAvaliacao[]
+    tiposAnexo?: TipoAnexo[] | null
+    notaMinima?: number | null
+    desempate?: RegraDesempate[] | null
   }
 }
 
@@ -166,6 +184,18 @@ export function EditalForm({ initialData }: EditalFormProps) {
   const [camposFormulario, setCamposFormulario] = useState<CampoFormulario[]>(
     initialData?.camposFormulario ?? []
   )
+  const [criteriosAvaliacao, setCriteriosAvaliacao] = useState<CriterioAvaliacao[]>(
+    initialData?.criteriosAvaliacao ?? []
+  )
+  const [tiposAnexo, setTiposAnexo] = useState<TipoAnexo[]>(
+    initialData?.tiposAnexo ?? []
+  )
+  const [notaMinima, setNotaMinima] = useState(
+    initialData?.notaMinima != null ? String(initialData.notaMinima) : ''
+  )
+  const [desempate, setDesempate] = useState<RegraDesempate[]>(
+    initialData?.desempate ?? []
+  )
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -209,6 +239,33 @@ export function EditalForm({ initialData }: EditalFormProps) {
 
   function updateCampoFormulario(index: number, field: keyof CampoFormulario, value: unknown) {
     setCamposFormulario(prev =>
+      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
+    )
+  }
+
+  function addCriterio() {
+    setCriteriosAvaliacao(prev => [
+      ...prev,
+      { criterio: '', peso: 0, notaMax: 0, descricao: '', bloco: '' },
+    ])
+  }
+
+  function duplicarUltimoCriterio() {
+    setCriteriosAvaliacao(prev => {
+      const last = prev[prev.length - 1]
+      return [
+        ...prev,
+        { criterio: '', peso: 0, notaMax: 0, descricao: '', bloco: last?.bloco ?? '' },
+      ]
+    })
+  }
+
+  function removeCriterio(index: number) {
+    setCriteriosAvaliacao(prev => prev.filter((_, i) => i !== index))
+  }
+
+  function updateCriterio(index: number, field: keyof CriterioAvaliacao, value: unknown) {
+    setCriteriosAvaliacao(prev =>
       prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
     )
   }
@@ -266,6 +323,10 @@ export function EditalForm({ initialData }: EditalFormProps) {
       camposFormulario: camposFiltrados,
       vagasContemplados: vagasContemplados.trim() ? Number(vagasContemplados) : null,
       vagasSuplentes: vagasSuplentes.trim() ? Number(vagasSuplentes) : null,
+      criteriosAvaliacao: criteriosAvaliacao.length > 0 ? criteriosAvaliacao : null,
+      tiposAnexo: tiposAnexo.length > 0 ? tiposAnexo : null,
+      notaMinima: notaMinima.trim() ? Number(notaMinima) : null,
+      desempate: desempate.length > 0 ? desempate : null,
     }
 
     try {
@@ -521,6 +582,7 @@ export function EditalForm({ initialData }: EditalFormProps) {
                       { value: 'numero', label: 'Número' },
                       { value: 'data', label: 'Data' },
                       { value: 'select', label: 'Seleção (dropdown)' },
+                      { value: 'multiselect', label: 'Seleção múltipla' },
                       { value: 'arquivo', label: 'Arquivo' },
                     ]}
                     onChange={e => {
@@ -553,7 +615,7 @@ export function EditalForm({ initialData }: EditalFormProps) {
                   />
                 </div>
 
-                {campo.tipo === 'select' && (
+                {(campo.tipo === 'select' || campo.tipo === 'multiselect') && (
                   <Input
                     label="Opções (separadas por vírgula)"
                     value={campo.opcoes.join(', ')}
@@ -613,10 +675,316 @@ export function EditalForm({ initialData }: EditalFormProps) {
         )}
       </Card>
 
-      {/* Secao 5 - Arquivos */}
+      {/* Secao 5 - Critérios de Avaliação */}
+      <Card padding="sm" className="sm:p-6">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+            <h2 className="text-base sm:text-lg font-semibold text-slate-800">
+              5. Critérios de Avaliação
+            </h2>
+            {criteriosAvaliacao.length === 0 ? (
+              <span className="inline-flex items-center text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
+                Usando critérios padrão PNAB (5)
+              </span>
+            ) : (
+              <span className="inline-flex items-center text-xs font-medium text-brand-700 bg-brand-50 px-2.5 py-0.5 rounded-full">
+                {criteriosAvaliacao.length} critérios customizados
+              </span>
+            )}
+          </div>
+          <div className="flex gap-2">
+            {criteriosAvaliacao.length > 0 && (
+              <Button type="button" variant="outline" size="sm" onClick={duplicarUltimoCriterio}>
+                + Duplicar último
+              </Button>
+            )}
+            <Button type="button" variant="outline" size="sm" onClick={addCriterio}>
+              + Adicionar critério
+            </Button>
+          </div>
+        </div>
+        <p className="text-sm text-slate-500 mb-4">
+          Configure critérios específicos para este edital. Se vazio, serão usados os 5 critérios padrão PNAB.
+        </p>
+
+        {criteriosAvaliacao.length === 0 ? (
+          <p className="text-sm text-slate-500 text-center py-4">
+            Nenhum critério customizado. O edital usará os critérios padrão PNAB.
+          </p>
+        ) : (
+          <>
+            <div className="space-y-4">
+              {criteriosAvaliacao.map((crit, idx) => (
+                <div key={idx} className="rounded-lg border border-slate-200 bg-white p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-xs font-medium text-slate-400">Critério {idx + 1}</span>
+                    <Button
+                      type="button"
+                      variant="danger"
+                      size="sm"
+                      onClick={() => removeCriterio(idx)}
+                      aria-label={`Remover critério ${idx + 1}`}
+                    >
+                      Remover
+                    </Button>
+                  </div>
+
+                  <Input
+                    label="Bloco / Grupo"
+                    value={crit.bloco ?? ''}
+                    onChange={e => updateCriterio(idx, 'bloco', e.target.value)}
+                    placeholder="Ex: Bloco 1 — Atuação da entidade"
+                  />
+
+                  <Input
+                    label="Nome do Critério"
+                    required
+                    value={crit.criterio}
+                    onChange={e => updateCriterio(idx, 'criterio', e.target.value)}
+                    placeholder="Nome do critério"
+                  />
+
+                  <Input
+                    label="Descrição / Orientação"
+                    value={crit.descricao ?? ''}
+                    onChange={e => updateCriterio(idx, 'descricao', e.target.value)}
+                    placeholder="Descrição ou orientação para o avaliador"
+                  />
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <Input
+                      label="Nota Máxima"
+                      type="number"
+                      required
+                      min={0}
+                      step={0.5}
+                      value={crit.notaMax || ''}
+                      onChange={e => updateCriterio(idx, 'notaMax', e.target.value ? Number(e.target.value) : 0)}
+                      placeholder="Nota máxima"
+                    />
+                    <Input
+                      label="Peso"
+                      type="number"
+                      required
+                      min={0}
+                      step={0.5}
+                      value={crit.peso || ''}
+                      onChange={e => updateCriterio(idx, 'peso', e.target.value ? Number(e.target.value) : 0)}
+                      placeholder="Peso"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Resumo */}
+            <div className="mt-4 rounded-lg bg-slate-50 border border-slate-200 px-4 py-3 flex items-center justify-between text-sm">
+              <div className="flex gap-6">
+                <span className="text-slate-600">
+                  Total de pesos: <strong className="text-slate-800">{criteriosAvaliacao.reduce((s, c) => s + c.peso, 0)}</strong>
+                </span>
+                <span className="text-slate-600">
+                  Nota máxima possível: <strong className="text-slate-800">{criteriosAvaliacao.reduce((s, c) => s + c.notaMax, 0)}</strong>
+                </span>
+              </div>
+              <span className="text-slate-500">{criteriosAvaliacao.length} critério(s)</span>
+            </div>
+          </>
+        )}
+
+        {/* Nota Mínima */}
+        <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50/50 p-4">
+          <h3 className="text-sm font-semibold text-slate-700 mb-2">Nota Mínima para Classificação</h3>
+          <p className="text-xs text-slate-500 mb-3">
+            Inscrições com nota abaixo deste valor serão automaticamente não contempladas. A nota é na escala 0-10 (normalizada). Deixe em branco para sem corte.
+          </p>
+          <Input
+            label="Nota mínima (escala 0-10)"
+            type="number"
+            step="0.01"
+            min={0}
+            max={10}
+            value={notaMinima}
+            onChange={e => setNotaMinima(e.target.value)}
+            placeholder="Ex: 3.0 (equivale a 60/200)"
+          />
+        </div>
+
+        {/* Regras de Desempate */}
+        <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50/50 p-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <h3 className="text-sm font-semibold text-slate-700">Regras de Desempate</h3>
+              {desempate.length === 0 ? (
+                <span className="inline-flex items-center text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
+                  Sem regras de desempate
+                </span>
+              ) : (
+                <span className="inline-flex items-center text-xs font-medium text-brand-700 bg-brand-50 px-2.5 py-0.5 rounded-full">
+                  {desempate.length} regra(s) configurada(s)
+                </span>
+              )}
+            </div>
+            <Button type="button" variant="outline" size="sm" onClick={() => setDesempate(prev => [
+              ...prev,
+              { descricao: '', tipo: 'bloco', ref: '', direcao: 'desc' },
+            ])}>
+              + Adicionar regra
+            </Button>
+          </div>
+          <p className="text-xs text-slate-500 mb-3">
+            Defina critérios de desempate em ordem de prioridade. O primeiro item é o critério mais importante.
+          </p>
+
+          {desempate.length === 0 ? (
+            <p className="text-sm text-slate-500 text-center py-3">
+              Nenhuma regra de desempate. Em caso de empate, a ordem será aleatória.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {desempate.map((regra, idx) => (
+                <div key={idx} className="rounded-lg border border-slate-200 bg-white p-3 space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-xs font-medium text-slate-400">{idx + 1}º critério de desempate</span>
+                    <Button
+                      type="button"
+                      variant="danger"
+                      size="sm"
+                      onClick={() => setDesempate(prev => prev.filter((_, i) => i !== idx))}
+                      aria-label={`Remover regra de desempate ${idx + 1}`}
+                    >
+                      Remover
+                    </Button>
+                  </div>
+                  <Input
+                    label="Descrição"
+                    value={regra.descricao}
+                    onChange={e => setDesempate(prev => prev.map((r, i) => i === idx ? { ...r, descricao: e.target.value } : r))}
+                    placeholder="Ex: Maior nota no Bloco 1"
+                  />
+                  <div className="grid grid-cols-3 gap-3">
+                    <Select
+                      label="Tipo"
+                      value={regra.tipo}
+                      options={[
+                        { value: 'bloco', label: 'Bloco' },
+                        { value: 'criterio', label: 'Critério' },
+                      ]}
+                      onChange={e => setDesempate(prev => prev.map((r, i) => i === idx ? { ...r, tipo: e.target.value as 'bloco' | 'criterio' } : r))}
+                    />
+                    <Input
+                      label="Referência"
+                      value={regra.ref}
+                      onChange={e => setDesempate(prev => prev.map((r, i) => i === idx ? { ...r, ref: e.target.value } : r))}
+                      placeholder="Ex: Bloco 1"
+                    />
+                    <Select
+                      label="Direção"
+                      value={regra.direcao}
+                      options={[
+                        { value: 'desc', label: 'Maior nota vence' },
+                        { value: 'asc', label: 'Menor nota vence' },
+                      ]}
+                      onChange={e => setDesempate(prev => prev.map((r, i) => i === idx ? { ...r, direcao: e.target.value as 'desc' | 'asc' } : r))}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </Card>
+
+      {/* Secao 6 — Tipos de Anexo */}
+      <Card padding="sm" className="sm:p-6">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+            <h2 className="text-base sm:text-lg font-semibold text-slate-800">
+              6. Tipos de Anexo
+            </h2>
+            {tiposAnexo.length === 0 ? (
+              <span className="inline-flex items-center text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
+                Usando tipos padrão (7)
+              </span>
+            ) : (
+              <span className="inline-flex items-center text-xs font-medium text-brand-700 bg-brand-50 px-2.5 py-0.5 rounded-full">
+                {tiposAnexo.length} tipos configurados
+              </span>
+            )}
+          </div>
+          <div className="flex gap-2">
+            {tiposAnexo.length > 0 && (
+              <Button type="button" variant="outline" size="sm" onClick={() => setTiposAnexo([])}>
+                Restaurar padrão
+              </Button>
+            )}
+            <Button type="button" variant="outline" size="sm" onClick={() => setTiposAnexo(prev => [
+              ...prev,
+              { tipo: '', label: '', obrigatorio: false },
+            ])}>
+              + Adicionar tipo
+            </Button>
+          </div>
+        </div>
+        <p className="text-sm text-slate-500 mb-4">
+          Configure os tipos de documento que o proponente poderá enviar. Se vazio, serão usados os 7 tipos padrão.
+        </p>
+
+        {tiposAnexo.length === 0 ? (
+          <p className="text-sm text-slate-500 text-center py-4">
+            Nenhum tipo customizado. O formulário usará os tipos padrão (Documento Pessoal, Comprovante de Endereço, Portfólio, etc.).
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {tiposAnexo.map((ta, idx) => (
+              <div key={idx} className="rounded-lg border border-slate-200 bg-white p-3 space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <span className="text-xs font-medium text-slate-400">Tipo {idx + 1}</span>
+                  <Button
+                    type="button"
+                    variant="danger"
+                    size="sm"
+                    onClick={() => setTiposAnexo(prev => prev.filter((_, i) => i !== idx))}
+                    aria-label={`Remover tipo de anexo ${idx + 1}`}
+                  >
+                    Remover
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Input
+                    label="ID interno (tipo)"
+                    required
+                    value={ta.tipo}
+                    onChange={e => setTiposAnexo(prev => prev.map((t, i) => i === idx ? { ...t, tipo: e.target.value } : t))}
+                    placeholder="Ex: CERTIFICADO_PNCV"
+                  />
+                  <Input
+                    label="Nome visível (label)"
+                    required
+                    value={ta.label}
+                    onChange={e => setTiposAnexo(prev => prev.map((t, i) => i === idx ? { ...t, label: e.target.value } : t))}
+                    placeholder="Ex: Certificado PNCV"
+                  />
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={ta.obrigatorio}
+                    onChange={e => setTiposAnexo(prev => prev.map((t, i) => i === idx ? { ...t, obrigatorio: e.target.checked } : t))}
+                    className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                  />
+                  <span className="text-sm text-slate-700">Obrigatório</span>
+                </label>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      {/* Secao 7 - Arquivos */}
       <Card padding="sm" className="sm:p-6">
         <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-4 sm:mb-5">
-          5. Documentos e Arquivos
+          7. Documentos e Arquivos
         </h2>
         <EditalArquivos
           ref={arquivosRef}
@@ -624,10 +992,10 @@ export function EditalForm({ initialData }: EditalFormProps) {
         />
       </Card>
 
-      {/* Secao 6 - Cronograma */}
+      {/* Secao 8 - Cronograma */}
       <Card padding="sm" className="sm:p-6">
         <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-4 sm:mb-5">
-          6. Cronograma
+          8. Cronograma
         </h2>
 
         {/* Fases fixas do edital */}

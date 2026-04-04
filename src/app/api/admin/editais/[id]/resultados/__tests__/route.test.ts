@@ -107,6 +107,8 @@ describe('POST /api/admin/editais/[id]/resultados', () => {
       status: 'AVALIACAO',
       vagasContemplados: null,
       vagasSuplentes: null,
+      notaMinima: null,
+      desempate: null,
     } as never)
 
     vi.spyOn(calcModule, 'calculateResults').mockResolvedValue([])
@@ -116,7 +118,7 @@ describe('POST /api/admin/editais/[id]/resultados', () => {
     expect(res.status).toBe(400)
   })
 
-  it('POST RESULTADO_FINAL passa vagas para saveResults (GAP 4)', async () => {
+  it('POST RESULTADO_FINAL passa vagas e notaMinima para saveResults (GAP 4)', async () => {
     mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
     mockPrisma.edital.findUnique.mockResolvedValue({
       id: 'ed-1',
@@ -125,6 +127,8 @@ describe('POST /api/admin/editais/[id]/resultados', () => {
       status: 'AVALIACAO',
       vagasContemplados: 3,
       vagasSuplentes: 2,
+      notaMinima: null,
+      desempate: null,
     } as never)
 
     const resultados = [
@@ -138,6 +142,7 @@ describe('POST /api/admin/editais/[id]/resultados', () => {
     expect(saveResultsSpy).toHaveBeenCalledWith(resultados, 'RESULTADO_FINAL', {
       contemplados: 3,
       suplentes: 2,
+      notaMinima: null,
     })
   })
 
@@ -150,6 +155,8 @@ describe('POST /api/admin/editais/[id]/resultados', () => {
       status: 'AVALIACAO',
       vagasContemplados: null,
       vagasSuplentes: null,
+      notaMinima: null,
+      desempate: null,
     } as never)
 
     vi.spyOn(calcModule, 'calculateResults').mockResolvedValue([
