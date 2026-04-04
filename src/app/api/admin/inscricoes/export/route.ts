@@ -44,17 +44,22 @@ export async function GET(req: NextRequest) {
       },
     })
 
+    // Sanitiza campo contra CSV injection (prefixar com ' se começa com =, +, @, -, \t, \r)
+    function csvSafe(value: string): string {
+      return /^[=+@\-\t\r]/.test(value) ? `'${value}` : value
+    }
+
     // Gerar CSV
     const headers = ['Numero', 'Nome', 'CPF/CNPJ', 'Email', 'Edital', 'Status', 'Categoria', 'Nota Final', 'Enviada em']
 
     const rows = inscricoes.map((i) => [
-      i.numero,
-      `"${i.proponente.nome}"`,
-      i.proponente.cpfCnpj ?? '',
-      i.proponente.email,
-      `"${i.edital.titulo}"`,
-      i.status,
-      i.categoria ?? '',
+      csvSafe(String(i.numero ?? '')),
+      `"${csvSafe(i.proponente.nome)}"`,
+      csvSafe(i.proponente.cpfCnpj ?? ''),
+      csvSafe(i.proponente.email),
+      `"${csvSafe(i.edital.titulo)}"`,
+      csvSafe(i.status),
+      csvSafe(i.categoria ?? ''),
       i.notaFinal ? String(i.notaFinal) : '',
       i.submittedAt ? new Date(i.submittedAt).toLocaleDateString('pt-BR') : '',
     ])

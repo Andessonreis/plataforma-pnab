@@ -1,8 +1,11 @@
-import { auth } from '@/lib/auth'
+import NextAuth from 'next-auth'
+import { authConfig } from '@/lib/auth/config'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import type { UserRole } from '@prisma/client'
 import { corsHeaders, handlePreflight } from '@/lib/api/cors'
+
+const { auth } = NextAuth(authConfig)
 
 const ROLES_ADMIN: UserRole[] = ['ADMIN', 'ATENDIMENTO', 'HABILITADOR']
 

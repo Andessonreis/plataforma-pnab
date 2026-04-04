@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
+import { auth } from '@/lib/auth'
 import { uploadFile } from '@/lib/storage'
 import { validateMagicBytes } from '@/lib/upload/validate'
 
@@ -13,6 +14,18 @@ export async function POST(req: NextRequest) {
   const start = Date.now()
 
   try {
+    // Verifica sessão antes de aceitar qualquer upload
+    const session = await auth()
+    if (!session?.user?.id) {
+      const res = NextResponse.json(
+        { error: 'UNAUTHORIZED', message: 'Autenticação necessária.', requestId },
+        { status: 401 },
+      )
+      res.headers.set('X-Request-Id', requestId)
+      res.headers.set('Cache-Control', 'no-store')
+      return res
+    }
+
     const formData = await req.formData()
     const file = formData.get('file') as File | null
     const userId = formData.get('userId') as string | null
@@ -22,6 +35,17 @@ export async function POST(req: NextRequest) {
       const res = NextResponse.json(
         { error: 'BAD_REQUEST', message: 'Arquivo e userId são obrigatórios.', requestId },
         { status: 400 },
+      )
+      res.headers.set('X-Request-Id', requestId)
+      res.headers.set('Cache-Control', 'no-store')
+      return res
+    }
+
+    // Garante que o usuário só pode fazer upload para o próprio userId
+    if (userId !== session.user.id) {
+      const res = NextResponse.json(
+        { error: 'FORBIDDEN', message: 'Acesso negado.', requestId },
+        { status: 403 },
       )
       res.headers.set('X-Request-Id', requestId)
       res.headers.set('Cache-Control', 'no-store')

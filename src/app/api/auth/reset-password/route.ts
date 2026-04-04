@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { randomUUID } from 'crypto'
+import { randomUUID, createHash } from 'crypto'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/db'
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
@@ -20,9 +20,10 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const data = resetPasswordSchema.parse(body)
 
-    // Busca o token válido (não usado e não expirado)
+    // Busca pelo hash do token (token raw nunca é salvo no banco)
+    const tokenHash = createHash('sha256').update(data.token).digest('hex')
     const resetToken = await prisma.passwordResetToken.findUnique({
-      where: { token: data.token },
+      where: { token: tokenHash },
       include: { user: true },
     })
 

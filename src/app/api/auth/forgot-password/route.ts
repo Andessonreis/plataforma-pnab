@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { randomUUID, randomBytes } from 'crypto'
+import { randomUUID, randomBytes, createHash } from 'crypto'
 import { prisma } from '@/lib/db'
 import { sendEmail } from '@/lib/mail'
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
@@ -58,20 +58,21 @@ export async function POST(req: NextRequest) {
         },
       })
 
-      // Gera novo token
-      const token = randomBytes(32).toString('hex')
+      // Gera novo token — envia raw ao usuário, salva apenas o hash no banco
+      const rawToken = randomBytes(32).toString('hex')
+      const tokenHash = createHash('sha256').update(rawToken).digest('hex')
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000) // 1 hora
 
       await prisma.passwordResetToken.create({
         data: {
           userId: user.id,
-          token,
+          token: tokenHash,
           expiresAt,
         },
       })
 
-      // Envia e-mail com link de recuperação
-      const resetUrl = `${process.env.NEXTAUTH_URL}/recuperar-senha/reset?token=${token}`
+      // Envia e-mail com link de recuperação (token raw — nunca o hash)
+      const resetUrl = `${process.env.NEXTAUTH_URL}/recuperar-senha/reset?token=${rawToken}`
 
       await sendEmail({
         to: user.email,
@@ -80,7 +81,7 @@ export async function POST(req: NextRequest) {
         data: {
           nome: user.nome,
           resetUrl,
-          token,
+          token: rawToken,
         },
       })
 

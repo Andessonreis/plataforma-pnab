@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { createHash } from 'crypto'
+import { createHmac } from 'crypto'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import type { UserRole } from '@prisma/client'
@@ -43,11 +43,17 @@ export async function resolveAuth(req: NextRequest): Promise<ApiCaller | null> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Resolve API key por hash SHA-256
+// Resolve API key por HMAC-SHA256
 // ─────────────────────────────────────────────────────────────────────────────
 
+function hmacKey(rawKey: string): string {
+  const secret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET
+  if (!secret) throw new Error('AUTH_SECRET não configurado')
+  return createHmac('sha256', secret).update(rawKey).digest('hex')
+}
+
 async function resolveApiKey(rawKey: string): Promise<ApiCaller | null> {
-  const keyHash = createHash('sha256').update(rawKey).digest('hex')
+  const keyHash = hmacKey(rawKey)
 
   const apiKey = await prisma.apiKey.findUnique({
     where: { keyHash },

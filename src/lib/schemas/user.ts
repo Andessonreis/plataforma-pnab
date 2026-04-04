@@ -1,5 +1,12 @@
 import { z } from 'zod'
 
+const passwordSchema = z.string()
+  .min(8, 'Senha deve ter no mínimo 8 caracteres')
+  .regex(/[A-Z]/, 'Senha deve conter ao menos uma letra maiúscula')
+  .regex(/[a-z]/, 'Senha deve conter ao menos uma letra minúscula')
+  .regex(/[0-9]/, 'Senha deve conter ao menos um número')
+  .regex(/[^A-Za-z0-9]/, 'Senha deve conter ao menos um caractere especial')
+
 export const registerSchema = z.object({
   nome: z.string().min(3, 'Nome deve ter no mínimo 3 caracteres'),
   cpfCnpj: z.string().min(11).max(14),
@@ -12,7 +19,7 @@ export const registerSchema = z.object({
   bairro: z.string().min(1, 'Bairro obrigatório'),
   cidade: z.string().min(1, 'Cidade obrigatória'),
   uf: z.string().length(2, 'UF inválida'),
-  password: z.string().min(8, 'Senha deve ter no mínimo 8 caracteres'),
+  password: passwordSchema,
   tipoProponente: z.enum(['PF', 'PJ', 'MEI', 'COLETIVO']),
 })
 
@@ -28,7 +35,7 @@ export const forgotPasswordSchema = z.object({
 
 export const resetPasswordSchema = z.object({
   token: z.string().min(1, 'Token obrigatório'),
-  password: z.string().min(8, 'Senha deve ter no mínimo 8 caracteres'),
+  password: passwordSchema,
 })
 
 export const updateProfileSchema = z.object({
@@ -42,7 +49,7 @@ export const updateProfileSchema = z.object({
   cidade: z.string().optional(),
   uf: z.string().length(2).optional(),
   currentPassword: z.string().optional(),
-  newPassword: z.string().min(8).optional(),
+  newPassword: passwordSchema.optional(),
 })
 
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>

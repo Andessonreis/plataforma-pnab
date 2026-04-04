@@ -1,12 +1,18 @@
-import { randomBytes, createHash } from 'crypto'
+import { randomBytes, createHmac } from 'crypto'
 import { prisma } from '@/lib/db'
 import { ServiceError } from './errors'
 
 const KEY_PREFIX = 'pnab_'
 
+function hmacKey(rawKey: string): string {
+  const secret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET
+  if (!secret) throw new Error('AUTH_SECRET não configurado')
+  return createHmac('sha256', secret).update(rawKey).digest('hex')
+}
+
 export async function createApiKey(userId: string, label: string, scopes: string[] = [], expiresAt?: Date) {
   const rawKey = `${KEY_PREFIX}${randomBytes(32).toString('base64url')}`
-  const keyHash = createHash('sha256').update(rawKey).digest('hex')
+  const keyHash = hmacKey(rawKey)
   const prefix = rawKey.slice(0, 12)
 
   const apiKey = await prisma.apiKey.create({
