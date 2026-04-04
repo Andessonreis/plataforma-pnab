@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, type FormEvent } from 'react'
+import { useState, useRef, useCallback, type FormEvent, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { Input, Button, Card, Textarea, Select } from '@/components/ui'
 import type { EditalStatus } from '@prisma/client'
@@ -150,6 +150,7 @@ export function EditalForm({ initialData }: EditalFormProps) {
     return isNaN(num) ? '' : num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   })
   const [categorias, setCategorias] = useState<string[]>(initialData?.categorias ?? [])
+  const [novaCategoria, setNovaCategoria] = useState('')
   const [regrasElegibilidade, setRegrasElegibilidade] = useState(initialData?.regrasElegibilidade ?? '')
   const [acoesAfirmativas, setAcoesAfirmativas] = useState(initialData?.acoesAfirmativas ?? '')
   const [status, setStatus] = useState<EditalStatus>(initialData?.status ?? 'RASCUNHO')
@@ -195,11 +196,62 @@ export function EditalForm({ initialData }: EditalFormProps) {
   )
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [collapsedSections, setCollapsedSections] = useState<Record<number, boolean>>({})
+
+  const toggleSection = useCallback((n: number) => {
+    setCollapsedSections(prev => ({ ...prev, [n]: !prev[n] }))
+  }, [])
+
+  function SectionHeader({ number, title, actions, children }: {
+    number: number
+    title: string
+    actions?: ReactNode
+    children?: ReactNode
+  }) {
+    const collapsed = !!collapsedSections[number]
+    return (
+      <>
+        <div className="flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => toggleSection(number)}
+            className="flex items-center gap-2 group text-left"
+          >
+            <svg
+              className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${collapsed ? '-rotate-90' : ''}`}
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+            </svg>
+            <h2 className="text-base sm:text-lg font-semibold text-slate-800 group-hover:text-brand-700 transition-colors">
+              {number}. {title}
+            </h2>
+          </button>
+          {!collapsed && actions}
+        </div>
+        {!collapsed && children}
+      </>
+    )
+  }
 
   function toggleCategoria(cat: string) {
     setCategorias(prev =>
       prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
     )
+  }
+
+  function addCategoriaPersonalizada() {
+    const trimmed = novaCategoria.trim()
+    if (!trimmed) return
+    if (categorias.includes(trimmed)) {
+      setNovaCategoria('')
+      return
+    }
+    setCategorias(prev => [...prev, trimmed])
+    setNovaCategoria('')
   }
 
   function updateFase(fase: string, field: keyof FaseState, value: string | boolean) {
@@ -371,10 +423,8 @@ export function EditalForm({ initialData }: EditalFormProps) {
 
       {/* Secao 1 - Informacoes Basicas */}
       <Card padding="sm" className="sm:p-6">
-        <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-4 sm:mb-5">
-          1. Informações Básicas
-        </h2>
-        <div className="grid gap-4 sm:gap-5">
+        <SectionHeader number={1} title="Informações Básicas" />
+        {!collapsedSections[1] && <div className="grid gap-4 sm:gap-5 mt-4 sm:mt-5">
           <Input
             label="Título do Edital"
             required
@@ -433,114 +483,158 @@ export function EditalForm({ initialData }: EditalFormProps) {
               placeholder="Ilimitado"
             />
           </div>
-        </div>
+        </div>}
       </Card>
 
       {/* Secao 2 - Categorias */}
       <Card padding="sm" className="sm:p-6">
-        <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-2">
-          2. Categorias Culturais
-        </h2>
-        <p className="text-sm text-slate-500 mb-4">
-          Selecione todas as categorias contempladas por este edital.
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {CATEGORIAS_OPCOES.map(cat => {
-            const selected = categorias.includes(cat)
-            return (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => toggleCategoria(cat)}
-                aria-pressed={selected}
-                className={[
-                  'rounded-full border px-3 py-1.5 text-sm font-medium transition-colors',
-                  'focus-visible:outline-2 focus-visible:outline-offset-2',
-                  selected
-                    ? 'border-brand-600 bg-brand-600 text-white'
-                    : 'border-slate-300 bg-white text-slate-700 hover:border-brand-400',
-                ].join(' ')}
-              >
-                {cat}
-              </button>
-            )
-          })}
-        </div>
-        {categorias.length > 0 && (
-          <p className="mt-3 text-xs text-slate-500">
-            {categorias.length} categoria(s) selecionada(s)
+        <SectionHeader number={2} title="Categorias Culturais">
+          <p className="text-sm text-slate-500 mt-2">
+            Selecione todas as categorias contempladas por este edital.
           </p>
-        )}
+        </SectionHeader>
+        {!collapsedSections[2] && <>
+          <div className="flex flex-wrap gap-2 mt-4">
+            {CATEGORIAS_OPCOES.map(cat => {
+              const selected = categorias.includes(cat)
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => toggleCategoria(cat)}
+                  aria-pressed={selected}
+                  className={[
+                    'rounded-full border px-3 py-1.5 text-sm font-medium transition-colors',
+                    'focus-visible:outline-2 focus-visible:outline-offset-2',
+                    selected
+                      ? 'border-brand-600 bg-brand-600 text-white'
+                      : 'border-slate-300 bg-white text-slate-700 hover:border-brand-400',
+                  ].join(' ')}
+                >
+                  {cat}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Tags personalizadas (não predefinidas) */}
+          {categorias.filter(c => !CATEGORIAS_OPCOES.includes(c)).length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {categorias.filter(c => !CATEGORIAS_OPCOES.includes(c)).map(cat => (
+                <span
+                  key={cat}
+                  className="inline-flex items-center gap-1 rounded-full border border-brand-600 bg-brand-50 px-3 py-1.5 text-sm font-medium text-brand-700"
+                >
+                  {cat}
+                  <button
+                    type="button"
+                    onClick={() => setCategorias(prev => prev.filter(c => c !== cat))}
+                    className="ml-0.5 text-brand-400 hover:text-red-500"
+                    aria-label={`Remover ${cat}`}
+                  >
+                    &times;
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Input para adicionar categoria livre */}
+          <div className="mt-4 flex gap-2">
+            <input
+              type="text"
+              value={novaCategoria}
+              onChange={e => setNovaCategoria(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCategoriaPersonalizada() } }}
+              placeholder="Adicionar outra categoria..."
+              className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            />
+            <button
+              type="button"
+              onClick={addCategoriaPersonalizada}
+              className="rounded-lg border border-brand-600 bg-brand-50 px-4 py-2 text-sm font-medium text-brand-700 hover:bg-brand-100 transition-colors"
+            >
+              Adicionar
+            </button>
+          </div>
+
+          {categorias.length > 0 && (
+            <p className="mt-3 text-xs text-slate-500">
+              {categorias.length} categoria(s) selecionada(s)
+            </p>
+          )}
+        </>}
       </Card>
 
       {/* Secao 3 - Regras e Acoes */}
-      <Card padding="sm" className="sm:p-6 space-y-5 sm:space-y-6">
-        <h2 className="text-base sm:text-lg font-semibold text-slate-800">
-          3. Regras e Ações Afirmativas
-        </h2>
-
-        <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <label htmlFor="regras-elegibilidade" className="block text-sm font-medium text-slate-700">
-              Regras de Elegibilidade
-            </label>
-            <button
-              type="button"
-              onClick={() => setRegrasElegibilidade(TEMPLATE_REGRAS)}
-              className="text-xs text-brand-600 hover:text-brand-700 underline-offset-2 hover:underline"
-            >
-              Usar modelo padrão
-            </button>
+      <Card padding="sm" className="sm:p-6">
+        <SectionHeader number={3} title="Regras e Ações Afirmativas" />
+        {!collapsedSections[3] && <div className="space-y-5 sm:space-y-6 mt-4 sm:mt-5">
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label htmlFor="regras-elegibilidade" className="block text-sm font-medium text-slate-700">
+                Regras de Elegibilidade
+              </label>
+              <button
+                type="button"
+                onClick={() => setRegrasElegibilidade(TEMPLATE_REGRAS)}
+                className="text-xs text-brand-600 hover:text-brand-700 underline-offset-2 hover:underline"
+              >
+                Usar modelo padrão
+              </button>
+            </div>
+            <textarea
+              id="regras-elegibilidade"
+              rows={5}
+              value={regrasElegibilidade}
+              onChange={e => setRegrasElegibilidade(e.target.value)}
+              placeholder="Liste os requisitos para participação neste edital (um por linha)"
+              className="block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition-colors resize-y focus:outline-none focus:ring-2 focus:ring-offset-0 focus:border-brand-500 focus:ring-brand-200"
+            />
           </div>
-          <textarea
-            id="regras-elegibilidade"
-            rows={5}
-            value={regrasElegibilidade}
-            onChange={e => setRegrasElegibilidade(e.target.value)}
-            placeholder="Liste os requisitos para participação neste edital (um por linha)"
-            className="block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition-colors resize-y focus:outline-none focus:ring-2 focus:ring-offset-0 focus:border-brand-500 focus:ring-brand-200"
-          />
-        </div>
 
-        <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <label htmlFor="acoes-afirmativas" className="block text-sm font-medium text-slate-700">
-              Ações Afirmativas
-            </label>
-            <button
-              type="button"
-              onClick={() => setAcoesAfirmativas(TEMPLATE_ACOES)}
-              className="text-xs text-brand-600 hover:text-brand-700 underline-offset-2 hover:underline"
-            >
-              Usar modelo padrão
-            </button>
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label htmlFor="acoes-afirmativas" className="block text-sm font-medium text-slate-700">
+                Ações Afirmativas
+              </label>
+              <button
+                type="button"
+                onClick={() => setAcoesAfirmativas(TEMPLATE_ACOES)}
+                className="text-xs text-brand-600 hover:text-brand-700 underline-offset-2 hover:underline"
+              >
+                Usar modelo padrão
+              </button>
+            </div>
+            <textarea
+              id="acoes-afirmativas"
+              rows={5}
+              value={acoesAfirmativas}
+              onChange={e => setAcoesAfirmativas(e.target.value)}
+              placeholder="Liste as ações afirmativas previstas neste edital (uma por linha)"
+              className="block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition-colors resize-y focus:outline-none focus:ring-2 focus:ring-offset-0 focus:border-brand-500 focus:ring-brand-200"
+            />
           </div>
-          <textarea
-            id="acoes-afirmativas"
-            rows={5}
-            value={acoesAfirmativas}
-            onChange={e => setAcoesAfirmativas(e.target.value)}
-            placeholder="Liste as ações afirmativas previstas neste edital (uma por linha)"
-            className="block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition-colors resize-y focus:outline-none focus:ring-2 focus:ring-offset-0 focus:border-brand-500 focus:ring-brand-200"
-          />
-        </div>
+        </div>}
       </Card>
 
       {/* Secao 4 - Campos do Formulário de Inscrição */}
       <Card padding="sm" className="sm:p-6">
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-base sm:text-lg font-semibold text-slate-800">
-            4. Campos do Formulário de Inscrição
-          </h2>
-          <Button type="button" variant="outline" size="sm" onClick={addCampoFormulario}>
-            + Adicionar campo
-          </Button>
-        </div>
-        <p className="text-sm text-slate-500 mb-4">
-          Configure os campos que o proponente deverá preencher ao se inscrever.
-        </p>
+        <SectionHeader
+          number={4}
+          title="Campos do Formulário de Inscrição"
+          actions={
+            <Button type="button" variant="outline" size="sm" onClick={addCampoFormulario}>
+              + Adicionar campo
+            </Button>
+          }
+        >
+          <p className="text-sm text-slate-500 mt-2">
+            Configure os campos que o proponente deverá preencher ao se inscrever.
+          </p>
+        </SectionHeader>
 
-        {camposFormulario.length === 0 ? (
+        {!collapsedSections[4] && (camposFormulario.length === 0 ? (
           <p className="text-sm text-slate-500 text-center py-4">
             Nenhum campo configurado. O formulário de inscrição ficará vazio.
           </p>
@@ -703,43 +797,43 @@ export function EditalForm({ initialData }: EditalFormProps) {
               </div>
             ))}
           </div>
-        )}
+        ))}
       </Card>
 
       {/* Secao 5 - Critérios de Avaliação */}
       <Card padding="sm" className="sm:p-6">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-3">
-            <h2 className="text-base sm:text-lg font-semibold text-slate-800">
-              5. Critérios de Avaliação
-            </h2>
-            {criteriosAvaliacao.length === 0 ? (
-              <span className="inline-flex items-center text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
-                Usando critérios padrão PNAB (5)
-              </span>
-            ) : (
-              <span className="inline-flex items-center text-xs font-medium text-brand-700 bg-brand-50 px-2.5 py-0.5 rounded-full">
-                {criteriosAvaliacao.length} critérios customizados
-              </span>
-            )}
-          </div>
-          <div className="flex gap-2">
-            {criteriosAvaliacao.length > 0 && (
-              <Button type="button" variant="outline" size="sm" onClick={duplicarUltimoCriterio}>
-                + Duplicar último
+        <SectionHeader
+          number={5}
+          title="Critérios de Avaliação"
+          actions={
+            <div className="flex items-center gap-2">
+              {criteriosAvaliacao.length === 0 ? (
+                <span className="inline-flex items-center text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
+                  Usando critérios padrão PNAB (5)
+                </span>
+              ) : (
+                <span className="inline-flex items-center text-xs font-medium text-brand-700 bg-brand-50 px-2.5 py-0.5 rounded-full">
+                  {criteriosAvaliacao.length} critérios customizados
+                </span>
+              )}
+              {criteriosAvaliacao.length > 0 && (
+                <Button type="button" variant="outline" size="sm" onClick={duplicarUltimoCriterio}>
+                  + Duplicar último
+                </Button>
+              )}
+              <Button type="button" variant="outline" size="sm" onClick={addCriterio}>
+                + Adicionar critério
               </Button>
-            )}
-            <Button type="button" variant="outline" size="sm" onClick={addCriterio}>
-              + Adicionar critério
-            </Button>
-          </div>
-        </div>
-        <p className="text-sm text-slate-500 mb-4">
-          Configure critérios específicos para este edital. Se vazio, serão usados os 5 critérios padrão PNAB.
-        </p>
+            </div>
+          }
+        >
+          <p className="text-sm text-slate-500 mt-2">
+            Configure critérios específicos para este edital. Se vazio, serão usados os 5 critérios padrão PNAB.
+          </p>
+        </SectionHeader>
 
-        {criteriosAvaliacao.length === 0 ? (
-          <p className="text-sm text-slate-500 text-center py-4">
+        {!collapsedSections[5] && <>{criteriosAvaliacao.length === 0 ? (
+          <p className="text-sm text-slate-500 text-center py-4 mt-4">
             Nenhum critério customizado. O edital usará os critérios padrão PNAB.
           </p>
         ) : (
@@ -923,45 +1017,45 @@ export function EditalForm({ initialData }: EditalFormProps) {
               ))}
             </div>
           )}
-        </div>
+        </div></>}
       </Card>
 
       {/* Secao 6 — Tipos de Anexo */}
       <Card padding="sm" className="sm:p-6">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-3">
-            <h2 className="text-base sm:text-lg font-semibold text-slate-800">
-              6. Tipos de Anexo
-            </h2>
-            {tiposAnexo.length === 0 ? (
-              <span className="inline-flex items-center text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
-                Usando tipos padrão (7)
-              </span>
-            ) : (
-              <span className="inline-flex items-center text-xs font-medium text-brand-700 bg-brand-50 px-2.5 py-0.5 rounded-full">
-                {tiposAnexo.length} tipos configurados
-              </span>
-            )}
-          </div>
-          <div className="flex gap-2">
-            {tiposAnexo.length > 0 && (
-              <Button type="button" variant="outline" size="sm" onClick={() => setTiposAnexo([])}>
-                Restaurar padrão
+        <SectionHeader
+          number={6}
+          title="Tipos de Anexo"
+          actions={
+            <div className="flex items-center gap-2">
+              {tiposAnexo.length === 0 ? (
+                <span className="inline-flex items-center text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
+                  Usando tipos padrão (7)
+                </span>
+              ) : (
+                <span className="inline-flex items-center text-xs font-medium text-brand-700 bg-brand-50 px-2.5 py-0.5 rounded-full">
+                  {tiposAnexo.length} tipos configurados
+                </span>
+              )}
+              {tiposAnexo.length > 0 && (
+                <Button type="button" variant="outline" size="sm" onClick={() => setTiposAnexo([])}>
+                  Restaurar padrão
+                </Button>
+              )}
+              <Button type="button" variant="outline" size="sm" onClick={() => setTiposAnexo(prev => [
+                ...prev,
+                { tipo: '', label: '', obrigatorio: false },
+              ])}>
+                + Adicionar tipo
               </Button>
-            )}
-            <Button type="button" variant="outline" size="sm" onClick={() => setTiposAnexo(prev => [
-              ...prev,
-              { tipo: '', label: '', obrigatorio: false },
-            ])}>
-              + Adicionar tipo
-            </Button>
-          </div>
-        </div>
-        <p className="text-sm text-slate-500 mb-4">
-          Configure os tipos de documento que o proponente poderá enviar. Se vazio, serão usados os 7 tipos padrão.
-        </p>
+            </div>
+          }
+        >
+          <p className="text-sm text-slate-500 mt-2">
+            Configure os tipos de documento que o proponente poderá enviar. Se vazio, serão usados os 7 tipos padrão.
+          </p>
+        </SectionHeader>
 
-        {tiposAnexo.length === 0 ? (
+        {!collapsedSections[6] && (tiposAnexo.length === 0 ? (
           <p className="text-sm text-slate-500 text-center py-4">
             Nenhum tipo customizado. O formulário usará os tipos padrão (Documento Pessoal, Comprovante de Endereço, Portfólio, etc.).
           </p>
@@ -1009,26 +1103,25 @@ export function EditalForm({ initialData }: EditalFormProps) {
               </div>
             ))}
           </div>
-        )}
+        ))}
       </Card>
 
       {/* Secao 7 - Arquivos */}
       <Card padding="sm" className="sm:p-6">
-        <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-4 sm:mb-5">
-          7. Documentos e Arquivos
-        </h2>
-        <EditalArquivos
-          ref={arquivosRef}
-          editalId={initialData?.id}
-        />
+        <SectionHeader number={7} title="Documentos e Arquivos" />
+        {!collapsedSections[7] && <div className="mt-4 sm:mt-5">
+          <EditalArquivos
+            ref={arquivosRef}
+            editalId={initialData?.id}
+          />
+        </div>}
       </Card>
 
       {/* Secao 8 - Cronograma */}
       <Card padding="sm" className="sm:p-6">
-        <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-4 sm:mb-5">
-          8. Cronograma
-        </h2>
+        <SectionHeader number={8} title="Cronograma" />
 
+        {!collapsedSections[8] && <div className="mt-4 sm:mt-5">
         {/* Fases fixas do edital */}
         <div className="rounded-lg border border-slate-200 bg-slate-50/50 p-4 mb-5">
           <h3 className="text-sm font-semibold text-slate-700 mb-3">
@@ -1187,6 +1280,7 @@ export function EditalForm({ initialData }: EditalFormProps) {
             </div>
           )}
         </div>
+        </div>}
       </Card>
 
       {/* Acoes do formulario */}
