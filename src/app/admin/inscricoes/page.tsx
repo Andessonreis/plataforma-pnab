@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { Card, Badge, Pagination, Button, EmptyState, FadeIn, IconExport, IconClipboard } from '@/components/ui'
 import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
+import { getEditaisVisiveis } from '@/lib/edital-acesso'
 import type { InscricaoStatus } from '@prisma/client'
 
 export const metadata: Metadata = {
@@ -34,6 +35,7 @@ export default async function AdminInscricoesPage({ searchParams }: Props) {
   const aviso = params.aviso || undefined
 
   const isAvaliador = session.user.role === 'AVALIADOR'
+  const isHabilitador = session.user.role === 'HABILITADOR'
 
   const where: Record<string, unknown> = {}
   if (statusFilter) where.status = statusFilter
@@ -49,6 +51,19 @@ export default async function AdminInscricoesPage({ searchParams }: Props) {
   // AVALIADOR só vê inscrições atribuídas a ele
   if (isAvaliador) {
     where.avaliacoes = { some: { avaliadorId: session.user.id } }
+  }
+
+  // HABILITADOR só vê inscrições de editais atribuídos (ou todos, se sem equipe)
+  if (isHabilitador) {
+    const visiveis = await getEditaisVisiveis(session.user.id, 'HABILITADOR')
+    if (visiveis) {
+      if (editalIdFilter && !visiveis.includes(editalIdFilter)) {
+        // Se filtrou um edital ao qual não tem acesso, zera
+        where.editalId = { in: [] }
+      } else if (!editalIdFilter) {
+        where.editalId = { in: visiveis }
+      }
+    }
   }
 
   const [inscricoes, total, editais] = await Promise.all([

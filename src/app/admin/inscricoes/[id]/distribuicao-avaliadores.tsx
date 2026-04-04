@@ -20,6 +20,7 @@ interface AvaliacaoAtribuida {
 
 interface Props {
   inscricaoId: string
+  editalId?: string
   avaliacoes: {
     avaliador: { id: string; nome: string }
     finalizada: boolean
@@ -27,7 +28,7 @@ interface Props {
   }[]
 }
 
-export function DistribuicaoAvaliadores({ inscricaoId, avaliacoes }: Props) {
+export function DistribuicaoAvaliadores({ inscricaoId, editalId, avaliacoes }: Props) {
   const router = useRouter()
   const [avaliadores, setAvaliadores] = useState<Avaliador[]>([])
   const [loading, setLoading] = useState(true)
@@ -48,7 +49,10 @@ export function DistribuicaoAvaliadores({ inscricaoId, avaliacoes }: Props) {
 
   const fetchAvaliadores = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/avaliadores')
+      const url = editalId
+        ? `/api/admin/avaliadores?editalId=${editalId}`
+        : '/api/admin/avaliadores'
+      const res = await fetch(url)
       if (res.ok) {
         const json = await res.json()
         setAvaliadores(json.data)
@@ -58,7 +62,7 @@ export function DistribuicaoAvaliadores({ inscricaoId, avaliacoes }: Props) {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [editalId])
 
   useEffect(() => {
     fetchAvaliadores()

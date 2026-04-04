@@ -32,6 +32,10 @@ export const AUDIT_ACTIONS = {
   AVALIADOR_ATRIBUIDO: 'AVALIADOR_ATRIBUIDO',
   AVALIADOR_REMOVIDO: 'AVALIADOR_REMOVIDO',
 
+  // Admin — equipe do edital
+  MEMBRO_EDITAL_ADICIONADO: 'MEMBRO_EDITAL_ADICIONADO',
+  MEMBRO_EDITAL_REMOVIDO: 'MEMBRO_EDITAL_REMOVIDO',
+
   // Admin — conteúdo
   NOTICIA_CRIADA: 'NOTICIA_CRIADA',
   NOTICIA_ATUALIZADA: 'NOTICIA_ATUALIZADA',
@@ -81,6 +85,8 @@ export const ACTION_LABELS: Record<string, string> = {
   STATUS_ALTERADO: 'Status alterado',
   AVALIADOR_ATRIBUIDO: 'Avaliador atribuído',
   AVALIADOR_REMOVIDO: 'Avaliador removido',
+  MEMBRO_EDITAL_ADICIONADO: 'Membro adicionado ao edital',
+  MEMBRO_EDITAL_REMOVIDO: 'Membro removido do edital',
   NOTICIA_CRIADA: 'Notícia criada',
   NOTICIA_ATUALIZADA: 'Notícia atualizada',
   NOTICIA_EXCLUIDA: 'Notícia excluída',

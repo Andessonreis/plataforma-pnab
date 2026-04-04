@@ -85,6 +85,14 @@ vi.mock('@/lib/db', () => ({
       create: vi.fn(),
       update: vi.fn(),
     },
+    editalMembro: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      createMany: vi.fn(),
+      deleteMany: vi.fn(),
+      count: vi.fn(),
+      groupBy: vi.fn(),
+    },
     avaliacao: {
       findMany: vi.fn(),
       findUnique: vi.fn(),
@@ -143,6 +151,8 @@ vi.mock('@/lib/audit', () => ({
     STATUS_ALTERADO: 'STATUS_ALTERADO',
     AVALIADOR_ATRIBUIDO: 'AVALIADOR_ATRIBUIDO',
     AVALIADOR_REMOVIDO: 'AVALIADOR_REMOVIDO',
+    MEMBRO_EDITAL_ADICIONADO: 'MEMBRO_EDITAL_ADICIONADO',
+    MEMBRO_EDITAL_REMOVIDO: 'MEMBRO_EDITAL_REMOVIDO',
     NOTICIA_CRIADA: 'NOTICIA_CRIADA',
     NOTICIA_ATUALIZADA: 'NOTICIA_ATUALIZADA',
     NOTICIA_EXCLUIDA: 'NOTICIA_EXCLUIDA',

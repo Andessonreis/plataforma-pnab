@@ -8,6 +8,7 @@ import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
 import { CRITERIOS_AVALIACAO_PADRAO, type CriterioAvaliacao } from '@/lib/avaliacao-criterios'
 import type { InscricaoStatus, TipoProponente } from '@prisma/client'
 import type { CampoFormulario } from '@/types/campo-formulario'
+import { temAcessoEdital } from '@/lib/edital-acesso'
 import { HabilitacaoActions } from './habilitacao-actions'
 import { AvaliacaoForm } from './avaliacao-form'
 import { RecursoDecision } from './recurso-decision'
@@ -59,6 +60,14 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
       select: { id: true },
     })
     if (!assignedById) {
+      redirect('/admin/inscricoes?aviso=nao-atribuido')
+    }
+  }
+
+  // HABILITADOR só acessa inscrições de editais atribuídos
+  if (userRole === 'HABILITADOR') {
+    const ok = await temAcessoEdital(session.user.id, inscricao.editalId, 'HABILITADOR')
+    if (!ok) {
       redirect('/admin/inscricoes?aviso=nao-atribuido')
     }
   }
@@ -329,6 +338,7 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
           {isAdmin && (inscricao.status === 'HABILITADA' || inscricao.status === 'EM_AVALIACAO') && (
             <DistribuicaoAvaliadores
               inscricaoId={inscricao.id}
+              editalId={inscricao.editalId}
               avaliacoes={inscricao.avaliacoes.map((a) => ({
                 avaliador: { id: a.avaliadorId, nome: a.avaliador.nome },
                 finalizada: (a as unknown as { finalizada: boolean }).finalizada,

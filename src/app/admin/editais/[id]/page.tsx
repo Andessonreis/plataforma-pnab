@@ -9,6 +9,7 @@ import type { EditalStatus } from '@prisma/client'
 import type { CronogramaItem } from '@/types/cronograma'
 import { migrateLegacyCronograma } from '@/lib/utils/cronograma'
 import { RelatorioFinalButton } from './relatorio-final-button'
+import { EquipeEditor } from './equipe-editor'
 import type { CriterioAvaliacao } from '@/lib/avaliacao-criterios'
 import type { CampoFormulario } from '@/types/campo-formulario'
 
@@ -46,6 +47,18 @@ export default async function EditarEditalPage({ params }: Props) {
   const edital = await prisma.edital.findUnique({ where: { id } })
 
   if (!edital) notFound()
+
+  // Buscar membros da equipe do edital
+  const membrosEdital = await prisma.editalMembro.findMany({
+    where: { editalId: id },
+    include: { user: { select: { id: true, nome: true, email: true } } },
+  })
+  const avaliadores = membrosEdital
+    .filter((m) => m.funcao === 'AVALIADOR')
+    .map((m) => ({ id: m.user.id, nome: m.user.nome, email: m.user.email }))
+  const habilitadores = membrosEdital
+    .filter((m) => m.funcao === 'HABILITADOR')
+    .map((m) => ({ id: m.user.id, nome: m.user.nome, email: m.user.email }))
 
   // Migra cronograma legado para formato novo (se necessário)
   const cronograma = migrateLegacyCronograma(edital.cronograma) as CronogramaItem[]
@@ -91,6 +104,15 @@ export default async function EditarEditalPage({ params }: Props) {
             ? edital.desempate : null) as RegraDesempate[] | null,
         }}
       />
+
+      {/* Equipe do Edital */}
+      <div className="mt-8">
+        <EquipeEditor
+          editalId={edital.id}
+          initialAvaliadores={avaliadores}
+          initialHabilitadores={habilitadores}
+        />
+      </div>
 
       {/* Seção de Conteúdo Acessível */}
       <div className="mt-8">

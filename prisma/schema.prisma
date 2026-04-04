@@ -59,6 +59,11 @@ enum AtendimentoStatus {
   FECHADO
 }
 
+enum FuncaoEdital {
+  AVALIADOR
+  HABILITADOR
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Usuários
 // ─────────────────────────────────────────────────────────────────────────────
@@ -89,6 +94,7 @@ model User {
   passwordResetTokens PasswordResetToken[]
   auditLogs           AuditLog[]
   apiKeys             ApiKey[]
+  editalMembros       EditalMembro[]
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -217,6 +223,7 @@ model Edital {
   arquivos   ArquivoEdital[]
   inscricoes Inscricao[]
   faqItems   FaqItem[]
+  membros    EditalMembro[]
 }
 
 model ArquivoEdital {
@@ -400,6 +407,25 @@ model SlideDestaque {
   fimEm       DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Equipe do Edital — Avaliadores e Habilitadores atribuídos
+// ─────────────────────────────────────────────────────────────────────────────
+
+model EditalMembro {
+  id        String       @id @default(cuid())
+  editalId  String
+  userId    String
+  funcao    FuncaoEdital
+  createdAt DateTime     @default(now())
+
+  edital Edital @relation(fields: [editalId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([editalId, userId, funcao])
+  @@index([editalId])
+  @@index([userId])
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
