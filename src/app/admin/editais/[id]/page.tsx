@@ -9,7 +9,6 @@ import type { EditalStatus } from '@prisma/client'
 import type { CronogramaItem } from '@/types/cronograma'
 import { migrateLegacyCronograma } from '@/lib/utils/cronograma'
 import { RelatorioFinalButton } from './relatorio-final-button'
-import { EquipeEditor } from './equipe-editor'
 import type { CriterioAvaliacao } from '@/lib/avaliacao-criterios'
 import type { CampoFormulario } from '@/types/campo-formulario'
 
@@ -102,17 +101,10 @@ export default async function EditarEditalPage({ params }: Props) {
           notaMinima: edital.notaMinima ? Number(edital.notaMinima) : null,
           desempate: (Array.isArray(edital.desempate)
             ? edital.desempate : null) as RegraDesempate[] | null,
+          initialAvaliadores: avaliadores,
+          initialHabilitadores: habilitadores,
         }}
       />
-
-      {/* Equipe do Edital */}
-      <div className="mt-8">
-        <EquipeEditor
-          editalId={edital.id}
-          initialAvaliadores={avaliadores}
-          initialHabilitadores={habilitadores}
-        />
-      </div>
 
       {/* Seção de Conteúdo Acessível */}
       <div className="mt-8">

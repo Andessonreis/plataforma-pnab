@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback, type FormEvent, type ReactNode } from 'react'
+import { useState, useRef, useEffect, useCallback, type FormEvent, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { Input, Button, Card, Textarea, Select } from '@/components/ui'
 import type { EditalStatus } from '@prisma/client'
@@ -45,6 +45,12 @@ interface RegraDesempate {
   direcao: 'desc' | 'asc'
 }
 
+interface MembroEquipe {
+  id: string
+  nome: string
+  email: string
+}
+
 interface EditalFormProps {
   initialData?: {
     id: string
@@ -64,6 +70,8 @@ interface EditalFormProps {
     tiposAnexo?: TipoAnexo[] | null
     notaMinima?: number | null
     desempate?: RegraDesempate[] | null
+    initialAvaliadores?: MembroEquipe[]
+    initialHabilitadores?: MembroEquipe[]
   }
 }
 
@@ -197,6 +205,47 @@ export function EditalForm({ initialData }: EditalFormProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [collapsedSections, setCollapsedSections] = useState<Record<number, boolean>>({})
+
+  // Equipe do edital
+  const [avaliadoresSelecionados, setAvaliadoresSelecionados] = useState<MembroEquipe[]>(
+    initialData?.initialAvaliadores ?? []
+  )
+  const [habilitadoresSelecionados, setHabilitadoresSelecionados] = useState<MembroEquipe[]>(
+    initialData?.initialHabilitadores ?? []
+  )
+  const [allAvaliadores, setAllAvaliadores] = useState<MembroEquipe[]>([])
+  const [allHabilitadores, setAllHabilitadores] = useState<MembroEquipe[]>([])
+  const [loadingEquipe, setLoadingEquipe] = useState(true)
+  const [selectedAvaliadorId, setSelectedAvaliadorId] = useState('')
+  const [selectedHabilitadorId, setSelectedHabilitadorId] = useState('')
+
+  useEffect(() => {
+    async function fetchElegíveis() {
+      try {
+        const [resAval, resHab] = await Promise.all([
+          fetch('/api/admin/avaliadores'),
+          fetch('/api/admin/habilitadores'),
+        ])
+        if (resAval.ok) {
+          const json = await resAval.json()
+          setAllAvaliadores(json.data.map((a: MembroEquipe) => ({
+            id: a.id, nome: a.nome, email: a.email,
+          })))
+        }
+        if (resHab.ok) {
+          const json = await resHab.json()
+          setAllHabilitadores(json.data.map((h: MembroEquipe) => ({
+            id: h.id, nome: h.nome, email: h.email,
+          })))
+        }
+      } catch {
+        // silencioso — seção de equipe fica vazia
+      } finally {
+        setLoadingEquipe(false)
+      }
+    }
+    fetchElegíveis()
+  }, [])
 
   const toggleSection = useCallback((n: number) => {
     setCollapsedSections(prev => ({ ...prev, [n]: !prev[n] }))
@@ -397,6 +446,50 @@ export function EditalForm({ initialData }: EditalFormProps) {
 
       const data = await res.json()
       const editalId: string = data.id ?? initialData?.id ?? ''
+
+      // Salvar equipe do edital
+      const initialAvalIds = new Set((initialData?.initialAvaliadores ?? []).map(a => a.id))
+      const initialHabIds = new Set((initialData?.initialHabilitadores ?? []).map(h => h.id))
+      const currentAvalIds = new Set(avaliadoresSelecionados.map(a => a.id))
+      const currentHabIds = new Set(habilitadoresSelecionados.map(h => h.id))
+
+      // Remover membros que estavam e foram retirados (só na edição)
+      if (isEdit) {
+        const avalRemovidos = [...initialAvalIds].filter(id => !currentAvalIds.has(id))
+        const habRemovidos = [...initialHabIds].filter(id => !currentHabIds.has(id))
+        for (const userId of avalRemovidos) {
+          await fetch(`/api/admin/editais/${editalId}/equipe`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, funcao: 'AVALIADOR' }),
+          })
+        }
+        for (const userId of habRemovidos) {
+          await fetch(`/api/admin/editais/${editalId}/equipe`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, funcao: 'HABILITADOR' }),
+          })
+        }
+      }
+
+      // Adicionar novos membros
+      const avalNovos = avaliadoresSelecionados.filter(a => !initialAvalIds.has(a.id))
+      const habNovos = habilitadoresSelecionados.filter(h => !initialHabIds.has(h.id))
+      if (avalNovos.length > 0) {
+        await fetch(`/api/admin/editais/${editalId}/equipe`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userIds: avalNovos.map(a => a.id), funcao: 'AVALIADOR' }),
+        })
+      }
+      if (habNovos.length > 0) {
+        await fetch(`/api/admin/editais/${editalId}/equipe`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userIds: habNovos.map(h => h.id), funcao: 'HABILITADOR' }),
+        })
+      }
 
       if (arquivosRef.current?.hasPending()) {
         await arquivosRef.current.uploadPending(editalId)
@@ -1281,6 +1374,183 @@ export function EditalForm({ initialData }: EditalFormProps) {
           )}
         </div>
         </div>}
+      </Card>
+
+      {/* Secao 9 — Equipe do Edital */}
+      <Card padding="sm" className="sm:p-6">
+        <SectionHeader number={9} title="Equipe do Edital">
+          <p className="text-sm text-slate-500 mt-2">
+            Defina quais habilitadores e avaliadores trabalham neste edital. Se nenhum for atribuído, todos com o respectivo cargo terão acesso.
+          </p>
+        </SectionHeader>
+
+        {!collapsedSections[9] && (
+          <div className="space-y-6 mt-4">
+            {/* Habilitadores */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-slate-800">Habilitadores</h3>
+                <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                  {habilitadoresSelecionados.length > 0
+                    ? `${habilitadoresSelecionados.length} habilitador${habilitadoresSelecionados.length > 1 ? 'es' : ''}`
+                    : 'Nenhum (todos acessam)'}
+                </span>
+              </div>
+
+              {habilitadoresSelecionados.length > 0 && (
+                <div className="space-y-1.5 mb-3">
+                  {habilitadoresSelecionados.map(m => (
+                    <div key={m.id} className="flex items-center justify-between gap-2 px-3 py-2 bg-slate-50 rounded-lg">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-slate-900 truncate">{m.nome}</p>
+                        <p className="text-xs text-slate-500 truncate">{m.email}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setHabilitadoresSelecionados(prev => prev.filter(h => h.id !== m.id))}
+                        className="shrink-0 text-xs font-medium text-red-500 hover:text-red-700 px-2 py-1 min-h-[44px] min-w-[44px] flex items-center justify-center rounded focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500"
+                        aria-label={`Remover ${m.nome}`}
+                      >
+                        Remover
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div>
+                <p className="text-xs font-medium text-slate-500 uppercase mb-2">Adicionar Habilitador</p>
+                {loadingEquipe ? (
+                  <p className="text-sm text-slate-400">Carregando...</p>
+                ) : (() => {
+                  const habIds = new Set(habilitadoresSelecionados.map(h => h.id))
+                  const disponíveis = allHabilitadores.filter(h => !habIds.has(h.id))
+                  return disponíveis.length === 0 ? (
+                    <p className="text-sm text-slate-400">
+                      {allHabilitadores.length === 0
+                        ? 'Nenhum habilitador cadastrado'
+                        : 'Todos os habilitadores já foram adicionados'}
+                    </p>
+                  ) : (
+                    <div className="flex items-end gap-2">
+                      <div className="flex-1">
+                        <label htmlFor="select-hab-form" className="sr-only">Selecionar habilitador</label>
+                        <select
+                          id="select-hab-form"
+                          value={selectedHabilitadorId}
+                          onChange={e => setSelectedHabilitadorId(e.target.value)}
+                          className="block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-500 min-h-[44px]"
+                        >
+                          <option value="">Selecionar...</option>
+                          {disponíveis.map(h => (
+                            <option key={h.id} value={h.id}>{h.nome} ({h.email})</option>
+                          ))}
+                        </select>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const membro = allHabilitadores.find(h => h.id === selectedHabilitadorId)
+                          if (membro) {
+                            setHabilitadoresSelecionados(prev => [...prev, membro])
+                            setSelectedHabilitadorId('')
+                          }
+                        }}
+                        disabled={!selectedHabilitadorId}
+                        className="shrink-0 inline-flex items-center justify-center rounded-lg bg-brand-600 text-white font-medium text-sm px-4 min-h-[44px] hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+                      >
+                        Adicionar
+                      </button>
+                    </div>
+                  )
+                })()}
+              </div>
+            </div>
+
+            <div className="border-t border-slate-200" />
+
+            {/* Avaliadores */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-slate-800">Avaliadores</h3>
+                <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                  {avaliadoresSelecionados.length > 0
+                    ? `${avaliadoresSelecionados.length} avaliador${avaliadoresSelecionados.length > 1 ? 'es' : ''}`
+                    : 'Nenhum (todos acessam)'}
+                </span>
+              </div>
+
+              {avaliadoresSelecionados.length > 0 && (
+                <div className="space-y-1.5 mb-3">
+                  {avaliadoresSelecionados.map(m => (
+                    <div key={m.id} className="flex items-center justify-between gap-2 px-3 py-2 bg-slate-50 rounded-lg">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-slate-900 truncate">{m.nome}</p>
+                        <p className="text-xs text-slate-500 truncate">{m.email}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setAvaliadoresSelecionados(prev => prev.filter(a => a.id !== m.id))}
+                        className="shrink-0 text-xs font-medium text-red-500 hover:text-red-700 px-2 py-1 min-h-[44px] min-w-[44px] flex items-center justify-center rounded focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500"
+                        aria-label={`Remover ${m.nome}`}
+                      >
+                        Remover
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div>
+                <p className="text-xs font-medium text-slate-500 uppercase mb-2">Adicionar Avaliador</p>
+                {loadingEquipe ? (
+                  <p className="text-sm text-slate-400">Carregando...</p>
+                ) : (() => {
+                  const avalIds = new Set(avaliadoresSelecionados.map(a => a.id))
+                  const disponíveis = allAvaliadores.filter(a => !avalIds.has(a.id))
+                  return disponíveis.length === 0 ? (
+                    <p className="text-sm text-slate-400">
+                      {allAvaliadores.length === 0
+                        ? 'Nenhum avaliador cadastrado'
+                        : 'Todos os avaliadores já foram adicionados'}
+                    </p>
+                  ) : (
+                    <div className="flex items-end gap-2">
+                      <div className="flex-1">
+                        <label htmlFor="select-aval-form" className="sr-only">Selecionar avaliador</label>
+                        <select
+                          id="select-aval-form"
+                          value={selectedAvaliadorId}
+                          onChange={e => setSelectedAvaliadorId(e.target.value)}
+                          className="block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-500 min-h-[44px]"
+                        >
+                          <option value="">Selecionar...</option>
+                          {disponíveis.map(a => (
+                            <option key={a.id} value={a.id}>{a.nome} ({a.email})</option>
+                          ))}
+                        </select>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const membro = allAvaliadores.find(a => a.id === selectedAvaliadorId)
+                          if (membro) {
+                            setAvaliadoresSelecionados(prev => [...prev, membro])
+                            setSelectedAvaliadorId('')
+                          }
+                        }}
+                        disabled={!selectedAvaliadorId}
+                        className="shrink-0 inline-flex items-center justify-center rounded-lg bg-brand-600 text-white font-medium text-sm px-4 min-h-[44px] hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+                      >
+                        Adicionar
+                      </button>
+                    </div>
+                  )
+                })()}
+              </div>
+            </div>
+          </div>
+        )}
       </Card>
 
       {/* Acoes do formulario */}
