@@ -12,6 +12,7 @@ import type { CriterioAvaliacao } from '@/lib/avaliacao-criterios'
 import type { CampoFormulario } from '@/types/campo-formulario'
 import type { TipoProponente } from '@prisma/client'
 import { CronogramaEditor } from './cronograma-editor'
+import type { TipoAnexo } from '@/lib/constants/attachment-types'
 
 const TIPO_PROPONENTE_OPTIONS: { value: TipoProponente; label: string }[] = [
   { value: 'PF', label: 'Pessoa Física' },
@@ -19,12 +20,6 @@ const TIPO_PROPONENTE_OPTIONS: { value: TipoProponente; label: string }[] = [
   { value: 'PJ', label: 'Pessoa Jurídica' },
   { value: 'COLETIVO', label: 'Coletivo' },
 ]
-
-interface TipoAnexo {
-  tipo: string
-  label: string
-  obrigatorio: boolean
-}
 
 interface RegraDesempate {
   descricao: string
@@ -190,6 +185,9 @@ export function EditalForm({ initialData }: EditalFormProps) {
   const [error, setError] = useState<string | null>(null)
   const [collapsedSections, setCollapsedSections] = useState<Record<number, boolean>>({})
 
+  // Tipos de anexo disponíveis (da API)
+  const [tiposAnexoDisponiveis, setTiposAnexoDisponiveis] = useState<{ id: string; tipo: string; label: string; obrigatorio: boolean; tag: string }[]>([])
+
   // Equipe do edital
   const [avaliadoresSelecionados, setAvaliadoresSelecionados] = useState<MembroEquipe[]>(
     initialData?.initialAvaliadores ?? []
@@ -230,6 +228,30 @@ export function EditalForm({ initialData }: EditalFormProps) {
     }
     fetchElegíveis()
   }, [])
+
+  // Carregar tipos de anexo disponíveis
+  useEffect(() => {
+    async function fetchTiposAnexo() {
+      try {
+        const res = await fetch('/api/admin/configuracoes/tipos-anexo')
+        if (res.ok) {
+          const json = await res.json()
+          setTiposAnexoDisponiveis(json.data)
+        }
+      } catch {
+        // silencioso
+      }
+    }
+    fetchTiposAnexo()
+  }, [])
+
+  function addTipoIndividual(tipoId: string) {
+    const found = tiposAnexoDisponiveis.find(t => t.id === tipoId)
+    if (!found) return
+    // Evitar duplicar
+    if (tiposAnexo.some(t => t.tipo === found.tipo)) return
+    setTiposAnexo(prev => [...prev, { tipo: found.tipo, label: found.label, obrigatorio: found.obrigatorio }])
+  }
 
   const toggleSection = useCallback((n: number) => {
     setCollapsedSections(prev => ({ ...prev, [n]: !prev[n] }))
@@ -1076,83 +1098,89 @@ export function EditalForm({ initialData }: EditalFormProps) {
           title="Tipos de Anexo"
           actions={
             <div className="flex items-center gap-2">
-              {tiposAnexo.length === 0 ? (
-                <span className="inline-flex items-center text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
-                  Usando tipos padrão (7)
-                </span>
-              ) : (
-                <span className="inline-flex items-center text-xs font-medium text-brand-700 bg-brand-50 px-2.5 py-0.5 rounded-full">
-                  {tiposAnexo.length} tipos configurados
-                </span>
-              )}
               {tiposAnexo.length > 0 && (
-                <Button type="button" variant="outline" size="sm" onClick={() => setTiposAnexo([])}>
-                  Restaurar padrão
-                </Button>
+                <>
+                  <span className="inline-flex items-center text-xs font-medium text-brand-700 bg-brand-50 px-2.5 py-0.5 rounded-full">
+                    {tiposAnexo.length} tipo{tiposAnexo.length !== 1 ? 's' : ''} selecionado{tiposAnexo.length !== 1 ? 's' : ''}
+                  </span>
+                  <Button type="button" variant="outline" size="sm" onClick={() => setTiposAnexo([])}>
+                    Limpar todos
+                  </Button>
+                </>
               )}
-              <Button type="button" variant="outline" size="sm" onClick={() => setTiposAnexo(prev => [
-                ...prev,
-                { tipo: '', label: '', obrigatorio: false },
-              ])}>
-                + Adicionar tipo
-              </Button>
             </div>
           }
         >
           <p className="text-sm text-slate-500 mt-2">
-            Configure os tipos de documento que o proponente poderá enviar. Se vazio, serão usados os 7 tipos padrão.
+            Selecione os tipos de documento que o proponente deverá enviar neste edital.{' '}
+            <a href="/admin/configuracoes/tipos-anexo" target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:text-brand-700 underline">
+              Gerenciar tipos
+            </a>
           </p>
         </SectionHeader>
 
-        {!collapsedSections[6] && (tiposAnexo.length === 0 ? (
-          <p className="text-sm text-slate-500 text-center py-4">
-            Nenhum tipo customizado. O formulário usará os tipos padrão (Documento Pessoal, Comprovante de Endereço, Portfólio, etc.).
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {tiposAnexo.map((ta, idx) => (
-              <div key={idx} className="rounded-lg border border-slate-200 bg-white p-3 space-y-3">
-                <div className="flex items-start justify-between gap-2">
-                  <span className="text-xs font-medium text-slate-400">Tipo {idx + 1}</span>
-                  <Button
-                    type="button"
-                    variant="danger"
-                    size="sm"
-                    onClick={() => setTiposAnexo(prev => prev.filter((_, i) => i !== idx))}
-                    aria-label={`Remover tipo de anexo ${idx + 1}`}
-                  >
-                    Remover
-                  </Button>
+        {!collapsedSections[6] && <>
+          {/* Adicionar tipo individual */}
+          {tiposAnexoDisponiveis.length > 0 && (
+            <div className="mb-4">
+              <label className="text-sm font-medium text-slate-700 block mb-1.5">Adicionar tipo</label>
+              <select
+                className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                value=""
+                onChange={(e) => {
+                  if (e.target.value) addTipoIndividual(e.target.value)
+                }}
+              >
+                <option value="">Selecionar tipo...</option>
+                {tiposAnexoDisponiveis
+                  .filter(t => !tiposAnexo.some(ta => ta.tipo === t.tipo))
+                  .map(t => (
+                    <option key={t.id} value={t.id}>
+                      {t.label} ({t.tag}){t.obrigatorio ? ' *' : ''}
+                    </option>
+                  ))}
+              </select>
+            </div>
+          )}
+
+          {tiposAnexo.length === 0 ? (
+            <p className="text-sm text-slate-500 text-center py-4">
+              Nenhum tipo selecionado. Use o dropdown acima para adicionar os tipos de anexo deste edital.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {tiposAnexo.map((ta, idx) => (
+                <div key={idx} className="rounded-lg border border-slate-200 bg-white p-3 space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-xs font-medium text-slate-400">Tipo {idx + 1}</span>
+                    <Button
+                      type="button"
+                      variant="danger"
+                      size="sm"
+                      onClick={() => setTiposAnexo(prev => prev.filter((_, i) => i !== idx))}
+                      aria-label={`Remover tipo de anexo ${idx + 1}`}
+                    >
+                      Remover
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium text-slate-900">{ta.label}</span>
+                    <span className="text-xs font-mono text-slate-400">{ta.tipo}</span>
+                  </div>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={ta.obrigatorio}
+                      onChange={e => setTiposAnexo(prev => prev.map((t, i) => i === idx ? { ...t, obrigatorio: e.target.checked } : t))}
+                      className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                    />
+                    <span className="text-sm text-slate-700">Obrigatório</span>
+                  </label>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <Input
-                    label="ID interno (tipo)"
-                    required
-                    value={ta.tipo}
-                    onChange={e => setTiposAnexo(prev => prev.map((t, i) => i === idx ? { ...t, tipo: e.target.value } : t))}
-                    placeholder="Ex: CERTIFICADO_PNCV"
-                  />
-                  <Input
-                    label="Nome visível (label)"
-                    required
-                    value={ta.label}
-                    onChange={e => setTiposAnexo(prev => prev.map((t, i) => i === idx ? { ...t, label: e.target.value } : t))}
-                    placeholder="Ex: Certificado PNCV"
-                  />
-                </div>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={ta.obrigatorio}
-                    onChange={e => setTiposAnexo(prev => prev.map((t, i) => i === idx ? { ...t, obrigatorio: e.target.checked } : t))}
-                    className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
-                  />
-                  <span className="text-sm text-slate-700">Obrigatório</span>
-                </label>
-              </div>
-            ))}
-          </div>
-        ))}
+              ))}
+            </div>
+          )}
+        </>}
       </Card>
 
       {/* Secao 7 - Arquivos */}
