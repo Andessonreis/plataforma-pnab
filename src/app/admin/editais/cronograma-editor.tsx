@@ -236,18 +236,20 @@ export function CronogramaEditor({ items, onChange, warnings }: CronogramaEditor
               + Etapa Personalizada
             </Button>
 
-            {/* Botão recarregar template (se já tem items mas faltam fases) */}
-            {fasesDisponiveis.length > 0 && items.length > 0 && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={loadTemplate}
-                className="text-slate-500"
-              >
-                Recarregar Padrão
-              </Button>
-            )}
+            {/* Botão resetar para o cronograma padrão */}
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                if (window.confirm('Isso substituirá todas as etapas atuais pelo cronograma padrão. Deseja continuar?')) {
+                  loadTemplate()
+                }
+              }}
+              className="text-slate-500"
+            >
+              Resetar para Padrão
+            </Button>
           </div>
         </>
       )}
