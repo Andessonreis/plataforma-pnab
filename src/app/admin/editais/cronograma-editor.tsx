@@ -33,6 +33,7 @@ interface CronogramaEditorProps {
 
 export function CronogramaEditor({ items, onChange, warnings }: CronogramaEditorProps) {
   const [addFaseOpen, setAddFaseOpen] = useState(false)
+  const [showResetModal, setShowResetModal] = useState(false)
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -241,17 +242,57 @@ export function CronogramaEditor({ items, onChange, warnings }: CronogramaEditor
               type="button"
               variant="ghost"
               size="sm"
-              onClick={() => {
-                if (window.confirm('Isso substituirá todas as etapas atuais pelo cronograma padrão. Deseja continuar?')) {
-                  loadTemplate()
-                }
-              }}
+              onClick={() => setShowResetModal(true)}
               className="text-slate-500"
             >
               Resetar para Padrão
             </Button>
           </div>
         </>
+      )}
+
+      {/* Modal de confirmação para resetar */}
+      {showResetModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={() => setShowResetModal(false)}
+          aria-modal="true"
+          role="dialog"
+          aria-labelledby="reset-modal-title"
+        >
+          <div
+            className="mx-4 w-full max-w-md rounded-lg bg-white p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 id="reset-modal-title" className="text-lg font-semibold text-slate-900">
+              Resetar cronograma
+            </h3>
+            <p className="mt-2 text-sm text-slate-600">
+              Isso substituirá todas as etapas atuais pelo cronograma padrão. As datas preenchidas serão perdidas.
+            </p>
+            <div className="mt-5 flex justify-end gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowResetModal(false)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                variant="danger"
+                size="sm"
+                onClick={() => {
+                  loadTemplate()
+                  setShowResetModal(false)
+                }}
+              >
+                Resetar
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
