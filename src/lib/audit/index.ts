@@ -61,6 +61,12 @@ export const AUDIT_ACTIONS = {
   TIPO_ANEXO_ATUALIZADO: 'TIPO_ANEXO_ATUALIZADO',
   TIPO_ANEXO_EXCLUIDO: 'TIPO_ANEXO_EXCLUIDO',
 
+  // Admin — categorias culturais
+  CATEGORIA_CRIADA: 'CATEGORIA_CRIADA',
+  CATEGORIA_ATUALIZADA: 'CATEGORIA_ATUALIZADA',
+  CATEGORIA_EXCLUIDA: 'CATEGORIA_EXCLUIDA',
+  CATEGORIAS_REORDENADAS: 'CATEGORIAS_REORDENADAS',
+
   // Admin — dados
   EXPORTACAO_CSV: 'EXPORTACAO_CSV',
   EXPORTACAO_LISTA_PDF: 'EXPORTACAO_LISTA_PDF',
@@ -109,6 +115,10 @@ export const ACTION_LABELS: Record<string, string> = {
   TIPO_ANEXO_CRIADO: 'Tipo de anexo criado',
   TIPO_ANEXO_ATUALIZADO: 'Tipo de anexo atualizado',
   TIPO_ANEXO_EXCLUIDO: 'Tipo de anexo excluído',
+  CATEGORIA_CRIADA: 'Categoria criada',
+  CATEGORIA_ATUALIZADA: 'Categoria atualizada',
+  CATEGORIA_EXCLUIDA: 'Categoria excluída',
+  CATEGORIAS_REORDENADAS: 'Categorias reordenadas',
   EXPORTACAO_CSV: 'Exportação CSV',
   EXPORTACAO_LISTA_PDF: 'Exportação lista PDF',
   EXPORTACAO_RELATORIO_FINAL: 'Exportação relatório final',

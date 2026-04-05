@@ -81,4 +81,5 @@ export {
   IconStar,
   IconSlides,
   IconSettings,
+  IconTag,
 } from './icons'

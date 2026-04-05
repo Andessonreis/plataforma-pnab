@@ -649,6 +649,46 @@ async function main() {
   }
 
   // ─────────────────────────────────────────────────────────────────────────
+  // Categorias Culturais — 16 categorias padrão
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const categoriasData = [
+    { nome: 'Artes Visuais', slug: 'artes-visuais' },
+    { nome: 'Música', slug: 'musica' },
+    { nome: 'Teatro', slug: 'teatro' },
+    { nome: 'Dança', slug: 'danca' },
+    { nome: 'Literatura', slug: 'literatura' },
+    { nome: 'Circo', slug: 'circo' },
+    { nome: 'Audiovisual', slug: 'audiovisual' },
+    { nome: 'Artesanato', slug: 'artesanato' },
+    { nome: 'Cultura Popular', slug: 'cultura-popular' },
+    { nome: 'Patrimônio Cultural', slug: 'patrimonio-cultural' },
+    { nome: 'Cultura Digital', slug: 'cultura-digital' },
+    { nome: 'Gastronomia', slug: 'gastronomia' },
+    { nome: 'Moda', slug: 'moda' },
+    { nome: 'Hip Hop', slug: 'hip-hop' },
+    { nome: 'Culturas Indígenas', slug: 'culturas-indigenas' },
+    { nome: 'Culturas Afro-Brasileiras', slug: 'culturas-afro-brasileiras' },
+  ]
+
+  for (let i = 0; i < categoriasData.length; i++) {
+    const cat = categoriasData[i]
+    await prisma.category.upsert({
+      where: { slug: cat.slug },
+      update: {},
+      create: {
+        nome: cat.nome,
+        slug: cat.slug,
+        ativa: true,
+        isSystem: true,
+        ordem: (i + 1) * 10,
+      },
+    })
+  }
+
+  console.log(`✔ ${categoriasData.length} categorias culturais criadas`)
+
+  // ─────────────────────────────────────────────────────────────────────────
   // Resumo
   // ─────────────────────────────────────────────────────────────────────────
 

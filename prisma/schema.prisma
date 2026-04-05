@@ -446,6 +446,25 @@ model AttachmentType {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Categorias Culturais
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Category {
+  id        String   @id @default(cuid())
+  nome      String   @unique
+  slug      String   @unique
+  descricao String?
+  ativa     Boolean  @default(true)
+  isSystem  Boolean  @default(false)
+  ordem     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ativa])
+  @@index([ordem])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Atendimento
 // ─────────────────────────────────────────────────────────────────────────────
 

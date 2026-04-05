@@ -58,25 +58,6 @@ interface EditalFormProps {
   }
 }
 
-export const CATEGORIAS_OPCOES = [
-  'Artes Visuais',
-  'Música',
-  'Teatro',
-  'Dança',
-  'Literatura',
-  'Circo',
-  'Audiovisual',
-  'Artesanato',
-  'Cultura Popular',
-  'Patrimônio Cultural',
-  'Cultura Digital',
-  'Gastronomia',
-  'Moda',
-  'Hip Hop',
-  'Culturas Indígenas',
-  'Culturas Afro-Brasileiras',
-]
-
 const TEMPLATE_REGRAS = [
   '• Ser pessoa física ou jurídica residente ou com sede no município de Irecê/BA',
   '• Possuir CPF ou CNPJ ativo e regular',
@@ -141,7 +122,6 @@ export function EditalForm({ initialData }: EditalFormProps) {
     return isNaN(num) ? '' : num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   })
   const [categorias, setCategorias] = useState<string[]>(initialData?.categorias ?? [])
-  const [novaCategoria, setNovaCategoria] = useState('')
   const [regrasElegibilidade, setRegrasElegibilidade] = useState(initialData?.regrasElegibilidade ?? '')
   const [acoesAfirmativas, setAcoesAfirmativas] = useState(initialData?.acoesAfirmativas ?? '')
   const [status, setStatus] = useState<EditalStatus>(initialData?.status ?? 'RASCUNHO')
@@ -187,6 +167,10 @@ export function EditalForm({ initialData }: EditalFormProps) {
 
   // Tipos de anexo disponíveis (da API)
   const [tiposAnexoDisponiveis, setTiposAnexoDisponiveis] = useState<{ id: string; tipo: string; label: string; obrigatorio: boolean; tag: string }[]>([])
+
+  // Categorias disponíveis (da API)
+  const [categoriasDisponiveis, setCategoriasDisponiveis] = useState<{ id: string; nome: string }[]>([])
+  const [loadingCategorias, setLoadingCategorias] = useState(true)
 
   // Equipe do edital
   const [avaliadoresSelecionados, setAvaliadoresSelecionados] = useState<MembroEquipe[]>(
@@ -245,6 +229,24 @@ export function EditalForm({ initialData }: EditalFormProps) {
     fetchTiposAnexo()
   }, [])
 
+  // Carregar categorias disponíveis
+  useEffect(() => {
+    async function fetchCategorias() {
+      try {
+        const res = await fetch('/api/admin/configuracoes/categorias')
+        if (res.ok) {
+          const json = await res.json()
+          setCategoriasDisponiveis(json.data)
+        }
+      } catch {
+        // silencioso
+      } finally {
+        setLoadingCategorias(false)
+      }
+    }
+    fetchCategorias()
+  }, [])
+
   function addTipoIndividual(tipoId: string) {
     const found = tiposAnexoDisponiveis.find(t => t.id === tipoId)
     if (!found) return
@@ -296,17 +298,6 @@ export function EditalForm({ initialData }: EditalFormProps) {
     setCategorias(prev =>
       prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
     )
-  }
-
-  function addCategoriaPersonalizada() {
-    const trimmed = novaCategoria.trim()
-    if (!trimmed) return
-    if (categorias.includes(trimmed)) {
-      setNovaCategoria('')
-      return
-    }
-    setCategorias(prev => [...prev, trimmed])
-    setNovaCategoria('')
   }
 
   function addCampoFormulario() {
@@ -565,42 +556,56 @@ export function EditalForm({ initialData }: EditalFormProps) {
           </p>
         </SectionHeader>
         {!collapsedSections[2] && <>
-          <div className="flex flex-wrap gap-2 mt-4">
-            {CATEGORIAS_OPCOES.map(cat => {
-              const selected = categorias.includes(cat)
-              return (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => toggleCategoria(cat)}
-                  aria-pressed={selected}
-                  className={[
-                    'rounded-full border px-3 py-1.5 text-sm font-medium transition-colors',
-                    'focus-visible:outline-2 focus-visible:outline-offset-2',
-                    selected
-                      ? 'border-brand-600 bg-brand-600 text-white'
-                      : 'border-slate-300 bg-white text-slate-700 hover:border-brand-400',
-                  ].join(' ')}
-                >
-                  {cat}
-                </button>
-              )
-            })}
-          </div>
+          {loadingCategorias ? (
+            <p className="text-sm text-slate-400 mt-4">Carregando categorias...</p>
+          ) : categoriasDisponiveis.length === 0 ? (
+            <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <p className="text-sm text-amber-800">
+                Nenhuma categoria cadastrada.{' '}
+                <a href="/admin/configuracoes/categorias" className="underline font-medium hover:text-amber-900">
+                  Cadastre categorias
+                </a>{' '}
+                antes de criar um edital.
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2 mt-4">
+              {categoriasDisponiveis.map(cat => {
+                const selected = categorias.includes(cat.nome)
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => toggleCategoria(cat.nome)}
+                    aria-pressed={selected}
+                    className={[
+                      'rounded-full border px-3 py-1.5 text-sm font-medium transition-colors',
+                      'focus-visible:outline-2 focus-visible:outline-offset-2',
+                      selected
+                        ? 'border-brand-600 bg-brand-600 text-white'
+                        : 'border-slate-300 bg-white text-slate-700 hover:border-brand-400',
+                    ].join(' ')}
+                  >
+                    {cat.nome}
+                  </button>
+                )
+              })}
+            </div>
+          )}
 
-          {/* Tags personalizadas (não predefinidas) */}
-          {categorias.filter(c => !CATEGORIAS_OPCOES.includes(c)).length > 0 && (
+          {/* Categorias salvas no edital que não existem mais no cadastro */}
+          {categorias.filter(c => !categoriasDisponiveis.some(d => d.nome === c)).length > 0 && (
             <div className="mt-3 flex flex-wrap gap-2">
-              {categorias.filter(c => !CATEGORIAS_OPCOES.includes(c)).map(cat => (
+              {categorias.filter(c => !categoriasDisponiveis.some(d => d.nome === c)).map(cat => (
                 <span
                   key={cat}
-                  className="inline-flex items-center gap-1 rounded-full border border-brand-600 bg-brand-50 px-3 py-1.5 text-sm font-medium text-brand-700"
+                  className="inline-flex items-center gap-1 rounded-full border border-amber-400 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-700"
                 >
                   {cat}
                   <button
                     type="button"
                     onClick={() => setCategorias(prev => prev.filter(c => c !== cat))}
-                    className="ml-0.5 text-brand-400 hover:text-red-500"
+                    className="ml-0.5 text-amber-400 hover:text-red-500"
                     aria-label={`Remover ${cat}`}
                   >
                     &times;
@@ -609,25 +614,6 @@ export function EditalForm({ initialData }: EditalFormProps) {
               ))}
             </div>
           )}
-
-          {/* Input para adicionar categoria livre */}
-          <div className="mt-4 flex gap-2">
-            <input
-              type="text"
-              value={novaCategoria}
-              onChange={e => setNovaCategoria(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCategoriaPersonalizada() } }}
-              placeholder="Adicionar outra categoria..."
-              className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-            />
-            <button
-              type="button"
-              onClick={addCategoriaPersonalizada}
-              className="rounded-lg border border-brand-600 bg-brand-50 px-4 py-2 text-sm font-medium text-brand-700 hover:bg-brand-100 transition-colors"
-            >
-              Adicionar
-            </button>
-          </div>
 
           {categorias.length > 0 && (
             <p className="mt-3 text-xs text-slate-500">
