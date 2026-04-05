@@ -1,10 +1,12 @@
 import type { EditalStatus } from '@prisma/client'
 import type {
   CronogramaItem,
+  CronogramaFormItem,
   CronogramaDisplayItem,
   CronogramaLegacyItem,
+  CronogramaValidationWarning,
 } from '@/types/cronograma'
-import { CRONOGRAMA_FASES_ORDENADAS } from '@/types/cronograma'
+import { CRONOGRAMA_FASES_ORDENADAS, CRONOGRAMA_FASES_FORMULARIO } from '@/types/cronograma'
 import { editalCronogramaLabel } from '@/lib/status-maps'
 
 // ── Normalização para fuzzy matching (reutilizada do scheduler) ─────────────
@@ -320,4 +322,127 @@ export function extractCustomItems(
       dataHora: item.dataHora,
       destaque: item.destaque ?? false,
     }))
+}
+
+// ── Helpers para o novo CronogramaEditor (drag & drop) ──────────────────────
+
+let _counter = 0
+
+/** Gera ID efêmero único para @dnd-kit */
+export function generateFormItemId(): string {
+  return `cfi_${Date.now()}_${++_counter}`
+}
+
+/**
+ * Converte dados salvos no banco (CronogramaItem[]) para formato do formulário
+ * com IDs efêmeros. Preserva a ordem original.
+ * Trata dados legados (sem campo `tipo`) via migrateLegacyCronograma.
+ */
+export function cronogramaToFormItems(raw: unknown): CronogramaFormItem[] {
+  const items = migrateLegacyCronograma(raw)
+  return items.map((item) => ({ ...item, id: generateFormItemId() }))
+}
+
+/**
+ * Remove IDs efêmeros dos form items para salvar no banco.
+ */
+export function formItemsToCronograma(items: CronogramaFormItem[]): CronogramaItem[] {
+  return items.map((item) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { id, ...rest } = item
+    return rest
+  })
+}
+
+/**
+ * Valida a ordem cronológica dos items do cronograma.
+ * Usa a ORDEM VISUAL (posição no array / drag & drop) como referência:
+ * cada item com data deve ter data >= ao item anterior com data.
+ * Isso garante que reordenar via drag gera warnings se as datas ficarem inconsistentes.
+ */
+export function validateCronogramaOrder(
+  items: CronogramaFormItem[],
+): CronogramaValidationWarning[] {
+  const warnings: CronogramaValidationWarning[] = []
+
+  // Pega todos os items (fases + custom) que têm data preenchida, na ordem visual
+  const itemsComData: { id: string; label: string; fase?: EditalStatus; date: Date }[] = []
+  for (const item of items) {
+    if (!item.dataHora?.trim()) continue
+    const d = new Date(item.dataHora)
+    if (isNaN(d.getTime())) continue
+
+    const label =
+      item.tipo === 'fase'
+        ? editalCronogramaLabel[item.fase]
+        : (item.label || 'Etapa personalizada')
+
+    itemsComData.push({
+      id: item.id,
+      label,
+      fase: item.tipo === 'fase' ? item.fase : undefined,
+      date: d,
+    })
+  }
+
+  // Compara cada item com o anterior na ordem visual
+  for (let i = 1; i < itemsComData.length; i++) {
+    const atual = itemsComData[i]
+    const anterior = itemsComData[i - 1]
+    if (atual.date < anterior.date) {
+      warnings.push({
+        itemId: atual.id,
+        fase: atual.fase,
+        message: `${atual.label} deve ser posterior a ${anterior.label}`,
+        anteriorFase: anterior.fase,
+      })
+    }
+  }
+
+  return warnings
+}
+
+/**
+ * Filtra warnings para um item específico (por ID).
+ */
+export function getItemValidationWarnings(
+  itemId: string,
+  warnings: CronogramaValidationWarning[],
+): CronogramaValidationWarning[] {
+  return warnings.filter((w) => w.itemId === itemId)
+}
+
+/**
+ * Validação server-side: mesma lógica da visual mas opera sobre CronogramaItem[] (sem IDs).
+ * Valida pela ordem do array (= ordem visual salva).
+ * Retorna array de mensagens de erro.
+ */
+export function validateCronogramaOrderServer(
+  items: CronogramaItem[],
+): string[] {
+  const errors: string[] = []
+
+  const itemsComData: { label: string; date: Date }[] = []
+  for (const item of items) {
+    if (!item.dataHora?.trim()) continue
+    const d = new Date(item.dataHora)
+    if (isNaN(d.getTime())) continue
+
+    const label =
+      item.tipo === 'fase'
+        ? editalCronogramaLabel[item.fase]
+        : (item.label || 'Etapa personalizada')
+
+    itemsComData.push({ label, date: d })
+  }
+
+  for (let i = 1; i < itemsComData.length; i++) {
+    const atual = itemsComData[i]
+    const anterior = itemsComData[i - 1]
+    if (atual.date < anterior.date) {
+      errors.push(`${atual.label} deve ser posterior a ${anterior.label}`)
+    }
+  }
+
+  return errors
 }

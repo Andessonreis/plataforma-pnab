@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { logAudit } from '@/lib/audit'
+import { validateCronogramaOrderServer } from '@/lib/utils/cronograma'
 
 export const runtime = 'nodejs'
 
@@ -53,7 +54,12 @@ const editalSchema = z.object({
     'HABILITACAO', 'AVALIACAO', 'RESULTADO_PRELIMINAR', 'RECURSO',
     'RESULTADO_FINAL', 'ENCERRADO',
   ]).default('RASCUNHO'),
-  cronograma: z.array(cronogramaItemSchema).default([]),
+  cronograma: z.array(cronogramaItemSchema).default([]).superRefine((items, ctx) => {
+    const errors = validateCronogramaOrderServer(items as import('@/types/cronograma').CronogramaItem[])
+    for (const msg of errors) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: msg, path: [] })
+    }
+  }),
   camposFormulario: z.array(z.record(z.string(), z.unknown())).default([]),
   vagasContemplados: z.number().int().min(1).nullable().optional(),
   vagasSuplentes: z.number().int().min(0).nullable().optional(),

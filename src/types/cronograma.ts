@@ -18,6 +18,18 @@ export interface CronogramaCustomItem {
 
 export type CronogramaItem = CronogramaFaseItem | CronogramaCustomItem
 
+// Item do formulário com ID efêmero para drag & drop (@dnd-kit)
+export type CronogramaFormItem = CronogramaItem & { id: string }
+
+// Warning de validação de ordem cronológica
+export interface CronogramaValidationWarning {
+  itemId: string
+  fase?: EditalStatus
+  message: string
+  /** Fase anterior que deveria ter data menor */
+  anteriorFase?: EditalStatus
+}
+
 // Item legado (formato antigo, sem campo `tipo`)
 export interface CronogramaLegacyItem {
   label: string

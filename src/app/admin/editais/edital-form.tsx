@@ -1,18 +1,17 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback, type FormEvent, type ReactNode } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo, type FormEvent, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { Input, Button, Card, Textarea, Select } from '@/components/ui'
 import type { EditalStatus } from '@prisma/client'
 import { EditalArquivos, type EditalArquivosHandle } from './edital-arquivos'
-import type { CronogramaItem } from '@/types/cronograma'
-import { CRONOGRAMA_FASES_FORMULARIO } from '@/types/cronograma'
-import { editalCronogramaLabel } from '@/lib/status-maps'
-import { extractFases, extractCustomItems } from '@/lib/utils/cronograma'
+import type { CronogramaItem, CronogramaFormItem } from '@/types/cronograma'
+import { cronogramaToFormItems, formItemsToCronograma, validateCronogramaOrder } from '@/lib/utils/cronograma'
 import { CHAR_LIMIT_DEFAULTS } from '@/lib/campo-limits'
 import type { CriterioAvaliacao } from '@/lib/avaliacao-criterios'
 import type { CampoFormulario } from '@/types/campo-formulario'
 import type { TipoProponente } from '@prisma/client'
+import { CronogramaEditor } from './cronograma-editor'
 
 const TIPO_PROPONENTE_OPTIONS: { value: TipoProponente; label: string }[] = [
   { value: 'PF', label: 'Pessoa Física' },
@@ -20,17 +19,6 @@ const TIPO_PROPONENTE_OPTIONS: { value: TipoProponente; label: string }[] = [
   { value: 'PJ', label: 'Pessoa Jurídica' },
   { value: 'COLETIVO', label: 'Coletivo' },
 ]
-
-interface FaseState {
-  dataHora: string
-  destaque: boolean
-}
-
-interface CustomItemState {
-  label: string
-  dataHora: string
-  destaque: boolean
-}
 
 interface TipoAnexo {
   tipo: string
@@ -163,23 +151,19 @@ export function EditalForm({ initialData }: EditalFormProps) {
   const [acoesAfirmativas, setAcoesAfirmativas] = useState(initialData?.acoesAfirmativas ?? '')
   const [status, setStatus] = useState<EditalStatus>(initialData?.status ?? 'RASCUNHO')
 
-  // Cronograma: fases fixas + items customizados
-  const [fases, setFases] = useState<Record<string, FaseState>>(() => {
-    if (initialData?.cronograma) {
-      return extractFases(initialData.cronograma)
-    }
-    const initial: Record<string, FaseState> = {}
-    for (const fase of CRONOGRAMA_FASES_FORMULARIO) {
-      initial[fase] = { dataHora: '', destaque: false }
-    }
-    return initial
-  })
-  const [customItems, setCustomItems] = useState<CustomItemState[]>(() => {
-    if (initialData?.cronograma) {
-      return extractCustomItems(initialData.cronograma)
+  // Cronograma: estado unificado com IDs efêmeros para drag & drop
+  const [cronogramaItems, setCronogramaItems] = useState<CronogramaFormItem[]>(() => {
+    if (initialData?.cronograma && initialData.cronograma.length > 0) {
+      return cronogramaToFormItems(initialData.cronograma)
     }
     return []
   })
+
+  // Validação de ordem cronológica em tempo real
+  const cronogramaWarnings = useMemo(
+    () => validateCronogramaOrder(cronogramaItems),
+    [cronogramaItems],
+  )
 
   const [vagasContemplados, setVagasContemplados] = useState(
     initialData?.vagasContemplados != null ? String(initialData.vagasContemplados) : ''
@@ -303,27 +287,6 @@ export function EditalForm({ initialData }: EditalFormProps) {
     setNovaCategoria('')
   }
 
-  function updateFase(fase: string, field: keyof FaseState, value: string | boolean) {
-    setFases(prev => ({
-      ...prev,
-      [fase]: { ...prev[fase], [field]: value },
-    }))
-  }
-
-  function addCustomItem() {
-    setCustomItems(prev => [...prev, { label: '', dataHora: '', destaque: false }])
-  }
-
-  function removeCustomItem(index: number) {
-    setCustomItems(prev => prev.filter((_, i) => i !== index))
-  }
-
-  function updateCustomItem(index: number, field: keyof CustomItemState, value: string | boolean) {
-    setCustomItems(prev =>
-      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
-    )
-  }
-
   function addCampoFormulario() {
     setCamposFormulario(prev => [
       ...prev,
@@ -373,27 +336,20 @@ export function EditalForm({ initialData }: EditalFormProps) {
     setError(null)
     setLoading(true)
 
-    // Monta cronograma no formato novo
-    const cronogramaFiltrado: CronogramaItem[] = [
-      // Fases fixas (apenas as que têm data preenchida)
-      ...CRONOGRAMA_FASES_FORMULARIO
-        .filter(fase => fases[fase]?.dataHora?.trim())
-        .map(fase => ({
-          tipo: 'fase' as const,
-          fase: fase as EditalStatus,
-          dataHora: fases[fase].dataHora,
-          destaque: fases[fase].destaque,
-        })),
-      // Items customizados (apenas os que têm label)
-      ...customItems
-        .filter(item => item.label.trim())
-        .map(item => ({
-          tipo: 'custom' as const,
-          label: item.label,
-          dataHora: item.dataHora,
-          destaque: item.destaque,
-        })),
-    ]
+    // Bloqueia submit se há erros de cronograma
+    if (cronogramaWarnings.length > 0) {
+      setError('Corrija as datas fora de ordem no cronograma antes de salvar.')
+      setLoading(false)
+      return
+    }
+
+    // Remove IDs efêmeros e filtra items sem conteúdo
+    const cronogramaFiltrado: CronogramaItem[] = formItemsToCronograma(
+      cronogramaItems.filter((item) => {
+        if (item.tipo === 'fase') return true // Fases fixas sempre incluídas (podem ter data vazia)
+        return item.label?.trim() // Custom items precisam de label
+      }),
+    )
 
     // Converte valorTotal para número (aceita vírgula como separador decimal)
     const valorTotalNum = valorTotal.trim()
@@ -1215,164 +1171,11 @@ export function EditalForm({ initialData }: EditalFormProps) {
         <SectionHeader number={8} title="Cronograma" />
 
         {!collapsedSections[8] && <div className="mt-4 sm:mt-5">
-        {/* Fases fixas do edital */}
-        <div className="rounded-lg border border-slate-200 bg-slate-50/50 p-4 mb-5">
-          <h3 className="text-sm font-semibold text-slate-700 mb-3">
-            Fases do Edital
-          </h3>
-          <p className="text-xs text-slate-500 mb-4">
-            Preencha as datas das fases que se aplicam a este edital. Fases sem data não serão salvas.
-          </p>
-          <div className="space-y-3">
-            {CRONOGRAMA_FASES_FORMULARIO.map((fase) => {
-              const faseState = fases[fase] ?? { dataHora: '', destaque: false }
-              return (
-                <div
-                  key={fase}
-                  className={[
-                    'rounded-lg border p-3 transition-colors',
-                    faseState.destaque
-                      ? 'border-blue-200 bg-blue-50'
-                      : 'border-slate-200 bg-white',
-                  ].join(' ')}
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                    <span className="text-sm font-medium text-slate-700 sm:w-64 shrink-0">
-                      {editalCronogramaLabel[fase]}
-                    </span>
-                    <div className="flex-1">
-                      <input
-                        type="datetime-local"
-                        value={faseState.dataHora}
-                        onChange={e => updateFase(fase, 'dataHora', e.target.value)}
-                        aria-label={`Data de ${editalCronogramaLabel[fase]}`}
-                        className="block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-0 focus:border-brand-500 focus:ring-brand-200"
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={faseState.destaque}
-                      aria-label={`Destaque para ${editalCronogramaLabel[fase]}`}
-                      onClick={() => updateFase(fase, 'destaque', !faseState.destaque)}
-                      className={[
-                        'flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors shrink-0',
-                        faseState.destaque
-                          ? 'border-blue-300 bg-blue-100 text-blue-700'
-                          : 'border-slate-300 bg-white text-slate-600 hover:border-slate-400',
-                      ].join(' ')}
-                    >
-                      <span
-                        className={[
-                          'inline-flex h-4 w-7 rounded-full border transition-colors',
-                          faseState.destaque ? 'border-blue-600 bg-blue-600' : 'border-slate-300 bg-slate-200',
-                        ].join(' ')}
-                      >
-                        <span
-                          className={[
-                            'my-auto block h-3 w-3 rounded-full bg-white shadow transition-transform',
-                            faseState.destaque ? 'translate-x-3.5' : 'translate-x-0.5',
-                          ].join(' ')}
-                        />
-                      </span>
-                      Destaque
-                    </button>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Etapas personalizadas */}
-        <div className="rounded-lg border border-slate-200 bg-slate-50/50 p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-slate-700">
-              Etapas Personalizadas
-            </h3>
-            <Button type="button" variant="outline" size="sm" onClick={addCustomItem}>
-              + Adicionar etapa
-            </Button>
-          </div>
-
-          {customItems.length === 0 ? (
-            <p className="text-sm text-slate-500 text-center py-3">
-              Nenhuma etapa personalizada.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {customItems.map((item, idx) => (
-                <div
-                  key={idx}
-                  className={[
-                    'rounded-lg border p-3 transition-colors',
-                    item.destaque
-                      ? 'border-blue-200 bg-blue-50'
-                      : 'border-slate-200 bg-white',
-                  ].join(' ')}
-                >
-                  <Input
-                    label="Etapa"
-                    value={item.label}
-                    onChange={e => updateCustomItem(idx, 'label', e.target.value)}
-                    placeholder="Ex.: Oficina de capacitação"
-                  />
-
-                  <div className="mt-3 flex flex-col sm:flex-row sm:items-end gap-3">
-                    <div className="flex-1">
-                      <Input
-                        label="Data / Hora"
-                        type="datetime-local"
-                        value={item.dataHora}
-                        onChange={e => updateCustomItem(idx, 'dataHora', e.target.value)}
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between sm:justify-start gap-3 pb-0.5">
-                      <button
-                        type="button"
-                        role="switch"
-                        aria-checked={item.destaque}
-                        onClick={() => updateCustomItem(idx, 'destaque', !item.destaque)}
-                        className={[
-                          'flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors',
-                          item.destaque
-                            ? 'border-blue-300 bg-blue-100 text-blue-700'
-                            : 'border-slate-300 bg-white text-slate-600 hover:border-slate-400',
-                        ].join(' ')}
-                      >
-                        <span
-                          className={[
-                            'inline-flex h-4 w-7 rounded-full border transition-colors',
-                            item.destaque ? 'border-blue-600 bg-blue-600' : 'border-slate-300 bg-slate-200',
-                          ].join(' ')}
-                        >
-                          <span
-                            className={[
-                              'my-auto block h-3 w-3 rounded-full bg-white shadow transition-transform',
-                              item.destaque ? 'translate-x-3.5' : 'translate-x-0.5',
-                            ].join(' ')}
-                          />
-                        </span>
-                        Destaque
-                      </button>
-
-                      <Button
-                        type="button"
-                        variant="danger"
-                        size="sm"
-                        onClick={() => removeCustomItem(idx)}
-                        aria-label={`Remover etapa personalizada ${idx + 1}`}
-                      >
-                        Remover
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+          <CronogramaEditor
+            items={cronogramaItems}
+            onChange={setCronogramaItems}
+            warnings={cronogramaWarnings}
+          />
         </div>}
       </Card>
 
@@ -1568,7 +1371,8 @@ export function EditalForm({ initialData }: EditalFormProps) {
           type="submit"
           variant="primary"
           loading={loading}
-          disabled={loading}
+          disabled={loading || cronogramaWarnings.length > 0}
+          title={cronogramaWarnings.length > 0 ? 'Corrija as datas fora de ordem no cronograma' : undefined}
           className="w-full sm:w-auto"
         >
           {loading
