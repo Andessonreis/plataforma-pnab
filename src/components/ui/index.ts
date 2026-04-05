@@ -80,4 +80,5 @@ export {
   IconChatBubble,
   IconStar,
   IconSlides,
+  IconSettings,
 } from './icons'

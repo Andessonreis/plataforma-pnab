@@ -18,6 +18,7 @@ import {
   IconStar,
   IconChatBubble,
   IconSlides,
+  IconSettings,
 } from '@/components/ui'
 
 interface AdminSidebarProps {
@@ -134,6 +135,12 @@ const navSections: NavSection[] = [
         href: '/admin/logs',
         roles: ['ADMIN'],
         icon: <IconInfo className="h-5 w-5" />,
+      },
+      {
+        label: 'Configurações',
+        href: '/admin/configuracoes',
+        roles: ['ADMIN'],
+        icon: <IconSettings className="h-5 w-5" />,
       },
     ],
   },

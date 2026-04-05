@@ -117,6 +117,15 @@ vi.mock('@/lib/db', () => ({
       delete: vi.fn(),
       count: vi.fn(),
     },
+    attachmentType: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn(),
+    },
     $transaction: vi.fn((ops: unknown) => {
       if (typeof ops === 'function') return ops({ /* proxy prisma */ })
       return Promise.all(ops as Promise<unknown>[])

@@ -56,6 +56,11 @@ export const AUDIT_ACTIONS = {
   RECURSO_SUBMETIDO: 'RECURSO_SUBMETIDO',
   RECURSO_DECIDIDO: 'RECURSO_DECIDIDO',
 
+  // Admin — tipos de anexo
+  TIPO_ANEXO_CRIADO: 'TIPO_ANEXO_CRIADO',
+  TIPO_ANEXO_ATUALIZADO: 'TIPO_ANEXO_ATUALIZADO',
+  TIPO_ANEXO_EXCLUIDO: 'TIPO_ANEXO_EXCLUIDO',
+
   // Admin — dados
   EXPORTACAO_CSV: 'EXPORTACAO_CSV',
   EXPORTACAO_LISTA_PDF: 'EXPORTACAO_LISTA_PDF',
@@ -101,6 +106,9 @@ export const ACTION_LABELS: Record<string, string> = {
   RESULTADO_FINAL_PUBLICADO: 'Resultado final publicado',
   RECURSO_SUBMETIDO: 'Recurso submetido',
   RECURSO_DECIDIDO: 'Recurso decidido',
+  TIPO_ANEXO_CRIADO: 'Tipo de anexo criado',
+  TIPO_ANEXO_ATUALIZADO: 'Tipo de anexo atualizado',
+  TIPO_ANEXO_EXCLUIDO: 'Tipo de anexo excluído',
   EXPORTACAO_CSV: 'Exportação CSV',
   EXPORTACAO_LISTA_PDF: 'Exportação lista PDF',
   EXPORTACAO_RELATORIO_FINAL: 'Exportação relatório final',

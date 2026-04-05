@@ -8,6 +8,7 @@ import { IconArrowLeft, IconArrowRight, IconCheck, IconDocument } from '@/compon
 import { resolveCharLimits } from '@/lib/campo-limits'
 import { filterCamposByTipo, type CampoFormulario } from '@/types/campo-formulario'
 import type { TipoProponente } from '@prisma/client'
+import { PNAB_DEFAULT_ATTACHMENT_TYPES } from '@/lib/constants/attachment-types'
 
 // ─── Contador de caracteres ──────────────────────────────────────────────────
 
@@ -45,11 +46,7 @@ interface Anexo {
   createdAt: string
 }
 
-interface TipoAnexoEdital {
-  tipo: string
-  label: string
-  obrigatorio: boolean
-}
+type TipoAnexoEdital = import('@/lib/constants/attachment-types').TipoAnexo
 
 interface EditalInfo {
   id: string
@@ -704,16 +701,11 @@ export default function InscricaoForm({
   )
 }
 
-// Tipos de anexo padrão (fallback quando o edital não define tipos customizados)
-const TIPOS_ANEXO_PADRAO: SelectOption[] = [
-  { value: 'DOCUMENTO_PESSOAL', label: 'Documento Pessoal' },
-  { value: 'COMPROVANTE_ENDERECO', label: 'Comprovante de Endereço' },
-  { value: 'PORTFOLIO', label: 'Portfólio / Currículo' },
-  { value: 'PROJETO', label: 'Projeto / Proposta' },
-  { value: 'ORCAMENTO', label: 'Orçamento' },
-  { value: 'DECLARACAO', label: 'Declaração' },
-  { value: 'OUTRO', label: 'Outro' },
-]
+// Tipos de anexo padrão (derivado da constante compartilhada)
+const TIPOS_ANEXO_PADRAO: SelectOption[] = PNAB_DEFAULT_ATTACHMENT_TYPES.map(t => ({
+  value: t.tipo,
+  label: t.label,
+}))
 
 // ─── Componente de Upload ────────────────────────────────────────────────────
 

@@ -429,6 +429,23 @@ model EditalMembro {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Tipos de Anexo (individuais, com tag/grupo)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model AttachmentType {
+  id          String   @id @default(cuid())
+  tipo        String   @unique   // ID interno (ex: DOCUMENTO_PESSOAL)
+  label       String             // Nome visível (ex: Documento Pessoal)
+  obrigatorio Boolean  @default(false)
+  tag         String             // Grupo (ex: "PNAB", "Cultura Viva")
+  isSystem    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([tag])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Atendimento
 // ─────────────────────────────────────────────────────────────────────────────
 

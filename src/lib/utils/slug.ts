@@ -34,3 +34,17 @@ export function generateContentSlug(titulo: string): string {
 export function generateSimpleSlug(titulo: string): string {
   return slugify(titulo)
 }
+
+/**
+ * Gera identificador UPPER_SNAKE_CASE a partir de um label.
+ * Ex: "Certidão Negativa de Débitos" → "CERTIDAO_NEGATIVA_DE_DEBITOS"
+ */
+export function generateTipoSlug(label: string): string {
+  return label
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase()
+    .replace(/[\s-]+/g, '_')
+    .replace(/[^A-Z0-9_]/g, '')
+    .replace(/^_+|_+$/g, '')
+}
