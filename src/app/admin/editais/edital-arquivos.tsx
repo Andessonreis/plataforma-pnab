@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef, useImperativeHandle, forwardRef } from 'react'
 import { Card, Button, Badge, Select, Input, EmptyState } from '@/components/ui'
 import { IconDocument, IconPlus, IconPdf } from '@/components/ui'
+import { EDITAL_DOCUMENT_DEFAULT_TYPES } from '@/lib/constants/attachment-types'
+import { getBadgeVariantForTipo } from '@/lib/utils/badge-variant'
 
 interface Arquivo {
   id: string
@@ -29,22 +31,6 @@ interface EditalArquivosProps {
   editalId?: string
 }
 
-const tipoOptions = [
-  { value: 'PDF', label: 'PDF do Edital' },
-  { value: 'ANEXO', label: 'Anexo' },
-  { value: 'MODELO', label: 'Modelo' },
-  { value: 'PLANILHA', label: 'Planilha' },
-  { value: 'DECLARACAO', label: 'Declaração' },
-]
-
-const tipoBadgeVariant: Record<string, 'success' | 'warning' | 'info' | 'neutral' | 'error'> = {
-  PDF: 'error',
-  ANEXO: 'info',
-  MODELO: 'neutral',
-  PLANILHA: 'success',
-  DECLARACAO: 'warning',
-}
-
 let localIdCounter = 0
 
 export const EditalArquivos = forwardRef<EditalArquivosHandle, EditalArquivosProps>(
@@ -55,9 +41,37 @@ export const EditalArquivos = forwardRef<EditalArquivosHandle, EditalArquivosPro
     const [loading, setLoading] = useState(!!editalId)
     const [error, setError] = useState<string | null>(null)
 
-    const [tipo, setTipo] = useState('PDF')
+    const [tipoOptions, setTipoOptions] = useState(
+      EDITAL_DOCUMENT_DEFAULT_TYPES.map((t) => ({ value: t.value, label: t.label })),
+    )
+    const [tipo, setTipo] = useState(EDITAL_DOCUMENT_DEFAULT_TYPES[0]?.value ?? '')
     const [titulo, setTitulo] = useState('')
     const fileInputRef = useRef<HTMLInputElement>(null)
+
+    // Carrega tipos de documento do edital via API
+    useEffect(() => {
+      async function loadTipos() {
+        try {
+          const res = await fetch('/api/admin/configuracoes/tipos-anexo')
+          if (res.ok) {
+            const json = await res.json()
+            const tipos: { tipo: string; label: string }[] = json.data ?? json.tipos ?? []
+            if (tipos.length > 0) {
+              const opts = tipos.map((t) => ({ value: t.tipo, label: t.label }))
+              setTipoOptions(opts)
+              setTipo((prev) => {
+                // Manter seleção atual se ainda válida, senão usar o primeiro
+                if (opts.some((o) => o.value === prev)) return prev
+                return opts[0].value
+              })
+            }
+          }
+        } catch {
+          // Fallback silencioso — usa EDITAL_DOCUMENT_DEFAULT_TYPES
+        }
+      }
+      loadTipos()
+    }, [])
 
     // Carrega arquivos existentes quando há editalId
     useEffect(() => {
@@ -274,7 +288,7 @@ export const EditalArquivos = forwardRef<EditalArquivosHandle, EditalArquivosPro
                     <p className="text-sm font-medium text-slate-900 truncate">{item.titulo}</p>
                     <p className="text-xs text-slate-400 truncate">{item.file.name}</p>
                   </div>
-                  <Badge variant={tipoBadgeVariant[item.tipo] ?? 'neutral'}>
+                  <Badge variant={getBadgeVariantForTipo(item.tipo)}>
                     {tipoOptions.find((t) => t.value === item.tipo)?.label ?? item.tipo}
                   </Badge>
                   <Badge variant="warning">Pendente</Badge>
@@ -312,7 +326,7 @@ export const EditalArquivos = forwardRef<EditalArquivosHandle, EditalArquivosPro
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-slate-900 truncate">{arq.titulo}</p>
                   </div>
-                  <Badge variant={tipoBadgeVariant[arq.tipo] ?? 'neutral'}>
+                  <Badge variant={getBadgeVariantForTipo(arq.tipo)}>
                     {tipoOptions.find((t) => t.value === arq.tipo)?.label ?? arq.tipo}
                   </Badge>
                 </div>

@@ -22,6 +22,7 @@ import {
 import { getStatusDisplay } from '@/lib/utils/edital-status'
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/utils/format'
 import { parseCronogramaPublico, getNextDeadline, isFaseCompleted, isFaseCurrent } from '@/lib/utils/cronograma'
+import { getBadgeVariantForTipo } from '@/lib/utils/badge-variant'
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
@@ -78,6 +79,19 @@ export default async function EditalPage({ params }: Props) {
 
   if (!edital || (!isAdmin && edital.status === 'RASCUNHO')) {
     notFound()
+  }
+
+  // Mapa tipo→label para exibir labels humanos nos badges de arquivo
+  const tipoLabels: Record<string, string> = {}
+  if (edital.arquivos.length > 0) {
+    const tiposUsados = [...new Set(edital.arquivos.map((a) => a.tipo))]
+    const attachmentTypes = await prisma.attachmentType.findMany({
+      where: { tipo: { in: tiposUsados } },
+      select: { tipo: true, label: true },
+    })
+    for (const at of attachmentTypes) {
+      tipoLabels[at.tipo] = at.label
+    }
   }
 
   const statusDisplay = getStatusDisplay(edital.status)
@@ -301,8 +315,8 @@ export default async function EditalPage({ params }: Props) {
                             {arquivo.titulo}
                           </p>
                           <div className="flex items-center gap-2 mt-0.5">
-                            <Badge variant={getFileBadgeVariant(arquivo.tipo)} className="text-[10px]">
-                              {arquivo.tipo}
+                            <Badge variant={getBadgeVariantForTipo(arquivo.tipo)} className="text-[10px]">
+                              {tipoLabels[arquivo.tipo] ?? arquivo.tipo}
                             </Badge>
                             {arquivo.acessivel && (
                               <span className="inline-flex items-center gap-0.5 text-[10px] text-brand-700 font-medium">
@@ -346,8 +360,8 @@ export default async function EditalPage({ params }: Props) {
                               {arquivo.titulo}
                             </td>
                             <td className="py-3 pr-4">
-                              <Badge variant={getFileBadgeVariant(arquivo.tipo)}>
-                                {arquivo.tipo}
+                              <Badge variant={getBadgeVariantForTipo(arquivo.tipo)}>
+                                {tipoLabels[arquivo.tipo] ?? arquivo.tipo}
                               </Badge>
                             </td>
                             <td className="py-3 pr-4">
@@ -610,24 +624,6 @@ export default async function EditalPage({ params }: Props) {
       </section>
     </>
   )
-}
-
-// ── Helpers ────────────────────────────────────────────────────────────────────
-
-function getFileBadgeVariant(tipo: string): 'info' | 'warning' | 'success' | 'neutral' {
-  switch (tipo.toUpperCase()) {
-    case 'PDF':
-      return 'info'
-    case 'ANEXO':
-      return 'warning'
-    case 'MODELO':
-    case 'DECLARACAO':
-      return 'success'
-    case 'PLANILHA':
-      return 'neutral'
-    default:
-      return 'neutral'
-  }
 }
 
 // ── FAQ Accordion (details/summary — sem JS) ─────────────────────────────────

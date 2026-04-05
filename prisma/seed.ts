@@ -284,13 +284,13 @@ async function main() {
   const PLACEHOLDER_URL = '/arquivos-indisponiveis'
 
   const arquivosData = [
-    { editalSlug: 'pnab-2025-fomento-artes', tipo: 'PDF', titulo: 'Edital Completo — Fomento às Artes 2025', url: PLACEHOLDER_URL, acessivel: true },
-    { editalSlug: 'pnab-2025-fomento-artes', tipo: 'PDF', titulo: 'Edital em versão acessível (HTML)', url: PLACEHOLDER_URL, acessivel: true },
-    { editalSlug: 'pnab-2025-fomento-artes', tipo: 'MODELO', titulo: 'Modelo de Plano de Trabalho', url: PLACEHOLDER_URL, acessivel: false },
-    { editalSlug: 'pnab-2025-fomento-artes', tipo: 'DECLARACAO', titulo: 'Declaração de Residência', url: PLACEHOLDER_URL, acessivel: false },
-    { editalSlug: 'pnab-2025-fomento-artes', tipo: 'PLANILHA', titulo: 'Planilha Orçamentária', url: PLACEHOLDER_URL, acessivel: false },
-    { editalSlug: 'pnab-2025-audiovisual', tipo: 'PDF', titulo: 'Edital Audiovisual 2025', url: PLACEHOLDER_URL, acessivel: true },
-    { editalSlug: 'pnab-2025-audiovisual', tipo: 'MODELO', titulo: 'Roteiro de Pré-Produção', url: PLACEHOLDER_URL, acessivel: false },
+    { editalSlug: 'pnab-2025-fomento-artes', tipo: 'PDF_EDITAL', titulo: 'Edital Completo — Fomento às Artes 2025', url: PLACEHOLDER_URL, acessivel: true },
+    { editalSlug: 'pnab-2025-fomento-artes', tipo: 'PDF_EDITAL', titulo: 'Edital em versão acessível (HTML)', url: PLACEHOLDER_URL, acessivel: true },
+    { editalSlug: 'pnab-2025-fomento-artes', tipo: 'MODELO_EDITAL', titulo: 'Modelo de Plano de Trabalho', url: PLACEHOLDER_URL, acessivel: false },
+    { editalSlug: 'pnab-2025-fomento-artes', tipo: 'DECLARACAO_EDITAL', titulo: 'Declaração de Residência', url: PLACEHOLDER_URL, acessivel: false },
+    { editalSlug: 'pnab-2025-fomento-artes', tipo: 'PLANILHA_EDITAL', titulo: 'Planilha Orçamentária', url: PLACEHOLDER_URL, acessivel: false },
+    { editalSlug: 'pnab-2025-audiovisual', tipo: 'PDF_EDITAL', titulo: 'Edital Audiovisual 2025', url: PLACEHOLDER_URL, acessivel: true },
+    { editalSlug: 'pnab-2025-audiovisual', tipo: 'MODELO_EDITAL', titulo: 'Roteiro de Pré-Produção', url: PLACEHOLDER_URL, acessivel: false },
   ]
 
   // Limpa arquivos existentes para evitar duplicatas em re-seeds
@@ -570,6 +570,83 @@ async function main() {
   }
 
   console.log(`✔ ${atendimentos.length} atendimentos de exemplo criados`)
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Tipos de Anexo — 7 tipos padrão PNAB
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const tiposAnexoPNAB = [
+    { tipo: 'DOCUMENTO_PESSOAL', label: 'Documento Pessoal', obrigatorio: true },
+    { tipo: 'COMPROVANTE_ENDERECO', label: 'Comprovante de Endereço', obrigatorio: true },
+    { tipo: 'PORTFOLIO', label: 'Portfólio / Currículo', obrigatorio: false },
+    { tipo: 'PROJETO', label: 'Projeto / Proposta', obrigatorio: true },
+    { tipo: 'ORCAMENTO', label: 'Orçamento', obrigatorio: false },
+    { tipo: 'DECLARACAO', label: 'Declaração', obrigatorio: false },
+    { tipo: 'OUTRO', label: 'Outro', obrigatorio: false },
+  ]
+
+  for (const t of tiposAnexoPNAB) {
+    await prisma.attachmentType.upsert({
+      where: { tipo: t.tipo },
+      update: {},
+      create: {
+        tipo: t.tipo,
+        label: t.label,
+        obrigatorio: t.obrigatorio,
+        tag: 'PNAB',
+        isSystem: true,
+      },
+    })
+  }
+
+  console.log(`✔ ${tiposAnexoPNAB.length} tipos de anexo PNAB criados`)
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Tipos de Anexo — Documentos do Edital (seção 7)
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const tiposDocEdital = [
+    { tipo: 'PDF_EDITAL', label: 'PDF do Edital', obrigatorio: false },
+    { tipo: 'ANEXO_EDITAL', label: 'Anexo', obrigatorio: false },
+    { tipo: 'MODELO_EDITAL', label: 'Modelo', obrigatorio: false },
+    { tipo: 'PLANILHA_EDITAL', label: 'Planilha', obrigatorio: false },
+    { tipo: 'DECLARACAO_EDITAL', label: 'Declaração', obrigatorio: false },
+  ]
+
+  for (const t of tiposDocEdital) {
+    await prisma.attachmentType.upsert({
+      where: { tipo: t.tipo },
+      update: {},
+      create: {
+        tipo: t.tipo,
+        label: t.label,
+        obrigatorio: t.obrigatorio,
+        tag: 'Documento Edital',
+        isSystem: true,
+      },
+    })
+  }
+
+  console.log(`✔ ${tiposDocEdital.length} tipos de documento do edital criados`)
+
+  // Migrar ArquivoEdital de tipos legados para os novos slugs
+  const tipoMigrationMap: Record<string, string> = {
+    PDF: 'PDF_EDITAL',
+    ANEXO: 'ANEXO_EDITAL',
+    MODELO: 'MODELO_EDITAL',
+    PLANILHA: 'PLANILHA_EDITAL',
+    DECLARACAO: 'DECLARACAO_EDITAL',
+  }
+
+  for (const [oldTipo, newTipo] of Object.entries(tipoMigrationMap)) {
+    const { count } = await prisma.arquivoEdital.updateMany({
+      where: { tipo: oldTipo },
+      data: { tipo: newTipo },
+    })
+    if (count > 0) {
+      console.log(`  ↳ Migrados ${count} arquivos: ${oldTipo} → ${newTipo}`)
+    }
+  }
 
   // ─────────────────────────────────────────────────────────────────────────
   // Resumo
