@@ -1148,34 +1148,32 @@ export function EditalForm({ initialData }: EditalFormProps) {
               Nenhum tipo selecionado. Use o dropdown acima para adicionar os tipos de anexo deste edital.
             </p>
           ) : (
-            <div className="space-y-3">
+            <div className="flex flex-wrap gap-2">
               {tiposAnexo.map((ta, idx) => (
-                <div key={idx} className="rounded-lg border border-slate-200 bg-white p-3 space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <span className="text-xs font-medium text-slate-400">Tipo {idx + 1}</span>
-                    <Button
-                      type="button"
-                      variant="danger"
-                      size="sm"
-                      onClick={() => setTiposAnexo(prev => prev.filter((_, i) => i !== idx))}
-                      aria-label={`Remover tipo de anexo ${idx + 1}`}
-                    >
-                      Remover
-                    </Button>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium text-slate-900">{ta.label}</span>
-                    <span className="text-xs font-mono text-slate-400">{ta.tipo}</span>
-                  </div>
-                  <label className="flex items-center gap-2 cursor-pointer">
+                <div
+                  key={idx}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white pl-3 pr-1 py-1 text-sm"
+                >
+                  <span className="font-medium text-slate-900">{ta.label}</span>
+                  <label className="flex items-center gap-1 cursor-pointer ml-1" title="Marcar como obrigatório">
                     <input
                       type="checkbox"
                       checked={ta.obrigatorio}
                       onChange={e => setTiposAnexo(prev => prev.map((t, i) => i === idx ? { ...t, obrigatorio: e.target.checked } : t))}
-                      className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                      className="h-3.5 w-3.5 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
                     />
-                    <span className="text-sm text-slate-700">Obrigatório</span>
+                    <span className="text-xs text-slate-500">Obrig.</span>
                   </label>
+                  <button
+                    type="button"
+                    onClick={() => setTiposAnexo(prev => prev.filter((_, i) => i !== idx))}
+                    className="ml-0.5 p-0.5 rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                    aria-label={`Remover ${ta.label}`}
+                  >
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
               ))}
             </div>
