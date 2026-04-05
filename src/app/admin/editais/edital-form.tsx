@@ -1111,12 +1111,6 @@ export function EditalForm({ initialData }: EditalFormProps) {
             </div>
           }
         >
-          <p className="text-sm text-slate-500 mt-2">
-            Selecione os tipos de documento que o proponente deverá enviar neste edital.{' '}
-            <a href="/admin/configuracoes/tipos-anexo" target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:text-brand-700 underline">
-              Gerenciar tipos
-            </a>
-          </p>
         </SectionHeader>
 
         {!collapsedSections[6] && <>
@@ -1152,32 +1146,41 @@ export function EditalForm({ initialData }: EditalFormProps) {
               {tiposAnexo.map((ta, idx) => (
                 <div
                   key={idx}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white pl-3 pr-1 py-1 text-sm"
+                  className="inline-flex flex-col items-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm"
                 >
-                  <span className="font-medium text-slate-900">{ta.label}</span>
-                  <label className="flex items-center gap-1 cursor-pointer ml-1" title="Marcar como obrigatório">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-medium text-slate-900">{ta.label}</span>
+                    <button
+                      type="button"
+                      onClick={() => setTiposAnexo(prev => prev.filter((_, i) => i !== idx))}
+                      className="p-0.5 rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                      aria-label={`Remover ${ta.label}`}
+                    >
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  <label className="flex items-center gap-1.5 cursor-pointer mt-0.5">
                     <input
                       type="checkbox"
                       checked={ta.obrigatorio}
                       onChange={e => setTiposAnexo(prev => prev.map((t, i) => i === idx ? { ...t, obrigatorio: e.target.checked } : t))}
                       className="h-3.5 w-3.5 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
                     />
-                    <span className="text-xs text-slate-500">Obrig.</span>
+                    <span className="text-xs text-slate-500">Obrigatório</span>
                   </label>
-                  <button
-                    type="button"
-                    onClick={() => setTiposAnexo(prev => prev.filter((_, i) => i !== idx))}
-                    className="ml-0.5 p-0.5 rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-                    aria-label={`Remover ${ta.label}`}
-                  >
-                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
                 </div>
               ))}
             </div>
           )}
+
+          <p className="text-sm text-slate-500 mt-4">
+            Selecione os tipos de documento que o proponente deverá enviar neste edital.{' '}
+            <a href="/admin/configuracoes/tipos-anexo" target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:text-brand-700 underline">
+              Gerenciar tipos
+            </a>
+          </p>
         </>}
       </Card>
 
