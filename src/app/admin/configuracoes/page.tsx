@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
-import { Card, PageHeader, IconDocument, IconTag } from '@/components/ui'
+import { Card, PageHeader, IconDocument, IconTag, IconClipboard } from '@/components/ui'
 
 export const metadata: Metadata = {
   title: 'Configurações — Portal PNAB Irecê',
@@ -20,6 +20,12 @@ const configCards = [
     description: 'Gerencie as categorias disponíveis para os editais (Música, Dança, Teatro, etc.).',
     href: '/admin/configuracoes/categorias',
     icon: <IconTag className="h-6 w-6" />,
+  },
+  {
+    title: 'Templates de Avaliação',
+    description: 'Crie e gerencie modelos reutilizáveis de critérios de avaliação para os editais.',
+    href: '/admin/configuracoes/templates-avaliacao',
+    icon: <IconClipboard className="h-6 w-6" />,
   },
 ]
 

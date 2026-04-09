@@ -38,4 +38,9 @@ export type CriterioAvaliacao = {
   descricao?: string
   notaMax: number
   bloco?: string
+  // Scoring discreto (3 níveis): Não Atende / Parcial / Plenamente
+  modo?: 'slider' | 'discreto'
+  naoAtende?: number
+  parcial?: number
+  plenamente?: number
 }

@@ -35,7 +35,7 @@ export async function calculateResults(
   // Busca critérios do edital
   const edital = await prisma.edital.findUnique({
     where: { id: editalId },
-    select: { criteriosAvaliacao: true },
+    select: { criteriosAvaliacao: true, formulaAvaliacao: true },
   })
 
   if (!edital) throw new Error(`Edital ${editalId} não encontrado`)
@@ -72,9 +72,13 @@ export async function calculateResults(
       continue
     }
 
-    // Calcula média ponderada de cada avaliação
+    // Calcula nota de cada avaliação (fórmula ou média ponderada)
     const allNotas = inscricao.avaliacoes.map((avaliacao) => parseNotas(avaliacao.notas))
-    const notasAvaliadores = allNotas.map((notas) => calculateWeightedAverage(notas, criterios))
+    const notasAvaliadores = allNotas.map((notas) =>
+      edital.formulaAvaliacao
+        ? calculateWithFormula(notas, criterios, edital.formulaAvaliacao)
+        : calculateWeightedAverage(notas, criterios),
+    )
 
     // Nota final = média das notas dos avaliadores
     const notaFinal = notasAvaliadores.reduce((sum, n) => sum + n, 0) / notasAvaliadores.length
@@ -230,6 +234,111 @@ export function parseNotas(raw: unknown): NotaAvaliacao[] {
   if (!Array.isArray(data)) return []
   return data as NotaAvaliacao[]
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Cálculo por fórmula (scoring discreto com soma por bloco)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Calcula a soma bruta das notas de um bloco específico.
+ * Usado com scoring discreto (Não Atende / Parcial / Plenamente).
+ */
+export function calculateBlockSum(
+  notas: NotaAvaliacao[],
+  criterios: CriterioAvaliacao[],
+  bloco: string,
+): number {
+  const criteriosDoBloco = criterios.filter((c) => c.bloco === bloco)
+  let soma = 0
+  for (const criterio of criteriosDoBloco) {
+    const nota = notas.find((n) => n.criterio === criterio.criterio)
+    if (nota) soma += nota.nota
+  }
+  return soma
+}
+
+/**
+ * Avalia uma expressão matemática simples com variáveis (B1, B2, B3...).
+ * Suporta: +, -, *, /, () e números decimais.
+ * NÃO usa eval() — parser seguro com recursive descent.
+ */
+export function evaluateExpression(expr: string, variables: Record<string, number>): number {
+  // Substituir variáveis por valores
+  let normalized = expr.replace(/\s+/g, '')
+  // Ordenar chaves por comprimento desc para evitar substituições parciais (B10 antes de B1)
+  const keys = Object.keys(variables).sort((a, b) => b.length - a.length)
+  for (const key of keys) {
+    normalized = normalized.split(key).join(String(variables[key]))
+  }
+
+  let pos = 0
+
+  function parseExpr(): number {
+    let result = parseTerm()
+    while (pos < normalized.length && (normalized[pos] === '+' || normalized[pos] === '-')) {
+      const op = normalized[pos++]
+      const term = parseTerm()
+      result = op === '+' ? result + term : result - term
+    }
+    return result
+  }
+
+  function parseTerm(): number {
+    let result = parseFactor()
+    while (pos < normalized.length && (normalized[pos] === '*' || normalized[pos] === '/')) {
+      const op = normalized[pos++]
+      const factor = parseFactor()
+      result = op === '*' ? result * factor : (factor !== 0 ? result / factor : 0)
+    }
+    return result
+  }
+
+  function parseFactor(): number {
+    if (normalized[pos] === '(') {
+      pos++ // skip '('
+      const result = parseExpr()
+      pos++ // skip ')'
+      return result
+    }
+
+    // Número (pode ser negativo com -)
+    const start = pos
+    if (normalized[pos] === '-') pos++
+    while (pos < normalized.length && (normalized[pos] >= '0' && normalized[pos] <= '9' || normalized[pos] === '.')) {
+      pos++
+    }
+    return parseFloat(normalized.slice(start, pos)) || 0
+  }
+
+  return parseExpr()
+}
+
+/**
+ * Calcula a nota final usando fórmula com blocos.
+ * Ex: "((B1+B2)/2)+B3" → soma Bloco 1 + soma Bloco 2 dividido por 2, + Bloco 3.
+ */
+export function calculateWithFormula(
+  notas: NotaAvaliacao[],
+  criterios: CriterioAvaliacao[],
+  formula: string,
+): number {
+  // Extrair blocos únicos dos critérios
+  const blocos = [...new Set(criterios.map((c) => c.bloco).filter(Boolean))] as string[]
+  // Ordenar para mapeamento consistente: "Bloco 1" → B1, "Bloco 2" → B2, etc.
+  blocos.sort()
+
+  const variables: Record<string, number> = {}
+  for (let i = 0; i < blocos.length; i++) {
+    const key = `B${i + 1}`
+    variables[key] = calculateBlockSum(notas, criterios, blocos[i])
+  }
+
+  return Math.round(evaluateExpression(formula, variables) * 100) / 100
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Cálculo por média ponderada (modo slider padrão)
+// ─────────────────────────────────────────────────────────────────────────────
 
 export function calculateWeightedAverage(notas: NotaAvaliacao[], criterios: CriterioAvaliacao[]): number {
   let totalPeso = 0

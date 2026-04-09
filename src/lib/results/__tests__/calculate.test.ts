@@ -3,6 +3,9 @@ import {
   parseCriterios,
   parseNotas,
   calculateWeightedAverage,
+  calculateBlockSum,
+  calculateWithFormula,
+  evaluateExpression,
   saveResults,
   calculateResults,
   saveManualOrder,
@@ -439,6 +442,170 @@ describe('calculateResults', () => {
     const grupo5 = results.filter(r => r.notaFinal === 5)
     expect(grupo5).toHaveLength(2)
     expect(grupo5[0].empatados).toHaveLength(1)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Scoring discreto e cálculo por fórmula
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('evaluateExpression', () => {
+  it('avalia soma simples', () => {
+    expect(evaluateExpression('10+20', {})).toBe(30)
+  })
+
+  it('avalia subtração', () => {
+    expect(evaluateExpression('50-20', {})).toBe(30)
+  })
+
+  it('avalia multiplicação e divisão', () => {
+    expect(evaluateExpression('10*3/2', {})).toBe(15)
+  })
+
+  it('avalia parênteses', () => {
+    expect(evaluateExpression('(10+20)/2', {})).toBe(15)
+  })
+
+  it('avalia com variáveis', () => {
+    expect(evaluateExpression('(B1+B2)/2', { B1: 80, B2: 60 })).toBe(70)
+  })
+
+  it('avalia fórmula do ANEXO 01: ((B1+B2)/2)+B3', () => {
+    expect(evaluateExpression('((B1+B2)/2)+B3', { B1: 80, B2: 70, B3: 5 })).toBe(80)
+  })
+
+  it('divisão por zero retorna 0', () => {
+    expect(evaluateExpression('10/0', {})).toBe(0)
+  })
+
+  it('variável inexistente não quebra (vira 0)', () => {
+    expect(evaluateExpression('B1+B99', { B1: 10 })).toBe(10)
+  })
+
+  it('lida com espaços na expressão', () => {
+    expect(evaluateExpression('( B1 + B2 ) / 2', { B1: 40, B2: 60 })).toBe(50)
+  })
+})
+
+describe('calculateBlockSum', () => {
+  const criterios = [
+    { criterio: 'A', peso: 10, notaMax: 10, bloco: 'Bloco 1', modo: 'discreto' as const },
+    { criterio: 'B', peso: 3, notaMax: 3, bloco: 'Bloco 1', modo: 'discreto' as const },
+    { criterio: 'C', peso: 5, notaMax: 5, bloco: 'Bloco 2', modo: 'discreto' as const },
+  ]
+
+  it('soma notas do bloco correto', () => {
+    const notas = [
+      { criterio: 'A', nota: 10 },
+      { criterio: 'B', nota: 2 },
+      { criterio: 'C', nota: 5 },
+    ]
+    expect(calculateBlockSum(notas, criterios, 'Bloco 1')).toBe(12) // 10 + 2
+    expect(calculateBlockSum(notas, criterios, 'Bloco 2')).toBe(5)
+  })
+
+  it('bloco inexistente retorna 0', () => {
+    const notas = [{ criterio: 'A', nota: 10 }]
+    expect(calculateBlockSum(notas, criterios, 'Bloco 99')).toBe(0)
+  })
+
+  it('critério sem nota é ignorado (soma 0)', () => {
+    const notas = [{ criterio: 'A', nota: 10 }] // B não tem nota
+    expect(calculateBlockSum(notas, criterios, 'Bloco 1')).toBe(10)
+  })
+})
+
+describe('calculateWithFormula', () => {
+  it('calcula fórmula ((B1+B2)/2)+B3 com dados do ANEXO 01', () => {
+    const criterios = [
+      { criterio: 'Iniciativas', peso: 10, notaMax: 10, bloco: 'Bloco 1', modo: 'discreto' as const },
+      { criterio: 'Autonomia', peso: 10, notaMax: 10, bloco: 'Bloco 1', modo: 'discreto' as const },
+      { criterio: 'Cidadania', peso: 5, notaMax: 5, bloco: 'Bloco 2', modo: 'discreto' as const },
+      { criterio: 'Formação', peso: 5, notaMax: 5, bloco: 'Bloco 2', modo: 'discreto' as const },
+      { criterio: 'Bonificação', peso: 5, notaMax: 5, bloco: 'Bloco 3', modo: 'discreto' as const },
+    ]
+
+    const notas = [
+      { criterio: 'Iniciativas', nota: 10 },  // Plenamente
+      { criterio: 'Autonomia', nota: 5 },      // Parcial
+      { criterio: 'Cidadania', nota: 5 },       // Plenamente
+      { criterio: 'Formação', nota: 3 },        // Parcial
+      { criterio: 'Bonificação', nota: 5 },     // Sim
+    ]
+
+    // B1 = 10 + 5 = 15, B2 = 5 + 3 = 8, B3 = 5
+    // ((15 + 8) / 2) + 5 = 11.5 + 5 = 16.5
+    const result = calculateWithFormula(notas, criterios, '((B1+B2)/2)+B3')
+    expect(result).toBe(16.5)
+  })
+
+  it('fórmula sem bonificação: (B1+B2)/2', () => {
+    const criterios = [
+      { criterio: 'A', peso: 10, notaMax: 10, bloco: 'Bloco 1' },
+      { criterio: 'B', peso: 5, notaMax: 5, bloco: 'Bloco 2' },
+    ]
+    const notas = [
+      { criterio: 'A', nota: 80 },
+      { criterio: 'B', nota: 60 },
+    ]
+
+    expect(calculateWithFormula(notas, criterios, '(B1+B2)/2')).toBe(70)
+  })
+
+  it('retorna 0 quando não há notas', () => {
+    const criterios = [
+      { criterio: 'A', peso: 10, notaMax: 10, bloco: 'Bloco 1' },
+    ]
+    expect(calculateWithFormula([], criterios, 'B1')).toBe(0)
+  })
+})
+
+describe('calculateResults com formulaAvaliacao', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('usa fórmula quando edital tem formulaAvaliacao', async () => {
+    mockPrisma.edital.findUnique.mockResolvedValue({
+      criteriosAvaliacao: JSON.stringify([
+        { criterio: 'A', peso: 10, notaMax: 10, bloco: 'Bloco 1', modo: 'discreto' },
+        { criterio: 'B', peso: 5, notaMax: 5, bloco: 'Bloco 2', modo: 'discreto' },
+      ]),
+      formulaAvaliacao: '(B1+B2)/2',
+    } as never)
+
+    mockPrisma.inscricao.findMany.mockResolvedValue([
+      {
+        id: '1',
+        proponente: { nome: 'Ana' },
+        categoria: null,
+        avaliacoes: [{ notas: JSON.stringify([{ criterio: 'A', nota: 10 }, { criterio: 'B', nota: 4 }]), notaTotal: 7 }],
+      },
+    ] as never)
+
+    const results = await calculateResults('edital-1')
+
+    // B1 = 10, B2 = 4, (10+4)/2 = 7
+    expect(results[0].notaFinal).toBe(7)
+  })
+
+  it('usa média ponderada quando não tem formulaAvaliacao', async () => {
+    mockPrisma.edital.findUnique.mockResolvedValue({
+      criteriosAvaliacao: JSON.stringify([{ criterio: 'A', peso: 1, notaMax: 10 }]),
+      formulaAvaliacao: null,
+    } as never)
+
+    mockPrisma.inscricao.findMany.mockResolvedValue([
+      {
+        id: '1',
+        proponente: { nome: 'Ana' },
+        categoria: null,
+        avaliacoes: [{ notas: JSON.stringify([{ criterio: 'A', nota: 8 }]), notaTotal: 8 }],
+      },
+    ] as never)
+
+    const results = await calculateResults('edital-1')
+    expect(results[0].notaFinal).toBe(8)
   })
 })
 

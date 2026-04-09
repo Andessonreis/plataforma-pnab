@@ -697,6 +697,79 @@ async function main() {
   console.log('════════════════════════════════════════════')
   console.log(`  Senha para todos: ${DEFAULT_PASSWORD}`)
   console.log('')
+  // ─────────────────────────────────────────────────────────────────────────
+  // Template de Avaliação — PNAB Cultura Viva (ANEXO 01)
+  // ─────────────────────────────────────────────────────────────────────────
+
+  await prisma.evaluationTemplate.upsert({
+    where: { nome: 'PNAB Cultura Viva - ANEXO 01' },
+    update: {},
+    create: {
+      nome: 'PNAB Cultura Viva - ANEXO 01',
+      descricao: 'Critérios de avaliação do edital Cultura Viva conforme ANEXO 01. Blocos 1 (Atuação da Entidade), 2 (Projeto) e 3 (Bonificação).',
+      isSystem: true,
+      ativo: true,
+      ordem: 10,
+      formula: '((B1+B2)/2)+B3',
+      criterios: [
+        // ── Bloco 1 — Avaliação da Atuação da Entidade Cultural (18 critérios, máx 100 pts) ──
+        { criterio: 'Iniciativas Desenvolvidas', bloco: 'Bloco 1', modo: 'discreto', naoAtende: 0, parcial: 5, plenamente: 10, notaMax: 10, peso: 10, descricao: 'Representa iniciativas culturais de comunidades, grupos e redes.' },
+        { criterio: 'Criação e Produção', bloco: 'Bloco 1', modo: 'discreto', naoAtende: 0, parcial: 2, plenamente: 3, notaMax: 3, peso: 3, descricao: 'Promove e garante a criação e a produção artística e cultural.' },
+        { criterio: 'Cultura de Irecê', bloco: 'Bloco 1', modo: 'discreto', naoAtende: 0, parcial: 2, plenamente: 3, notaMax: 3, peso: 3, descricao: 'Incentiva a preservação da cultura local.' },
+        { criterio: 'Espaços Culturais', bloco: 'Bloco 1', modo: 'discreto', naoAtende: 0, parcial: 1, plenamente: 2, notaMax: 2, peso: 2, descricao: 'Estimula a exploração de espaços para ação cultural.' },
+        { criterio: 'Visibilidade', bloco: 'Bloco 1', modo: 'discreto', naoAtende: 0, parcial: 2, plenamente: 3, notaMax: 3, peso: 3, descricao: 'Aumenta a visibilidade das diversas iniciativas culturais.' },
+        { criterio: 'Diversidade', bloco: 'Bloco 1', modo: 'discreto', naoAtende: 0, parcial: 2, plenamente: 3, notaMax: 3, peso: 3, descricao: 'Promove a diversidade cultural e diálogos interculturais.' },
+        { criterio: 'Acesso', bloco: 'Bloco 1', modo: 'discreto', naoAtende: 0, parcial: 2, plenamente: 3, notaMax: 3, peso: 3, descricao: 'Garante acesso aos meios de fruição, produção e difusão.' },
+        { criterio: 'Inclusão Social', bloco: 'Bloco 1', modo: 'discreto', naoAtende: 0, parcial: 2, plenamente: 4, notaMax: 4, peso: 4, descricao: 'Assegura inclusão de idosos, mulheres, jovens, negros, PCD, LGBTQIAP+ e baixa renda.' },
+        { criterio: 'Autonomia', bloco: 'Bloco 1', modo: 'discreto', naoAtende: 0, parcial: 5, plenamente: 10, notaMax: 10, peso: 10, descricao: 'Contribui para o fortalecimento da autonomia social das comunidades.' },
+        { criterio: 'Intercâmbio', bloco: 'Bloco 1', modo: 'discreto', naoAtende: 0, parcial: 3, plenamente: 5, notaMax: 5, peso: 5, descricao: 'Promove o intercâmbio entre diferentes segmentos da comunidade.' },
+        { criterio: 'Articulação', bloco: 'Bloco 1', modo: 'discreto', naoAtende: 0, parcial: 3, plenamente: 5, notaMax: 5, peso: 5, descricao: 'Estimula a articulação de redes com a educação.' },
+        { criterio: 'Gestão Compartilhada', bloco: 'Bloco 1', modo: 'discreto', naoAtende: 0, parcial: 3, plenamente: 5, notaMax: 5, peso: 5, descricao: 'Adota princípios de gestão entre atores não governamentais e o Estado.' },
+        { criterio: 'Economia', bloco: 'Bloco 1', modo: 'discreto', naoAtende: 0, parcial: 2, plenamente: 4, notaMax: 4, peso: 4, descricao: 'Fomenta as economias solidária e criativa.' },
+        { criterio: 'Patrimônio', bloco: 'Bloco 1', modo: 'discreto', naoAtende: 0, parcial: 3, plenamente: 5, notaMax: 5, peso: 5, descricao: 'Protege o patrimônio material, imaterial e memórias comunitárias.' },
+        { criterio: 'Tradição', bloco: 'Bloco 1', modo: 'discreto', naoAtende: 0, parcial: 3, plenamente: 5, notaMax: 5, peso: 5, descricao: 'Apoia e incentiva manifestações populares e tradicionais.' },
+        { criterio: 'Regularidade', bloco: 'Bloco 1', modo: 'discreto', naoAtende: 0, parcial: 5, plenamente: 10, notaMax: 10, peso: 10, descricao: 'Realiza atividades gratuitas e abertas com regularidade.' },
+        { criterio: 'Eixos da PNCV', bloco: 'Bloco 1', modo: 'discreto', naoAtende: 0, parcial: 5, plenamente: 10, notaMax: 10, peso: 10, descricao: 'Ações relacionadas aos eixos estruturantes de forma continuada.' },
+        { criterio: 'Participação Política', bloco: 'Bloco 1', modo: 'discreto', naoAtende: 0, parcial: 5, plenamente: 10, notaMax: 10, peso: 10, descricao: 'Articulação com Redes, Conselhos ou Comissões da PNCV.' },
+
+        // ── Bloco 2 — Avaliação do Projeto (26 critérios, máx 100 pts) ──
+        // I. Efeitos Artístico-Culturais, Sociais e Econômicos (50 pts)
+        { criterio: 'Cidadania', bloco: 'Bloco 2', modo: 'discreto', naoAtende: 0, parcial: 3, plenamente: 5, notaMax: 5, peso: 5, descricao: 'Contribuição com o acesso da comunidade aos bens culturais.' },
+        { criterio: 'Formação', bloco: 'Bloco 2', modo: 'discreto', naoAtende: 0, parcial: 3, plenamente: 5, notaMax: 5, peso: 5, descricao: 'Impacto das oficinas na ampliação de repertórios artísticos.' },
+        { criterio: 'Acessibilidade', bloco: 'Bloco 2', modo: 'discreto', naoAtende: 0, parcial: 3, plenamente: 5, notaMax: 5, peso: 5, descricao: 'Estratégias que promovem o protagonismo de PCD.' },
+        { criterio: 'Diversidade do Projeto', bloco: 'Bloco 2', modo: 'discreto', naoAtende: 0, parcial: 3, plenamente: 5, notaMax: 5, peso: 5, descricao: 'Interação e protagonismo de grupos vulneráveis e excluídos.' },
+        { criterio: 'Estética', bloco: 'Bloco 2', modo: 'discreto', naoAtende: 0, parcial: 3, plenamente: 5, notaMax: 5, peso: 5, descricao: 'Promoção da expressividade e criação estética.' },
+        { criterio: 'Processos Continuados', bloco: 'Bloco 2', modo: 'discreto', naoAtende: 0, parcial: 2, plenamente: 3, notaMax: 3, peso: 3, descricao: 'Realização de jogos, dinâmicas ou exercícios estéticos.' },
+        { criterio: 'Cultura Digital', bloco: 'Bloco 2', modo: 'discreto', naoAtende: 0, parcial: 2, plenamente: 3, notaMax: 3, peso: 3, descricao: 'Uso consciente de tecnologias e combate à desinformação.' },
+        { criterio: 'Trabalho e Renda', bloco: 'Bloco 2', modo: 'discreto', naoAtende: 0, parcial: 2, plenamente: 3, notaMax: 3, peso: 3, descricao: 'Contribuição para geração de renda na comunidade.' },
+        { criterio: 'Economia Solidária', bloco: 'Bloco 2', modo: 'discreto', naoAtende: 0, parcial: 2, plenamente: 3, notaMax: 3, peso: 3, descricao: 'Disponibilização de crédito, equipamentos coletivos ou feiras.' },
+        { criterio: 'Dimensão Social', bloco: 'Bloco 2', modo: 'discreto', naoAtende: 0, parcial: 3, plenamente: 5, notaMax: 5, peso: 5, descricao: 'Impacto em áreas como saúde, educação, meio ambiente e segurança.' },
+        { criterio: 'Gestão Comunitária', bloco: 'Bloco 2', modo: 'discreto', naoAtende: 0, parcial: 3, plenamente: 5, notaMax: 5, peso: 5, descricao: 'Participação efetiva da comunidade na gestão do Ponto de Cultura.' },
+        { criterio: 'Atuação em Rede', bloco: 'Bloco 2', modo: 'discreto', naoAtende: 0, parcial: 2, plenamente: 3, notaMax: 3, peso: 3, descricao: 'Fortalecimento da base comunitária através de redes.' },
+        // II. Execução e Plano de Trabalho (35 pts)
+        { criterio: 'Capacidade Técnica', bloco: 'Bloco 2', modo: 'discreto', naoAtende: 0, parcial: 2, plenamente: 4, notaMax: 4, peso: 4, descricao: 'Operacionalidade da entidade e vínculo com o portfólio.' },
+        { criterio: 'Metas', bloco: 'Bloco 2', modo: 'discreto', naoAtende: 0, parcial: 2, plenamente: 4, notaMax: 4, peso: 4, descricao: 'Definição de metas razoáveis, exequíveis e prazos claros.' },
+        { criterio: 'Resultados', bloco: 'Bloco 2', modo: 'discreto', naoAtende: 0, parcial: 3, plenamente: 5, notaMax: 5, peso: 5, descricao: 'Pertinência das estratégias em relação aos resultados.' },
+        { criterio: 'Divulgação', bloco: 'Bloco 2', modo: 'discreto', naoAtende: 0, parcial: 2, plenamente: 4, notaMax: 4, peso: 4, descricao: 'Estratégias específicas para democratizar a informação.' },
+        { criterio: 'Verificação', bloco: 'Bloco 2', modo: 'discreto', naoAtende: 0, parcial: 2, plenamente: 4, notaMax: 4, peso: 4, descricao: 'Meios para verificar o cumprimento das metas.' },
+        { criterio: 'Equipe', bloco: 'Bloco 2', modo: 'discreto', naoAtende: 0, parcial: 3, plenamente: 5, notaMax: 5, peso: 5, descricao: 'Adequação da equipe técnica para a realização do projeto.' },
+        { criterio: 'Custos', bloco: 'Bloco 2', modo: 'discreto', naoAtende: 0, parcial: 3, plenamente: 5, notaMax: 5, peso: 5, descricao: 'Clareza e coerência entre ações e itens de despesa.' },
+        { criterio: 'Prazo', bloco: 'Bloco 2', modo: 'discreto', naoAtende: 0, parcial: 2, plenamente: 4, notaMax: 4, peso: 4, descricao: 'Viabilidade de execução no prazo proposto.' },
+        // III. Abrangência e Público (15 pts)
+        { criterio: 'Estudantes', bloco: 'Bloco 2', modo: 'discreto', naoAtende: 0, parcial: 0, plenamente: 2, notaMax: 2, peso: 2, descricao: 'Rede Pública de ensino.' },
+        { criterio: 'Primeira Infância', bloco: 'Bloco 2', modo: 'discreto', naoAtende: 0, parcial: 0, plenamente: 2, notaMax: 2, peso: 2, descricao: 'Crianças de 0 a 6 anos.' },
+        { criterio: 'Baixa Renda', bloco: 'Bloco 2', modo: 'discreto', naoAtende: 0, parcial: 0, plenamente: 5, notaMax: 5, peso: 5, descricao: 'Áreas com oferta precária de serviços, incluindo zona rural.' },
+        { criterio: 'PCD', bloco: 'Bloco 2', modo: 'discreto', naoAtende: 0, parcial: 0, plenamente: 2, notaMax: 2, peso: 2, descricao: 'Pessoas com deficiência ou mobilidade reduzida.' },
+        { criterio: 'Povos Tradicionais', bloco: 'Bloco 2', modo: 'discreto', naoAtende: 0, parcial: 0, plenamente: 2, notaMax: 2, peso: 2, descricao: 'Indígenas e comunidades de matriz africana.' },
+        { criterio: 'LGBTQIA+', bloco: 'Bloco 2', modo: 'discreto', naoAtende: 0, parcial: 0, plenamente: 2, notaMax: 2, peso: 2, descricao: 'Atendimento direto a esse público.' },
+
+        // ── Bloco 3 — Bonificações (5 pts) ──
+        { criterio: 'Autodeclaração Étnico-Racial ou PCD', bloco: 'Bloco 3', modo: 'discreto', naoAtende: 0, parcial: 0, plenamente: 5, notaMax: 5, peso: 5, descricao: 'Agente Cultural representante de Irecê que se autodeclare negro(a), índio ou PCD (com entrega de anexos 05 ou 06).' },
+      ],
+    },
+  })
+  console.log('  ✓ Template de avaliação PNAB Cultura Viva criado')
+
   console.log('  ADMIN          → admin@pnab.irece.ba.gov.br')
   console.log('  ATENDIMENTO    → atendimento@pnab.irece.ba.gov.br')
   console.log('  HABILITADOR    → habilitador@pnab.irece.ba.gov.br')

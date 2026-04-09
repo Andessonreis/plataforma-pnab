@@ -126,6 +126,15 @@ vi.mock('@/lib/db', () => ({
       delete: vi.fn(),
       count: vi.fn(),
     },
+    evaluationTemplate: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn(),
+    },
     $transaction: vi.fn((ops: unknown) => {
       if (typeof ops === 'function') return ops({ /* proxy prisma */ })
       return Promise.all(ops as Promise<unknown>[])
@@ -176,6 +185,9 @@ vi.mock('@/lib/audit', () => ({
     RESULTADO_FINAL_PUBLICADO: 'RESULTADO_FINAL_PUBLICADO',
     RECURSO_SUBMETIDO: 'RECURSO_SUBMETIDO',
     RECURSO_DECIDIDO: 'RECURSO_DECIDIDO',
+    TEMPLATE_AVALIACAO_CRIADO: 'TEMPLATE_AVALIACAO_CRIADO',
+    TEMPLATE_AVALIACAO_ATUALIZADO: 'TEMPLATE_AVALIACAO_ATUALIZADO',
+    TEMPLATE_AVALIACAO_EXCLUIDO: 'TEMPLATE_AVALIACAO_EXCLUIDO',
     EXPORTACAO_CSV: 'EXPORTACAO_CSV',
     IMPORTACAO_CONTEMPLADOS: 'IMPORTACAO_CONTEMPLADOS',
   },

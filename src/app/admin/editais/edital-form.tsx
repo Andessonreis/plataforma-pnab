@@ -144,6 +144,11 @@ export function EditalForm({ initialData }: EditalFormProps) {
   const [criteriosAvaliacao, setCriteriosAvaliacao] = useState<CriterioAvaliacao[]>(
     initialData?.criteriosAvaliacao ?? []
   )
+  const [formulaAvaliacao, setFormulaAvaliacao] = useState(
+    (initialData as Record<string, unknown>)?.formulaAvaliacao as string ?? ''
+  )
+  // Templates de avaliação disponíveis
+  const [templatesDisponiveis, setTemplatesDisponiveis] = useState<{ id: string; nome: string; criterios: CriterioAvaliacao[]; formula: string | null }[]>([])
   const [tiposAnexo, setTiposAnexo] = useState<TipoAnexo[]>(
     initialData?.tiposAnexo ?? []
   )
@@ -216,6 +221,27 @@ export function EditalForm({ initialData }: EditalFormProps) {
       }
     }
     fetchTiposAnexo()
+  }, [])
+
+  // Carregar templates de avaliação
+  useEffect(() => {
+    async function fetchTemplates() {
+      try {
+        const res = await fetch('/api/admin/configuracoes/templates-avaliacao')
+        if (res.ok) {
+          const json = await res.json()
+          setTemplatesDisponiveis(json.data.map((t: { id: string; nome: string; criterios: unknown; formula: string | null }) => ({
+            id: t.id,
+            nome: t.nome,
+            criterios: Array.isArray(t.criterios) ? t.criterios : JSON.parse(t.criterios as string),
+            formula: t.formula,
+          })))
+        }
+      } catch {
+        // silencioso
+      }
+    }
+    fetchTemplates()
   }, [])
 
   // Carregar categorias disponíveis
@@ -380,6 +406,7 @@ export function EditalForm({ initialData }: EditalFormProps) {
       vagasContemplados: vagasContemplados.trim() ? Number(vagasContemplados) : null,
       vagasSuplentes: vagasSuplentes.trim() ? Number(vagasSuplentes) : null,
       criteriosAvaliacao: criteriosAvaliacao.length > 0 ? criteriosAvaliacao : null,
+      formulaAvaliacao: formulaAvaliacao.trim() || null,
       tiposAnexo: tiposAnexo.length > 0 ? tiposAnexo : null,
       notaMinima: notaMinima.trim() ? Number(notaMinima) : null,
     }
@@ -877,6 +904,39 @@ export function EditalForm({ initialData }: EditalFormProps) {
           </p>
         </SectionHeader>
 
+        {/* Selector de template */}
+        {!collapsedSections[5] && templatesDisponiveis.length > 0 && (
+          <div className="mt-4 rounded-lg border border-brand-200 bg-brand-50/50 p-4">
+            <div className="flex items-end gap-3">
+              <div className="flex-1">
+                <label className="text-sm font-medium text-slate-700 block mb-1.5">
+                  Carregar de template
+                </label>
+                <select
+                  className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 bg-white"
+                  defaultValue=""
+                  onChange={e => {
+                    const tpl = templatesDisponiveis.find(t => t.id === e.target.value)
+                    if (tpl) {
+                      setCriteriosAvaliacao(tpl.criterios)
+                      setFormulaAvaliacao(tpl.formula ?? '')
+                      e.target.value = ''
+                    }
+                  }}
+                >
+                  <option value="" disabled>Selecione um template...</option>
+                  {templatesDisponiveis.map(t => (
+                    <option key={t.id} value={t.id}>{t.nome} ({t.criterios.length} critérios)</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <p className="text-xs text-slate-500 mt-2">
+              Os critérios do template serão carregados abaixo. Você pode editá-los depois.
+            </p>
+          </div>
+        )}
+
         {!collapsedSections[5] && <>{criteriosAvaliacao.length === 0 ? (
           <p className="text-sm text-slate-500 text-center py-4 mt-4">
             Nenhum critério customizado. O edital usará os critérios padrão PNAB.
@@ -921,27 +981,71 @@ export function EditalForm({ initialData }: EditalFormProps) {
                     placeholder="Descrição ou orientação para o avaliador"
                   />
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <Input
-                      label="Nota Máxima"
-                      type="number"
-                      required
-                      min={0}
-                      step={0.5}
-                      value={crit.notaMax || ''}
-                      onChange={e => updateCriterio(idx, 'notaMax', e.target.value ? Number(e.target.value) : 0)}
-                      placeholder="Nota máxima"
-                    />
-                    <Input
-                      label="Peso"
-                      type="number"
-                      required
-                      min={0}
-                      step={0.5}
-                      value={crit.peso || ''}
-                      onChange={e => updateCriterio(idx, 'peso', e.target.value ? Number(e.target.value) : 0)}
-                      placeholder="Peso"
-                    />
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div>
+                      <label className="text-sm font-medium text-slate-700 block mb-1.5">Modo</label>
+                      <select
+                        value={crit.modo ?? 'slider'}
+                        onChange={e => updateCriterio(idx, 'modo', e.target.value)}
+                        className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 bg-white"
+                      >
+                        <option value="slider">Slider (nota livre)</option>
+                        <option value="discreto">Discreto (3 níveis)</option>
+                      </select>
+                    </div>
+
+                    {crit.modo === 'discreto' ? (
+                      <>
+                        <Input
+                          label="Não Atende"
+                          type="number"
+                          min={0}
+                          value={crit.naoAtende ?? 0}
+                          onChange={e => updateCriterio(idx, 'naoAtende', Number(e.target.value))}
+                        />
+                        <Input
+                          label="Parcial"
+                          type="number"
+                          min={0}
+                          value={crit.parcial ?? 0}
+                          onChange={e => updateCriterio(idx, 'parcial', Number(e.target.value))}
+                        />
+                        <Input
+                          label="Plenamente"
+                          type="number"
+                          min={0}
+                          value={crit.plenamente ?? 0}
+                          onChange={e => {
+                            const val = Number(e.target.value)
+                            updateCriterio(idx, 'plenamente', val)
+                            updateCriterio(idx, 'notaMax', val)
+                          }}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <Input
+                          label="Nota Máxima"
+                          type="number"
+                          required
+                          min={0}
+                          step={0.5}
+                          value={crit.notaMax || ''}
+                          onChange={e => updateCriterio(idx, 'notaMax', e.target.value ? Number(e.target.value) : 0)}
+                          placeholder="Nota máxima"
+                        />
+                        <Input
+                          label="Peso"
+                          type="number"
+                          required
+                          min={0}
+                          step={0.5}
+                          value={crit.peso || ''}
+                          onChange={e => updateCriterio(idx, 'peso', e.target.value ? Number(e.target.value) : 0)}
+                          placeholder="Peso"
+                        />
+                      </>
+                    )}
                   </div>
                 </div>
               ))}
@@ -961,6 +1065,20 @@ export function EditalForm({ initialData }: EditalFormProps) {
             </div>
           </>
         )}
+
+        {/* Fórmula de cálculo */}
+        <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50/50 p-4">
+          <h3 className="text-sm font-semibold text-slate-700 mb-2">Fórmula de Cálculo</h3>
+          <p className="text-xs text-slate-500 mb-3">
+            Define como os blocos são combinados na nota final. Use B1, B2, B3... para referenciar os blocos (ordem alfabética). Em branco = média ponderada padrão.
+          </p>
+          <Input
+            label="Fórmula"
+            value={formulaAvaliacao}
+            onChange={e => setFormulaAvaliacao(e.target.value)}
+            placeholder="Ex: ((B1+B2)/2)+B3"
+          />
+        </div>
 
         {/* Nota Mínima */}
         <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50/50 p-4">
