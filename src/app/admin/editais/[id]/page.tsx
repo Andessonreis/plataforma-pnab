@@ -93,6 +93,7 @@ export default async function EditarEditalPage({ params }: Props) {
           tiposAnexo: (Array.isArray(edital.tiposAnexo)
             ? edital.tiposAnexo : null) as TipoAnexo[] | null,
           notaMinima: edital.notaMinima ? Number(edital.notaMinima) : null,
+          tiposProponentePermitidos: edital.tiposProponentePermitidos ?? [],
           initialAvaliadores: avaliadores,
           initialHabilitadores: habilitadores,
         }}

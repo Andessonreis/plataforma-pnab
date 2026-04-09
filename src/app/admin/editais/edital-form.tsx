@@ -46,6 +46,7 @@ interface EditalFormProps {
     formulaAvaliacao?: string
     tiposAnexo?: TipoAnexo[] | null
     notaMinima?: number | null
+    tiposProponentePermitidos?: string[]
     initialAvaliadores?: MembroEquipe[]
     initialHabilitadores?: MembroEquipe[]
   }
@@ -155,6 +156,9 @@ export function EditalForm({ initialData }: EditalFormProps) {
   )
   const [notaMinima, setNotaMinima] = useState(
     initialData?.notaMinima != null ? String(initialData.notaMinima) : ''
+  )
+  const [tiposProponentePermitidos, setTiposProponentePermitidos] = useState<string[]>(
+    initialData?.tiposProponentePermitidos ?? []
   )
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -410,6 +414,7 @@ export function EditalForm({ initialData }: EditalFormProps) {
       formulaAvaliacao: formulaAvaliacao.trim() || null,
       tiposAnexo: tiposAnexo.length > 0 ? tiposAnexo : null,
       notaMinima: notaMinima.trim() ? Number(notaMinima) : null,
+      tiposProponentePermitidos,
     }
 
     try {
@@ -560,6 +565,50 @@ export function EditalForm({ initialData }: EditalFormProps) {
               onChange={e => setVagasSuplentes(e.target.value)}
               placeholder="Ilimitado"
             />
+          </div>
+
+          {/* Tipos de Proponente Permitidos */}
+          <div className="mt-6 pt-6 border-t border-slate-200">
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Tipos de Proponente Aceitos
+            </label>
+            <p className="text-xs text-slate-500 mb-3">
+              Selecione quais tipos de proponente podem se inscrever neste edital.
+              Se nenhum for selecionado, todos os tipos serão aceitos.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {TIPO_PROPONENTE_OPTIONS.map(opt => {
+                const selected = tiposProponentePermitidos.includes(opt.value)
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => {
+                      setTiposProponentePermitidos(prev =>
+                        selected
+                          ? prev.filter(t => t !== opt.value)
+                          : [...prev, opt.value]
+                      )
+                    }}
+                    aria-pressed={selected}
+                    className={[
+                      'rounded-full border px-3 py-1.5 text-sm font-medium transition-colors',
+                      'focus-visible:outline-2 focus-visible:outline-offset-2',
+                      selected
+                        ? 'border-brand-600 bg-brand-600 text-white'
+                        : 'border-slate-300 bg-white text-slate-700 hover:border-brand-400',
+                    ].join(' ')}
+                  >
+                    {opt.label}
+                  </button>
+                )
+              })}
+            </div>
+            {tiposProponentePermitidos.length > 0 && (
+              <p className="text-xs text-brand-600 mt-2">
+                Apenas {tiposProponentePermitidos.map(t => TIPO_PROPONENTE_OPTIONS.find(o => o.value === t)?.label || t).join(', ')} poderão se inscrever.
+              </p>
+            )}
           </div>
         </div>}
       </Card>

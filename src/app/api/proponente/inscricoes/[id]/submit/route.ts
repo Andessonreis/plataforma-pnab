@@ -42,6 +42,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
             status: true,
             categorias: true,
             camposFormulario: true,
+            tiposProponentePermitidos: true,
           },
         },
         anexos: true,
@@ -79,6 +80,21 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
       res.headers.set('X-Request-Id', requestId)
       res.headers.set('Cache-Control', 'no-store')
       return res
+    }
+
+    // Verificar elegibilidade por tipo de proponente
+    const tiposPermitidos = inscricao.edital.tiposProponentePermitidos as string[]
+    if (tiposPermitidos.length > 0) {
+      const tipoUser = inscricao.proponente.tipoProponente
+      if (!tipoUser || !tiposPermitidos.includes(tipoUser)) {
+        const res = NextResponse.json(
+          { error: 'FORBIDDEN', message: `Este edital aceita apenas inscrições de: ${tiposPermitidos.join(', ')}.`, requestId },
+          { status: 403 },
+        )
+        res.headers.set('X-Request-Id', requestId)
+        res.headers.set('Cache-Control', 'no-store')
+        return res
+      }
     }
 
     if (inscricao.edital.status !== 'INSCRICOES_ABERTAS') {

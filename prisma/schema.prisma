@@ -197,6 +197,8 @@ model Edital {
   categorias          String[]
   acoesAfirmativas    String?
   regrasElegibilidade String?
+  // Tipos de proponente aceitos (vazio = todos): PF, MEI, PJ, COLETIVO
+  tiposProponentePermitidos String[] @default([])
   // Array de marcos: [{ label: string, dataHora: string, destaque?: boolean }]
   cronograma          Json         @default("[]")
   // Definição dinâmica dos campos do formulário de inscrição

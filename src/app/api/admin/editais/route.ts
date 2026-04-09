@@ -87,6 +87,7 @@ const editalSchema = z.object({
     ref: z.string().min(1),
     direcao: z.enum(['desc', 'asc']).default('desc'),
   })).nullable().optional(),
+  tiposProponentePermitidos: z.array(z.enum(['PF', 'MEI', 'PJ', 'COLETIVO'])).default([]),
 })
 
 // ── Gerar slug a partir do titulo ───────────────────────────────────────────
@@ -150,6 +151,7 @@ export async function POST(req: NextRequest) {
         tiposAnexo: (data.tiposAnexo ?? null) as unknown as import('@prisma/client').Prisma.InputJsonValue,
         notaMinima: data.notaMinima ?? null,
         desempate: (data.desempate ?? null) as unknown as import('@prisma/client').Prisma.InputJsonValue,
+        tiposProponentePermitidos: data.tiposProponentePermitidos,
         ...(data.status !== 'RASCUNHO' ? { publishedAt: new Date() } : {}),
       },
     })
@@ -287,6 +289,7 @@ export async function PUT(req: NextRequest) {
         tiposAnexo: (data.tiposAnexo ?? null) as unknown as import('@prisma/client').Prisma.InputJsonValue,
         notaMinima: data.notaMinima ?? null,
         desempate: (data.desempate ?? null) as unknown as import('@prisma/client').Prisma.InputJsonValue,
+        tiposProponentePermitidos: data.tiposProponentePermitidos,
         ...(publishedAt ? { publishedAt } : {}),
       },
     })

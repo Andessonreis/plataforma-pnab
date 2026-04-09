@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     // Verificar se edital existe e está com inscrições abertas
     const edital = await prisma.edital.findUnique({
       where: { id: data.editalId },
-      select: { id: true, status: true, ano: true, categorias: true },
+      select: { id: true, status: true, ano: true, categorias: true, tiposProponentePermitidos: true },
     })
 
     if (!edital) {
@@ -54,6 +54,24 @@ export async function POST(req: NextRequest) {
       res.headers.set('X-Request-Id', requestId)
       res.headers.set('Cache-Control', 'no-store')
       return res
+    }
+
+    // Verificar elegibilidade por tipo de proponente
+    if (edital.tiposProponentePermitidos.length > 0) {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { tipoProponente: true },
+      })
+      if (!user?.tipoProponente || !edital.tiposProponentePermitidos.includes(user.tipoProponente)) {
+        const tiposLabel = edital.tiposProponentePermitidos.join(', ')
+        const res = NextResponse.json(
+          { error: 'FORBIDDEN', message: `Este edital aceita apenas inscrições de: ${tiposLabel}. Atualize seu cadastro se necessário.`, requestId },
+          { status: 403 },
+        )
+        res.headers.set('X-Request-Id', requestId)
+        res.headers.set('Cache-Control', 'no-store')
+        return res
+      }
     }
 
     if (edital.status !== 'INSCRICOES_ABERTAS') {
