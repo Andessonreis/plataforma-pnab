@@ -742,6 +742,17 @@ async function main() {
     console.log('  Editais e inscrições de teste removidos.\n')
   }
 
+  // Criar/atualizar registros de AttachmentType para o Cultura Viva
+  console.log('Cadastrando tipos de anexo no banco...')
+  for (const tipo of tiposAnexo) {
+    await prisma.attachmentType.upsert({
+      where: { tipo: tipo.tipo },
+      update: { label: tipo.label, obrigatorio: tipo.obrigatorio, tag: 'Cultura Viva' },
+      create: { tipo: tipo.tipo, label: tipo.label, obrigatorio: tipo.obrigatorio, tag: 'Cultura Viva', isSystem: false },
+    })
+  }
+  console.log(`  ${tiposAnexo.length} tipos de anexo cadastrados.\n`)
+
   // Verificar se o edital Cultura Viva já existe
   const existingSlug = 'chamamento-publico-cultura-viva-irece-2026'
   const existing = await prisma.edital.findUnique({ where: { slug: existingSlug } })
