@@ -9,20 +9,13 @@ interface NotaAvaliacao {
   peso?: number
 }
 
-interface RegraDesempate {
-  descricao: string
-  tipo: 'bloco' | 'criterio'
-  ref: string
-  direcao: 'desc' | 'asc'
-}
-
-interface ResultadoInscricao {
+export interface ResultadoInscricao {
   inscricaoId: string
   proponenteNome: string
   categoria: string | null
   notaFinal: number
   totalAvaliacoes: number
-  scoresBlocos?: Record<string, number>
+  empatados?: string[]
 }
 
 /**
@@ -34,10 +27,10 @@ interface ResultadoInscricao {
  * 3. Para cada avaliação, calcula a média ponderada das notas
  * 4. A nota final da inscrição é a média das notas dos avaliadores
  * 5. Ordena por nota final descendente
+ * 6. Detecta empates (inscrições com mesma nota final)
  */
 export async function calculateResults(
   editalId: string,
-  desempateRules?: RegraDesempate[] | null,
 ): Promise<ResultadoInscricao[]> {
   // Busca critérios do edital
   const edital = await prisma.edital.findUnique({
@@ -48,10 +41,6 @@ export async function calculateResults(
   if (!edital) throw new Error(`Edital ${editalId} não encontrado`)
 
   const criterios = parseCriterios(edital.criteriosAvaliacao)
-
-  // Identificar blocos únicos se temos regras de desempate
-  const blocosDesempate = desempateRules?.filter(r => r.tipo === 'bloco').map(r => r.ref) ?? []
-  const criteriosDesempate = desempateRules?.filter(r => r.tipo === 'criterio').map(r => r.ref) ?? []
 
   // Busca inscrições avaliadas
   const inscricoes = await prisma.inscricao.findMany({
@@ -90,46 +79,32 @@ export async function calculateResults(
     // Nota final = média das notas dos avaliadores
     const notaFinal = notasAvaliadores.reduce((sum, n) => sum + n, 0) / notasAvaliadores.length
 
-    // Calcula scores de blocos/critérios para desempate (se necessário)
-    let scoresBlocos: Record<string, number> | undefined
-    if (desempateRules && desempateRules.length > 0) {
-      scoresBlocos = {}
-      for (const blocoRef of blocosDesempate) {
-        const scores = allNotas.map(notas => calculateBlockScore(notas, criterios, blocoRef))
-        scoresBlocos[blocoRef] = scores.reduce((s, n) => s + n, 0) / scores.length
-      }
-      for (const critRef of criteriosDesempate) {
-        const scores = allNotas.map(notas => calculateCriterioScore(notas, criterios, critRef))
-        scoresBlocos[critRef] = scores.reduce((s, n) => s + n, 0) / scores.length
-      }
-    }
-
     resultados.push({
       inscricaoId: inscricao.id,
       proponenteNome: inscricao.proponente.nome,
       categoria: inscricao.categoria,
       notaFinal: Math.round(notaFinal * 100) / 100,
       totalAvaliacoes: inscricao.avaliacoes.length,
-      scoresBlocos,
     })
   }
 
-  // Ordena por nota final (descendente) + desempate multi-nível
-  resultados.sort((a, b) => {
-    const diff = b.notaFinal - a.notaFinal
-    if (diff !== 0) return diff
+  // Ordena por nota final descendente
+  resultados.sort((a, b) => b.notaFinal - a.notaFinal)
 
-    if (desempateRules && desempateRules.length > 0) {
-      for (const rule of desempateRules) {
-        const scoreA = a.scoresBlocos?.[rule.ref] ?? 0
-        const scoreB = b.scoresBlocos?.[rule.ref] ?? 0
-        const d = rule.direcao === 'desc' ? scoreB - scoreA : scoreA - scoreB
-        if (Math.abs(d) > 0.001) return d
-      }
+  // Detecta empates: inscrições com mesma notaFinal
+  const notaGroups = new Map<number, string[]>()
+  for (const r of resultados) {
+    const key = r.notaFinal
+    if (!notaGroups.has(key)) notaGroups.set(key, [])
+    notaGroups.get(key)!.push(r.inscricaoId)
+  }
+
+  for (const r of resultados) {
+    const group = notaGroups.get(r.notaFinal)!
+    if (group.length > 1) {
+      r.empatados = group.filter(id => id !== r.inscricaoId)
     }
-
-    return 0
-  })
+  }
 
   return resultados
 }
@@ -186,10 +161,54 @@ export async function saveResults(
       where: { id: r.inscricaoId },
       data: {
         notaFinal: r.notaFinal,
+        posicao: index + 1,
         status,
       },
     })
   })
+
+  await prisma.$transaction(updates)
+}
+
+/**
+ * Salva a ordem manual definida pelo admin para resolver empates.
+ */
+export async function saveManualOrder(
+  editalId: string,
+  orderedIds: string[],
+): Promise<void> {
+  // Busca todas as inscrições do edital ordenadas pela posição atual
+  const allInscricoes = await prisma.inscricao.findMany({
+    where: { editalId, status: { notIn: ['RASCUNHO', 'ENVIADA'] } },
+    select: { id: true, posicao: true, notaFinal: true },
+    orderBy: [
+      { posicao: { sort: 'asc', nulls: 'last' } },
+      { notaFinal: { sort: 'desc', nulls: 'last' } },
+    ],
+  })
+
+  // Valida que todos os IDs pertencem ao edital
+  const allIds = new Set(allInscricoes.map(i => i.id))
+  for (const id of orderedIds) {
+    if (!allIds.has(id)) {
+      throw new Error(`Inscrição ${id} não pertence ao edital ${editalId}`)
+    }
+  }
+
+  // Pega as posições atuais dos IDs fornecidos para reatribuir na nova ordem
+  const reorderedSet = new Set(orderedIds)
+  const currentPositions = allInscricoes
+    .filter(i => reorderedSet.has(i.id))
+    .map(i => i.posicao ?? Infinity)
+    .sort((a, b) => a - b)
+
+  // Atualiza os reordenados com as posições que ocupavam (na nova ordem)
+  const updates = orderedIds.map((id, i) =>
+    prisma.inscricao.update({
+      where: { id },
+      data: { posicao: currentPositions[i] },
+    })
+  )
 
   await prisma.$transaction(updates)
 }
@@ -210,29 +229,6 @@ export function parseNotas(raw: unknown): NotaAvaliacao[] {
   }
   if (!Array.isArray(data)) return []
   return data as NotaAvaliacao[]
-}
-
-export function calculateBlockScore(
-  notas: NotaAvaliacao[],
-  criterios: CriterioAvaliacao[],
-  blocoRef: string,
-): number {
-  const critDoBloco = criterios.filter(c => c.bloco === blocoRef)
-  if (critDoBloco.length === 0) return 0
-  const notasDoBloco = notas.filter(n => critDoBloco.some(c => c.criterio === n.criterio))
-  return calculateWeightedAverage(notasDoBloco, critDoBloco)
-}
-
-export function calculateCriterioScore(
-  notas: NotaAvaliacao[],
-  criterios: CriterioAvaliacao[],
-  criterioRef: string,
-): number {
-  const criterio = criterios.find(c => c.criterio === criterioRef)
-  if (!criterio) return 0
-  const nota = notas.find(n => n.criterio === criterioRef)
-  if (!nota) return 0
-  return calculateWeightedAverage([nota], [criterio])
 }
 
 export function calculateWeightedAverage(notas: NotaAvaliacao[], criterios: CriterioAvaliacao[]): number {

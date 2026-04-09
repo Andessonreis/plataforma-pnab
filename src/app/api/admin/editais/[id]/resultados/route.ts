@@ -44,7 +44,7 @@ export async function GET(
       )
     }
 
-    // Busca inscrições com notas
+    // Busca inscrições com notas — ordenadas por posicao (manual) e notaFinal
     const inscricoes = await prisma.inscricao.findMany({
       where: { editalId: id },
       include: {
@@ -54,25 +54,39 @@ export async function GET(
           select: { notaTotal: true, avaliadorId: true },
         },
       },
-      orderBy: { notaFinal: { sort: 'desc', nulls: 'last' } },
+      orderBy: [
+        { posicao: { sort: 'asc', nulls: 'last' } },
+        { notaFinal: { sort: 'desc', nulls: 'last' } },
+      ],
     })
 
-    const resultados = inscricoes
-      .filter((i) => !['RASCUNHO', 'ENVIADA'].includes(i.status))
-      .map((i, index) => ({
-        posicao: index + 1,
-        inscricaoId: i.id,
-        numero: i.numero,
-        proponenteNome: i.proponente.nome,
-        categoria: i.categoria,
-        notaFinal: i.notaFinal ? Number(i.notaFinal) : null,
-        status: i.status,
-        totalAvaliacoes: i.avaliacoes.length,
-      }))
+    const filtered = inscricoes.filter((i) => !['RASCUNHO', 'ENVIADA'].includes(i.status))
+
+    // Detecta empates
+    const notaGroups = new Map<number, number>()
+    for (const i of filtered) {
+      if (i.notaFinal != null) {
+        const nota = Number(i.notaFinal)
+        notaGroups.set(nota, (notaGroups.get(nota) ?? 0) + 1)
+      }
+    }
+    const hasEmpates = Array.from(notaGroups.values()).some(count => count > 1)
+
+    const resultados = filtered.map((i, index) => ({
+      posicao: i.posicao ?? index + 1,
+      inscricaoId: i.id,
+      numero: i.numero,
+      proponenteNome: i.proponente.nome,
+      categoria: i.categoria,
+      notaFinal: i.notaFinal ? Number(i.notaFinal) : null,
+      status: i.status,
+      totalAvaliacoes: i.avaliacoes.length,
+    }))
 
     const res = NextResponse.json({
       edital: { id: edital.id, titulo: edital.titulo, status: edital.status },
       resultados,
+      hasEmpates,
       requestId,
     })
     res.headers.set('X-Request-Id', requestId)
@@ -111,7 +125,7 @@ export async function POST(
 
     const edital = await prisma.edital.findUnique({
       where: { id },
-      select: { id: true, titulo: true, slug: true, status: true, vagasContemplados: true, vagasSuplentes: true, notaMinima: true, desempate: true },
+      select: { id: true, titulo: true, slug: true, status: true, vagasContemplados: true, vagasSuplentes: true, notaMinima: true },
     })
 
     if (!edital) {
@@ -121,13 +135,8 @@ export async function POST(
       )
     }
 
-    // Parse regras de desempate do edital
-    const desempateRules = Array.isArray(edital.desempate) ? edital.desempate as {
-      descricao: string; tipo: 'bloco' | 'criterio'; ref: string; direcao: 'desc' | 'asc'
-    }[] : null
-
-    // Calcula notas finais
-    const resultados = await calculateResults(id, desempateRules)
+    // Calcula notas finais (sem desempate automático — desempate é manual)
+    const resultados = await calculateResults(id)
 
     if (resultados.length === 0) {
       return NextResponse.json(
@@ -135,6 +144,9 @@ export async function POST(
         { status: 400 },
       )
     }
+
+    // Detecta empates na resposta
+    const hasEmpates = resultados.some(r => r.empatados && r.empatados.length > 0)
 
     // Salva notas e atualiza status das inscrições
     await saveResults(resultados, fase, {
@@ -188,6 +200,7 @@ export async function POST(
     const res = NextResponse.json({
       message: `${fase === 'RESULTADO_FINAL' ? 'Resultado final' : 'Resultado preliminar'} publicado com sucesso.`,
       totalInscrições: resultados.length,
+      hasEmpates,
       requestId,
     })
     res.headers.set('X-Request-Id', requestId)

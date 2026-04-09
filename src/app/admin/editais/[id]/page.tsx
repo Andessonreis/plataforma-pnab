@@ -31,13 +31,6 @@ interface TipoAnexo {
   obrigatorio: boolean
 }
 
-interface RegraDesempate {
-  descricao: string
-  tipo: 'bloco' | 'criterio'
-  ref: string
-  direcao: 'desc' | 'asc'
-}
-
 export default async function EditarEditalPage({ params }: Props) {
   const session = await auth()
   if (!session || session.user.role !== 'ADMIN') redirect('/')
@@ -99,8 +92,6 @@ export default async function EditarEditalPage({ params }: Props) {
           tiposAnexo: (Array.isArray(edital.tiposAnexo)
             ? edital.tiposAnexo : null) as TipoAnexo[] | null,
           notaMinima: edital.notaMinima ? Number(edital.notaMinima) : null,
-          desempate: (Array.isArray(edital.desempate)
-            ? edital.desempate : null) as RegraDesempate[] | null,
           initialAvaliadores: avaliadores,
           initialHabilitadores: habilitadores,
         }}

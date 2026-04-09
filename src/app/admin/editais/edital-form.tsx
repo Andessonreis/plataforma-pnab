@@ -21,13 +21,6 @@ const TIPO_PROPONENTE_OPTIONS: { value: TipoProponente; label: string }[] = [
   { value: 'COLETIVO', label: 'Coletivo' },
 ]
 
-interface RegraDesempate {
-  descricao: string
-  tipo: 'bloco' | 'criterio'
-  ref: string
-  direcao: 'desc' | 'asc'
-}
-
 interface MembroEquipe {
   id: string
   nome: string
@@ -52,7 +45,6 @@ interface EditalFormProps {
     criteriosAvaliacao?: CriterioAvaliacao[]
     tiposAnexo?: TipoAnexo[] | null
     notaMinima?: number | null
-    desempate?: RegraDesempate[] | null
     initialAvaliadores?: MembroEquipe[]
     initialHabilitadores?: MembroEquipe[]
   }
@@ -157,9 +149,6 @@ export function EditalForm({ initialData }: EditalFormProps) {
   )
   const [notaMinima, setNotaMinima] = useState(
     initialData?.notaMinima != null ? String(initialData.notaMinima) : ''
-  )
-  const [desempate, setDesempate] = useState<RegraDesempate[]>(
-    initialData?.desempate ?? []
   )
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -393,7 +382,6 @@ export function EditalForm({ initialData }: EditalFormProps) {
       criteriosAvaliacao: criteriosAvaliacao.length > 0 ? criteriosAvaliacao : null,
       tiposAnexo: tiposAnexo.length > 0 ? tiposAnexo : null,
       notaMinima: notaMinima.trim() ? Number(notaMinima) : null,
-      desempate: desempate.length > 0 ? desempate : null,
     }
 
     try {
@@ -992,88 +980,12 @@ export function EditalForm({ initialData }: EditalFormProps) {
           />
         </div>
 
-        {/* Regras de Desempate */}
+        {/* Desempate */}
         <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50/50 p-4">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-3">
-              <h3 className="text-sm font-semibold text-slate-700">Regras de Desempate</h3>
-              {desempate.length === 0 ? (
-                <span className="inline-flex items-center text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
-                  Sem regras de desempate
-                </span>
-              ) : (
-                <span className="inline-flex items-center text-xs font-medium text-brand-700 bg-brand-50 px-2.5 py-0.5 rounded-full">
-                  {desempate.length} regra(s) configurada(s)
-                </span>
-              )}
-            </div>
-            <Button type="button" variant="outline" size="sm" onClick={() => setDesempate(prev => [
-              ...prev,
-              { descricao: '', tipo: 'bloco', ref: '', direcao: 'desc' },
-            ])}>
-              + Adicionar regra
-            </Button>
-          </div>
-          <p className="text-xs text-slate-500 mb-3">
-            Defina critérios de desempate em ordem de prioridade. O primeiro item é o critério mais importante.
+          <h3 className="text-sm font-semibold text-slate-700 mb-1">Desempate</h3>
+          <p className="text-xs text-slate-500">
+            Em caso de empate, o administrador define a ordem manualmente na tela de resultados.
           </p>
-
-          {desempate.length === 0 ? (
-            <p className="text-sm text-slate-500 text-center py-3">
-              Nenhuma regra de desempate. Em caso de empate, a ordem será aleatória.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {desempate.map((regra, idx) => (
-                <div key={idx} className="rounded-lg border border-slate-200 bg-white p-3 space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <span className="text-xs font-medium text-slate-400">{idx + 1}º critério de desempate</span>
-                    <Button
-                      type="button"
-                      variant="danger"
-                      size="sm"
-                      onClick={() => setDesempate(prev => prev.filter((_, i) => i !== idx))}
-                      aria-label={`Remover regra de desempate ${idx + 1}`}
-                    >
-                      Remover
-                    </Button>
-                  </div>
-                  <Input
-                    label="Descrição"
-                    value={regra.descricao}
-                    onChange={e => setDesempate(prev => prev.map((r, i) => i === idx ? { ...r, descricao: e.target.value } : r))}
-                    placeholder="Ex: Maior nota no Bloco 1"
-                  />
-                  <div className="grid grid-cols-3 gap-3">
-                    <Select
-                      label="Tipo"
-                      value={regra.tipo}
-                      options={[
-                        { value: 'bloco', label: 'Bloco' },
-                        { value: 'criterio', label: 'Critério' },
-                      ]}
-                      onChange={e => setDesempate(prev => prev.map((r, i) => i === idx ? { ...r, tipo: e.target.value as 'bloco' | 'criterio' } : r))}
-                    />
-                    <Input
-                      label="Referência"
-                      value={regra.ref}
-                      onChange={e => setDesempate(prev => prev.map((r, i) => i === idx ? { ...r, ref: e.target.value } : r))}
-                      placeholder="Ex: Bloco 1"
-                    />
-                    <Select
-                      label="Direção"
-                      value={regra.direcao}
-                      options={[
-                        { value: 'desc', label: 'Maior nota vence' },
-                        { value: 'asc', label: 'Menor nota vence' },
-                      ]}
-                      onChange={e => setDesempate(prev => prev.map((r, i) => i === idx ? { ...r, direcao: e.target.value as 'desc' | 'asc' } : r))}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </div></>}
       </Card>
 

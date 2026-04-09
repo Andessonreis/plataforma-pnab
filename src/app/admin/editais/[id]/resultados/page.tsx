@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui'
 import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
 import { editalStatusLabel } from '@/lib/status-maps'
 import { ResultActions } from './result-actions'
+import { TiebreakerPanel } from './tiebreaker-panel'
 import type { InscricaoStatus } from '@prisma/client'
 
 interface Props {
@@ -25,7 +26,7 @@ export default async function AdminResultadosPage({ params }: Props) {
 
   if (!edital) notFound()
 
-  // Busca inscrições com notas
+  // Busca inscrições com notas — ordenadas por posicao (manual) e notaFinal
   const inscricoes = await prisma.inscricao.findMany({
     where: {
       editalId: id,
@@ -38,8 +39,36 @@ export default async function AdminResultadosPage({ params }: Props) {
         select: { notaTotal: true },
       },
     },
-    orderBy: { notaFinal: { sort: 'desc', nulls: 'last' } },
+    orderBy: [
+      { posicao: { sort: 'asc', nulls: 'last' } },
+      { notaFinal: { sort: 'desc', nulls: 'last' } },
+    ],
   })
+
+  // Detecta empates
+  const notaCount = new Map<number, number>()
+  for (const i of inscricoes) {
+    if (i.notaFinal != null) {
+      const nota = Number(i.notaFinal)
+      notaCount.set(nota, (notaCount.get(nota) ?? 0) + 1)
+    }
+  }
+  const empatadas = new Set<number>()
+  for (const [nota, count] of notaCount) {
+    if (count > 1) empatadas.add(nota)
+  }
+  const hasEmpates = empatadas.size > 0
+
+  // Dados para o TiebreakerPanel
+  const tiebreakerData = inscricoes.map(i => ({
+    inscricaoId: i.id,
+    numero: i.numero,
+    proponenteNome: i.proponente.nome,
+    categoria: i.categoria,
+    notaFinal: i.notaFinal ? Number(i.notaFinal) : null,
+    posicao: i.posicao,
+    status: i.status,
+  }))
 
   return (
     <div className="space-y-6">
@@ -66,6 +95,11 @@ export default async function AdminResultadosPage({ params }: Props) {
       {/* Ações */}
       <ResultActions editalId={edital.id} editalStatus={edital.status} />
 
+      {/* Painel de desempate manual */}
+      {hasEmpates && (
+        <TiebreakerPanel editalId={edital.id} inscricoes={tiebreakerData} />
+      )}
+
       {/* Tabela de resultados */}
       {inscricoes.length === 0 ? (
         <div className="bg-white rounded-xl border border-slate-200 p-8 text-center">
@@ -90,43 +124,58 @@ export default async function AdminResultadosPage({ params }: Props) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {inscricoes.map((inscricao, index) => (
-                  <tr key={inscricao.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="py-3 px-4 font-medium text-slate-900">
-                      {index + 1}
-                    </td>
-                    <td className="py-3 px-4">
-                      <div>
-                        <p className="font-medium text-slate-900">{inscricao.proponente.nome}</p>
-                        <p className="text-xs text-slate-400">{inscricao.numero}</p>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 text-slate-700">
-                      {inscricao.categoria ?? '—'}
-                    </td>
-                    <td className="py-3 px-4 text-slate-700">
-                      {inscricao.avaliacoes.length}
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="font-semibold text-slate-900">
-                        {inscricao.notaFinal ? Number(inscricao.notaFinal).toFixed(2) : '—'}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <Badge variant={inscricaoStatusVariant[inscricao.status as InscricaoStatus]}>
-                        {inscricaoStatusLabel[inscricao.status as InscricaoStatus]}
-                      </Badge>
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      <Link
-                        href={`/admin/inscricoes/${inscricao.id}`}
-                        className="text-sm font-medium text-brand-600 hover:text-brand-700"
-                      >
-                        Detalhes
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
+                {inscricoes.map((inscricao, index) => {
+                  const nota = inscricao.notaFinal ? Number(inscricao.notaFinal) : null
+                  const isEmpatada = nota != null && empatadas.has(nota)
+
+                  return (
+                    <tr
+                      key={inscricao.id}
+                      className={`hover:bg-slate-50 transition-colors ${isEmpatada ? 'bg-amber-50/50' : ''}`}
+                    >
+                      <td className="py-3 px-4 font-medium text-slate-900">
+                        <span className="flex items-center gap-1.5">
+                          {inscricao.posicao ?? index + 1}
+                          {isEmpatada && (
+                            <span className="inline-flex items-center text-[10px] font-semibold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">
+                              Empate
+                            </span>
+                          )}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div>
+                          <p className="font-medium text-slate-900">{inscricao.proponente.nome}</p>
+                          <p className="text-xs text-slate-400">{inscricao.numero}</p>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-slate-700">
+                        {inscricao.categoria ?? '—'}
+                      </td>
+                      <td className="py-3 px-4 text-slate-700">
+                        {inscricao.avaliacoes.length}
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className="font-semibold text-slate-900">
+                          {nota != null ? nota.toFixed(2) : '—'}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <Badge variant={inscricaoStatusVariant[inscricao.status as InscricaoStatus]}>
+                          {inscricaoStatusLabel[inscricao.status as InscricaoStatus]}
+                        </Badge>
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <Link
+                          href={`/admin/inscricoes/${inscricao.id}`}
+                          className="text-sm font-medium text-brand-600 hover:text-brand-700"
+                        >
+                          Detalhes
+                        </Link>
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>

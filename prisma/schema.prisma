@@ -253,6 +253,7 @@ model Inscricao {
   campos             Json            @default("{}")
   orcamento          Json?
   notaFinal          Decimal?        @db.Decimal(5, 2)
+  posicao            Int?
   motivoInabilitacao String?
   submittedAt        DateTime?
   createdAt          DateTime        @default(now())
