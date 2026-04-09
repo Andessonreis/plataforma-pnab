@@ -89,7 +89,7 @@ export default async function EditarEditalPage({ params }: Props) {
           vagasSuplentes: edital.vagasSuplentes,
           criteriosAvaliacao: (Array.isArray(edital.criteriosAvaliacao)
             ? edital.criteriosAvaliacao : []) as CriterioAvaliacao[],
-          formulaAvaliacao: (edital as Record<string, unknown>).formulaAvaliacao as string ?? '',
+          formulaAvaliacao: (edital.formulaAvaliacao as string) ?? '',
           tiposAnexo: (Array.isArray(edital.tiposAnexo)
             ? edital.tiposAnexo : null) as TipoAnexo[] | null,
           notaMinima: edital.notaMinima ? Number(edital.notaMinima) : null,

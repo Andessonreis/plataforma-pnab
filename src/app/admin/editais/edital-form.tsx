@@ -43,6 +43,7 @@ interface EditalFormProps {
     vagasContemplados: number | null
     vagasSuplentes: number | null
     criteriosAvaliacao?: CriterioAvaliacao[]
+    formulaAvaliacao?: string
     tiposAnexo?: TipoAnexo[] | null
     notaMinima?: number | null
     initialAvaliadores?: MembroEquipe[]
@@ -145,7 +146,7 @@ export function EditalForm({ initialData }: EditalFormProps) {
     initialData?.criteriosAvaliacao ?? []
   )
   const [formulaAvaliacao, setFormulaAvaliacao] = useState(
-    (initialData as Record<string, unknown>)?.formulaAvaliacao as string ?? ''
+    initialData?.formulaAvaliacao ?? ''
   )
   // Templates de avaliação disponíveis
   const [templatesDisponiveis, setTemplatesDisponiveis] = useState<{ id: string; nome: string; criterios: CriterioAvaliacao[]; formula: string | null }[]>([])
