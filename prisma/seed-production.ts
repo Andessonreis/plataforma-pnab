@@ -730,7 +730,8 @@ async function main() {
 
   if (shouldClean) {
     console.log('Limpando dados de teste...')
-    // Ordem importa: dependências primeiro
+    // Ordem importa: dependências primeiro (FKs)
+    await prisma.projetoApoiado.deleteMany()
     await prisma.recurso.deleteMany()
     await prisma.avaliacao.deleteMany()
     await prisma.anexoInscricao.deleteMany()
