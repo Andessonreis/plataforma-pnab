@@ -448,18 +448,20 @@ export function EditalForm({ initialData }: EditalFormProps) {
         const avalRemovidos = [...initialAvalIds].filter(id => !currentAvalIds.has(id))
         const habRemovidos = [...initialHabIds].filter(id => !currentHabIds.has(id))
         for (const userId of avalRemovidos) {
-          await fetch(`/api/admin/editais/${editalId}/equipe`, {
+          const delRes = await fetch(`/api/admin/editais/${editalId}/equipe`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId, funcao: 'AVALIADOR' }),
           })
+          if (!delRes.ok) console.error('Erro ao remover avaliador:', userId)
         }
         for (const userId of habRemovidos) {
-          await fetch(`/api/admin/editais/${editalId}/equipe`, {
+          const delRes = await fetch(`/api/admin/editais/${editalId}/equipe`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId, funcao: 'HABILITADOR' }),
           })
+          if (!delRes.ok) console.error('Erro ao remover habilitador:', userId)
         }
       }
 
@@ -467,18 +469,26 @@ export function EditalForm({ initialData }: EditalFormProps) {
       const avalNovos = avaliadoresSelecionados.filter(a => !initialAvalIds.has(a.id))
       const habNovos = habilitadoresSelecionados.filter(h => !initialHabIds.has(h.id))
       if (avalNovos.length > 0) {
-        await fetch(`/api/admin/editais/${editalId}/equipe`, {
+        const eqRes = await fetch(`/api/admin/editais/${editalId}/equipe`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userIds: avalNovos.map(a => a.id), funcao: 'AVALIADOR' }),
         })
+        if (!eqRes.ok) {
+          const err = await eqRes.json().catch(() => ({}))
+          console.error('Erro ao salvar avaliadores:', err)
+        }
       }
       if (habNovos.length > 0) {
-        await fetch(`/api/admin/editais/${editalId}/equipe`, {
+        const eqRes = await fetch(`/api/admin/editais/${editalId}/equipe`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userIds: habNovos.map(h => h.id), funcao: 'HABILITADOR' }),
         })
+        if (!eqRes.ok) {
+          const err = await eqRes.json().catch(() => ({}))
+          console.error('Erro ao salvar habilitadores:', err)
+        }
       }
 
       if (arquivosRef.current?.hasPending()) {
