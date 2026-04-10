@@ -415,6 +415,8 @@ export function EditalForm({ initialData }: EditalFormProps) {
       tiposAnexo: tiposAnexo.length > 0 ? tiposAnexo : null,
       notaMinima: notaMinima.trim() ? Number(notaMinima) : null,
       tiposProponentePermitidos,
+      equipeAvaliadores: avaliadoresSelecionados.map(a => a.id),
+      equipeHabilitadores: habilitadoresSelecionados.map(h => h.id),
     }
 
     try {
@@ -436,61 +438,6 @@ export function EditalForm({ initialData }: EditalFormProps) {
 
       const data = await res.json()
       const editalId: string = data.id ?? initialData?.id ?? ''
-
-      // Salvar equipe do edital
-      const initialAvalIds = new Set((initialData?.initialAvaliadores ?? []).map(a => a.id))
-      const initialHabIds = new Set((initialData?.initialHabilitadores ?? []).map(h => h.id))
-      const currentAvalIds = new Set(avaliadoresSelecionados.map(a => a.id))
-      const currentHabIds = new Set(habilitadoresSelecionados.map(h => h.id))
-
-      // Remover membros que estavam e foram retirados (só na edição)
-      if (isEdit) {
-        const avalRemovidos = [...initialAvalIds].filter(id => !currentAvalIds.has(id))
-        const habRemovidos = [...initialHabIds].filter(id => !currentHabIds.has(id))
-        for (const userId of avalRemovidos) {
-          const delRes = await fetch(`/api/admin/editais/${editalId}/equipe`, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, funcao: 'AVALIADOR' }),
-          })
-          if (!delRes.ok) console.error('Erro ao remover avaliador:', userId)
-        }
-        for (const userId of habRemovidos) {
-          const delRes = await fetch(`/api/admin/editais/${editalId}/equipe`, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, funcao: 'HABILITADOR' }),
-          })
-          if (!delRes.ok) console.error('Erro ao remover habilitador:', userId)
-        }
-      }
-
-      // Adicionar novos membros
-      const avalNovos = avaliadoresSelecionados.filter(a => !initialAvalIds.has(a.id))
-      const habNovos = habilitadoresSelecionados.filter(h => !initialHabIds.has(h.id))
-      console.log('[equipe] editalId:', editalId, 'avalNovos:', avalNovos.length, 'habNovos:', habNovos.length, 'avalSel:', avaliadoresSelecionados.length, 'habSel:', habilitadoresSelecionados.length, 'initAval:', initialAvalIds.size, 'initHab:', initialHabIds.size)
-      if (avalNovos.length > 0) {
-        const eqRes = await fetch(`/api/admin/editais/${editalId}/equipe`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userIds: avalNovos.map(a => a.id), funcao: 'AVALIADOR' }),
-        })
-        if (!eqRes.ok) {
-          const err = await eqRes.json().catch(() => ({}))
-          console.error('Erro ao salvar avaliadores:', err)
-        }
-      }
-      if (habNovos.length > 0) {
-        const eqRes = await fetch(`/api/admin/editais/${editalId}/equipe`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userIds: habNovos.map(h => h.id), funcao: 'HABILITADOR' }),
-        })
-        if (!eqRes.ok) {
-          const err = await eqRes.json().catch(() => ({}))
-          console.error('Erro ao salvar habilitadores:', err)
-        }
-      }
 
       if (arquivosRef.current?.hasPending()) {
         await arquivosRef.current.uploadPending(editalId)

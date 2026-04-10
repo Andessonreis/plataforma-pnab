@@ -88,6 +88,9 @@ const editalSchema = z.object({
     direcao: z.enum(['desc', 'asc']).default('desc'),
   })).nullable().optional(),
   tiposProponentePermitidos: z.array(z.enum(['PF', 'MEI', 'PJ', 'COLETIVO'])).default([]),
+  // Equipe do edital (IDs dos membros)
+  equipeAvaliadores: z.array(z.string().min(1)).default([]),
+  equipeHabilitadores: z.array(z.string().min(1)).default([]),
 })
 
 // ── Gerar slug a partir do titulo ───────────────────────────────────────────
@@ -101,6 +104,49 @@ function generateSlug(titulo: string, ano: number): string {
     .replace(/(^-|-$)/g, '')
 
   return `${base}-${ano}`
+}
+
+// ── Sincronizar equipe do edital ────────────────────────────────────────────
+
+async function syncEquipe(editalId: string, avaliadorIds: string[], habilitadorIds: string[]) {
+  // Buscar membros atuais
+  const membrosAtuais = await prisma.editalMembro.findMany({
+    where: { editalId },
+    select: { userId: true, funcao: true },
+  })
+
+  const atuaisAval = new Set(membrosAtuais.filter(m => m.funcao === 'AVALIADOR').map(m => m.userId))
+  const atuaisHab = new Set(membrosAtuais.filter(m => m.funcao === 'HABILITADOR').map(m => m.userId))
+  const novosAval = new Set(avaliadorIds)
+  const novosHab = new Set(habilitadorIds)
+
+  // Remover quem saiu
+  const avalRemover = [...atuaisAval].filter(id => !novosAval.has(id))
+  const habRemover = [...atuaisHab].filter(id => !novosHab.has(id))
+  if (avalRemover.length > 0 || habRemover.length > 0) {
+    await prisma.editalMembro.deleteMany({
+      where: {
+        editalId,
+        OR: [
+          ...(avalRemover.length > 0 ? [{ userId: { in: avalRemover }, funcao: 'AVALIADOR' as const }] : []),
+          ...(habRemover.length > 0 ? [{ userId: { in: habRemover }, funcao: 'HABILITADOR' as const }] : []),
+        ],
+      },
+    })
+  }
+
+  // Adicionar quem entrou
+  const avalAdicionar = avaliadorIds.filter(id => !atuaisAval.has(id))
+  const habAdicionar = habilitadorIds.filter(id => !atuaisHab.has(id))
+  const novos = [
+    ...avalAdicionar.map(userId => ({ editalId, userId, funcao: 'AVALIADOR' as const })),
+    ...habAdicionar.map(userId => ({ editalId, userId, funcao: 'HABILITADOR' as const })),
+  ]
+  if (novos.length > 0) {
+    await prisma.editalMembro.createMany({ data: novos, skipDuplicates: true })
+  }
+
+  return { adicionados: novos.length, removidos: avalRemover.length + habRemover.length }
 }
 
 // ── POST — Criar edital ─────────────────────────────────────────────────────
@@ -155,6 +201,11 @@ export async function POST(req: NextRequest) {
         ...(data.status !== 'RASCUNHO' ? { publishedAt: new Date() } : {}),
       },
     })
+
+    // Salvar equipe do edital
+    if (data.equipeAvaliadores.length > 0 || data.equipeHabilitadores.length > 0) {
+      await syncEquipe(edital.id, data.equipeAvaliadores, data.equipeHabilitadores)
+    }
 
     await logAudit({
       userId: session.user.id,
@@ -293,6 +344,9 @@ export async function PUT(req: NextRequest) {
         ...(publishedAt ? { publishedAt } : {}),
       },
     })
+
+    // Sincronizar equipe do edital
+    await syncEquipe(edital.id, data.equipeAvaliadores, data.equipeHabilitadores)
 
     await logAudit({
       userId: session.user.id,
