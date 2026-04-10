@@ -178,6 +178,12 @@ export function EditalForm({ initialData }: EditalFormProps) {
   const [habilitadoresSelecionados, setHabilitadoresSelecionados] = useState<MembroEquipe[]>(
     initialData?.initialHabilitadores ?? []
   )
+  // Refs para garantir acesso ao valor mais recente no submit (evita closure stale)
+  const avaliadoresRef = useRef(avaliadoresSelecionados)
+  avaliadoresRef.current = avaliadoresSelecionados
+  const habilitadoresRef = useRef(habilitadoresSelecionados)
+  habilitadoresRef.current = habilitadoresSelecionados
+
   const [allAvaliadores, setAllAvaliadores] = useState<MembroEquipe[]>([])
   const [allHabilitadores, setAllHabilitadores] = useState<MembroEquipe[]>([])
   const [loadingEquipe, setLoadingEquipe] = useState(true)
@@ -415,8 +421,8 @@ export function EditalForm({ initialData }: EditalFormProps) {
       tiposAnexo: tiposAnexo.length > 0 ? tiposAnexo : null,
       notaMinima: notaMinima.trim() ? Number(notaMinima) : null,
       tiposProponentePermitidos,
-      equipeAvaliadores: avaliadoresSelecionados.map(a => a.id),
-      equipeHabilitadores: habilitadoresSelecionados.map(h => h.id),
+      equipeAvaliadores: avaliadoresRef.current.map(a => a.id),
+      equipeHabilitadores: habilitadoresRef.current.map(h => h.id),
     }
 
     try {
