@@ -8,6 +8,7 @@ import type {
 } from '@/types/cronograma'
 import { CRONOGRAMA_FASES_ORDENADAS, CRONOGRAMA_FASES_FORMULARIO } from '@/types/cronograma'
 import { editalCronogramaLabel } from '@/lib/status-maps'
+import { parseBrazilDateTime } from '@/lib/utils/format'
 
 // ── Normalização para fuzzy matching (reutilizada do scheduler) ─────────────
 
@@ -187,8 +188,8 @@ export function getNextDeadline(cronograma: unknown): CronogramaDisplayItem | nu
   const now = new Date()
 
   const future = items
-    .filter((item) => item.dataHora && new Date(item.dataHora) > now)
-    .sort((a, b) => new Date(a.dataHora).getTime() - new Date(b.dataHora).getTime())
+    .filter((item) => item.dataHora && parseBrazilDateTime(item.dataHora) > now)
+    .sort((a, b) => parseBrazilDateTime(a.dataHora).getTime() - parseBrazilDateTime(b.dataHora).getTime())
 
   return future[0] ?? null
 }
@@ -369,7 +370,7 @@ export function validateCronogramaOrder(
   const itemsComData: { id: string; label: string; fase?: EditalStatus; date: Date }[] = []
   for (const item of items) {
     if (!item.dataHora?.trim()) continue
-    const d = new Date(item.dataHora)
+    const d = parseBrazilDateTime(item.dataHora)
     if (isNaN(d.getTime())) continue
 
     const label =
@@ -425,7 +426,7 @@ export function validateCronogramaOrderServer(
   const itemsComData: { label: string; date: Date }[] = []
   for (const item of items) {
     if (!item.dataHora?.trim()) continue
-    const d = new Date(item.dataHora)
+    const d = parseBrazilDateTime(item.dataHora)
     if (isNaN(d.getTime())) continue
 
     const label =

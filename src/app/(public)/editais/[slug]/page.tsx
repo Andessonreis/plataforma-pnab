@@ -20,7 +20,7 @@ import {
   IconQuestion,
 } from '@/components/ui/icons'
 import { getStatusDisplay } from '@/lib/utils/edital-status'
-import { formatCurrency, formatDate, formatDateTime } from '@/lib/utils/format'
+import { formatCurrency, formatDate, formatDateTime, parseBrazilDateTime } from '@/lib/utils/format'
 import { parseCronogramaPublico, getNextDeadline, isFaseCompleted, isFaseCurrent } from '@/lib/utils/cronograma'
 import { getBadgeVariantForTipo } from '@/lib/utils/badge-variant'
 
@@ -200,7 +200,7 @@ export default async function EditalPage({ params }: Props) {
 
                     <ol className="space-y-1">
                       {cronograma.map((item, index) => {
-                        const itemDate = new Date(item.dataHora)
+                        const itemDate = parseBrazilDateTime(item.dataHora)
                         const datePast = itemDate < now
                         // 3 estados: concluído (já passou), em andamento (fase atual), futuro
                         const isPast = item.fase

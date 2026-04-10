@@ -7,6 +7,7 @@ import {
   FASE_TRANSICOES,
   STATUS_ELEGIVEIS_SCHEDULER,
 } from '@/types/cronograma'
+import { parseBrazilDateTime } from '@/lib/utils/format'
 
 export interface SchedulerJobData {
   trigger: 'cron'
@@ -188,7 +189,7 @@ export async function processSchedulerJob(): Promise<number> {
       advancing = false
 
       const match = extractFaseItems(cronograma, currentStatus)
-      if (!match || new Date(match.dataHora) > now) {
+      if (!match || parseBrazilDateTime(match.dataHora) > now) {
         break
       }
 

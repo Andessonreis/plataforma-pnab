@@ -22,6 +22,24 @@ export function formatCurrency(value: number | string | Decimal | null | undefin
 }
 
 /**
+ * Converte uma string de data em Date interpretando datetime-local "nu"
+ * (sem timezone, vindo de `<input type="datetime-local">`) como horário
+ * de Brasília (UTC-03:00). Strings com `Z` ou offset explícito são respeitadas.
+ *
+ * Necessário porque o servidor Next.js roda em UTC: `new Date("2026-08-15T09:00")`
+ * lá vira 9h UTC (= 6h BRT) em vez do 9h BRT que o usuário digitou.
+ *
+ * Brasil não adota mais horário de verão desde 2019, então `-03:00` fixo é seguro.
+ */
+export function parseBrazilDateTime(date: Date | string): Date {
+  if (date instanceof Date) return date
+  // Já tem timezone (Z ou ±HH:MM / ±HHMM) → respeita
+  if (/Z$|[+-]\d{2}:?\d{2}$/.test(date)) return new Date(date)
+  // String "nua" do datetime-local → assume BRT
+  return new Date(`${date}-03:00`)
+}
+
+/**
  * Formata uma data como dd/mm/aaaa.
  *
  * @example formatDate("2026-04-30T23:59:00") => "30/04/2026"
@@ -29,7 +47,7 @@ export function formatCurrency(value: number | string | Decimal | null | undefin
 export function formatDate(date: Date | string | null | undefined): string {
   if (!date) return '—'
 
-  const d = typeof date === 'string' ? new Date(date) : date
+  const d = parseBrazilDateTime(date)
 
   if (Number.isNaN(d.getTime())) return '—'
 
@@ -49,7 +67,7 @@ export function formatDate(date: Date | string | null | undefined): string {
 export function formatDateTime(date: Date | string | null | undefined): string {
   if (!date) return '—'
 
-  const d = typeof date === 'string' ? new Date(date) : date
+  const d = parseBrazilDateTime(date)
 
   if (Number.isNaN(d.getTime())) return '—'
 
