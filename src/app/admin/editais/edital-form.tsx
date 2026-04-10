@@ -468,6 +468,7 @@ export function EditalForm({ initialData }: EditalFormProps) {
       // Adicionar novos membros
       const avalNovos = avaliadoresSelecionados.filter(a => !initialAvalIds.has(a.id))
       const habNovos = habilitadoresSelecionados.filter(h => !initialHabIds.has(h.id))
+      console.log('[equipe] editalId:', editalId, 'avalNovos:', avalNovos.length, 'habNovos:', habNovos.length, 'avalSel:', avaliadoresSelecionados.length, 'habSel:', habilitadoresSelecionados.length, 'initAval:', initialAvalIds.size, 'initHab:', initialHabIds.size)
       if (avalNovos.length > 0) {
         const eqRes = await fetch(`/api/admin/editais/${editalId}/equipe`, {
           method: 'POST',
