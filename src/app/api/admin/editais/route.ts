@@ -346,6 +346,7 @@ export async function PUT(req: NextRequest) {
     })
 
     // Sincronizar equipe do edital
+    console.log('[equipe-sync] editalId:', edital.id, 'aval:', data.equipeAvaliadores, 'hab:', data.equipeHabilitadores)
     await syncEquipe(edital.id, data.equipeAvaliadores, data.equipeHabilitadores)
 
     await logAudit({
