@@ -81,6 +81,9 @@ export default function InscricaoForm({
   const router = useRouter()
   const hasCategorias = edital.categorias.length > 0
   const camposFormulario = filterCamposByTipo(edital.camposFormulario || [], tipoProponente)
+  const effectiveTiposAnexo = edital.tiposAnexo?.length
+    ? edital.tiposAnexo
+    : PNAB_DEFAULT_ATTACHMENT_TYPES
 
   // Determinar etapas
   const steps: Step[] = [
@@ -529,54 +532,116 @@ export default function InscricaoForm({
       )}
 
       {/* ─── Etapa: Anexos ─────────────────────────────────────────────────── */}
-      {step === 'anexos' && (
-        <Card padding="lg">
-          <h2 className="text-lg font-semibold text-slate-900 mb-1">Documentos e Anexos</h2>
-          <p className="text-sm text-slate-500 mb-6">
-            Envie os documentos necessários para sua inscrição. Formatos aceitos: PDF, PNG, JPEG, XLSX (máx. 10MB cada).
-          </p>
+      {step === 'anexos' && (() => {
+        const tiposObrigatorios = effectiveTiposAnexo.filter((t) => t.obrigatorio)
+        const totalObrigatorios = tiposObrigatorios.length
+        const obrigatoriosEnviados = tiposObrigatorios.filter((t) =>
+          anexos.some((a) => a.tipo === t.tipo),
+        ).length
+        const allObrigatoriosOk = obrigatoriosEnviados === totalObrigatorios
 
-          {/* Upload */}
-          <AnexoUpload onUpload={handleUpload} uploading={uploading} tiposAnexoEdital={edital.tiposAnexo} />
-
-          {/* Lista de anexos */}
-          {anexos.length > 0 && (
-            <div className="mt-6 space-y-3">
-              <h3 className="text-sm font-medium text-slate-700">
-                Anexos enviados ({anexos.length})
-              </h3>
-              {anexos.map((anexo) => (
-                <div
-                  key={anexo.id}
-                  className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-3"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <IconDocument className="h-5 w-5 text-slate-400 shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-slate-900 truncate">{anexo.titulo}</p>
-                      <p className="text-xs text-slate-500">{anexo.tipo}</p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteAnexo(anexo.id)}
-                    className="text-red-500 hover:text-red-700 text-sm font-medium shrink-0 ml-3 min-h-[44px] px-2"
-                    aria-label={`Remover ${anexo.titulo}`}
-                  >
-                    Remover
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {anexos.length === 0 && (
-            <p className="mt-4 text-sm text-amber-600">
-              Envie pelo menos um documento para poder submeter sua inscrição.
+        return (
+          <Card padding="lg">
+            <h2 className="text-lg font-semibold text-slate-900 mb-1">Documentos e Anexos</h2>
+            <p className="text-sm text-slate-500 mb-6">
+              Envie os documentos necessários para sua inscrição. Formatos aceitos: PDF, PNG, JPEG, XLSX (máx. 10MB cada).
             </p>
-          )}
-        </Card>
-      )}
+
+            {/* Checklist de documentos esperados */}
+            {effectiveTiposAnexo.length > 0 && (
+              <div className="mb-6 rounded-lg border border-slate-200 bg-slate-50 p-4">
+                <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+                  <h3 className="text-sm font-semibold text-slate-800">
+                    Documentos necessários
+                  </h3>
+                  {totalObrigatorios > 0 && (
+                    <span
+                      className={`text-xs font-medium px-2 py-1 rounded-full ${
+                        allObrigatoriosOk
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-amber-100 text-amber-700'
+                      }`}
+                      aria-live="polite"
+                    >
+                      {obrigatoriosEnviados}/{totalObrigatorios} obrigatórios enviados
+                    </span>
+                  )}
+                </div>
+                <ul className="space-y-2" role="list">
+                  {effectiveTiposAnexo.map((t) => {
+                    const enviado = anexos.find((a) => a.tipo === t.tipo)
+                    return (
+                      <li key={t.tipo} className="flex items-start gap-2 text-sm">
+                        {enviado ? (
+                          <IconCheck className="h-4 w-4 text-green-600 shrink-0 mt-0.5" />
+                        ) : (
+                          <span
+                            className="h-4 w-4 rounded-full border border-slate-300 shrink-0 mt-0.5"
+                            aria-hidden="true"
+                          />
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={enviado ? 'text-slate-900' : 'text-slate-700'}>
+                              {t.label}
+                            </span>
+                            {t.obrigatorio ? (
+                              <span className="text-[10px] uppercase tracking-wide font-semibold text-red-600">
+                                obrigatório
+                              </span>
+                            ) : (
+                              <span className="text-[10px] uppercase tracking-wide font-medium text-slate-400">
+                                opcional
+                              </span>
+                            )}
+                          </div>
+                          {enviado && (
+                            <p className="text-xs text-slate-500 truncate">{enviado.titulo}</p>
+                          )}
+                        </div>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
+            )}
+
+            {/* Upload */}
+            <AnexoUpload onUpload={handleUpload} uploading={uploading} tiposAnexoEdital={edital.tiposAnexo} />
+
+            {/* Lista de anexos */}
+            {anexos.length > 0 && (
+              <div className="mt-6 space-y-3">
+                <h3 className="text-sm font-medium text-slate-700">
+                  Anexos enviados ({anexos.length})
+                </h3>
+                {anexos.map((anexo) => (
+                  <div
+                    key={anexo.id}
+                    className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-3"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <IconDocument className="h-5 w-5 text-slate-400 shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-slate-900 truncate">{anexo.titulo}</p>
+                        <p className="text-xs text-slate-500">{anexo.tipo}</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteAnexo(anexo.id)}
+                      className="text-red-500 hover:text-red-700 text-sm font-medium shrink-0 ml-3 min-h-[44px] px-2"
+                      aria-label={`Remover ${anexo.titulo}`}
+                    >
+                      Remover
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+        )
+      })()}
 
       {/* ─── Etapa: Revisão ────────────────────────────────────────────────── */}
       {step === 'revisao' && (
