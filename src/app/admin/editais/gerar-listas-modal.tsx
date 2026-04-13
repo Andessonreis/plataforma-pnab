@@ -30,7 +30,6 @@ const STATUS_OPTIONS: InscricaoStatus[] = [
 ]
 
 const ALL_PHASES = '__ALL__'
-const ALL_INSCRICOES = '__INSCRICOES__'
 
 const EDITAL_PHASE_ORDER: Record<EditalStatus, number> = {
   RASCUNHO: 0,
@@ -93,14 +92,9 @@ export function GerarListasModal({ editalId, editalTitulo, editalStatus }: Gerar
     setLoading(format)
 
     try {
-      let url: string
-      if (selected === ALL_INSCRICOES) {
-        url = `/api/admin/inscricoes/export?editalId=${editalId}`
-      } else {
-        url = format === 'pdf'
-          ? `/api/admin/editais/${editalId}/listas?status=${selected}`
-          : `/api/admin/inscricoes/export?editalId=${editalId}&status=${selected}`
-      }
+      const url = format === 'pdf'
+        ? `/api/admin/editais/${editalId}/listas?status=${selected}`
+        : `/api/admin/inscricoes/export?editalId=${editalId}&status=${selected}`
 
       const res = await fetch(url)
       if (!res.ok) throw new Error(`Erro ${res.status}`)
@@ -126,12 +120,9 @@ export function GerarListasModal({ editalId, editalTitulo, editalStatus }: Gerar
   }
 
   const isAllPhases = selected === ALL_PHASES
-  const isAllInscricoes = selected === ALL_INSCRICOES
-  const isSpecialOption = isAllPhases || isAllInscricoes
-  const phaseNotReached = !isSpecialOption && !isPhaseReached(selected as InscricaoStatus, editalStatus)
-  const hasZero = !isSpecialOption && data !== null && (data.byStatus[selected] ?? 0) === 0
-  const totalReal = data?.total ?? 0
-  const buttonsDisabled = loading !== null || phaseNotReached || hasZero || (isAllInscricoes && totalReal === 0)
+  const phaseNotReached = !isAllPhases && !isPhaseReached(selected as InscricaoStatus, editalStatus)
+  const hasZero = !isAllPhases && data !== null && (data.byStatus[selected] ?? 0) === 0
+  const buttonsDisabled = loading !== null || phaseNotReached || hasZero
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -162,15 +153,12 @@ export function GerarListasModal({ editalId, editalTitulo, editalStatus }: Gerar
             className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none min-h-[44px]"
           >
             <option value={ALL_PHASES}>Todas as fases</option>
-            <option value={ALL_INSCRICOES} disabled={totalReal === 0}>
-              Inscrições{data !== null ? ` (${totalReal})` : ''}
-            </option>
             {STATUS_OPTIONS.map((status) => {
               const reached = isPhaseReached(status, editalStatus)
               const count = data?.byStatus[status] ?? 0
               const disabled = !reached || count === 0
 
-              let label = inscricaoStatusLabel[status]
+              let label = status === 'ENVIADA' ? 'Inscrições Enviadas' : inscricaoStatusLabel[status]
               if (!reached) {
                 label += ' (fase não alcançada)'
               } else if (data !== null) {
@@ -220,11 +208,11 @@ export function GerarListasModal({ editalId, editalTitulo, editalStatus }: Gerar
           <button
             type="button"
             onClick={() => handleDownload('pdf')}
-            disabled={buttonsDisabled || isAllInscricoes}
+            disabled={buttonsDisabled}
             className={[
               'inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors min-h-[44px]',
               'bg-brand-600 text-white hover:bg-brand-700',
-              (buttonsDisabled || isAllInscricoes) ? 'cursor-not-allowed opacity-60' : '',
+              buttonsDisabled ? 'cursor-not-allowed opacity-60' : '',
             ].join(' ')}
           >
             {loading === 'pdf' ? (
