@@ -7,6 +7,7 @@ export const authConfig: NextAuthConfig = {
   session: { strategy: 'jwt' },
   pages: {
     signIn: '/login',
+    signOut: '/sair',
     error: '/login',
   },
   providers: [],

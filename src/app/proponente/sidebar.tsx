@@ -2,12 +2,12 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { LogoutButton } from '@/components/logout-button'
 import {
   IconHome,
   IconClipboard,
   IconUser,
   IconClose,
-  IconLogout,
 } from '@/components/ui'
 
 interface ProponenteSidebarProps {
@@ -96,13 +96,9 @@ export function ProponenteSidebar({ userName }: ProponenteSidebarProps) {
 
         {/* Rodapé */}
         <div className="px-3 py-4 border-t border-slate-800">
-          <Link
-            href="/api/auth/signout"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-all duration-150 min-h-[44px]"
-          >
-            <IconLogout className="h-5 w-5" />
-            Sair
-          </Link>
+          <LogoutButton
+            className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-all duration-150 min-h-[44px]"
+          />
         </div>
       </aside>
     </>
