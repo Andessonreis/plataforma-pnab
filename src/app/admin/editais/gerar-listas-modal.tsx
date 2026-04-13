@@ -17,6 +17,7 @@ import type { EditalInscricaoCounts } from './actions'
 import type { InscricaoStatus, EditalStatus } from '@prisma/client'
 
 const STATUS_OPTIONS: InscricaoStatus[] = [
+  'ENVIADA',
   'HABILITADA',
   'INABILITADA',
   'EM_AVALIACAO',
