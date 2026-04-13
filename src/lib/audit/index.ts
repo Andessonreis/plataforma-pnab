@@ -18,6 +18,7 @@ export const AUDIT_ACTIONS = {
   PERFIL_ATUALIZADO: 'PERFIL_ATUALIZADO',
   INSCRICAO_CRIADA: 'INSCRICAO_CRIADA',
   INSCRICAO_ENVIADA: 'INSCRICAO_ENVIADA',
+  INSCRICAO_RETIRADA: 'INSCRICAO_RETIRADA',
   ANEXO_ENVIADO: 'ANEXO_ENVIADO',
 
   // Admin — editais
@@ -92,6 +93,7 @@ export const ACTION_LABELS: Record<string, string> = {
   PERFIL_ATUALIZADO: 'Perfil atualizado',
   INSCRICAO_CRIADA: 'Inscrição criada',
   INSCRICAO_ENVIADA: 'Inscrição enviada',
+  INSCRICAO_RETIRADA: 'Inscrição retirada para edição',
   ANEXO_ENVIADO: 'Anexo enviado',
   EDITAL_CRIADO: 'Edital criado',
   EDITAL_ATUALIZADO: 'Edital atualizado',
