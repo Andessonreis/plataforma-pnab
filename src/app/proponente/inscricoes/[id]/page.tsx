@@ -262,7 +262,7 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
                       <dt className="text-sm font-medium text-slate-500">
                         {label}
                       </dt>
-                      <dd className="text-sm text-slate-900 mt-0.5 whitespace-pre-wrap">
+                      <dd className="text-sm text-slate-900 mt-0.5 whitespace-pre-wrap break-words">
                         {display}
                       </dd>
                     </div>
@@ -301,7 +301,7 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
           {inscricao.motivoInabilitacao && (
             <Card className="border-red-200 bg-red-50">
               <h2 className="text-lg font-semibold text-red-800 mb-2">Motivo da Inabilitacao</h2>
-              <p className="text-sm text-red-700">{inscricao.motivoInabilitacao}</p>
+              <p className="text-sm text-red-700 break-words">{inscricao.motivoInabilitacao}</p>
             </Card>
           )}
         </div>
@@ -320,7 +320,7 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
                       <span className="text-lg font-bold text-brand-700">{String(avaliacao.notaTotal)}</span>
                     </div>
                     {avaliacao.parecer && (
-                      <p className="text-xs text-slate-500 mt-1">{avaliacao.parecer}</p>
+                      <p className="text-xs text-slate-500 mt-1 break-words">{avaliacao.parecer}</p>
                     )}
                     <p className="text-xs text-slate-400 mt-1">
                       {new Date(avaliacao.createdAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
@@ -347,7 +347,7 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
                       )}
                     </div>
                     {recurso.justificativa && (
-                      <p className="text-xs text-slate-600 mt-1">{recurso.justificativa}</p>
+                      <p className="text-xs text-slate-600 mt-1 break-words">{recurso.justificativa}</p>
                     )}
                     <p className="text-xs text-slate-400 mt-1">
                       {new Date(recurso.createdAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}

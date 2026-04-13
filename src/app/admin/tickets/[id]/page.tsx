@@ -155,7 +155,7 @@ export default async function TicketDetailPage({ params }: Props) {
                   </p>
                 </div>
               </div>
-              <div className="bg-slate-50 rounded-lg p-4 text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">
+              <div className="bg-slate-50 rounded-lg p-4 text-sm text-slate-800 leading-relaxed whitespace-pre-wrap break-words">
                 {ticket.mensagem}
               </div>
             </Card>
@@ -188,7 +188,7 @@ export default async function TicketDetailPage({ params }: Props) {
                         </p>
                       </div>
                     </div>
-                    <div className="bg-brand-50 rounded-lg p-4 text-sm text-slate-800 leading-relaxed whitespace-pre-wrap border border-brand-100">
+                    <div className="bg-brand-50 rounded-lg p-4 text-sm text-slate-800 leading-relaxed whitespace-pre-wrap break-words border border-brand-100">
                       {item.texto}
                     </div>
                   </Card>

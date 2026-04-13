@@ -196,7 +196,7 @@ export function AvaliacaoForm({
           {parecer && (
             <div className="pt-1">
               <p className="text-xs font-medium text-slate-500 mb-1.5">Parecer Técnico</p>
-              <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{parecer}</p>
+              <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words">{parecer}</p>
             </div>
           )}
 

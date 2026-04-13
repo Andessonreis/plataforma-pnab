@@ -114,7 +114,7 @@ export default async function AvaliadorInscricaoDetailPage({ params }: Props) {
             {Object.entries(campos).map(([key, value]) => (
               <div key={key} className="border-b border-slate-100 pb-3 last:border-0">
                 <dt className="text-slate-500 mb-0.5">{key}</dt>
-                <dd className="text-slate-900 whitespace-pre-wrap">{String(value ?? '—')}</dd>
+                <dd className="text-slate-900 whitespace-pre-wrap break-words">{String(value ?? '—')}</dd>
               </div>
             ))}
           </dl>

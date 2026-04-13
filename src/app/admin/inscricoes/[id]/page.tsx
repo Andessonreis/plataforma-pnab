@@ -194,7 +194,7 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
                           </span>
                         )}
                       </dt>
-                      <dd className="text-sm text-slate-900 mt-0.5 whitespace-pre-wrap">
+                      <dd className="text-sm text-slate-900 mt-0.5 whitespace-pre-wrap break-words">
                         {typeof value === 'string' ? value : JSON.stringify(value)}
                       </dd>
                     </div>
@@ -248,7 +248,7 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
                       </div>
                     </div>
                     {avaliacao.parecer && (
-                      <p className="text-sm text-slate-600 mt-2 leading-relaxed">{avaliacao.parecer}</p>
+                      <p className="text-sm text-slate-600 mt-2 leading-relaxed break-words">{avaliacao.parecer}</p>
                     )}
                     <p className="text-xs text-slate-400 mt-2">
                       {new Date(avaliacao.createdAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
@@ -274,11 +274,11 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
                         </Badge>
                       )}
                     </div>
-                    <p className="text-sm text-slate-700 mt-2">{recurso.texto}</p>
+                    <p className="text-sm text-slate-700 mt-2 break-words">{recurso.texto}</p>
                     {recurso.justificativa && (
                       <div className="mt-3 p-3 bg-slate-50 rounded-lg">
                         <p className="text-xs font-medium text-slate-500 mb-1">Justificativa:</p>
-                        <p className="text-sm text-slate-700">{recurso.justificativa}</p>
+                        <p className="text-sm text-slate-700 break-words">{recurso.justificativa}</p>
                       </div>
                     )}
                     <p className="text-xs text-slate-400 mt-2">
@@ -383,7 +383,7 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
           {inscricao.motivoInabilitacao && (
             <Card padding="sm" className="sm:p-6 border-red-200 bg-red-50">
               <h2 className="text-base sm:text-lg font-semibold text-red-800 mb-2">Motivo da Inabilitação</h2>
-              <p className="text-sm text-red-700">{inscricao.motivoInabilitacao}</p>
+              <p className="text-sm text-red-700 break-words">{inscricao.motivoInabilitacao}</p>
             </Card>
           )}
         </div>
