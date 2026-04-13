@@ -22,7 +22,7 @@ export default async function AvaliadorDashboardPage() {
   startOfToday.setHours(0, 0, 0, 0)
 
   const today = new Date().toLocaleDateString('pt-BR', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'America/Sao_Paulo',
   })
 
   const [pendentes, concluidas, concluidasHoje, avaliacoesRecentes] = await Promise.all([

@@ -110,7 +110,7 @@ function formatCurrency(value: unknown): string {
 function formatDate(value: unknown): string {
   const date = new Date(String(value))
   if (isNaN(date.getTime())) return String(value)
-  return date.toLocaleDateString('pt-BR')
+  return date.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
 }
 
 /** Formata valor de campo conforme o tipo e o nome. */
@@ -274,6 +274,7 @@ export async function generateProjetoCompleto(data: ProjetoCompletoData): Promis
         year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
+        timeZone: 'America/Sao_Paulo',
       }),
     },
     { label: 'Protocolo', value: data.numero },

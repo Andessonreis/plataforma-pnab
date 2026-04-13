@@ -205,6 +205,7 @@ export default async function AdminTicketsPage({ searchParams }: Props) {
                   {new Date(ticket.createdAt).toLocaleDateString('pt-BR', {
                     day: '2-digit',
                     month: '2-digit',
+                    timeZone: 'America/Sao_Paulo',
                   })}
                 </span>
               </Link>
@@ -257,6 +258,7 @@ export default async function AdminTicketsPage({ searchParams }: Props) {
                           day: '2-digit',
                           month: '2-digit',
                           year: 'numeric',
+                          timeZone: 'America/Sao_Paulo',
                         })}
                       </td>
                       <td className="py-3 px-4 text-right">

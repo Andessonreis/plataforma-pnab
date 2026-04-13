@@ -109,7 +109,7 @@ export default async function AdminSlidesPage({ searchParams }: Props) {
                   <span>Ordem: {slide.ordem}</span>
                   {slide.inicioEm && (
                     <span>
-                      De: {new Date(slide.inicioEm).toLocaleDateString('pt-BR')}
+                      De: {new Date(slide.inicioEm).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
                     </span>
                   )}
                 </div>
@@ -151,11 +151,11 @@ export default async function AdminSlidesPage({ searchParams }: Props) {
                         {slide.inicioEm || slide.fimEm ? (
                           <>
                             {slide.inicioEm
-                              ? new Date(slide.inicioEm).toLocaleDateString('pt-BR')
+                              ? new Date(slide.inicioEm).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
                               : '—'}
                             {' → '}
                             {slide.fimEm
-                              ? new Date(slide.fimEm).toLocaleDateString('pt-BR')
+                              ? new Date(slide.fimEm).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
                               : '—'}
                           </>
                         ) : (

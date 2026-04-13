@@ -150,6 +150,7 @@ export default async function TicketDetailPage({ params }: Props) {
                       year: 'numeric',
                       hour: '2-digit',
                       minute: '2-digit',
+                      timeZone: 'America/Sao_Paulo',
                     })}
                   </p>
                 </div>
@@ -182,6 +183,7 @@ export default async function TicketDetailPage({ params }: Props) {
                             year: 'numeric',
                             hour: '2-digit',
                             minute: '2-digit',
+                            timeZone: 'America/Sao_Paulo',
                           })}
                         </p>
                       </div>
@@ -321,6 +323,7 @@ export default async function TicketDetailPage({ params }: Props) {
                       year: 'numeric',
                       hour: '2-digit',
                       minute: '2-digit',
+                      timeZone: 'America/Sao_Paulo',
                     })}
                   </dd>
                 </div>
@@ -336,6 +339,7 @@ export default async function TicketDetailPage({ params }: Props) {
                       year: 'numeric',
                       hour: '2-digit',
                       minute: '2-digit',
+                      timeZone: 'America/Sao_Paulo',
                     })}
                   </dd>
                 </div>

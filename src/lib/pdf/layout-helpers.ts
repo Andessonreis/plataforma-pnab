@@ -191,8 +191,8 @@ export function addCompactFooter(doc: PDFKit.PDFDocument, pageNumber: number): v
   const footerY = lineY + 6
 
   const now = new Date()
-  const dateStr = now.toLocaleDateString('pt-BR')
-  const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  const dateStr = now.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+  const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' })
 
   // Left: Geração do documento
   doc

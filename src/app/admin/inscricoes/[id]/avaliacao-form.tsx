@@ -87,7 +87,7 @@ export function AvaliacaoForm({
   const [showConfirm, setShowConfirm] = useState(false)
   const [savedAt, setSavedAt] = useState<string | null>(
     initialAvaliacao?.updatedAt
-      ? new Date(initialAvaliacao.updatedAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
+      ? new Date(initialAvaliacao.updatedAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short', timeZone: 'America/Sao_Paulo' })
       : null,
   )
 
@@ -137,7 +137,7 @@ export function AvaliacaoForm({
       }
 
       if (finalizar) setFinalizada(true)
-      setSavedAt(new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }))
+      setSavedAt(new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short', timeZone: 'America/Sao_Paulo' }))
       setFeedback({ type: 'success', text: data.message })
       router.refresh()
     } catch {

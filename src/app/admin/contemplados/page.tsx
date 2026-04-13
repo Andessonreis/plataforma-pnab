@@ -96,6 +96,7 @@ export default async function ContempladosPage() {
                         year: 'numeric',
                         hour: '2-digit',
                         minute: '2-digit',
+                        timeZone: 'America/Sao_Paulo',
                       })}
                       {' por '}
                       {lastImportLog.user?.nome ?? 'Sistema'}
@@ -206,7 +207,7 @@ export default async function ContempladosPage() {
                           </Badge>
                         </td>
                         <td className="px-4 py-3 text-xs text-slate-500">
-                          {new Date(projeto.createdAt).toLocaleDateString('pt-BR')}
+                          {new Date(projeto.createdAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
                         </td>
                       </tr>
                     ))}

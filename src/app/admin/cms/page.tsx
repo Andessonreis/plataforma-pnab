@@ -75,7 +75,7 @@ export default async function AdminCmsPage({ searchParams }: Props) {
                 </div>
                 <div className="flex items-center justify-between text-[11px] text-slate-500">
                   <span className="font-mono">{cmsPage.slug}</span>
-                  <span>{new Date(cmsPage.updatedAt).toLocaleDateString('pt-BR')}</span>
+                  <span>{new Date(cmsPage.updatedAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</span>
                 </div>
               </Link>
             ))}
@@ -115,6 +115,7 @@ export default async function AdminCmsPage({ searchParams }: Props) {
                           year: 'numeric',
                           hour: '2-digit',
                           minute: '2-digit',
+                          timeZone: 'America/Sao_Paulo',
                         })}
                       </td>
                       <td className="py-3 px-4 text-right">

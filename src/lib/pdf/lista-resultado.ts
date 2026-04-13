@@ -33,7 +33,7 @@ export async function generateListaResultado(data: ListaResultadoData): Promise<
     .font('Helvetica')
     .fontSize(9)
     .fillColor(COLORS.textLight)
-    .text(`Ano: ${data.edital.ano} | Publicado em: ${data.dataPublicacao.toLocaleDateString('pt-BR')}`, MARGINS.left, doc.y, {
+    .text(`Ano: ${data.edital.ano} | Publicado em: ${data.dataPublicacao.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}`, MARGINS.left, doc.y, {
       width: CONTENT_WIDTH,
       align: 'center',
     })

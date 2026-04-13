@@ -268,7 +268,7 @@ export default async function AdminInscricoesPage({ searchParams }: Props) {
                       })()}
                       <span>
                         {inscricao.submittedAt
-                          ? new Date(inscricao.submittedAt).toLocaleDateString('pt-BR')
+                          ? new Date(inscricao.submittedAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
                           : '—'}
                       </span>
                     </div>
@@ -357,7 +357,7 @@ export default async function AdminInscricoesPage({ searchParams }: Props) {
                         )}
                         <td className="py-3 px-4 text-slate-500">
                           {inscricao.submittedAt
-                            ? new Date(inscricao.submittedAt).toLocaleDateString('pt-BR')
+                            ? new Date(inscricao.submittedAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
                             : '—'}
                         </td>
                         <td className="py-3 px-4 text-right">

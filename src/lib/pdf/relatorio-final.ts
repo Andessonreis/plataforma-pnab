@@ -184,7 +184,7 @@ function addTimbreHeader(doc: PDFKit.PDFDocument, data: RelatorioFinalData): voi
 function addInfoSummary(doc: PDFKit.PDFDocument, data: RelatorioFinalData): void {
   const now = new Date()
   const rows = [
-    { label: 'Data de publicação', value: now.toLocaleDateString('pt-BR') },
+    { label: 'Data de publicação', value: now.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }) },
     { label: 'Total de inscrições avaliadas', value: String(data.totalAvaliados) },
     {
       label: 'Contemplados / Suplentes / Não contemplados',

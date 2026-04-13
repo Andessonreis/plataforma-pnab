@@ -168,7 +168,7 @@ export default async function AdminUsuariosPage({ searchParams }: Props) {
                     <Badge variant={user.ativo ? 'success' : 'error'}>
                       {user.ativo ? 'Ativo' : 'Inativo'}
                     </Badge>
-                    <span>{new Date(user.createdAt).toLocaleDateString('pt-BR')}</span>
+                    <span>{new Date(user.createdAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</span>
                   </div>
                 </div>
               </div>
@@ -212,7 +212,7 @@ export default async function AdminUsuariosPage({ searchParams }: Props) {
                         </Badge>
                       </td>
                       <td className="py-3 px-4 text-slate-500 whitespace-nowrap">
-                        {new Date(user.createdAt).toLocaleDateString('pt-BR')}
+                        {new Date(user.createdAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
                       </td>
                     </tr>
                   ))}

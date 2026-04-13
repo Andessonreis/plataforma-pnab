@@ -105,7 +105,7 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
               {inscricao.submittedAt && (
                 <p className="text-sm text-emerald-600 mt-2">
                   Enviada em {new Date(inscricao.submittedAt).toLocaleDateString('pt-BR', {
-                    day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
+                    day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo',
                   })}
                 </p>
               )}
@@ -228,6 +228,7 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
                         year: 'numeric',
                         hour: '2-digit',
                         minute: '2-digit',
+                        timeZone: 'America/Sao_Paulo',
                       })
                     : 'Nao enviada'}
                 </dd>
@@ -322,7 +323,7 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
                       <p className="text-xs text-slate-500 mt-1">{avaliacao.parecer}</p>
                     )}
                     <p className="text-xs text-slate-400 mt-1">
-                      {new Date(avaliacao.createdAt).toLocaleDateString('pt-BR')}
+                      {new Date(avaliacao.createdAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
                     </p>
                   </div>
                 ))}
@@ -349,7 +350,7 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
                       <p className="text-xs text-slate-600 mt-1">{recurso.justificativa}</p>
                     )}
                     <p className="text-xs text-slate-400 mt-1">
-                      {new Date(recurso.createdAt).toLocaleDateString('pt-BR')}
+                      {new Date(recurso.createdAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
                     </p>
                   </div>
                 ))}

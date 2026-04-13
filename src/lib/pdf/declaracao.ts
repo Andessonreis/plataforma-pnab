@@ -61,7 +61,7 @@ export async function generateDeclaracao(data: DeclaracaoData): Promise<Buffer> 
     .fontSize(11)
     .fillColor(COLORS.text)
     .text(
-      `Irecê/BA, ${data.dataEmissao.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}.`,
+      `Irecê/BA, ${data.dataEmissao.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'America/Sao_Paulo' })}.`,
       MARGINS.left,
       doc.y,
       { width: CONTENT_WIDTH, align: 'right' },

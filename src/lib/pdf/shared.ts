@@ -93,7 +93,7 @@ export function addFooter(doc: PDFKit.PDFDocument, pageNumber: number): void {
     .fontSize(7)
     .fillColor(COLORS.textLight)
     .text(
-      `Portal PNAB Irecê — Gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}`,
+      `Portal PNAB Irecê — Gerado em ${new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })} às ${new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' })}`,
       MARGINS.left,
       y + 8,
       { width: CONTENT_WIDTH, align: 'left' },

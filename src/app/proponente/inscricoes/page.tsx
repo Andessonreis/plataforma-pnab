@@ -92,7 +92,7 @@ export default async function MinhasInscricoesPage({ searchParams }: Props) {
                       </td>
                       <td className="py-3 px-4 text-slate-500">
                         {inscricao.submittedAt
-                          ? new Date(inscricao.submittedAt).toLocaleDateString('pt-BR')
+                          ? new Date(inscricao.submittedAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
                           : '—'}
                       </td>
                       <td className="py-3 px-4 text-right">
@@ -127,7 +127,7 @@ export default async function MinhasInscricoesPage({ searchParams }: Props) {
                   )}
                   {inscricao.submittedAt && (
                     <p className="text-xs text-slate-400 mt-2">
-                      Enviada em {new Date(inscricao.submittedAt).toLocaleDateString('pt-BR')}
+                      Enviada em {new Date(inscricao.submittedAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
                     </p>
                   )}
                 </Link>

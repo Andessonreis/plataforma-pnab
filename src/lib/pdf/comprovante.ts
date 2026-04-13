@@ -75,6 +75,7 @@ export async function generateComprovante(data: ComprovanteData): Promise<Buffer
         year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
+        timeZone: 'America/Sao_Paulo',
       }),
     },
     { label: 'Protocolo', value: data.numero },

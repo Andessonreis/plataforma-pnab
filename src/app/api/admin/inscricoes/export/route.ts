@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
       csvSafe(i.status),
       csvSafe(i.categoria ?? ''),
       i.notaFinal ? String(i.notaFinal) : '',
-      i.submittedAt ? new Date(i.submittedAt).toLocaleDateString('pt-BR') : '',
+      i.submittedAt ? new Date(i.submittedAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : '',
     ])
 
     // BOM para UTF-8 + CSV

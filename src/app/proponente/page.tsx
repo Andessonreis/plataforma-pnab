@@ -86,6 +86,7 @@ export default async function ProponenteDashboardPage() {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
+    timeZone: 'America/Sao_Paulo',
   })
 
   return (
@@ -183,7 +184,7 @@ export default async function ProponenteDashboardPage() {
                     <div className="flex items-center justify-between">
                       <span className="font-mono text-xs text-slate-500">{inscricao.numero}</span>
                       <span className="text-xs text-slate-400">
-                        {new Date(inscricao.createdAt).toLocaleDateString('pt-BR')}
+                        {new Date(inscricao.createdAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
                       </span>
                     </div>
                   </Link>
@@ -213,7 +214,7 @@ export default async function ProponenteDashboardPage() {
                           </Badge>
                         </td>
                         <td className="py-3.5 px-3 text-slate-400">
-                          {new Date(inscricao.createdAt).toLocaleDateString('pt-BR')}
+                          {new Date(inscricao.createdAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
                         </td>
                         <td className="py-3.5 px-3 text-right">
                           <Link

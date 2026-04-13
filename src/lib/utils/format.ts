@@ -1,5 +1,8 @@
 import type { Decimal } from '@prisma/client/runtime/library'
 
+/** Timezone padrão do sistema — Brasília (UTC-3, sem horário de verão desde 2019). */
+export const TZ_BR = 'America/Sao_Paulo' as const
+
 /**
  * Formata um valor numérico como moeda brasileira (BRL).
  * Aceita number, string ou Prisma Decimal.

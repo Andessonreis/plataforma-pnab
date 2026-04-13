@@ -98,6 +98,7 @@ export default async function ProfilePage() {
                     {new Date(user.createdAt).toLocaleDateString('pt-BR', {
                       month: 'long',
                       year: 'numeric',
+                      timeZone: 'America/Sao_Paulo',
                     })}
                   </dd>
                 </div>

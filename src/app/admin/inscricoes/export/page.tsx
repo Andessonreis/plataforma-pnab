@@ -152,7 +152,7 @@ export default async function ExportPage({ searchParams }: Props) {
                       <span className="truncate max-w-[200px] text-slate-400">{i.edital.titulo}</span>
                     )}
                     {i.submittedAt && (
-                      <span>{new Date(i.submittedAt).toLocaleDateString('pt-BR')}</span>
+                      <span>{new Date(i.submittedAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</span>
                     )}
                   </div>
                 </div>
@@ -206,7 +206,7 @@ export default async function ExportPage({ searchParams }: Props) {
                           {i.notaFinal ? Number(i.notaFinal).toFixed(2) : '—'}
                         </td>
                         <td className="px-3 py-3 text-xs text-slate-400 whitespace-nowrap hidden lg:table-cell">
-                          {i.submittedAt ? new Date(i.submittedAt).toLocaleDateString('pt-BR') : '—'}
+                          {i.submittedAt ? new Date(i.submittedAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : '—'}
                         </td>
                       </tr>
                     ))}

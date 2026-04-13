@@ -115,7 +115,7 @@ export default async function AdminNoticiasPage({ searchParams }: Props) {
                 </div>
                 <p className="text-[11px] text-slate-500">
                   {noticia.publicadoEm
-                    ? new Date(noticia.publicadoEm).toLocaleDateString('pt-BR')
+                    ? new Date(noticia.publicadoEm).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
                     : 'Sem data de publicação'}
                 </p>
               </Link>
@@ -165,6 +165,7 @@ export default async function AdminNoticiasPage({ searchParams }: Props) {
                               day: '2-digit',
                               month: '2-digit',
                               year: 'numeric',
+                              timeZone: 'America/Sao_Paulo',
                             })
                           : '—'}
                       </td>

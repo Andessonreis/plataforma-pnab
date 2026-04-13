@@ -251,7 +251,7 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
                       <p className="text-sm text-slate-600 mt-2 leading-relaxed">{avaliacao.parecer}</p>
                     )}
                     <p className="text-xs text-slate-400 mt-2">
-                      {new Date(avaliacao.createdAt).toLocaleDateString('pt-BR')}
+                      {new Date(avaliacao.createdAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
                     </p>
                   </div>
                 ))}
@@ -282,7 +282,7 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
                       </div>
                     )}
                     <p className="text-xs text-slate-400 mt-2">
-                      {new Date(recurso.createdAt).toLocaleDateString('pt-BR')}
+                      {new Date(recurso.createdAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
                     </p>
                     {/* Formulário de decisão para recursos pendentes */}
                     {!recurso.decisao && (isAdmin || userRole === 'HABILITADOR') && (
@@ -319,6 +319,7 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
                       day: '2-digit',
                       month: 'long',
                       year: 'numeric',
+                      timeZone: 'America/Sao_Paulo',
                     })
                     : 'Não enviada'}
                 </dd>
