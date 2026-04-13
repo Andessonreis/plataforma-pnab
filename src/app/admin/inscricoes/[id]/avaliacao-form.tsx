@@ -2,6 +2,8 @@
 
 import { useState, useCallback, useMemo, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
+import { calculateTotal, type NotaAvaliacao } from '@/lib/results/formula'
+import type { CriterioAvaliacao } from '@/lib/avaliacao-criterios'
 
 interface CriterioConfig {
   criterio: string
@@ -36,6 +38,7 @@ interface AvaliacaoFormProps {
   criterios: CriterioConfig[]
   initialAvaliacao: AvaliacaoData | null
   isAdmin?: boolean
+  formulaAvaliacao?: string | null
 }
 
 function notaColor(nota: number): string {
@@ -50,7 +53,7 @@ function totalColor(nota: number): string {
   return 'text-red-600'
 }
 
-function calcTotal(notas: NotaItem[]): number {
+function calcTotalWeighted(notas: NotaItem[]): number {
   const totalPeso = notas.reduce((acc, n) => acc + n.peso, 0)
   if (totalPeso === 0) return 0
   return notas.reduce((acc, n) => acc + (n.nota * n.peso) / totalPeso, 0)
@@ -62,7 +65,9 @@ export function AvaliacaoForm({
   criterios,
   initialAvaliacao,
   isAdmin = false,
+  formulaAvaliacao,
 }: AvaliacaoFormProps) {
+  const hasFormula = !!formulaAvaliacao
   const router = useRouter()
 
   const buildInitialNotas = useCallback((): NotaItem[] => {
@@ -91,7 +96,9 @@ export function AvaliacaoForm({
       : null,
   )
 
-  const total = calcTotal(notas)
+  const total = hasFormula
+    ? calculateTotal(notas as NotaAvaliacao[], criterios as CriterioAvaliacao[], formulaAvaliacao)
+    : calcTotalWeighted(notas)
   const isLocked = finalizada && !isAdmin
 
   const grupos = useMemo(() => {
@@ -108,6 +115,10 @@ export function AvaliacaoForm({
 
   function calcBlocoSubtotal(items: Array<{ originalIndex: number }>) {
     const blocoNotas = items.map(item => notas[item.originalIndex]).filter(Boolean)
+    if (hasFormula) {
+      // Com fórmula: soma bruta das notas do bloco
+      return blocoNotas.reduce((acc, n) => acc + n.nota, 0)
+    }
     const totalPeso = blocoNotas.reduce((acc, n) => acc + n.peso, 0)
     if (totalPeso === 0) return 0
     return blocoNotas.reduce((acc, n) => acc + (n.nota * n.peso) / totalPeso, 0)
@@ -170,10 +181,10 @@ export function AvaliacaoForm({
         <div className="p-4 space-y-4">
           {/* Nota total destaque */}
           <div className="text-center py-3 bg-slate-50 rounded-lg">
-            <p className="text-xs font-medium text-slate-500 mb-1">Nota Final Ponderada</p>
-            <p className={`text-4xl font-bold tabular-nums ${totalColor(parseFloat(String(initialAvaliacao?.notaTotal ?? 0)))}`}>
-              {parseFloat(String(initialAvaliacao?.notaTotal ?? 0)).toFixed(1)}
-              <span className="text-lg font-normal text-slate-400 ml-0.5">/10</span>
+            <p className="text-xs font-medium text-slate-500 mb-1">{hasFormula ? 'Pontuação Final' : 'Nota Final Ponderada'}</p>
+            <p className={`text-4xl font-bold tabular-nums ${hasFormula ? 'text-brand-700' : totalColor(parseFloat(String(initialAvaliacao?.notaTotal ?? 0)))}`}>
+              {parseFloat(String(initialAvaliacao?.notaTotal ?? 0)).toFixed(hasFormula ? 2 : 1)}
+              <span className="text-lg font-normal text-slate-400 ml-0.5">{hasFormula ? ' pts' : '/10'}</span>
             </p>
           </div>
 
@@ -252,12 +263,12 @@ export function AvaliacaoForm({
           {/* Total ponderado */}
           <div className="flex items-center justify-between py-3 px-3.5 rounded-lg bg-slate-50 border border-slate-100">
             <div>
-              <p className="text-xs font-medium text-slate-600">Nota ponderada atual</p>
+              <p className="text-xs font-medium text-slate-600">{hasFormula ? 'Pontuação atual' : 'Nota ponderada atual'}</p>
               <p className="text-[11px] text-slate-400 mt-0.5">Calculada automaticamente</p>
             </div>
-            <p className={`text-3xl font-bold tabular-nums ${totalColor(total)}`}>
-              {total.toFixed(1)}
-              <span className="text-base font-normal text-slate-400 ml-0.5">/10</span>
+            <p className={`text-3xl font-bold tabular-nums ${hasFormula ? 'text-brand-700' : totalColor(total)}`}>
+              {total.toFixed(hasFormula ? 2 : 1)}
+              <span className="text-base font-normal text-slate-400 ml-0.5">{hasFormula ? ' pts' : '/10'}</span>
             </p>
           </div>
 
@@ -272,7 +283,9 @@ export function AvaliacaoForm({
                     <div className="flex items-center justify-between rounded-lg bg-slate-50 border-l-4 border-brand-500 px-3.5 py-2.5 mb-3">
                       <h3 className="text-sm font-semibold text-slate-800">{blocoName}</h3>
                       <span className="text-xs text-slate-500">
-                        Subtotal: <strong className={totalColor(calcBlocoSubtotal(items))}>{calcBlocoSubtotal(items).toFixed(1)}</strong>/10
+                        Subtotal: <strong className={hasFormula ? 'text-brand-700' : totalColor(calcBlocoSubtotal(items))}>
+                          {calcBlocoSubtotal(items).toFixed(hasFormula ? 0 : 1)}
+                        </strong>{hasFormula ? `/${items.reduce((s, c) => s + (criterios[c.originalIndex]?.notaMax ?? 0), 0)} pts` : '/10'}
                       </span>
                     </div>
                   </>
@@ -418,7 +431,7 @@ export function AvaliacaoForm({
                 <div>
                   <p className="text-sm font-medium text-amber-900">Confirmar finalização</p>
                   <p className="text-xs text-amber-700 mt-0.5 leading-snug">
-                    Após finalizar, esta avaliação ficará bloqueada para edição. Nota: <strong>{total.toFixed(1)}</strong>.
+                    Após finalizar, esta avaliação ficará bloqueada para edição. {hasFormula ? 'Pontuação' : 'Nota'}: <strong>{total.toFixed(hasFormula ? 2 : 1)}{hasFormula ? ' pts' : ''}</strong>.
                   </p>
                 </div>
               </div>

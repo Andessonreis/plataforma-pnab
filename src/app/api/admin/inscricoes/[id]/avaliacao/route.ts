@@ -5,6 +5,8 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { logAudit } from '@/lib/audit'
 import { CRITERIOS_AVALIACAO_PADRAO } from '@/lib/avaliacao-criterios'
+import type { CriterioAvaliacao } from '@/lib/avaliacao-criterios'
+import { calculateTotal } from '@/lib/results/formula'
 import type { UserRole } from '@prisma/client'
 
 export const runtime = 'nodejs'
@@ -49,7 +51,7 @@ export async function GET(
     const inscricao = await prisma.inscricao.findUnique({
       where: { id },
       include: {
-        edital: { select: { id: true } },
+        edital: { select: { id: true, criteriosAvaliacao: true, formulaAvaliacao: true } },
         avaliacoes: {
           where: { avaliadorId: session.user.id },
           select: {
@@ -88,12 +90,16 @@ export async function GET(
       return res
     }
 
-    const criterios = [...CRITERIOS_AVALIACAO_PADRAO]
+    const editalCriterios = Array.isArray(inscricao.edital.criteriosAvaliacao)
+      ? (inscricao.edital.criteriosAvaliacao as unknown as CriterioAvaliacao[])
+      : []
+    const criterios = editalCriterios.length > 0 ? editalCriterios : [...CRITERIOS_AVALIACAO_PADRAO]
 
     const res = NextResponse.json({
       avaliacao,
       criterios,
       inscricaoStatus: inscricao.status,
+      formulaAvaliacao: inscricao.edital.formulaAvaliacao ?? null,
     })
     res.headers.set('X-Request-Id', requestId)
     res.headers.set('Cache-Control', 'no-store')
@@ -137,10 +143,20 @@ export async function PUT(
     const body = await req.json()
     const data = avaliacaoBodySchema.parse(body)
 
-    // Verificar se a inscrição existe e está no status correto
+    // Verificar se a inscrição existe e buscar edital para fórmula
     const inscricao = await prisma.inscricao.findUnique({
       where: { id },
-      select: { id: true, numero: true, status: true },
+      select: {
+        id: true,
+        numero: true,
+        status: true,
+        edital: {
+          select: {
+            formulaAvaliacao: true,
+            criteriosAvaliacao: true,
+          },
+        },
+      },
     })
 
     if (!inscricao) {
@@ -169,11 +185,12 @@ export async function PUT(
       return res
     }
 
-    // Calcular nota total ponderada
-    const totalPeso = data.notas.reduce((acc, n) => acc + n.peso, 0)
-    const notaTotal = totalPeso > 0
-      ? data.notas.reduce((acc, n) => acc + (n.nota * n.peso) / totalPeso, 0)
-      : 0
+    // Calcular nota total usando fórmula do edital (se existir) ou média ponderada
+    const editalCriterios = Array.isArray(inscricao.edital.criteriosAvaliacao)
+      ? (inscricao.edital.criteriosAvaliacao as unknown as CriterioAvaliacao[])
+      : []
+    const criteriosCalc = editalCriterios.length > 0 ? editalCriterios : [...CRITERIOS_AVALIACAO_PADRAO]
+    const notaTotal = calculateTotal(data.notas, criteriosCalc, inscricao.edital.formulaAvaliacao)
 
     const avaliacaoData = {
       notas: data.notas,

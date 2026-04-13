@@ -28,7 +28,7 @@ export default async function AvaliadorInscricaoDetailPage({ params }: Props) {
   const inscricao = await prisma.inscricao.findUnique({
     where: { id },
     include: {
-      edital: { select: { titulo: true, slug: true, ano: true, criteriosAvaliacao: true } },
+      edital: { select: { titulo: true, slug: true, ano: true, criteriosAvaliacao: true, formulaAvaliacao: true } },
       proponente: {
         select: { nome: true, cpfCnpj: true, email: true, telefone: true, tipoProponente: true },
       },
@@ -157,6 +157,7 @@ export default async function AvaliadorInscricaoDetailPage({ params }: Props) {
             }
             : null
         }
+        formulaAvaliacao={inscricao.edital.formulaAvaliacao}
       />
     </section>
   )

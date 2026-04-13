@@ -49,7 +49,7 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
   const inscricao = await prisma.inscricao.findUnique({
     where: { id },
     include: {
-      edital: { select: { titulo: true, slug: true, ano: true, categorias: true, status: true } },
+      edital: { select: { titulo: true, slug: true, ano: true, categorias: true, status: true, formulaAvaliacao: true } },
       anexos: true,
       avaliacoes: {
         select: { notaTotal: true, parecer: true, createdAt: true },
@@ -236,8 +236,10 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
               </div>
               {RESULTADO_VISIVEL.includes(inscricao.edital.status) && inscricao.notaFinal && (
                 <div>
-                  <dt className="text-sm font-medium text-slate-500">Nota Final</dt>
-                  <dd className="text-sm text-slate-900 font-bold">{String(inscricao.notaFinal)}</dd>
+                  <dt className="text-sm font-medium text-slate-500">{inscricao.edital.formulaAvaliacao ? 'Pontuação Final' : 'Nota Final'}</dt>
+                  <dd className="text-sm text-slate-900 font-bold">
+                    {Number(inscricao.notaFinal).toFixed(2)}{inscricao.edital.formulaAvaliacao ? ' pts' : ''}
+                  </dd>
                 </div>
               )}
             </dl>

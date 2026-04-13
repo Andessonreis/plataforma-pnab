@@ -31,6 +31,7 @@ export default async function PublicResultadosPage({ params }: Props) {
       titulo: true,
       ano: true,
       status: true,
+      formulaAvaliacao: true,
     },
   })
 
@@ -134,7 +135,7 @@ export default async function PublicResultadosPage({ params }: Props) {
                       <th className="text-left py-3 px-4 font-semibold text-slate-600">Pos.</th>
                       <th className="text-left py-3 px-4 font-semibold text-slate-600">Proponente</th>
                       <th className="text-left py-3 px-4 font-semibold text-slate-600">Categoria</th>
-                      <th className="text-left py-3 px-4 font-semibold text-slate-600">Nota</th>
+                      <th className="text-left py-3 px-4 font-semibold text-slate-600">{edital.formulaAvaliacao ? 'Pontuação' : 'Nota'}</th>
                       <th className="text-left py-3 px-4 font-semibold text-slate-600">Status</th>
                     </tr>
                   </thead>
@@ -151,7 +152,9 @@ export default async function PublicResultadosPage({ params }: Props) {
                           {inscricao.categoria ?? '—'}
                         </td>
                         <td className="py-3 px-4 font-semibold text-slate-900">
-                          {inscricao.notaFinal ? Number(inscricao.notaFinal).toFixed(2) : '—'}
+                          {inscricao.notaFinal
+                            ? `${Number(inscricao.notaFinal).toFixed(2)}${edital.formulaAvaliacao ? ' pts' : ''}`
+                            : '—'}
                         </td>
                         <td className="py-3 px-4">
                           <Badge variant={getPublicStatusVariant(inscricao.status)}>

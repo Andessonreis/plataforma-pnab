@@ -36,7 +36,7 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
   const inscricao = await prisma.inscricao.findUnique({
     where: { id },
     include: {
-      edital: { select: { titulo: true, slug: true, ano: true, criteriosAvaliacao: true, camposFormulario: true } },
+      edital: { select: { titulo: true, slug: true, ano: true, criteriosAvaliacao: true, camposFormulario: true, formulaAvaliacao: true } },
       proponente: {
         select: { nome: true, cpfCnpj: true, email: true, telefone: true, tipoProponente: true },
       },
@@ -95,6 +95,7 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
     criteriosEdital.length > 0
       ? criteriosEdital
       : [...CRITERIOS_AVALIACAO_PADRAO]
+  const hasFormula = !!inscricao.edital.formulaAvaliacao
 
   const rawCampos = inscricao.campos
   const campos: Record<string, unknown> =
@@ -243,7 +244,8 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
                           </span>
                         )}
                         <span className="text-xl font-bold text-brand-700 tabular-nums">
-                          {parseFloat(String(avaliacao.notaTotal)).toFixed(1)}
+                          {parseFloat(String(avaliacao.notaTotal)).toFixed(hasFormula ? 2 : 1)}
+                          {hasFormula ? ' pts' : ''}
                         </span>
                       </div>
                     </div>
@@ -326,9 +328,10 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
               </div>
               {inscricao.notaFinal && (
                 <div>
-                  <dt className="text-xs font-medium text-slate-500 uppercase">Nota Final</dt>
+                  <dt className="text-xs font-medium text-slate-500 uppercase">{hasFormula ? 'Pontuação Final' : 'Nota Final'}</dt>
                   <dd className="text-2xl font-bold text-brand-700 tabular-nums">
-                    {parseFloat(String(inscricao.notaFinal)).toFixed(1)}
+                    {parseFloat(String(inscricao.notaFinal)).toFixed(hasFormula ? 2 : 1)}
+                    {hasFormula && <span className="text-sm font-normal text-slate-400 ml-1">pts</span>}
                   </dd>
                 </div>
               )}
@@ -367,6 +370,7 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
                   : null
               }
               isAdmin={isAdmin}
+              formulaAvaliacao={inscricao.edital.formulaAvaliacao}
             />
           )}
 
