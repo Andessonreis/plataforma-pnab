@@ -117,7 +117,7 @@ export default async function ProponenteDashboardPage() {
             <span className="text-sm text-brand-800">
               <strong>Inscrições abertas!</strong>
               {' — '}
-              Edital PNAB 2025 — Fomento às Artes está com inscrições abertas até 30/06.
+              Chamamento Cultura Viva — Rede Municipal de Pontos de Cultura de Irecê está com inscrições abertas.
             </span>
             <IconArrowRight className="ml-auto h-4 w-4 text-brand-500 opacity-0 -translate-x-1 transition-all group-hover:opacity-100 group-hover:translate-x-0" />
           </Link>
