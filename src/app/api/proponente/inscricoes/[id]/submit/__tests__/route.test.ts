@@ -33,6 +33,7 @@ const baseInscricao = {
     titulo: 'Edital PNAB 2025',
     status: 'INSCRICOES_ABERTAS',
     categorias: ['Música', 'Dança'],
+    tiposProponentePermitidos: [],
     camposFormulario: [{ nome: 'nome_projeto', tipo: 'texto', obrigatorio: true, label: 'Nome do Projeto' }],
   },
   anexos: [{ id: 'a1', nome: 'doc.pdf' }],

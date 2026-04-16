@@ -164,6 +164,10 @@ describe('PUT /api/admin/editais', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockLogAudit.mockResolvedValue(undefined)
+    // syncEquipe consulta membros atuais — default retorna lista vazia.
+    mockPrisma.editalMembro.findMany.mockResolvedValue([] as never)
+    mockPrisma.editalMembro.deleteMany.mockResolvedValue({ count: 0 } as never)
+    mockPrisma.editalMembro.createMany.mockResolvedValue({ count: 0 } as never)
   })
 
   it('sem id → 400', async () => {
@@ -425,6 +429,9 @@ describe('PUT /api/admin/editais', () => {
       titulo: validEditalBody.titulo,
       slug: 'edital-2025',
     } as never)
+    mockPrisma.editalMembro.findMany.mockResolvedValue([] as never)
+    mockPrisma.editalMembro.deleteMany.mockResolvedValue({ count: 0 } as never)
+    mockPrisma.editalMembro.createMany.mockResolvedValue({ count: 0 } as never)
     mockLogAudit.mockResolvedValue(undefined)
 
     await PUT(makePutRequest(validEditalBody, 'ed-1'))

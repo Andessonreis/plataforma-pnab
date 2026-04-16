@@ -34,8 +34,7 @@ jobs:
       - name: Typecheck
         run: npx tsc --noEmit || true
 
-      # TODO: habilitar após corrigir ~40 testes legados pre-existentes.
-      # A suite atual tem mocks desatualizados em rotas de admin/proponente.
-      # Validador + providers + lookup + route de CNPJ passam (39 testes novos).
-      - name: Testes unit (desabilitado temporariamente)
-        run: npm run test || true
+      # Middleware ainda excluído: bug ESM entre vitest e next-auth@beta
+      # (Cannot find module 'next/server' em next-auth/lib/env.js).
+      - name: Testes unit
+        run: npx vitest run --exclude 'src/middleware/**'

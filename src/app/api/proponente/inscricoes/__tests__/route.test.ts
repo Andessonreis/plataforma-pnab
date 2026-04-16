@@ -30,6 +30,7 @@ const baseEdital = {
   status: 'INSCRICOES_ABERTAS',
   ano: 2025,
   categorias: ['Musica', 'Danca'],
+  tiposProponentePermitidos: [],
 }
 
 describe('POST /api/proponente/inscricoes', () => {

@@ -39,7 +39,16 @@ const baseInscricao = {
   id: 'insc-1',
   numero: 'PNAB-2025-0001',
   status: 'EM_AVALIACAO',
-  edital: { id: 'edital-1' },
+  edital: {
+    id: 'edital-1',
+    criteriosAvaliacao: [
+      { criterio: 'Qualidade Artistica', peso: 40, notaMax: 10 },
+      { criterio: 'Relevancia Social', peso: 30, notaMax: 10 },
+      { criterio: 'Exequibilidade', peso: 15, notaMax: 10 },
+      { criterio: 'Historico do Proponente', peso: 15, notaMax: 10 },
+    ],
+    formulaAvaliacao: null,
+  },
   avaliacoes: [
     {
       id: 'aval-1',
@@ -138,6 +147,7 @@ describe('PUT /api/admin/inscricoes/[id]/avaliacao', () => {
       id: 'insc-1',
       numero: 'PNAB-2025-0001',
       status: 'EM_AVALIACAO',
+      edital: baseInscricao.edital,
     } as never)
     mockPrisma.avaliacao.findUnique.mockResolvedValue(null)
     mockPrisma.avaliacao.upsert.mockResolvedValue({
@@ -164,6 +174,7 @@ describe('PUT /api/admin/inscricoes/[id]/avaliacao', () => {
       id: 'insc-1',
       numero: 'PNAB-2025-0001',
       status: 'EM_AVALIACAO',
+      edital: baseInscricao.edital,
     } as never)
     mockPrisma.avaliacao.findUnique.mockResolvedValue(null)
     mockPrisma.avaliacao.upsert.mockResolvedValue({
@@ -191,6 +202,7 @@ describe('PUT /api/admin/inscricoes/[id]/avaliacao', () => {
       id: 'insc-1',
       numero: 'PNAB-2025-0001',
       status: 'EM_AVALIACAO',
+      edital: baseInscricao.edital,
     } as never)
     mockPrisma.avaliacao.findUnique.mockResolvedValue({
       id: 'aval-1',
@@ -213,6 +225,7 @@ describe('PUT /api/admin/inscricoes/[id]/avaliacao', () => {
       id: 'insc-1',
       numero: 'PNAB-2025-0001',
       status: 'EM_AVALIACAO',
+      edital: baseInscricao.edital,
     } as never)
     mockPrisma.avaliacao.findUnique.mockResolvedValue({
       id: 'aval-1',
@@ -262,6 +275,7 @@ describe('PUT /api/admin/inscricoes/[id]/avaliacao', () => {
       id: 'insc-1',
       numero: 'PNAB-2025-0001',
       status: 'EM_AVALIACAO',
+      edital: baseInscricao.edital,
     } as never)
     mockPrisma.avaliacao.findUnique.mockResolvedValue(null)
     mockPrisma.avaliacao.upsert.mockResolvedValue({
