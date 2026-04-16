@@ -24,8 +24,15 @@ jobs:
           port: 22
           command_timeout: 20m
           script: |
-            cd ${{ secrets.VPS_APP_DIR }}
-            git pull origin main
+            set -euo pipefail
+            cd "${{ secrets.VPS_APP_DIR }}"
+
+            # Atualiza repo de forma resiliente: remove untracked que poderiam
+            # bloquear fast-forward (logs, arquivos deixados por execuções manuais),
+            # preservando .env, backups/ e .next/. Depois exige merge fast-forward.
+            git fetch origin main
+            git clean -fd -e .env -e 'backups/' -e '.next/' -e '*.log'
+            git merge --ff-only origin/main
 
             # Build das imagens
             docker compose -f docker-compose.prod.yml build
