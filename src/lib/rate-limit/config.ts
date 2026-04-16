@@ -16,6 +16,7 @@ export const RATE_LIMITS: Record<string, RateLimitConfig> = {
   // Público
   contato: { window: 60, max: 5 },
   newsletter: { window: 60, max: 5 },
+  'cnpj/lookup': { window: 60, max: 10 },
 
   // API v1 — por API key
   'v1:read': { window: 60, max: 60 },

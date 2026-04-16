@@ -39,6 +39,8 @@ export function CadastroForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loadingCep, setLoadingCep] = useState(false)
+  const [loadingCnpj, setLoadingCnpj] = useState(false)
+  const [cnpjHint, setCnpjHint] = useState('')
 
   function updateField(field: string, value: string) {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -153,6 +155,67 @@ export function CadastroForm() {
     }
   }
 
+  async function handleCnpjBlur() {
+    if (!isCnpj) return
+    const digits = formData.cpfCnpj.replace(/\D/g, '')
+    if (digits.length !== 14) return
+
+    setLoadingCnpj(true)
+    setCnpjHint('')
+
+    try {
+      const res = await fetch('/api/cnpj/lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cnpj: digits }),
+      })
+
+      if (res.status === 404) {
+        setCnpjHint('CNPJ não encontrado na Receita. Preencha manualmente.')
+        return
+      }
+      if (!res.ok) {
+        setCnpjHint('Não foi possível consultar agora. Preencha manualmente.')
+        return
+      }
+
+      const json = await res.json()
+      const data = json.data as {
+        razaoSocial: string
+        situacao: string
+        endereco: {
+          cep: string | null
+          logradouro: string | null
+          numero: string | null
+          complemento: string | null
+          bairro: string | null
+          municipio: string | null
+          uf: string | null
+        }
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        nome: prev.nome || data.razaoSocial || prev.nome,
+        cep: prev.cep || data.endereco.cep || prev.cep,
+        logradouro: prev.logradouro || data.endereco.logradouro || prev.logradouro,
+        numero: prev.numero || data.endereco.numero || prev.numero,
+        complemento: prev.complemento || data.endereco.complemento || prev.complemento,
+        bairro: prev.bairro || data.endereco.bairro || prev.bairro,
+        cidade: prev.cidade || data.endereco.municipio || prev.cidade,
+        uf: prev.uf || data.endereco.uf || prev.uf,
+      }))
+
+      if (data.situacao && data.situacao !== 'ATIVA') {
+        setCnpjHint(`Atenção: situação na Receita é "${data.situacao}".`)
+      }
+    } catch {
+      setCnpjHint('Não foi possível consultar agora. Preencha manualmente.')
+    } finally {
+      setLoadingCnpj(false)
+    }
+  }
+
   async function handleCepBlur() {
     const cepLimpo = formData.cep.replace(/\D/g, '')
     if (cepLimpo.length !== 8) return
@@ -224,8 +287,16 @@ export function CadastroForm() {
         placeholder={isCnpj ? '00.000.000/0000-00' : '000.000.000-00'}
         value={formData.cpfCnpj}
         onChange={(e) => updateField('cpfCnpj', e.target.value)}
+        onBlur={isCnpj ? handleCnpjBlur : undefined}
         required
         autoComplete={isCnpj ? 'off' : 'off'}
+        hint={
+          isCnpj
+            ? loadingCnpj
+              ? 'Consultando CNPJ na Receita...'
+              : cnpjHint || undefined
+            : undefined
+        }
       />
 
       <Input

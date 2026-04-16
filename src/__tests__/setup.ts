@@ -211,6 +211,7 @@ vi.mock('@/lib/rate-limit/config', () => ({
     'auth/login': { window: 60, max: 10 },
     'contato': { window: 60, max: 5 },
     'newsletter': { window: 60, max: 5 },
+    'cnpj/lookup': { window: 60, max: 10 },
   },
 }))
 
@@ -259,7 +260,14 @@ vi.mock('@/lib/queue', () => ({
 
 // Mock Redis
 vi.mock('@/lib/redis', () => ({
-  redis: { duplicate: vi.fn().mockReturnValue({}) },
+  redis: {
+    duplicate: vi.fn().mockReturnValue({}),
+    get: vi.fn().mockResolvedValue(null),
+    set: vi.fn().mockResolvedValue('OK'),
+    setex: vi.fn().mockResolvedValue('OK'),
+    del: vi.fn().mockResolvedValue(1),
+    expire: vi.fn().mockResolvedValue(1),
+  },
 }))
 
 // Mock nodemailer
