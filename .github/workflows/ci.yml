@@ -8,7 +8,7 @@ on:
 
 jobs:
   check:
-    name: Lint & Typecheck
+    name: Lint, Typecheck & Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -30,3 +30,6 @@ jobs:
 
       - name: Typecheck
         run: npx tsc --noEmit || true
+
+      - name: Testes unit
+        run: npm run test

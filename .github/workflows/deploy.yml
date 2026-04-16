@@ -1,7 +1,9 @@
 name: Deploy
 
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [main]
   workflow_dispatch:
 
@@ -9,6 +11,8 @@ jobs:
   deploy:
     name: Deploy na VPS
     runs-on: ubuntu-latest
+    # Só roda se o CI da branch main terminou com sucesso (ou se for disparo manual)
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
 
     steps:
       - name: Deploy via SSH

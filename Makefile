@@ -8,7 +8,7 @@
 .PHONY: help dev dev-local dev-docker dev-worker start build install clean \
         docker-up docker-down docker-build docker-logs docker-ps docker-clean \
         db-generate db-push db-migrate db-seed db-studio db-reset db-setup \
-        lint typecheck check setup env-check
+        lint typecheck check test test-watch test-coverage setup env-check
 
 # -----------------------------------------------------------------------------
 # Detecção de OS | OS Detection
@@ -156,9 +156,21 @@ lint:
 typecheck:
 	@npx tsc --noEmit
 
-## Verifica lint + tipos
-check: lint typecheck
+## Verifica lint + tipos + testes unit
+check: lint typecheck test
 	@echo "$(GREEN)Todas as verificações passaram!$(RESET)"
+
+## Roda testes unit (Vitest)
+test:
+	@$(NPM) run test
+
+## Roda testes unit em modo watch
+test-watch:
+	@$(NPM) run test:watch
+
+## Roda testes unit com relatório de cobertura
+test-coverage:
+	@$(NPM) run test:coverage
 
 ## Roda testes e2e (Playwright)
 test-e2e:
@@ -234,9 +246,12 @@ help:
 	@echo "$(GREEN)Qualidade:$(RESET)"
 	@echo "  make lint          Verifica lint"
 	@echo "  make typecheck     Verifica tipos TypeScript"
-	@echo "  make check         lint + typecheck"
+	@echo "  make check         lint + typecheck + test"
 	@echo ""
 	@echo "$(GREEN)Testes:$(RESET)"
+	@echo "  make test          Roda testes unit (Vitest)"
+	@echo "  make test-watch    Testes unit em modo watch"
+	@echo "  make test-coverage Testes unit com relatório de cobertura"
 	@echo "  make test-e2e      Roda testes e2e (Playwright)"
 	@echo "  make test-e2e-ui   Testes e2e com UI interativa"
 	@echo "  make test-setup    Instala browsers do Playwright"
