@@ -10,6 +10,12 @@ import { filterCamposByTipo, type CampoFormulario } from '@/types/campo-formular
 import type { EtapaCustomizada } from '@/types/etapa-customizada'
 import type { TipoProponente } from '@prisma/client'
 import { PNAB_DEFAULT_ATTACHMENT_TYPES } from '@/lib/constants/attachment-types'
+import {
+  BlocoInfo,
+  TabelaInput,
+  GrupoRepetivelInput,
+  CampoEstruturaRevisao,
+} from './campo-estrutura'
 
 // ─── Contador de caracteres ──────────────────────────────────────────────────
 
@@ -295,6 +301,33 @@ export default function InscricaoForm({
   // ─── Renderizar campo dinâmico ────────────────────────────────────────────
 
   const renderCampo = (campo: CampoFormulario) => {
+    // Elementos estruturais — tratados antes do switch por tipo simples
+    if (campo.tipo === 'info') {
+      return <BlocoInfo key={campo.nome || `info_${campo.label}`} campo={campo} />
+    }
+    if (campo.tipo === 'tabela') {
+      const valor = Array.isArray(campos[campo.nome]) ? campos[campo.nome] as Record<string, unknown>[] : []
+      return (
+        <TabelaInput
+          key={campo.nome}
+          campo={campo}
+          value={valor}
+          onChange={(v) => updateCampo(campo.nome, v)}
+        />
+      )
+    }
+    if (campo.tipo === 'grupo_repetivel') {
+      const valor = Array.isArray(campos[campo.nome]) ? campos[campo.nome] as Record<string, unknown>[] : []
+      return (
+        <GrupoRepetivelInput
+          key={campo.nome}
+          campo={campo}
+          value={valor}
+          onChange={(v) => updateCampo(campo.nome, v)}
+        />
+      )
+    }
+
     const value = (campos[campo.nome] as string) ?? ''
 
     switch (campo.tipo) {
@@ -451,6 +484,17 @@ export default function InscricaoForm({
 
   // Render de campo na tela de revisão (modo leitura)
   const renderCampoRevisao = (campo: CampoFormulario) => {
+    // Elementos estruturais têm render próprio
+    if (campo.tipo === 'info' || campo.tipo === 'tabela' || campo.tipo === 'grupo_repetivel') {
+      return (
+        <CampoEstruturaRevisao
+          key={campo.nome || `info_${campo.label}`}
+          campo={campo}
+          value={campos[campo.nome]}
+        />
+      )
+    }
+
     const valor = campos[campo.nome]
     const isEmpty = valor === undefined || valor === null || valor === '' ||
       (Array.isArray(valor) && valor.length === 0)

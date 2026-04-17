@@ -14,6 +14,7 @@ import { AvaliacaoForm } from './avaliacao-form'
 import { RecursoDecision } from './recurso-decision'
 import { AnexoViewer } from './anexo-viewer'
 import { DistribuicaoAvaliadores } from './distribuicao-avaliadores'
+import { CampoEstruturaRevisao } from '@/app/proponente/inscricoes/nova/campo-estrutura'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -221,32 +222,41 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
             </Card>
           )}
 
-          {/* Etapas customizadas — cada etapa vira uma seção separada */}
+          {/* Etapas customizadas — renderiza cada elemento na ordem definida */}
           {etapasOrdenadas.map((etapa) => {
-            const nomes = nomesPorEtapa.get(etapa.id) ?? new Set<string>()
-            const entradas = Object.entries(campos).filter(([key]) => nomes.has(key))
-            if (entradas.length === 0) return null
+            if (!etapa.campos || etapa.campos.length === 0) return null
             return (
               <Card key={etapa.id} padding="sm" className="sm:p-6">
                 <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-1">{etapa.titulo}</h2>
                 {etapa.descricao && (
                   <p className="text-xs sm:text-sm text-slate-500 mb-3 sm:mb-4 whitespace-pre-line">{etapa.descricao}</p>
                 )}
-                <dl className="space-y-3">
-                  {entradas.map(([key, value]) => {
-                    const campoConfig = etapaCampoMap.get(key)
+                <div className="space-y-4">
+                  {etapa.campos.map((c, idx) => {
+                    if (c.tipo === 'info' || c.tipo === 'tabela' || c.tipo === 'grupo_repetivel') {
+                      return (
+                        <CampoEstruturaRevisao
+                          key={c.nome || `info_${idx}`}
+                          campo={c}
+                          value={campos[c.nome]}
+                        />
+                      )
+                    }
+                    const valor = campos[c.nome]
+                    const empty = valor === undefined || valor === null || valor === ''
                     return (
-                      <div key={key} className="border-b border-slate-100 pb-3 last:border-0 last:pb-0">
-                        <dt className="text-sm font-medium text-slate-500 capitalize">
-                          {campoConfig?.label ?? key.replace(/_/g, ' ')}
+                      <div key={c.nome} className="border-b border-slate-100 pb-3 last:border-0 last:pb-0">
+                        <dt className="text-sm font-medium text-slate-500">
+                          {c.label}
+                          {c.obrigatorio && <span className="text-red-500 ml-1">*</span>}
                         </dt>
-                        <dd className="text-sm text-slate-900 mt-0.5 whitespace-pre-wrap break-words">
-                          {typeof value === 'string' ? value : JSON.stringify(value)}
+                        <dd className={`text-sm mt-0.5 whitespace-pre-wrap break-words ${empty ? 'text-red-500 italic' : 'text-slate-900'}`}>
+                          {empty ? 'Não preenchido' : (Array.isArray(valor) ? (valor as string[]).join(', ') : String(valor))}
                         </dd>
                       </div>
                     )
                   })}
-                </dl>
+                </div>
               </Card>
             )
           })}

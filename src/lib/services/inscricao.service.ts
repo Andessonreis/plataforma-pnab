@@ -134,21 +134,78 @@ export async function submitInscricao(id: string, userId: string, ip?: string) {
     ? (inscricao.edital.etapasCustomizadas as unknown as Array<{ campos: CampoFormulario[] }>)
     : []
   const camposDeEtapas = etapas.flatMap((e) => e.campos || [])
-  const camposFormulario = filterCamposByTipo(
+  // Top-level: filtra por tipo de proponente. Inclui tipos estruturais (tabela/grupo/info)
+  const todosTopLevel = filterCamposByTipo(
     [...allCampos, ...camposDeEtapas],
     inscricao.proponente.tipoProponente,
   )
   const campos = (inscricao.campos as Record<string, unknown>) || {}
   const camposFaltando: string[] = []
 
-  for (const campo of camposFormulario) {
-    if (campo.obrigatorio && campo.tipo !== 'arquivo') {
+  // Validação recursiva: tipos simples, tabelas (cada linha) e grupos repetíveis (cada item)
+  for (const campo of todosTopLevel) {
+    if (campo.tipo === 'info' || campo.tipo === 'arquivo') continue
+
+    if (campo.tipo === 'tabela') {
+      const linhas = Array.isArray(campos[campo.nome]) ? (campos[campo.nome] as Record<string, unknown>[]) : []
+      if (campo.obrigatorio && linhas.length === 0) {
+        camposFaltando.push(campo.label || campo.nome)
+        continue
+      }
+      if ((campo.linhaMin ?? 0) > linhas.length) {
+        camposFaltando.push(`${campo.label || campo.nome} (mínimo ${campo.linhaMin} linhas)`)
+        continue
+      }
+      for (let i = 0; i < linhas.length; i++) {
+        for (const col of campo.colunas ?? []) {
+          if (col.obrigatorio) {
+            const v = linhas[i]?.[col.nome]
+            if (v === undefined || v === null || v === '') {
+              camposFaltando.push(`${campo.label || campo.nome} — linha ${i + 1}: ${col.label || col.nome}`)
+            }
+          }
+        }
+      }
+      continue
+    }
+
+    if (campo.tipo === 'grupo_repetivel') {
+      const itens = Array.isArray(campos[campo.nome]) ? (campos[campo.nome] as Record<string, unknown>[]) : []
+      if (campo.obrigatorio && itens.length === 0) {
+        camposFaltando.push(campo.label || campo.nome)
+        continue
+      }
+      if ((campo.itemMin ?? 0) > itens.length) {
+        camposFaltando.push(`${campo.label || campo.nome} (mínimo ${campo.itemMin} itens)`)
+        continue
+      }
+      const labelItem = campo.labelItem || 'item'
+      for (let i = 0; i < itens.length; i++) {
+        for (const sub of campo.subcampos ?? []) {
+          if (sub.obrigatorio) {
+            const v = itens[i]?.[sub.nome]
+            if (v === undefined || v === null || v === '') {
+              camposFaltando.push(`${campo.label || campo.nome} — ${labelItem} ${i + 1}: ${sub.label || sub.nome}`)
+            }
+          }
+        }
+      }
+      continue
+    }
+
+    // tipos simples
+    if (campo.obrigatorio) {
       const valor = campos[campo.nome]
       if (valor === undefined || valor === null || valor === '') {
         camposFaltando.push(campo.label || campo.nome)
       }
     }
   }
+
+  // Para validação de limites de caracteres abaixo, só considera tipos simples (folha)
+  const camposFormulario = todosTopLevel.filter(
+    (c) => c.tipo !== 'info' && c.tipo !== 'tabela' && c.tipo !== 'grupo_repetivel',
+  )
 
   if (camposFaltando.length > 0) {
     throw new ServiceError('BAD_REQUEST', `Campos obrigatórios não preenchidos: ${camposFaltando.join(', ')}`)

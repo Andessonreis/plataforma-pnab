@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { filterCamposByTipo, type CampoFormulario } from '../campo-formulario'
+import {
+  filterCamposByTipo,
+  isCampoEstrutura,
+  flattenCamposPreenchiveis,
+  type CampoFormulario,
+} from '../campo-formulario'
 
 const campoGeral: CampoFormulario = {
   nome: 'nome_projeto',
@@ -96,5 +101,89 @@ describe('filterCamposByTipo', () => {
 
   it('lista vazia retorna lista vazia', () => {
     expect(filterCamposByTipo([], 'PF')).toEqual([])
+  })
+})
+
+describe('isCampoEstrutura', () => {
+  it('retorna true para info, tabela e grupo_repetivel', () => {
+    expect(isCampoEstrutura('info')).toBe(true)
+    expect(isCampoEstrutura('tabela')).toBe(true)
+    expect(isCampoEstrutura('grupo_repetivel')).toBe(true)
+  })
+
+  it('retorna false para tipos simples', () => {
+    expect(isCampoEstrutura('texto')).toBe(false)
+    expect(isCampoEstrutura('textarea')).toBe(false)
+    expect(isCampoEstrutura('select')).toBe(false)
+    expect(isCampoEstrutura('moeda')).toBe(false)
+    expect(isCampoEstrutura('data')).toBe(false)
+    expect(isCampoEstrutura('arquivo')).toBe(false)
+  })
+})
+
+describe('flattenCamposPreenchiveis', () => {
+  it('ignora blocos info', () => {
+    const campos: CampoFormulario[] = [
+      { nome: 'info1', label: 'Aviso', tipo: 'info', conteudo: 'texto' },
+      { nome: 'nome', label: 'Nome', tipo: 'texto' },
+    ]
+    const result = flattenCamposPreenchiveis(campos)
+    expect(result).toHaveLength(1)
+    expect(result[0].nome).toBe('nome')
+  })
+
+  it('expande colunas de tabela', () => {
+    const campos: CampoFormulario[] = [
+      {
+        nome: 'equipe',
+        label: 'Equipe',
+        tipo: 'tabela',
+        colunas: [
+          { nome: 'nome', label: 'Nome', tipo: 'texto', obrigatorio: true },
+          { nome: 'funcao', label: 'Função', tipo: 'texto', obrigatorio: true },
+        ],
+      },
+    ]
+    const result = flattenCamposPreenchiveis(campos)
+    expect(result).toHaveLength(2)
+    expect(result.map((c) => c.nome)).toEqual(['nome', 'funcao'])
+  })
+
+  it('expande subcampos de grupo_repetivel', () => {
+    const campos: CampoFormulario[] = [
+      {
+        nome: 'planos',
+        label: 'Planos',
+        tipo: 'grupo_repetivel',
+        subcampos: [
+          { nome: 'tema', label: 'Tema', tipo: 'texto' },
+          { nome: 'ementa', label: 'Ementa', tipo: 'textarea' },
+        ],
+      },
+    ]
+    const result = flattenCamposPreenchiveis(campos)
+    expect(result.map((c) => c.nome)).toEqual(['tema', 'ementa'])
+  })
+
+  it('preserva campos simples no topo', () => {
+    const campos: CampoFormulario[] = [
+      { nome: 'titulo', label: 'Título', tipo: 'texto' },
+      { nome: 'info1', label: 'Info', tipo: 'info', conteudo: 'x' },
+      { nome: 'equipe', label: 'Equipe', tipo: 'tabela', colunas: [{ nome: 'n', label: 'N', tipo: 'texto' }] },
+      { nome: 'valor', label: 'Valor', tipo: 'moeda' },
+    ]
+    const result = flattenCamposPreenchiveis(campos)
+    expect(result.map((c) => c.nome)).toEqual(['titulo', 'n', 'valor'])
+  })
+
+  it('retorna lista vazia para entrada vazia', () => {
+    expect(flattenCamposPreenchiveis([])).toEqual([])
+  })
+
+  it('tabela sem colunas retorna vazio para aquela tabela', () => {
+    const campos: CampoFormulario[] = [
+      { nome: 't', label: 'T', tipo: 'tabela' },
+    ]
+    expect(flattenCamposPreenchiveis(campos)).toEqual([])
   })
 })
