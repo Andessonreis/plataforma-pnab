@@ -32,6 +32,7 @@ export default async function EditarInscricaoPage({ params }: Props) {
           titulo: true,
           categorias: true,
           camposFormulario: true,
+          etapasCustomizadas: true,
           tiposAnexo: true,
           status: true,
         },
@@ -99,6 +100,9 @@ export default async function EditarInscricaoPage({ params }: Props) {
           titulo: inscricao.edital.titulo,
           categorias: inscricao.edital.categorias,
           camposFormulario: camposFormulario as unknown as CampoFormulario[],
+          etapasCustomizadas: (Array.isArray(inscricao.edital.etapasCustomizadas)
+            ? (inscricao.edital.etapasCustomizadas as unknown as import('@/types/etapa-customizada').EtapaCustomizada[])
+            : []),
           tiposAnexo: Array.isArray(inscricao.edital.tiposAnexo)
             ? (inscricao.edital.tiposAnexo as Array<{ tipo: string; label: string; obrigatorio: boolean }>)
             : null,

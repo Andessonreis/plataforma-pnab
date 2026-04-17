@@ -7,6 +7,7 @@ import type { SelectOption } from '@/components/ui'
 import { IconArrowLeft, IconArrowRight, IconCheck, IconDocument } from '@/components/ui/icons'
 import { resolveCharLimits } from '@/lib/campo-limits'
 import { filterCamposByTipo, type CampoFormulario } from '@/types/campo-formulario'
+import type { EtapaCustomizada } from '@/types/etapa-customizada'
 import type { TipoProponente } from '@prisma/client'
 import { PNAB_DEFAULT_ATTACHMENT_TYPES } from '@/lib/constants/attachment-types'
 
@@ -54,6 +55,7 @@ interface EditalInfo {
   categorias: string[]
   camposFormulario: CampoFormulario[]
   tiposAnexo?: TipoAnexoEdital[] | null
+  etapasCustomizadas?: EtapaCustomizada[]
 }
 
 interface InscricaoFormProps {
@@ -66,7 +68,12 @@ interface InscricaoFormProps {
   initialAnexos?: Anexo[]
 }
 
-type Step = 'categoria' | 'dados' | 'anexos' | 'revisao'
+type Step =
+  | { kind: 'categoria' }
+  | { kind: 'dados' }
+  | { kind: 'etapa_custom'; etapa: EtapaCustomizada }
+  | { kind: 'anexos' }
+  | { kind: 'revisao' }
 
 // ─── Componente ──────────────────────────────────────────────────────────────
 
@@ -85,12 +92,20 @@ export default function InscricaoForm({
     ? edital.tiposAnexo
     : PNAB_DEFAULT_ATTACHMENT_TYPES
 
-  // Determinar etapas
+  // Etapas customizadas ordenadas (filtradas por tipo de proponente em cada campo)
+  const etapasCustomizadas: EtapaCustomizada[] = (edital.etapasCustomizadas ?? [])
+    .slice()
+    .sort((a, b) => a.ordem - b.ordem)
+    .map((e) => ({ ...e, campos: filterCamposByTipo(e.campos, tipoProponente) }))
+    .filter((e) => e.campos.length > 0)
+
+  // Determinar etapas — customizadas entram entre "dados" e "anexos"
   const steps: Step[] = [
-    ...(hasCategorias ? ['categoria' as const] : []),
-    'dados',
-    'anexos',
-    'revisao',
+    ...(hasCategorias ? [{ kind: 'categoria' as const }] : []),
+    { kind: 'dados' as const },
+    ...etapasCustomizadas.map((etapa) => ({ kind: 'etapa_custom' as const, etapa })),
+    { kind: 'anexos' as const },
+    { kind: 'revisao' as const },
   ]
 
   const [currentStep, setCurrentStep] = useState(0)
@@ -256,8 +271,8 @@ export default function InscricaoForm({
 
   const goNext = async () => {
     setError('')
-    // Ao sair da etapa de categoria ou dados, salvar rascunho
-    if (step === 'categoria' || step === 'dados') {
+    // Ao sair de etapas com campos (categoria, dados, customizadas), salvar rascunho
+    if (step.kind === 'categoria' || step.kind === 'dados' || step.kind === 'etapa_custom') {
       await saveRascunho()
     }
     if (currentStep < steps.length - 1) {
@@ -434,6 +449,35 @@ export default function InscricaoForm({
     }
   }
 
+  // Render de campo na tela de revisão (modo leitura)
+  const renderCampoRevisao = (campo: CampoFormulario) => {
+    const valor = campos[campo.nome]
+    const isEmpty = valor === undefined || valor === null || valor === '' ||
+      (Array.isArray(valor) && valor.length === 0)
+    return (
+      <div key={campo.nome} className="border-b border-slate-100 pb-3">
+        <dt className="text-sm text-slate-500">
+          {campo.label}
+          {campo.obrigatorio && <span className="text-red-500 ml-1">*</span>}
+        </dt>
+        <dd className={`text-sm mt-0.5 ${isEmpty ? 'text-red-500 italic' : 'text-slate-900'}`}>
+          {isEmpty
+            ? 'Não preenchido'
+            : (() => {
+              if (Array.isArray(valor)) return (valor as string[]).join(', ')
+              const isCurrency =
+                campo.tipo === 'moeda' ||
+                campo.tipo === 'currency' ||
+                (/valor|preco|preço|custo|orcamento|orçamento/i.test(campo.nome) &&
+                  (campo.tipo === 'numero' || campo.tipo === 'number'))
+              return isCurrency ? formatCurrencyBRL(valor as string) : String(valor)
+            })()
+          }
+        </dd>
+      </div>
+    )
+  }
+
   // ─── Renderização ─────────────────────────────────────────────────────────
 
   return (
@@ -442,17 +486,18 @@ export default function InscricaoForm({
       <nav aria-label="Progresso da inscrição">
         <ol className="flex items-center gap-2">
           {steps.map((s, i) => {
-            const labels: Record<Step, string> = {
-              categoria: 'Categoria',
-              dados: 'Dados do Projeto',
-              anexos: 'Anexos',
-              revisao: 'Revisão',
-            }
+            const label =
+              s.kind === 'categoria' ? 'Categoria' :
+              s.kind === 'dados' ? 'Dados do Projeto' :
+              s.kind === 'etapa_custom' ? s.etapa.titulo :
+              s.kind === 'anexos' ? 'Anexos' :
+              'Revisão'
+            const key = s.kind === 'etapa_custom' ? `custom:${s.etapa.id}` : s.kind
             const isActive = i === currentStep
             const isCompleted = i < currentStep
 
             return (
-              <li key={s} className="flex items-center gap-2">
+              <li key={key} className="flex items-center gap-2">
                 {i > 0 && (
                   <div className={`h-px w-6 sm:w-10 ${isCompleted ? 'bg-brand-500' : 'bg-slate-200'}`} />
                 )}
@@ -473,7 +518,7 @@ export default function InscricaoForm({
                   `}>
                     {isCompleted ? <IconCheck className="h-3.5 w-3.5" /> : i + 1}
                   </span>
-                  <span className="hidden sm:inline">{labels[s]}</span>
+                  <span className="hidden sm:inline">{label}</span>
                 </button>
               </li>
             )
@@ -494,7 +539,7 @@ export default function InscricaoForm({
       )}
 
       {/* ─── Etapa: Categoria ──────────────────────────────────────────────── */}
-      {step === 'categoria' && (
+      {step.kind === 'categoria' && (
         <Card padding="lg">
           <h2 className="text-lg font-semibold text-slate-900 mb-1">Selecione a Categoria</h2>
           <p className="text-sm text-slate-500 mb-6">
@@ -512,7 +557,7 @@ export default function InscricaoForm({
       )}
 
       {/* ─── Etapa: Dados do Projeto ───────────────────────────────────────── */}
-      {step === 'dados' && (
+      {step.kind === 'dados' && (
         <Card padding="lg">
           <h2 className="text-lg font-semibold text-slate-900 mb-1">Dados do Projeto</h2>
           <p className="text-sm text-slate-500 mb-6">
@@ -531,8 +576,29 @@ export default function InscricaoForm({
         </Card>
       )}
 
+      {/* ─── Etapa: customizada (definida pelo admin no edital) ────────────── */}
+      {step.kind === 'etapa_custom' && (
+        <Card padding="lg">
+          <h2 className="text-lg font-semibold text-slate-900 mb-1">{step.etapa.titulo}</h2>
+          {step.etapa.descricao && (
+            <p className="text-sm text-slate-500 mb-6 whitespace-pre-line">{step.etapa.descricao}</p>
+          )}
+          {!step.etapa.descricao && (
+            <p className="text-sm text-slate-500 mb-6">
+              Preencha as informações abaixo. Campos marcados com * são obrigatórios.
+            </p>
+          )}
+          <div className="space-y-5">
+            {step.etapa.campos.filter((c) => c.tipo !== 'arquivo').map(renderCampo)}
+            {step.etapa.campos.filter((c) => c.tipo !== 'arquivo').length === 0 && (
+              <p className="text-slate-500 text-sm">Nenhum campo configurado nesta etapa.</p>
+            )}
+          </div>
+        </Card>
+      )}
+
       {/* ─── Etapa: Anexos ─────────────────────────────────────────────────── */}
-      {step === 'anexos' && (() => {
+      {step.kind === 'anexos' && (() => {
         const tiposObrigatorios = effectiveTiposAnexo.filter((t) => t.obrigatorio)
         const totalObrigatorios = tiposObrigatorios.length
         const obrigatoriosEnviados = tiposObrigatorios.filter((t) =>
@@ -644,7 +710,7 @@ export default function InscricaoForm({
       })()}
 
       {/* ─── Etapa: Revisão ────────────────────────────────────────────────── */}
-      {step === 'revisao' && (
+      {step.kind === 'revisao' && (
         <Card padding="lg">
           <h2 className="text-lg font-semibold text-slate-900 mb-1">Revisão da Inscrição</h2>
           <p className="text-sm text-slate-500 mb-6">
@@ -660,41 +726,25 @@ export default function InscricaoForm({
               </div>
             )}
 
-            {/* Campos */}
+            {/* Campos da etapa "Dados" */}
             <div>
               <h3 className="text-sm font-medium text-slate-500 mb-3">Dados do Projeto</h3>
               <dl className="space-y-3">
                 {camposFormulario
                   .filter((c) => c.tipo !== 'arquivo')
-                  .map((campo) => {
-                    const valor = campos[campo.nome]
-                    const isEmpty = valor === undefined || valor === null || valor === '' ||
-                      (Array.isArray(valor) && valor.length === 0)
-                    return (
-                      <div key={campo.nome} className="border-b border-slate-100 pb-3">
-                        <dt className="text-sm text-slate-500">
-                          {campo.label}
-                          {campo.obrigatorio && <span className="text-red-500 ml-1">*</span>}
-                        </dt>
-                        <dd className={`text-sm mt-0.5 ${isEmpty ? 'text-red-500 italic' : 'text-slate-900'}`}>
-                          {isEmpty
-                            ? 'Não preenchido'
-                            : (() => {
-                              if (Array.isArray(valor)) return (valor as string[]).join(', ')
-                              const isCurrency =
-                                campo.tipo === 'moeda' ||
-                                campo.tipo === 'currency' ||
-                                (/valor|preco|preço|custo|orcamento|orçamento/i.test(campo.nome) &&
-                                  (campo.tipo === 'numero' || campo.tipo === 'number'))
-                              return isCurrency ? formatCurrencyBRL(valor as string) : String(valor)
-                            })()
-                          }
-                        </dd>
-                      </div>
-                    )
-                  })}
+                  .map(renderCampoRevisao)}
               </dl>
             </div>
+
+            {/* Etapas customizadas */}
+            {etapasCustomizadas.map((etapa) => (
+              <div key={etapa.id}>
+                <h3 className="text-sm font-medium text-slate-500 mb-3">{etapa.titulo}</h3>
+                <dl className="space-y-3">
+                  {etapa.campos.filter((c) => c.tipo !== 'arquivo').map(renderCampoRevisao)}
+                </dl>
+              </div>
+            ))}
 
             {/* Anexos */}
             <div>
@@ -741,7 +791,7 @@ export default function InscricaoForm({
               Voltar
             </Button>
           )}
-          {(step === 'dados' || step === 'categoria') && (
+          {(step.kind === 'dados' || step.kind === 'categoria' || step.kind === 'etapa_custom') && (
             <Button variant="ghost" onClick={saveRascunho} loading={saving} type="button">
               Salvar rascunho
             </Button>
@@ -749,7 +799,7 @@ export default function InscricaoForm({
         </div>
 
         <div>
-          {step !== 'revisao' ? (
+          {step.kind !== 'revisao' ? (
             <Button onClick={goNext} type="button">
               Próximo
               <IconArrowRight className="h-4 w-4 ml-1" />

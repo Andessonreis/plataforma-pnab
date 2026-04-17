@@ -38,6 +38,21 @@ export const cronogramaItemSchema = z.union([
 // Edital
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Etapas customizadas do wizard de inscrição
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const etapaCustomizadaSchema = z.object({
+  id: z
+    .string()
+    .min(1, 'Identificador da etapa é obrigatório')
+    .regex(/^[a-z0-9_-]+$/, 'ID só pode conter letras minúsculas, números, hífen ou underline'),
+  titulo: z.string().min(1, 'Título da etapa é obrigatório').max(120),
+  descricao: z.string().max(2000).optional(),
+  ordem: z.number().int().min(0),
+  campos: z.array(z.record(z.string(), z.unknown())).default([]),
+})
+
 export const editalSchema = z.object({
   titulo: z.string().min(3, 'Titulo deve ter no minimo 3 caracteres'),
   resumo: z.string().nullable().optional(),
@@ -53,6 +68,7 @@ export const editalSchema = z.object({
   ]).default('RASCUNHO'),
   cronograma: z.array(cronogramaItemSchema).default([]),
   camposFormulario: z.array(z.record(z.string(), z.unknown())).default([]),
+  etapasCustomizadas: z.array(etapaCustomizadaSchema).default([]),
   vagasContemplados: z.number().int().min(1).nullable().optional(),
   vagasSuplentes: z.number().int().min(0).nullable().optional(),
 })

@@ -61,6 +61,25 @@ const editalSchema = z.object({
     }
   }),
   camposFormulario: z.array(z.record(z.string(), z.unknown())).default([]),
+  etapasCustomizadas: z.array(z.object({
+    id: z.string()
+      .min(1, 'Identificador da etapa é obrigatório')
+      .regex(/^[a-z0-9_-]+$/, 'ID só pode conter letras minúsculas, números, hífen ou underline'),
+    titulo: z.string().min(1, 'Título da etapa é obrigatório').max(120),
+    descricao: z.string().max(2000).optional(),
+    ordem: z.number().int().min(0),
+    campos: z.array(z.record(z.string(), z.unknown())).default([]),
+  })).default([]).superRefine((etapas, ctx) => {
+    const ids = etapas.map(e => e.id)
+    const dupes = ids.filter((id, i) => ids.indexOf(id) !== i)
+    if (dupes.length > 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `IDs de etapas duplicados: ${[...new Set(dupes)].join(', ')}`,
+        path: [],
+      })
+    }
+  }),
   vagasContemplados: z.number().int().min(1).nullable().optional(),
   vagasSuplentes: z.number().int().min(0).nullable().optional(),
   criteriosAvaliacao: z.array(z.object({
@@ -190,6 +209,7 @@ export async function POST(req: NextRequest) {
         regrasElegibilidade: data.regrasElegibilidade ?? null,
         cronograma: data.cronograma,
         camposFormulario: data.camposFormulario as unknown as import('@prisma/client').Prisma.InputJsonValue,
+        etapasCustomizadas: data.etapasCustomizadas as unknown as import('@prisma/client').Prisma.InputJsonValue,
         vagasContemplados: data.vagasContemplados ?? null,
         vagasSuplentes: data.vagasSuplentes ?? null,
         criteriosAvaliacao: (data.criteriosAvaliacao ?? null) as unknown as import('@prisma/client').Prisma.InputJsonValue,
@@ -333,6 +353,7 @@ export async function PUT(req: NextRequest) {
         regrasElegibilidade: data.regrasElegibilidade ?? null,
         cronograma: data.cronograma,
         camposFormulario: data.camposFormulario as unknown as import('@prisma/client').Prisma.InputJsonValue,
+        etapasCustomizadas: data.etapasCustomizadas as unknown as import('@prisma/client').Prisma.InputJsonValue,
         vagasContemplados: data.vagasContemplados ?? null,
         vagasSuplentes: data.vagasSuplentes ?? null,
         criteriosAvaliacao: (data.criteriosAvaliacao ?? null) as unknown as import('@prisma/client').Prisma.InputJsonValue,

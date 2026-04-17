@@ -33,6 +33,7 @@ export default async function NovaInscricaoPage({ searchParams }: Props) {
       titulo: true,
       categorias: true,
       camposFormulario: true,
+      etapasCustomizadas: true,
       tiposAnexo: true,
       tiposProponentePermitidos: true,
       status: true,
@@ -134,6 +135,9 @@ export default async function NovaInscricaoPage({ searchParams }: Props) {
           titulo: edital.titulo,
           categorias: edital.categorias,
           camposFormulario: camposFormulario as unknown as CampoFormulario[],
+          etapasCustomizadas: (Array.isArray(edital.etapasCustomizadas)
+            ? (edital.etapasCustomizadas as unknown as import('@/types/etapa-customizada').EtapaCustomizada[])
+            : []),
           tiposAnexo: Array.isArray(edital.tiposAnexo)
             ? (edital.tiposAnexo as Array<{ tipo: string; label: string; obrigatorio: boolean }>)
             : null,

@@ -201,8 +201,12 @@ model Edital {
   tiposProponentePermitidos String[] @default([])
   // Array de marcos: [{ label: string, dataHora: string, destaque?: boolean }]
   cronograma          Json         @default("[]")
-  // Definição dinâmica dos campos do formulário de inscrição
+  // Definição dinâmica dos campos do formulário de inscrição (etapa "Dados")
   camposFormulario    Json         @default("[]")
+  // Etapas customizadas adicionais do wizard de inscrição (além de categoria/dados/anexos/revisão).
+  // Renderizadas entre "dados" e "anexos" na ordem definida.
+  // [{ id: string, titulo: string, descricao?: string, ordem: number, campos: CampoFormulario[] }]
+  etapasCustomizadas  Json         @default("[]")
   // Critérios de avaliação: [{ criterio: string, peso: number, descricao?: string, notaMax: number }]
   criteriosAvaliacao  Json         @default("[]")
   // Tipos de anexo aceitos: [{ tipo: string, label: string, obrigatorio: boolean }]
