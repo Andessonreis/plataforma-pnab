@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
 
       await sendEmail({
         to: user.email,
-        subject: 'Recuperação de Senha — Portal PNAB Irecê',
+        subject: 'Recuperação de Senha — Cultura e Turismo Irecê',
         template: 'recuperacao_senha',
         data: {
           nome: user.nome,

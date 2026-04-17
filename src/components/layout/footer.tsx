@@ -67,14 +67,14 @@ function Footer() {
               </div>
               <div>
                 <p className="text-base font-bold text-white leading-tight group-hover:text-brand-200 transition-colors">
-                  Portal PNAB
+                  Cultura e Turismo
                 </p>
                 <p className="text-xs text-slate-400 leading-tight">Irecê/BA</p>
               </div>
             </Link>
             <p className="text-sm leading-relaxed mb-6 text-slate-400">
-              Política Nacional Aldir Blanc de Fomento à Cultura.
-              Secretaria de Arte e Cultura de Irecê/BA.
+              Portal oficial da Secretaria de Cultura e Turismo de Irecê/BA.
+              Gestão de editais (PNAB), turismo e ações culturais do município.
             </p>
             {/* Contato */}
             <div className="space-y-2.5 text-sm">
@@ -207,11 +207,11 @@ function Footer() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-3 text-xs text-slate-500">
             <p className="text-center sm:text-left">
-              &copy; {currentYear} Secretaria de Arte e Cultura — Prefeitura Municipal de Irecê/BA
+              &copy; {currentYear} Secretaria de Cultura e Turismo — Prefeitura Municipal de Irecê/BA
             </p>
             <p className="flex items-center gap-1.5">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-brand-500" aria-hidden="true" />
-              Portal PNAB Irecê
+              Cultura e Turismo Irecê
             </p>
           </div>
         </div>

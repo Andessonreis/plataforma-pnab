@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import { Card, PageHeader, IconDocument, IconTag, IconClipboard } from '@/components/ui'
 
 export const metadata: Metadata = {
-  title: 'Configurações — Portal PNAB Irecê',
+  title: 'Configurações — Cultura e Turismo Irecê',
 }
 
 const configCards = [

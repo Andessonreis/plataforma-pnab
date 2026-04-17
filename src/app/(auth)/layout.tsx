@@ -43,7 +43,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-white tracking-tight">
-                  Portal PNAB
+                  Cultura e Turismo
                 </h1>
                 <p className="text-brand-200 text-sm font-medium">
                   Irecê — Bahia
@@ -52,12 +52,12 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             </div>
 
             <p className="text-xl xl:text-2xl font-semibold text-white/90 leading-snug max-w-md">
-              Política Nacional Aldir Blanc de Fomento à Cultura
+              Portal oficial da Secretaria de Cultura e Turismo de Irecê
             </p>
 
             <p className="mt-4 text-brand-200/80 text-sm leading-relaxed max-w-sm">
-              Plataforma oficial para publicação de editais, inscrição de propostas
-              e acompanhamento dos processos culturais do município de Irecê.
+              Plataforma para publicação de editais, inscrição de propostas e
+              acompanhamento das ações culturais (PNAB) e turísticas do município.
             </p>
           </div>
 
@@ -88,7 +88,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="relative z-10 px-12 xl:px-16 pb-8">
           <div className="border-t border-white/10 pt-6">
             <p className="text-xs text-brand-300/70">
-              Secretaria de Arte e Cultura — Prefeitura Municipal de Irecê/BA
+              Secretaria de Cultura e Turismo — Prefeitura Municipal de Irecê/BA
             </p>
           </div>
         </div>
@@ -111,7 +111,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-bold text-slate-900 leading-tight">
-                  Portal PNAB
+                  Cultura e Turismo
                 </p>
                 <p className="text-xs text-slate-500 leading-tight">
                   Irecê — Bahia

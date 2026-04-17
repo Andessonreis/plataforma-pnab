@@ -70,7 +70,7 @@ export function renderTemplate(template: EmailTemplate, data: Record<string, unk
     recuperacao_senha: `
       <h2>Recuperação de Senha</h2>
       <p>Olá, <strong>${data.nome}</strong>!</p>
-      <p>Recebemos uma solicitação para redefinir sua senha no Portal PNAB Irecê.</p>
+      <p>Recebemos uma solicitação para redefinir sua senha no portal da Secretaria de Cultura e Turismo de Irecê.</p>
       <p>Clique no link abaixo para criar uma nova senha:</p>
       <p>
         <a href="${data.resetUrl}" style="display:inline-block;padding:12px 24px;background-color:#059669;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;">

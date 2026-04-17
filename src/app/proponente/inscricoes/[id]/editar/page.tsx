@@ -8,7 +8,7 @@ import InscricaoForm from '../../nova/inscricao-form'
 import type { CampoFormulario } from '@/types/campo-formulario'
 
 export const metadata: Metadata = {
-  title: 'Editar Inscrição — Portal PNAB Irecê',
+  title: 'Editar Inscrição — Cultura e Turismo Irecê',
 }
 
 interface Props {

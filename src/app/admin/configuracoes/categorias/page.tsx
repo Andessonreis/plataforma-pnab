@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/ui'
 import { CategoriasManager } from './categorias-manager'
 
 export const metadata: Metadata = {
-  title: 'Categorias Culturais — Portal PNAB Irecê',
+  title: 'Categorias Culturais — Cultura e Turismo Irecê',
 }
 
 export default async function CategoriasPage() {

@@ -33,7 +33,7 @@ export async function generateDeclaracao(data: DeclaracaoData): Promise<Buffer> 
       `inscrito(a) sob o CPF/CNPJ ${maskCpfCnpj(data.proponente.cpfCnpj)}, ` +
       `encontra-se ${data.tipo === 'contemplado' ? 'contemplado(a)' : 'inscrito(a)'} ` +
       `no edital "${data.edital.titulo}" (${data.edital.ano}), ` +
-      `promovido pela Secretaria de Arte e Cultura do Município de Irecê/BA, ` +
+      `promovido pela Secretaria de Cultura e Turismo do Município de Irecê/BA, ` +
       `no âmbito da Política Nacional Aldir Blanc de Fomento à Cultura (PNAB).`,
       MARGINS.left,
       doc.y,
@@ -81,7 +81,7 @@ export async function generateDeclaracao(data: DeclaracaoData): Promise<Buffer> 
     .font('Helvetica')
     .fontSize(9)
     .fillColor(COLORS.text)
-    .text('Secretaria de Arte e Cultura de Irecê', MARGINS.left, doc.y + 5, {
+    .text('Secretaria de Cultura e Turismo de Irecê', MARGINS.left, doc.y + 5, {
       width: CONTENT_WIDTH,
       align: 'center',
     })

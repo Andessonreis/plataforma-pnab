@@ -121,7 +121,7 @@ export async function requestPasswordReset(cpfCnpj?: string, email?: string, ip?
   const resetUrl = `${process.env.NEXTAUTH_URL}/recuperar-senha/reset?token=${token}`
   await sendEmail({
     to: user.email,
-    subject: 'Recuperação de Senha — Portal PNAB Irecê',
+    subject: 'Recuperação de Senha — Cultura e Turismo Irecê',
     template: 'recuperacao_senha',
     data: { nome: user.nome, resetUrl, token },
   })

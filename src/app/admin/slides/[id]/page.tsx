@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     where: { id },
     select: { titulo: true },
   })
-  return { title: `Editar: ${slide?.titulo ?? id} — Portal PNAB Irecê` }
+  return { title: `Editar: ${slide?.titulo ?? id} — Cultura e Turismo Irecê` }
 }
 
 export default async function EditarSlidePage({ params }: Props) {

@@ -8,7 +8,7 @@ import InscricaoForm from './inscricao-form'
 import type { CampoFormulario } from '@/types/campo-formulario'
 
 export const metadata: Metadata = {
-  title: 'Nova Inscrição — Portal PNAB Irecê',
+  title: 'Nova Inscrição — Cultura e Turismo Irecê',
 }
 
 interface Props {
@@ -81,7 +81,7 @@ export default async function NovaInscricaoPage({ searchParams }: Props) {
               </p>
               <p className="text-sm text-amber-700 mt-2">
                 Seu cadastro atual não corresponde aos tipos aceitos. Se acredita que houve um erro,
-                entre em contato com a Secretaria de Arte e Cultura de Irecê.
+                entre em contato com a Secretaria de Cultura e Turismo de Irecê.
               </p>
               <Link
                 href="/proponente/perfil"

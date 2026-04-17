@@ -10,7 +10,7 @@ import {
 } from '@/components/ui'
 
 export const metadata: Metadata = {
-  title: 'Painel do Avaliador — Portal PNAB Irecê',
+  title: 'Painel do Avaliador — Cultura e Turismo Irecê',
 }
 
 export default async function AvaliadorDashboardPage() {

@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/ui'
 import { TiposAnexoManager } from './tipos-anexo-manager'
 
 export const metadata: Metadata = {
-  title: 'Tipos de Anexo — Portal PNAB Irecê',
+  title: 'Tipos de Anexo — Cultura e Turismo Irecê',
 }
 
 export default async function TiposAnexoPage() {

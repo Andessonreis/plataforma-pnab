@@ -6,7 +6,7 @@ import { Card, Badge, StatCard, EmptyState, FadeIn, StaggerContainer, StaggerIte
 import { ImportForm } from './import-form'
 
 export const metadata: Metadata = {
-  title: 'Importar Contemplados — Portal PNAB Irecê',
+  title: 'Importar Contemplados — Cultura e Turismo Irecê',
 }
 
 const statusExecucaoLabel: Record<string, string> = {

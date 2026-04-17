@@ -6,7 +6,7 @@ import { prisma } from '@/lib/db'
 import { FaqForm } from '../faq-form'
 
 export const metadata: Metadata = {
-  title: 'Novo Item de FAQ — Portal PNAB Irece',
+  title: 'Novo Item de FAQ — Cultura e Turismo Irecê',
 }
 
 export default async function NovoFaqPage() {

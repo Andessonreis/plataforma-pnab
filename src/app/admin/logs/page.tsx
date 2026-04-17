@@ -8,7 +8,7 @@ import { ACTION_LABELS, actionBadgeVariant, getRetentionDays } from '@/lib/audit
 import { PurgeButton } from './purge-button'
 
 export const metadata: Metadata = {
-  title: 'Logs de Auditoria — Portal PNAB Irecê',
+  title: 'Logs de Auditoria — Cultura e Turismo Irecê',
 }
 
 interface Props {

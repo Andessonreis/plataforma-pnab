@@ -33,7 +33,7 @@ export function addCompactHeader(doc: PDFKit.PDFDocument, title: string): void {
     .font('Helvetica')
     .fontSize(8)
     .fillColor(COLORS.textLight)
-    .text('  —  Secretaria de Arte e Cultura de Irecê/BA', { align: 'left' })
+    .text('  —  Secretaria de Cultura e Turismo de Irecê/BA', { align: 'left' })
 
   // Título do documento centralizado
   doc
@@ -200,7 +200,7 @@ export function addCompactFooter(doc: PDFKit.PDFDocument, pageNumber: number): v
     .fontSize(7)
     .fillColor(COLORS.textLight)
     .text(
-      `Portal PNAB Irecê — Documento gerado em ${dateStr} às ${timeStr}`,
+      `Cultura e Turismo Irecê — Documento gerado em ${dateStr} às ${timeStr}`,
       MARGINS.left,
       footerY,
       { width: CONTENT_WIDTH, align: 'left', lineBreak: false },

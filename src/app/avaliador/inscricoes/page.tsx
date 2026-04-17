@@ -8,7 +8,7 @@ import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
 import type { InscricaoStatus } from '@prisma/client'
 
 export const metadata: Metadata = {
-  title: 'Minhas Avaliações — Portal PNAB Irecê',
+  title: 'Minhas Avaliações — Cultura e Turismo Irecê',
 }
 
 interface Props {

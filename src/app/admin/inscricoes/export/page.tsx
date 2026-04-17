@@ -11,7 +11,7 @@ import FilterForm from './filter-form'
 import { Suspense } from 'react'
 
 export const metadata: Metadata = {
-  title: 'Exportar Inscrições — Portal PNAB Irecê',
+  title: 'Exportar Inscrições — Cultura e Turismo Irecê',
 }
 
 interface Props {

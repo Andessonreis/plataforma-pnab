@@ -13,7 +13,7 @@ export default function CadastroPage() {
           Criar conta
         </h1>
         <p className="mt-2 text-sm text-slate-500 leading-relaxed">
-          Cadastre-se para se inscrever nos editais PNAB Irecê.
+          Cadastre-se para se inscrever nos editais da Secretaria de Cultura e Turismo de Irecê.
         </p>
       </div>
 

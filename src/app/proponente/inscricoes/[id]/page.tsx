@@ -16,7 +16,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params
-  return { title: `Inscricao ${id} — Portal PNAB Irece` }
+  return { title: `Inscricao ${id} — Cultura e Turismo Irecê` }
 }
 
 // Timeline de status: a ordem esperada pelo fluxo

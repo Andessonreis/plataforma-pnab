@@ -131,7 +131,7 @@ function addTimbreHeader(doc: PDFKit.PDFDocument, data: RelatorioFinalData): voi
     .font('Helvetica')
     .fontSize(9)
     .fillColor(COLORS.textLight)
-    .text('Secretaria de Arte e Cultura', textX, doc.y + 1, { width: textWidth, align: 'left' })
+    .text('Secretaria de Cultura e Turismo', textX, doc.y + 1, { width: textWidth, align: 'left' })
 
   // PNAB + ano
   doc
@@ -374,7 +374,7 @@ export async function generateRelatorioFinal(data: RelatorioFinalData): Promise<
   addLegalNotice(
     doc,
     'Este documento constitui o relatório final oficial de resultado do edital acima identificado, ' +
-    'gerado pela plataforma Portal PNAB Irecê. As informações apresentadas correspondem ao resultado ' +
+    'gerado pelo portal da Secretaria de Cultura e Turismo de Irecê. As informações apresentadas correspondem ao resultado ' +
     'definitivo após análise de recursos. Para fins de transparência e publicidade, conforme art. 37 ' +
     'da Constituição Federal e legislação da Política Nacional Aldir Blanc.',
   )

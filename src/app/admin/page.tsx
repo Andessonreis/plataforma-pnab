@@ -30,7 +30,7 @@ import {
 } from '@/components/ui'
 
 export const metadata: Metadata = {
-  title: 'Painel Administrativo — Portal PNAB Irecê',
+  title: 'Painel Administrativo — Cultura e Turismo Irecê',
 }
 
 type IconComponent = React.ComponentType<{ className?: string }>
@@ -811,7 +811,7 @@ export default async function AdminDashboardPage() {
           <p className="text-sm text-slate-500 capitalize mb-1">{today}</p>
           <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Painel da Secretaria</h1>
           <p className="text-sm text-slate-500 mt-1">
-            Visão geral das atividades do Portal PNAB Irecê.
+            Visão geral das atividades do portal da Secretaria de Cultura e Turismo de Irecê.
           </p>
         </div>
       </FadeIn>

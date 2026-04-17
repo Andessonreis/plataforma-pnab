@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import { SlideForm } from '../slide-form'
 
 export const metadata: Metadata = {
-  title: 'Novo Slide — Portal PNAB Irecê',
+  title: 'Novo Slide — Cultura e Turismo Irecê',
 }
 
 export default async function NovoSlidePage() {

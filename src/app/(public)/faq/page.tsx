@@ -16,7 +16,7 @@ import {
 import { FaqAccordion } from './faq-accordion'
 
 export const metadata: Metadata = {
-  title: 'Perguntas Frequentes — Portal PNAB Irecê',
+  title: 'Perguntas Frequentes — Cultura e Turismo Irecê',
   description:
     'Encontre respostas para as dúvidas mais comuns sobre editais, inscrições, prazos e resultados da PNAB em Irecê.',
 }

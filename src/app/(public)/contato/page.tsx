@@ -13,9 +13,9 @@ import { FadeIn } from '@/components/ui/animated'
 import { ContactForm } from './contact-form'
 
 export const metadata: Metadata = {
-  title: 'Contato e Atendimento — Portal PNAB Irecê',
+  title: 'Contato e Atendimento — Cultura e Turismo Irecê',
   description:
-    'Entre em contato com a Secretaria de Arte e Cultura de Irecê. Envie sua mensagem e receba um protocolo para acompanhamento.',
+    'Entre em contato com a Secretaria de Cultura e Turismo de Irecê. Envie sua mensagem e receba um protocolo para acompanhamento.',
 }
 
 export default async function ContatoPage() {
@@ -34,7 +34,7 @@ export default async function ContatoPage() {
     <>
       <PageHeader
         title="Contato e Atendimento"
-        subtitle="Envie sua mensagem para a Secretaria de Arte e Cultura. Você receberá um número de protocolo para acompanhamento."
+        subtitle="Envie sua mensagem para a Secretaria de Cultura e Turismo. Você receberá um número de protocolo para acompanhamento."
         breadcrumbs={[
           { label: 'Início', href: '/' },
           { label: 'Contato' },
@@ -74,7 +74,7 @@ export default async function ContatoPage() {
                   {/* Informações de contato */}
                   <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 sm:p-6">
                     <h3 className="text-base font-semibold text-slate-900 mb-5">
-                      Secretaria de Arte e Cultura
+                      Secretaria de Cultura e Turismo
                     </h3>
 
                     <div className="space-y-4">

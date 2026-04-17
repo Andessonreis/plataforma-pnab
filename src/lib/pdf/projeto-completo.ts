@@ -286,7 +286,7 @@ export async function generateProjetoCompleto(data: ProjetoCompletoData): Promis
     doc,
     'Este documento é uma cópia para referência do projeto inscrito no edital acima referido. ' +
     'Os dados apresentados correspondem às informações registradas na plataforma no momento da inscrição. ' +
-    'Para fins oficiais, consulte a plataforma do Portal PNAB Irecê.',
+    'Para fins oficiais, consulte o portal da Secretaria de Cultura e Turismo de Irecê.',
   )
 
   // ── Footer da última página ─────────────────────────────────────────────

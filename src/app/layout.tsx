@@ -11,11 +11,11 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: {
-    default: 'Portal PNAB Irecê',
-    template: '%s | Portal PNAB Irecê',
+    default: 'Secretaria de Cultura e Turismo de Irecê',
+    template: '%s | Cultura e Turismo Irecê',
   },
   description:
-    'Política Nacional Aldir Blanc de Fomento à Cultura — Secretaria de Arte e Cultura de Irecê/BA',
+    'Portal oficial da Secretaria de Cultura e Turismo de Irecê/BA — editais, políticas culturais (PNAB), turismo e ações da Prefeitura Municipal.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

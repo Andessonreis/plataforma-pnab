@@ -16,7 +16,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params
-  return { title: `Avaliação ${id} — Portal PNAB Irecê` }
+  return { title: `Avaliação ${id} — Cultura e Turismo Irecê` }
 }
 
 export default async function AvaliadorInscricaoDetailPage({ params }: Props) {

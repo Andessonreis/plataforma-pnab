@@ -20,7 +20,7 @@ import {
 } from '@/components/ui'
 
 export const metadata: Metadata = {
-  title: 'Detalhe do Atendimento — Portal PNAB Irecê',
+  title: 'Detalhe do Atendimento — Cultura e Turismo Irecê',
 }
 
 const ROLES_PERMITIDOS: UserRole[] = ['ADMIN', 'ATENDIMENTO']

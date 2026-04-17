@@ -6,7 +6,7 @@ import { Card, Badge, FadeIn } from '@/components/ui'
 import { ProfileForm } from './profile-form'
 
 export const metadata: Metadata = {
-  title: 'Meu Perfil — Portal PNAB Irecê',
+  title: 'Meu Perfil — Cultura e Turismo Irecê',
 }
 
 export default async function ProfilePage() {

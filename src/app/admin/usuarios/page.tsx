@@ -6,7 +6,7 @@ import { Card, Badge, Pagination, Button, EmptyState, FadeIn, IconUsers } from '
 import type { UserRole } from '@prisma/client'
 
 export const metadata: Metadata = {
-  title: 'Usuários — Portal PNAB Irecê',
+  title: 'Usuários — Cultura e Turismo Irecê',
 }
 
 interface Props {

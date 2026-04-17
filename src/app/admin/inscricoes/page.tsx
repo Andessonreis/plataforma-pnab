@@ -9,7 +9,7 @@ import { getEditaisVisiveis } from '@/lib/edital-acesso'
 import type { InscricaoStatus } from '@prisma/client'
 
 export const metadata: Metadata = {
-  title: 'Inscrições — Portal PNAB Irecê',
+  title: 'Inscrições — Cultura e Turismo Irecê',
 }
 
 interface Props {

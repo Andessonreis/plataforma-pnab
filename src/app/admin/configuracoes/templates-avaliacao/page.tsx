@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/ui'
 import { TemplatesManager } from './templates-manager'
 
 export const metadata: Metadata = {
-  title: 'Templates de Avaliação — Portal PNAB Irecê',
+  title: 'Templates de Avaliação — Cultura e Turismo Irecê',
 }
 
 export default async function TemplatesAvaliacaoPage() {

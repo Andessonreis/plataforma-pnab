@@ -4,7 +4,7 @@ import Link from 'next/link'
 export const metadata: Metadata = {
   title: 'Termos de Uso',
   description:
-    'Termos e condições de uso do Portal PNAB Irecê — Secretaria de Arte e Cultura de Irecê/BA.',
+    'Termos e condições de uso do portal da Secretaria de Cultura e Turismo de Irecê/BA.',
 }
 
 export default function TermsOfUsePage() {
@@ -43,9 +43,9 @@ export default function TermsOfUsePage() {
             1. Aceitacao dos Termos
           </h2>
           <p className="text-slate-600 leading-relaxed">
-            O uso do Portal PNAB Irece implica a aceitacao integral e
+            O uso deste portal implica a aceitacao integral e
             irrestrita de todos os itens destes Termos de Uso, em sua versao
-            mais recente. A Secretaria de Arte e Cultura reserva-se o direito
+            mais recente. A Secretaria de Cultura e Turismo reserva-se o direito
             de atualizar estes termos a qualquer momento, sendo
             responsabilidade do usuario consultar esta pagina periodicamente.
           </p>
@@ -57,7 +57,7 @@ export default function TermsOfUsePage() {
             2. Uso do Portal
           </h2>
           <p className="text-slate-600 leading-relaxed mb-4">
-            O Portal PNAB Irece destina-se a:
+            O portal destina-se a:
           </p>
           <ul className="list-disc pl-6 space-y-2 text-slate-600 leading-relaxed">
             <li>
@@ -155,7 +155,7 @@ export default function TermsOfUsePage() {
             5. Responsabilidades
           </h2>
           <h3 className="text-lg font-medium text-slate-800 mt-6 mb-3">
-            5.1. Da Secretaria de Arte e Cultura
+            5.1. Da Secretaria de Cultura e Turismo
           </h3>
           <ul className="list-disc pl-6 space-y-2 text-slate-600 leading-relaxed">
             <li>
@@ -201,7 +201,7 @@ export default function TermsOfUsePage() {
             6. Limitacao de Responsabilidade
           </h2>
           <p className="text-slate-600 leading-relaxed">
-            A Secretaria de Arte e Cultura nao se responsabiliza por danos
+            A Secretaria de Cultura e Turismo nao se responsabiliza por danos
             decorrentes de interrupcoes temporarias no acesso ao portal,
             falhas tecnicas, ataques ciberneticos ou eventos de forca maior.
             O portal e fornecido &ldquo;como esta&rdquo;, sem garantias de
@@ -217,7 +217,7 @@ export default function TermsOfUsePage() {
             7. Alteracoes nos Termos
           </h2>
           <p className="text-slate-600 leading-relaxed">
-            A Secretaria de Arte e Cultura podera modificar estes Termos de
+            A Secretaria de Cultura e Turismo podera modificar estes Termos de
             Uso a qualquer tempo. As alteracoes entrarao em vigor na data de
             sua publicacao nesta pagina. O uso continuado do portal apos a
             publicacao de alteracoes implica a aceitacao dos novos termos.
@@ -249,7 +249,7 @@ export default function TermsOfUsePage() {
           </p>
           <ul className="space-y-2 text-slate-600">
             <li>
-              <strong className="text-slate-900">Secretaria de Arte e Cultura de Irece</strong>
+              <strong className="text-slate-900">Secretaria de Cultura e Turismo de Irece</strong>
             </li>
             <li>
               E-mail:{' '}

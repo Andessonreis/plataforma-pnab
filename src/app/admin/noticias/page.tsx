@@ -6,7 +6,7 @@ import { prisma } from '@/lib/db'
 import { Card, Badge, Pagination, Button, EmptyState, FadeIn, IconPlus, IconNews } from '@/components/ui'
 
 export const metadata: Metadata = {
-  title: 'Gestão de Notícias — Portal PNAB Irecê',
+  title: 'Gestão de Notícias — Cultura e Turismo Irecê',
 }
 
 interface Props {

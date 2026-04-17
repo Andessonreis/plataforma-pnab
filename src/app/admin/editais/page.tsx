@@ -9,7 +9,7 @@ import { GerarListasModal } from './gerar-listas-modal'
 import type { EditalStatus } from '@prisma/client'
 
 export const metadata: Metadata = {
-  title: 'Gestão de Editais — Portal PNAB Irecê',
+  title: 'Gestão de Editais — Cultura e Turismo Irecê',
 }
 
 interface Props {

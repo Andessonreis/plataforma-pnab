@@ -59,10 +59,10 @@ export function ProponenteSidebar({ userName }: ProponenteSidebarProps) {
         {/* Cabeçalho */}
         <div className="flex items-center gap-3 px-4 py-5 border-b border-slate-800">
           <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-bold text-xs shadow-sm">
-            PNAB
+            SCT
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold truncate">Portal PNAB</p>
+            <p className="text-sm font-semibold truncate">Cultura e Turismo</p>
             <p className="text-xs text-slate-400 truncate">{userName}</p>
           </div>
           <label

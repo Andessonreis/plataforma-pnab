@@ -9,6 +9,8 @@ import { AccessibilityControls } from './accessibility-controls'
 
 const navLinks = [
   { href: '/', label: 'Início' },
+  { href: '/cultura/pnab', label: 'Cultura' },
+  { href: '/turismo', label: 'Turismo' },
   { href: '/editais', label: 'Editais' },
   { href: '/projetos-apoiados', label: 'Projetos Apoiados' },
   { href: '/noticias', label: 'Notícias' },

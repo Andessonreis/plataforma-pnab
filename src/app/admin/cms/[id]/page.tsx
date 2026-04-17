@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     where: { id },
     select: { titulo: true },
   })
-  return { title: `Editar: ${page?.titulo ?? id} — Portal PNAB Irece` }
+  return { title: `Editar: ${page?.titulo ?? id} — Cultura e Turismo Irecê` }
 }
 
 export default async function EditarCmsPage({ params }: Props) {

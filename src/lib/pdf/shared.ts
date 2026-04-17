@@ -25,9 +25,9 @@ export function createDocument(): PDFKit.PDFDocument {
     size: 'A4',
     margins: MARGINS,
     info: {
-      Title: 'Portal PNAB Irecê',
-      Author: 'Secretaria de Arte e Cultura de Irecê',
-      Creator: 'Portal PNAB Irecê',
+      Title: 'Cultura e Turismo Irecê',
+      Author: 'Secretaria de Cultura e Turismo de Irecê',
+      Creator: 'Cultura e Turismo Irecê',
     },
   })
 }
@@ -52,7 +52,7 @@ export function addHeader(doc: PDFKit.PDFDocument, title: string): void {
     .font('Helvetica')
     .fontSize(7)
     .fillColor(COLORS.textLight)
-    .text('Secretaria de Arte e Cultura de Irecê/BA', MARGINS.left, y - 8, { align: 'left' })
+    .text('Secretaria de Cultura e Turismo de Irecê/BA', MARGINS.left, y - 8, { align: 'left' })
 
   // Linha separadora
   doc
@@ -93,7 +93,7 @@ export function addFooter(doc: PDFKit.PDFDocument, pageNumber: number): void {
     .fontSize(7)
     .fillColor(COLORS.textLight)
     .text(
-      `Portal PNAB Irecê — Gerado em ${new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })} às ${new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' })}`,
+      `Cultura e Turismo Irecê — Gerado em ${new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })} às ${new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' })}`,
       MARGINS.left,
       y + 8,
       { width: CONTENT_WIDTH, align: 'left' },

@@ -23,7 +23,7 @@ import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
 import type { InscricaoStatus } from '@prisma/client'
 
 export const metadata: Metadata = {
-  title: 'Minha Área — Portal PNAB Irecê',
+  title: 'Minha Área — Cultura e Turismo Irecê',
 }
 
 export default async function ProponenteDashboardPage() {

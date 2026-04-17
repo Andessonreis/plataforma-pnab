@@ -4,7 +4,7 @@ import Link from 'next/link'
 export const metadata: Metadata = {
   title: 'Politica de Privacidade',
   description:
-    'Politica de Privacidade do Portal PNAB Irece — Tratamento de dados pessoais conforme a LGPD (Lei 13.709/2018).',
+    'Política de Privacidade do portal da Secretaria de Cultura e Turismo de Irecê — Tratamento de dados pessoais conforme a LGPD (Lei 13.709/2018).',
 }
 
 export default function PrivacyPolicyPage() {
@@ -23,7 +23,7 @@ export default function PrivacyPolicyPage() {
         {/* Introducao */}
         <section className="mb-8">
           <p className="text-slate-600 leading-relaxed">
-            A Secretaria de Arte e Cultura da Prefeitura Municipal de
+            A Secretaria de Cultura e Turismo da Prefeitura Municipal de
             Irece/BA, na qualidade de controladora dos dados pessoais
             tratados por meio do Portal da Politica Nacional Aldir Blanc
             (PNAB), apresenta esta Politica de Privacidade em conformidade
@@ -125,7 +125,7 @@ export default function PrivacyPolicyPage() {
             3. Base Legal (LGPD — Art. 7)
           </h2>
           <p className="text-slate-600 leading-relaxed mb-4">
-            O tratamento de dados pessoais realizado pelo Portal PNAB Irece
+            O tratamento de dados pessoais realizado pelo portal da Secretaria de Cultura e Turismo de Irecê
             fundamenta-se nas seguintes bases legais previstas no Art. 7 da
             Lei 13.709/2018:
           </p>
@@ -345,7 +345,7 @@ export default function PrivacyPolicyPage() {
           <ul className="space-y-2 text-slate-600">
             <li>
               <strong className="text-slate-900">Orgao responsavel:</strong>{' '}
-              Secretaria de Arte e Cultura de Irece
+              Secretaria de Cultura e Turismo de Irece
             </li>
             <li>
               <strong className="text-slate-900">E-mail:</strong>{' '}
@@ -376,7 +376,7 @@ export default function PrivacyPolicyPage() {
             </li>
             <li>
               <strong className="text-slate-900">Endereco:</strong>{' '}
-              Secretaria de Arte e Cultura, Prefeitura Municipal de
+              Secretaria de Cultura e Turismo, Prefeitura Municipal de
               Irece — Irece/BA
             </li>
           </ul>

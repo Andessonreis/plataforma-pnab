@@ -13,12 +13,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     select: { titulo: true },
   })
 
-  if (!page) return { title: 'Pagina nao encontrada — Portal PNAB Irece' }
+  if (!page) return { title: 'Pagina nao encontrada — Cultura e Turismo Irecê' }
 
   return {
-    title: `${page.titulo} — Portal PNAB Irece`,
+    title: `${page.titulo} — Cultura e Turismo Irecê`,
     openGraph: {
-      title: `${page.titulo} — Portal PNAB Irece`,
+      title: `${page.titulo} — Cultura e Turismo Irecê`,
     },
   }
 }

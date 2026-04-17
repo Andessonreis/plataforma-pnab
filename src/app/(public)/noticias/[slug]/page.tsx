@@ -67,7 +67,7 @@ export async function generateMetadata({ params }: NoticiaPageProps): Promise<Me
   }
 
   return {
-    title: `${noticia.titulo} — Portal PNAB Irecê`,
+    title: `${noticia.titulo} — Cultura e Turismo Irecê`,
     description: truncateText(noticia.corpo.replace(/[#*_`]/g, ''), 160),
     openGraph: {
       title: noticia.titulo,

@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     where: { id },
     select: { titulo: true },
   })
-  return { title: `Editar: ${edital?.titulo ?? id} — Portal PNAB Irece` }
+  return { title: `Editar: ${edital?.titulo ?? id} — Cultura e Turismo Irecê` }
 }
 
 interface TipoAnexo {

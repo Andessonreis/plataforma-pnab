@@ -214,7 +214,7 @@ export async function generateListaInscricoes(data: ListaInscricoesData): Promis
   checkPageBreak(doc, 50, ctx)
   addLegalNotice(
     doc,
-    'Este documento é uma lista oficial gerada pela plataforma Portal PNAB Irecê. ' +
+    'Este documento é uma lista oficial gerada pelo portal da Secretaria de Cultura e Turismo de Irecê. ' +
     'Os dados apresentados correspondem às informações registradas no sistema na data de geração. ' +
     'Para contestações e recursos, consulte os prazos estabelecidos no edital.',
   )

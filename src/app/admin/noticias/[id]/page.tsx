@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     where: { id },
     select: { titulo: true },
   })
-  return { title: `Editar: ${noticia?.titulo ?? id} — Portal PNAB Irece` }
+  return { title: `Editar: ${noticia?.titulo ?? id} — Cultura e Turismo Irecê` }
 }
 
 export default async function EditarNoticiaPage({ params }: Props) {

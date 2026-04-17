@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import { CmsForm } from '../cms-form'
 
 export const metadata: Metadata = {
-  title: 'Nova Pagina — Portal PNAB Irece',
+  title: 'Nova Pagina — Cultura e Turismo Irecê',
 }
 
 export default async function NovaCmsPage() {

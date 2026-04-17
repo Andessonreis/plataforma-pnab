@@ -5,9 +5,9 @@ import { Badge, Button, PageHeader, EmptyState } from '@/components/ui'
 import { IconPdf, IconDocument, IconDownload, IconBook } from '@/components/ui/icons'
 
 export const metadata: Metadata = {
-  title: 'Manuais e Documentos — Portal PNAB Irecê',
+  title: 'Manuais e Documentos — Cultura e Turismo Irecê',
   description:
-    'Baixe manuais, guias e documentos de apoio para proponentes dos editais PNAB Irecê.',
+    'Baixe manuais, guias e documentos de apoio para proponentes dos editais da Secretaria de Cultura e Turismo de Irecê.',
 }
 
 function getFileIcon(url: string) {

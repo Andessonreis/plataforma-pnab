@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import { NoticiaForm } from '../noticia-form'
 
 export const metadata: Metadata = {
-  title: 'Nova Noticia — Portal PNAB Irece',
+  title: 'Nova Noticia — Cultura e Turismo Irecê',
 }
 
 export default async function NovaNoticiaPage() {

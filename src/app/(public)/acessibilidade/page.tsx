@@ -4,7 +4,7 @@ import Link from 'next/link'
 export const metadata: Metadata = {
   title: 'Acessibilidade',
   description:
-    'Declaração de acessibilidade do Portal PNAB Irecê — Conformidade com WCAG 2.1 AA e recursos disponíveis.',
+    'Declaração de acessibilidade do portal da Secretaria de Cultura e Turismo de Irecê — Conformidade com WCAG 2.1 AA e recursos disponíveis.',
 }
 
 export default function AccessibilityPage() {
@@ -228,7 +228,7 @@ export default function AccessibilityPage() {
           </p>
           <ul className="space-y-2 text-slate-600">
             <li>
-              <strong className="text-slate-900">Secretaria de Arte e Cultura de Irecê</strong>
+              <strong className="text-slate-900">Secretaria de Cultura e Turismo de Irecê</strong>
             </li>
             <li>
               E-mail:{' '}
@@ -240,7 +240,7 @@ export default function AccessibilityPage() {
               </a>
             </li>
             <li>
-              Assunto do e-mail: <em>&ldquo;Acessibilidade — Portal PNAB&rdquo;</em>
+              Assunto do e-mail: <em>&ldquo;Acessibilidade — Cultura e Turismo Irecê&rdquo;</em>
             </li>
           </ul>
           <p className="text-slate-600 leading-relaxed mt-4">

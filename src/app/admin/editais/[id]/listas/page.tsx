@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     where: { id },
     select: { titulo: true },
   })
-  return { title: `Listas: ${edital?.titulo ?? id} — Portal PNAB Irecê` }
+  return { title: `Listas: ${edital?.titulo ?? id} — Cultura e Turismo Irecê` }
 }
 
 /** Ordem de exibição dos status (RASCUNHO é omitido). */
