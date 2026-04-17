@@ -2,7 +2,7 @@
 
 import { useCallback } from 'react'
 import { Input, Textarea, Button, Select } from '@/components/ui'
-import type { CampoFormulario } from '@/types/campo-formulario'
+import type { CampoFormulario, CampoTipo } from '@/types/campo-formulario'
 import type { EtapaCustomizada } from '@/types/etapa-customizada'
 
 interface Props {
@@ -10,7 +10,7 @@ interface Props {
   onChange: (next: EtapaCustomizada[]) => void
 }
 
-const TIPO_CAMPO_OPTIONS = [
+const TIPO_CAMPO_SIMPLES_OPTIONS = [
   { value: 'texto', label: 'Texto curto' },
   { value: 'textarea', label: 'Texto longo' },
   { value: 'numero', label: 'Número' },
@@ -20,6 +20,19 @@ const TIPO_CAMPO_OPTIONS = [
   { value: 'multiselect', label: 'Seleção múltipla' },
 ]
 
+const TIPO_CAMPO_TODOS_OPTIONS = [
+  ...TIPO_CAMPO_SIMPLES_OPTIONS,
+  { value: 'info', label: '— Bloco informativo (texto)' },
+  { value: 'tabela', label: '— Tabela (linhas adicionáveis)' },
+  { value: 'grupo_repetivel', label: '— Grupo repetível (itens)' },
+]
+
+const VARIANTE_INFO_OPTIONS = [
+  { value: 'info', label: 'Informação (cinza)' },
+  { value: 'atencao', label: 'Atenção (âmbar)' },
+  { value: 'alerta', label: 'Alerta (vermelho)' },
+]
+
 function slugify(s: string): string {
   return s
     .toLowerCase()
@@ -27,8 +40,141 @@ function slugify(s: string): string {
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]+/g, '_')
     .replace(/^_+|_+$/g, '')
-    .slice(0, 48) || `etapa_${Date.now().toString(36).slice(-4)}`
+    .slice(0, 48) || `campo_${Date.now().toString(36).slice(-4)}`
 }
+
+// ─── Editor de subcampo simples (usado em colunas de tabela e subcampos de grupo) ─
+
+function SubcampoEditor({
+  campo,
+  onChange,
+  onRemove,
+  prefixLabel,
+}: {
+  campo: CampoFormulario
+  onChange: (patch: Partial<CampoFormulario>) => void
+  onRemove: () => void
+  prefixLabel: string
+}) {
+  return (
+    <div className="rounded border border-slate-200 bg-white p-3 space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-slate-500">{prefixLabel}</span>
+        <button
+          type="button"
+          onClick={onRemove}
+          className="text-red-500 hover:text-red-700 text-xs font-medium"
+        >
+          Remover
+        </button>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Input
+          label="Rótulo"
+          value={campo.label}
+          onChange={(e) => {
+            const label = e.target.value
+            const patch: Partial<CampoFormulario> = { label }
+            if (!campo.nome.trim() && label.trim()) patch.nome = slugify(label)
+            onChange(patch)
+          }}
+          placeholder="Ex: Nome"
+          required
+        />
+        <Input
+          label="Nome técnico"
+          value={campo.nome}
+          onChange={(e) => onChange({ nome: slugify(e.target.value) })}
+          hint="Gerado automaticamente"
+        />
+      </div>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Select
+          label="Tipo"
+          value={campo.tipo}
+          onChange={(e) => onChange({ tipo: e.target.value as CampoTipo })}
+          options={TIPO_CAMPO_SIMPLES_OPTIONS}
+        />
+        <label className="inline-flex items-center gap-2 text-sm text-slate-700 self-end min-h-[44px]">
+          <input
+            type="checkbox"
+            checked={campo.obrigatorio ?? false}
+            onChange={(e) => onChange({ obrigatorio: e.target.checked })}
+            className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+          />
+          Obrigatório
+        </label>
+      </div>
+      {(campo.tipo === 'select' || campo.tipo === 'multiselect') && (
+        <Textarea
+          label="Opções (uma por linha)"
+          value={(campo.opcoes ?? []).join('\n')}
+          onChange={(e) =>
+            onChange({ opcoes: e.target.value.split('\n').map((s) => s.trim()).filter(Boolean) })
+          }
+          rows={3}
+          placeholder="Opção A&#10;Opção B"
+        />
+      )}
+      <Input
+        label="Hint"
+        value={campo.hint ?? ''}
+        onChange={(e) => onChange({ hint: e.target.value })}
+        placeholder="Instrução opcional"
+      />
+    </div>
+  )
+}
+
+// ─── Editor de lista de subcampos (colunas ou subcampos) ────────────────────
+
+function SubcamposListEditor({
+  items,
+  onChange,
+  labelSingular,
+  labelPlural,
+}: {
+  items: CampoFormulario[]
+  onChange: (next: CampoFormulario[]) => void
+  labelSingular: string
+  labelPlural: string
+}) {
+  const add = () => {
+    const novo: CampoFormulario = { nome: '', label: '', tipo: 'texto', obrigatorio: false }
+    onChange([...items, novo])
+  }
+  const remove = (i: number) => onChange(items.filter((_, idx) => idx !== i))
+  const update = (i: number, patch: Partial<CampoFormulario>) => {
+    onChange(items.map((c, idx) => (idx === i ? { ...c, ...patch } : c)))
+  }
+
+  return (
+    <div className="space-y-3 pl-3 border-l-2 border-brand-200">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold text-slate-600">{labelPlural}</p>
+        <Button type="button" variant="outline" size="sm" onClick={add}>
+          + Adicionar {labelSingular}
+        </Button>
+      </div>
+      {items.length === 0 && (
+        <p className="text-xs text-slate-400 italic">
+          Nenhum {labelSingular.toLowerCase()} configurado.
+        </p>
+      )}
+      {items.map((item, i) => (
+        <SubcampoEditor
+          key={i}
+          campo={item}
+          onChange={(patch) => update(i, patch)}
+          onRemove={() => remove(i)}
+          prefixLabel={`${labelSingular} ${i + 1}`}
+        />
+      ))}
+    </div>
+  )
+}
+
+// ─── Editor principal ───────────────────────────────────────────────────────
 
 function EtapasCustomizadasEditor({ value, onChange }: Props) {
   const etapas = value
@@ -47,13 +193,11 @@ function EtapasCustomizadasEditor({ value, onChange }: Props) {
   }, [etapas, onChange])
 
   const removeEtapa = useCallback((index: number) => {
-    const next = etapas.filter((_, i) => i !== index)
-    onChange(next)
+    onChange(etapas.filter((_, i) => i !== index))
   }, [etapas, onChange])
 
   const updateEtapa = useCallback((index: number, patch: Partial<EtapaCustomizada>) => {
-    const next = etapas.map((e, i) => (i === index ? { ...e, ...patch } : e))
-    onChange(next)
+    onChange(etapas.map((e, i) => (i === index ? { ...e, ...patch } : e)))
   }, [etapas, onChange])
 
   const moveEtapa = useCallback((index: number, dir: -1 | 1) => {
@@ -61,7 +205,6 @@ function EtapasCustomizadasEditor({ value, onChange }: Props) {
     if (target < 0 || target >= etapas.length) return
     const next = [...etapas]
     ;[next[index], next[target]] = [next[target], next[index]]
-    // Re-normalizar a ordem
     onChange(next.map((e, i) => ({ ...e, ordem: i })))
   }, [etapas, onChange])
 
@@ -79,6 +222,15 @@ function EtapasCustomizadasEditor({ value, onChange }: Props) {
   const removeCampo = useCallback((etapaIndex: number, campoIndex: number) => {
     const etapa = etapas[etapaIndex]
     updateEtapa(etapaIndex, { campos: etapa.campos.filter((_, i) => i !== campoIndex) })
+  }, [etapas, updateEtapa])
+
+  const moveCampo = useCallback((etapaIndex: number, campoIndex: number, dir: -1 | 1) => {
+    const etapa = etapas[etapaIndex]
+    const target = campoIndex + dir
+    if (target < 0 || target >= etapa.campos.length) return
+    const next = [...etapa.campos]
+    ;[next[campoIndex], next[target]] = [next[target], next[campoIndex]]
+    updateEtapa(etapaIndex, { campos: next })
   }, [etapas, updateEtapa])
 
   const updateCampo = useCallback((etapaIndex: number, campoIndex: number, patch: Partial<CampoFormulario>) => {
@@ -108,7 +260,6 @@ function EtapasCustomizadasEditor({ value, onChange }: Props) {
           key={`etapa-${idx}`}
           className="rounded-lg border border-slate-200 bg-white p-4 sm:p-5 space-y-4"
         >
-          {/* Header da etapa */}
           <div className="flex items-start gap-2 flex-wrap">
             <span className="inline-flex items-center justify-center h-7 min-w-[28px] rounded-full bg-brand-100 text-brand-700 text-xs font-bold px-2">
               {idx + 1}
@@ -118,7 +269,7 @@ function EtapasCustomizadasEditor({ value, onChange }: Props) {
                 {etapa.titulo || 'Nova etapa'}
               </p>
               <p className="text-xs text-slate-500">
-                ID: <code className="font-mono">{etapa.id}</code> · {etapa.campos.length} campo(s)
+                ID: <code className="font-mono">{etapa.id}</code> · {etapa.campos.length} elemento(s)
               </p>
             </div>
             <div className="flex gap-1">
@@ -128,7 +279,6 @@ function EtapasCustomizadasEditor({ value, onChange }: Props) {
                 disabled={idx === 0}
                 className="text-slate-400 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed p-1 rounded"
                 aria-label="Mover para cima"
-                title="Mover para cima"
               >
                 ↑
               </button>
@@ -138,7 +288,6 @@ function EtapasCustomizadasEditor({ value, onChange }: Props) {
                 disabled={idx === etapas.length - 1}
                 className="text-slate-400 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed p-1 rounded"
                 aria-label="Mover para baixo"
-                title="Mover para baixo"
               >
                 ↓
               </button>
@@ -153,14 +302,12 @@ function EtapasCustomizadasEditor({ value, onChange }: Props) {
             </div>
           </div>
 
-          {/* Configuração da etapa */}
           <div className="grid gap-4 sm:grid-cols-2">
             <Input
               label="Título da etapa"
               value={etapa.titulo}
               onChange={(e) => {
                 const titulo = e.target.value
-                // Auto-gerar id se ainda estiver no padrão default
                 const autoGenId = etapa.id.startsWith('etapa_') && /^etapa_\d+$/.test(etapa.id)
                 updateEtapa(idx, {
                   titulo,
@@ -186,25 +333,19 @@ function EtapasCustomizadasEditor({ value, onChange }: Props) {
             rows={3}
           />
 
-          {/* Campos da etapa */}
           <div className="border-t border-slate-100 pt-4 space-y-3">
             <div className="flex items-center justify-between">
               <h4 className="text-sm font-semibold text-slate-700">
-                Campos desta etapa
+                Elementos desta etapa
               </h4>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => addCampo(idx)}
-              >
-                + Adicionar campo
+              <Button type="button" variant="outline" size="sm" onClick={() => addCampo(idx)}>
+                + Adicionar elemento
               </Button>
             </div>
 
             {etapa.campos.length === 0 && (
               <p className="text-xs text-slate-500 italic">
-                Nenhum campo adicionado. Clique em &ldquo;Adicionar campo&rdquo; para começar.
+                Nenhum elemento. Clique em &ldquo;Adicionar elemento&rdquo; para começar.
               </p>
             )}
 
@@ -213,76 +354,208 @@ function EtapasCustomizadasEditor({ value, onChange }: Props) {
                 key={`campo-${cIdx}`}
                 className="rounded-md bg-slate-50 border border-slate-200 p-3 space-y-3"
               >
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <Input
-                    label="Rótulo (visível)"
-                    value={campo.label}
-                    onChange={(e) => {
-                      const label = e.target.value
-                      // Auto-gerar nome se vazio
-                      const patch: Partial<CampoFormulario> = { label }
-                      if (!campo.nome.trim() && label.trim()) {
-                        patch.nome = slugify(label)
-                      }
-                      updateCampo(idx, cIdx, patch)
-                    }}
-                    placeholder="Ex: Objeto do Projeto"
-                    required
-                  />
-                  <Input
-                    label="Nome técnico"
-                    value={campo.nome}
-                    onChange={(e) => updateCampo(idx, cIdx, { nome: slugify(e.target.value) })}
-                    hint="Identificador único do campo. Gerado automaticamente a partir do rótulo"
-                  />
-                </div>
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <Select
-                    label="Tipo"
-                    value={campo.tipo}
-                    onChange={(e) => updateCampo(idx, cIdx, { tipo: e.target.value as CampoFormulario['tipo'] })}
-                    options={TIPO_CAMPO_OPTIONS}
-                  />
-                  <div className="flex items-end">
-                    <label className="inline-flex items-center gap-2 text-sm text-slate-700 min-h-[44px]">
-                      <input
-                        type="checkbox"
-                        checked={campo.obrigatorio ?? false}
-                        onChange={(e) => updateCampo(idx, cIdx, { obrigatorio: e.target.checked })}
-                        className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
-                      />
-                      Obrigatório
-                    </label>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-slate-500">
+                    Elemento {cIdx + 1} — {campo.tipo}
+                  </span>
+                  <div className="flex gap-1">
+                    <button
+                      type="button"
+                      onClick={() => moveCampo(idx, cIdx, -1)}
+                      disabled={cIdx === 0}
+                      className="text-slate-400 hover:text-slate-700 disabled:opacity-30 p-1 rounded text-xs"
+                      aria-label="Mover para cima"
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => moveCampo(idx, cIdx, 1)}
+                      disabled={cIdx === etapa.campos.length - 1}
+                      className="text-slate-400 hover:text-slate-700 disabled:opacity-30 p-1 rounded text-xs"
+                      aria-label="Mover para baixo"
+                    >
+                      ↓
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeCampo(idx, cIdx)}
+                      className="text-red-500 hover:text-red-700 text-xs font-medium px-2"
+                    >
+                      Remover
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => removeCampo(idx, cIdx)}
-                    className="text-red-500 hover:text-red-700 text-sm font-medium self-end min-h-[44px]"
-                  >
-                    Remover campo
-                  </button>
                 </div>
 
-                {(campo.tipo === 'select' || campo.tipo === 'multiselect') && (
-                  <Textarea
-                    label="Opções (uma por linha)"
-                    value={(campo.opcoes ?? []).join('\n')}
-                    onChange={(e) =>
-                      updateCampo(idx, cIdx, {
-                        opcoes: e.target.value.split('\n').map((s) => s.trim()).filter(Boolean),
-                      })
-                    }
-                    rows={3}
-                    placeholder="Opção A&#10;Opção B"
-                  />
+                <Select
+                  label="Tipo do elemento"
+                  value={campo.tipo}
+                  onChange={(e) => updateCampo(idx, cIdx, { tipo: e.target.value as CampoTipo })}
+                  options={TIPO_CAMPO_TODOS_OPTIONS}
+                />
+
+                {/* ── Tipo INFO ──────────────────────────────────────────── */}
+                {campo.tipo === 'info' && (
+                  <>
+                    <Input
+                      label="Título (opcional)"
+                      value={campo.label}
+                      onChange={(e) => updateCampo(idx, cIdx, {
+                        label: e.target.value,
+                        nome: campo.nome || slugify(e.target.value || `info_${cIdx + 1}`),
+                      })}
+                      placeholder="Ex: Atenção!"
+                    />
+                    <Select
+                      label="Variante visual"
+                      value={campo.variante ?? 'info'}
+                      onChange={(e) => updateCampo(idx, cIdx, { variante: e.target.value as 'info' | 'atencao' | 'alerta' })}
+                      options={VARIANTE_INFO_OPTIONS}
+                    />
+                    <Textarea
+                      label="Conteúdo (markdown aceito)"
+                      value={campo.conteudo ?? ''}
+                      onChange={(e) => updateCampo(idx, cIdx, { conteudo: e.target.value })}
+                      rows={6}
+                      placeholder="Texto explicativo exibido ao proponente..."
+                    />
+                  </>
                 )}
 
-                <Input
-                  label="Texto de ajuda (hint)"
-                  value={campo.hint ?? ''}
-                  onChange={(e) => updateCampo(idx, cIdx, { hint: e.target.value })}
-                  placeholder="Instrução curta exibida abaixo do campo"
-                />
+                {/* ── Tipo TABELA ────────────────────────────────────────── */}
+                {campo.tipo === 'tabela' && (
+                  <>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Input
+                        label="Rótulo (título da tabela)"
+                        value={campo.label}
+                        onChange={(e) => {
+                          const label = e.target.value
+                          const patch: Partial<CampoFormulario> = { label }
+                          if (!campo.nome.trim() && label.trim()) patch.nome = slugify(label)
+                          updateCampo(idx, cIdx, patch)
+                        }}
+                        placeholder="Ex: Equipe"
+                        required
+                      />
+                      <Input
+                        label="Nome técnico"
+                        value={campo.nome}
+                        onChange={(e) => updateCampo(idx, cIdx, { nome: slugify(e.target.value) })}
+                      />
+                    </div>
+                    <Input
+                      label="Hint (opcional)"
+                      value={campo.hint ?? ''}
+                      onChange={(e) => updateCampo(idx, cIdx, { hint: e.target.value })}
+                    />
+                    <SubcamposListEditor
+                      items={campo.colunas ?? []}
+                      onChange={(cols) => updateCampo(idx, cIdx, { colunas: cols })}
+                      labelSingular="Coluna"
+                      labelPlural="Colunas da tabela"
+                    />
+                  </>
+                )}
+
+                {/* ── Tipo GRUPO REPETIVEL ───────────────────────────────── */}
+                {campo.tipo === 'grupo_repetivel' && (
+                  <>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Input
+                        label="Rótulo (título do bloco)"
+                        value={campo.label}
+                        onChange={(e) => {
+                          const label = e.target.value
+                          const patch: Partial<CampoFormulario> = { label }
+                          if (!campo.nome.trim() && label.trim()) patch.nome = slugify(label)
+                          updateCampo(idx, cIdx, patch)
+                        }}
+                        placeholder="Ex: Planos de Formação"
+                        required
+                      />
+                      <Input
+                        label="Nome técnico"
+                        value={campo.nome}
+                        onChange={(e) => updateCampo(idx, cIdx, { nome: slugify(e.target.value) })}
+                      />
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Input
+                        label="Nome singular do item"
+                        value={campo.labelItem ?? ''}
+                        onChange={(e) => updateCampo(idx, cIdx, { labelItem: e.target.value })}
+                        placeholder="Ex: Plano"
+                        hint="Usado no botão '+ Adicionar X'"
+                      />
+                      <Input
+                        label="Hint (opcional)"
+                        value={campo.hint ?? ''}
+                        onChange={(e) => updateCampo(idx, cIdx, { hint: e.target.value })}
+                      />
+                    </div>
+                    <SubcamposListEditor
+                      items={campo.subcampos ?? []}
+                      onChange={(subs) => updateCampo(idx, cIdx, { subcampos: subs })}
+                      labelSingular="Campo"
+                      labelPlural="Campos de cada item"
+                    />
+                  </>
+                )}
+
+                {/* ── Tipos simples ──────────────────────────────────────── */}
+                {campo.tipo !== 'info' && campo.tipo !== 'tabela' && campo.tipo !== 'grupo_repetivel' && (
+                  <>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Input
+                        label="Rótulo (visível)"
+                        value={campo.label}
+                        onChange={(e) => {
+                          const label = e.target.value
+                          const patch: Partial<CampoFormulario> = { label }
+                          if (!campo.nome.trim() && label.trim()) patch.nome = slugify(label)
+                          updateCampo(idx, cIdx, patch)
+                        }}
+                        placeholder="Ex: Objeto do Projeto"
+                        required
+                      />
+                      <Input
+                        label="Nome técnico"
+                        value={campo.nome}
+                        onChange={(e) => updateCampo(idx, cIdx, { nome: slugify(e.target.value) })}
+                        hint="Gerado automaticamente a partir do rótulo"
+                      />
+                    </div>
+                    <div className="flex items-end gap-4">
+                      <label className="inline-flex items-center gap-2 text-sm text-slate-700 min-h-[44px]">
+                        <input
+                          type="checkbox"
+                          checked={campo.obrigatorio ?? false}
+                          onChange={(e) => updateCampo(idx, cIdx, { obrigatorio: e.target.checked })}
+                          className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                        />
+                        Obrigatório
+                      </label>
+                    </div>
+                    {(campo.tipo === 'select' || campo.tipo === 'multiselect') && (
+                      <Textarea
+                        label="Opções (uma por linha)"
+                        value={(campo.opcoes ?? []).join('\n')}
+                        onChange={(e) =>
+                          updateCampo(idx, cIdx, {
+                            opcoes: e.target.value.split('\n').map((s) => s.trim()).filter(Boolean),
+                          })
+                        }
+                        rows={3}
+                      />
+                    )}
+                    <Input
+                      label="Texto de ajuda (hint)"
+                      value={campo.hint ?? ''}
+                      onChange={(e) => updateCampo(idx, cIdx, { hint: e.target.value })}
+                    />
+                  </>
+                )}
               </div>
             ))}
           </div>
