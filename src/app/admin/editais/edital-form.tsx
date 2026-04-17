@@ -10,8 +10,10 @@ import { cronogramaToFormItems, formItemsToCronograma, validateCronogramaOrder }
 import { CHAR_LIMIT_DEFAULTS } from '@/lib/campo-limits'
 import type { CriterioAvaliacao } from '@/lib/avaliacao-criterios'
 import type { CampoFormulario } from '@/types/campo-formulario'
+import type { EtapaCustomizada } from '@/types/etapa-customizada'
 import type { TipoProponente } from '@prisma/client'
 import { CronogramaEditor } from './cronograma-editor'
+import { EtapasCustomizadasEditor } from './etapas-customizadas-editor'
 import type { TipoAnexo } from '@/lib/constants/attachment-types'
 
 const TIPO_PROPONENTE_OPTIONS: { value: TipoProponente; label: string }[] = [
@@ -39,6 +41,7 @@ interface EditalFormProps {
     regrasElegibilidade: string
     cronograma: CronogramaItem[]
     camposFormulario: CampoFormulario[]
+    etapasCustomizadas?: EtapaCustomizada[]
     status: EditalStatus
     vagasContemplados: number | null
     vagasSuplentes: number | null
@@ -142,6 +145,9 @@ export function EditalForm({ initialData }: EditalFormProps) {
   )
   const [camposFormulario, setCamposFormulario] = useState<CampoFormulario[]>(
     initialData?.camposFormulario ?? []
+  )
+  const [etapasCustomizadas, setEtapasCustomizadas] = useState<EtapaCustomizada[]>(
+    initialData?.etapasCustomizadas ?? []
   )
   const [criteriosAvaliacao, setCriteriosAvaliacao] = useState<CriterioAvaliacao[]>(
     initialData?.criteriosAvaliacao ?? []
@@ -403,6 +409,21 @@ export function EditalForm({ initialData }: EditalFormProps) {
         nome: c.nome.trim() || c.label.trim().toLowerCase().replace(/\s+/g, '_').normalize('NFD').replace(/[\u0300-\u036f]/g, ''),
       }))
 
+    // Normalizar etapas customizadas — remover etapas sem título e campos sem rótulo/nome
+    const etapasNormalizadas = etapasCustomizadas
+      .filter((e) => e.titulo.trim() !== '')
+      .map((e, i) => ({
+        ...e,
+        ordem: i,
+        id: e.id.trim() || `etapa_${i + 1}`,
+        campos: e.campos
+          .filter((c) => c.label.trim() !== '')
+          .map((c) => ({
+            ...c,
+            nome: c.nome.trim() || c.label.trim().toLowerCase().replace(/\s+/g, '_').normalize('NFD').replace(/[\u0300-\u036f]/g, ''),
+          })),
+      }))
+
     const body = {
       titulo,
       resumo,
@@ -414,6 +435,7 @@ export function EditalForm({ initialData }: EditalFormProps) {
       status,
       cronograma: cronogramaFiltrado,
       camposFormulario: camposFiltrados,
+      etapasCustomizadas: etapasNormalizadas,
       vagasContemplados: vagasContemplados.trim() ? Number(vagasContemplados) : null,
       vagasSuplentes: vagasSuplentes.trim() ? Number(vagasSuplentes) : null,
       criteriosAvaliacao: criteriosAvaliacao.length > 0 ? criteriosAvaliacao : null,
@@ -1411,6 +1433,35 @@ export function EditalForm({ initialData }: EditalFormProps) {
                 })()}
               </div>
             </div>
+          </div>
+        )}
+      </Card>
+
+      {/* Secao 10 — Etapas customizadas da inscrição */}
+      <Card padding="sm" className="sm:p-6">
+        <SectionHeader
+          number={10}
+          title="Etapas Customizadas da Inscrição"
+          actions={
+            <span className="inline-flex items-center text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
+              {etapasCustomizadas.length === 0
+                ? 'Nenhuma etapa adicional'
+                : `${etapasCustomizadas.length} etapa${etapasCustomizadas.length > 1 ? 's' : ''}`}
+            </span>
+          }
+        >
+          <p className="text-sm text-slate-500 mt-2">
+            Adicione etapas extras ao formulário do proponente (ex.: Plano de Trabalho, Equipe, Cronograma Físico-Financeiro).
+            Aparecem entre &ldquo;Dados&rdquo; e &ldquo;Anexos&rdquo; no wizard de inscrição.
+          </p>
+        </SectionHeader>
+
+        {!collapsedSections[10] && (
+          <div className="mt-4">
+            <EtapasCustomizadasEditor
+              value={etapasCustomizadas}
+              onChange={setEtapasCustomizadas}
+            />
           </div>
         )}
       </Card>

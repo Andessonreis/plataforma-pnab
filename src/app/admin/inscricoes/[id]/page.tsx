@@ -36,7 +36,7 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
   const inscricao = await prisma.inscricao.findUnique({
     where: { id },
     include: {
-      edital: { select: { titulo: true, slug: true, ano: true, criteriosAvaliacao: true, camposFormulario: true, formulaAvaliacao: true } },
+      edital: { select: { titulo: true, slug: true, ano: true, criteriosAvaliacao: true, camposFormulario: true, etapasCustomizadas: true, formulaAvaliacao: true } },
       proponente: {
         select: { nome: true, cpfCnpj: true, email: true, telefone: true, tipoProponente: true },
       },
@@ -116,7 +116,21 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
 
   const camposFormulario = (Array.isArray(inscricao.edital.camposFormulario)
     ? inscricao.edital.camposFormulario : []) as unknown as CampoFormulario[]
+  const etapasCustomizadas = (Array.isArray(inscricao.edital.etapasCustomizadas)
+    ? inscricao.edital.etapasCustomizadas : []) as unknown as import('@/types/etapa-customizada').EtapaCustomizada[]
   const camposMap = new Map(camposFormulario.map(c => [c.nome, c]))
+
+  // Conjunto dos nomes de campo "donos" de cada etapa customizada, para agrupar os valores
+  const etapasOrdenadas = [...etapasCustomizadas].sort((a, b) => a.ordem - b.ordem)
+  const nomesDaEtapaDados = new Set(camposFormulario.map(c => c.nome))
+  const nomesPorEtapa = new Map<string, Set<string>>()
+  for (const etapa of etapasOrdenadas) {
+    nomesPorEtapa.set(etapa.id, new Set(etapa.campos.map(c => c.nome)))
+  }
+  const etapaCampoMap = new Map<string, CampoFormulario>()
+  for (const etapa of etapasOrdenadas) {
+    for (const c of etapa.campos) etapaCampoMap.set(c.nome, c)
+  }
 
   return (
     <section>
@@ -177,33 +191,65 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
             </dl>
           </Card>
 
-          {/* Dados da proposta */}
-          {Object.keys(campos).length > 0 && (
+          {/* Dados da proposta (etapa "Dados") */}
+          {Object.entries(campos).filter(([key]) => nomesDaEtapaDados.has(key)).length > 0 && (
             <Card padding="sm" className="sm:p-6">
               <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Dados da Proposta</h2>
               <dl className="space-y-3">
-                {Object.entries(campos).map(([key, value]) => {
-                  const campoConfig = camposMap.get(key)
-                  const tiposRestritos = campoConfig?.tiposProponente
-                  return (
-                    <div key={key} className="border-b border-slate-100 pb-3 last:border-0 last:pb-0">
-                      <dt className="text-sm font-medium text-slate-500 flex items-center gap-2">
-                        <span className="capitalize">{campoConfig?.label ?? key.replace(/_/g, ' ')}</span>
-                        {tiposRestritos && tiposRestritos.length > 0 && (
-                          <span className="text-[10px] font-medium text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
-                            {tiposRestritos.map((t: TipoProponente) => tipoLabels[t] ?? t).join(', ')}
-                          </span>
-                        )}
-                      </dt>
-                      <dd className="text-sm text-slate-900 mt-0.5 whitespace-pre-wrap break-words">
-                        {typeof value === 'string' ? value : JSON.stringify(value)}
-                      </dd>
-                    </div>
-                  )
-                })}
+                {Object.entries(campos)
+                  .filter(([key]) => nomesDaEtapaDados.has(key))
+                  .map(([key, value]) => {
+                    const campoConfig = camposMap.get(key)
+                    const tiposRestritos = campoConfig?.tiposProponente
+                    return (
+                      <div key={key} className="border-b border-slate-100 pb-3 last:border-0 last:pb-0">
+                        <dt className="text-sm font-medium text-slate-500 flex items-center gap-2">
+                          <span className="capitalize">{campoConfig?.label ?? key.replace(/_/g, ' ')}</span>
+                          {tiposRestritos && tiposRestritos.length > 0 && (
+                            <span className="text-[10px] font-medium text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+                              {tiposRestritos.map((t: TipoProponente) => tipoLabels[t] ?? t).join(', ')}
+                            </span>
+                          )}
+                        </dt>
+                        <dd className="text-sm text-slate-900 mt-0.5 whitespace-pre-wrap break-words">
+                          {typeof value === 'string' ? value : JSON.stringify(value)}
+                        </dd>
+                      </div>
+                    )
+                  })}
               </dl>
             </Card>
           )}
+
+          {/* Etapas customizadas — cada etapa vira uma seção separada */}
+          {etapasOrdenadas.map((etapa) => {
+            const nomes = nomesPorEtapa.get(etapa.id) ?? new Set<string>()
+            const entradas = Object.entries(campos).filter(([key]) => nomes.has(key))
+            if (entradas.length === 0) return null
+            return (
+              <Card key={etapa.id} padding="sm" className="sm:p-6">
+                <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-1">{etapa.titulo}</h2>
+                {etapa.descricao && (
+                  <p className="text-xs sm:text-sm text-slate-500 mb-3 sm:mb-4 whitespace-pre-line">{etapa.descricao}</p>
+                )}
+                <dl className="space-y-3">
+                  {entradas.map(([key, value]) => {
+                    const campoConfig = etapaCampoMap.get(key)
+                    return (
+                      <div key={key} className="border-b border-slate-100 pb-3 last:border-0 last:pb-0">
+                        <dt className="text-sm font-medium text-slate-500 capitalize">
+                          {campoConfig?.label ?? key.replace(/_/g, ' ')}
+                        </dt>
+                        <dd className="text-sm text-slate-900 mt-0.5 whitespace-pre-wrap break-words">
+                          {typeof value === 'string' ? value : JSON.stringify(value)}
+                        </dd>
+                      </div>
+                    )
+                  })}
+                </dl>
+              </Card>
+            )
+          })}
 
           {/* Anexos */}
           {inscricao.anexos.length > 0 && (

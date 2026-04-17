@@ -106,7 +106,12 @@ export async function submitInscricao(id: string, userId: string, ip?: string) {
   const inscricao = await prisma.inscricao.findUnique({
     where: { id },
     include: {
-      edital: { select: { id: true, titulo: true, status: true, categorias: true, camposFormulario: true } },
+      edital: {
+        select: {
+          id: true, titulo: true, status: true, categorias: true,
+          camposFormulario: true, etapasCustomizadas: true,
+        },
+      },
       anexos: true,
       proponente: { select: { email: true, nome: true, tipoProponente: true } },
     },
@@ -123,9 +128,16 @@ export async function submitInscricao(id: string, userId: string, ip?: string) {
     throw new ServiceError('BAD_REQUEST', 'Selecione uma categoria antes de enviar.')
   }
 
-  // Valida campos obrigatórios (filtrados por tipo de proponente)
+  // Valida campos obrigatórios (dados + etapas customizadas), filtrados por tipo de proponente
   const allCampos = (inscricao.edital.camposFormulario as unknown as CampoFormulario[]) || []
-  const camposFormulario = filterCamposByTipo(allCampos, inscricao.proponente.tipoProponente)
+  const etapas = Array.isArray(inscricao.edital.etapasCustomizadas)
+    ? (inscricao.edital.etapasCustomizadas as unknown as Array<{ campos: CampoFormulario[] }>)
+    : []
+  const camposDeEtapas = etapas.flatMap((e) => e.campos || [])
+  const camposFormulario = filterCamposByTipo(
+    [...allCampos, ...camposDeEtapas],
+    inscricao.proponente.tipoProponente,
+  )
   const campos = (inscricao.campos as Record<string, unknown>) || {}
   const camposFaltando: string[] = []
 

@@ -55,6 +55,7 @@ export default async function EditarEditalPage({ params }: Props) {
   // Migra cronograma legado para formato novo (se necessário)
   const cronograma = migrateLegacyCronograma(edital.cronograma) as CronogramaItem[]
   const camposFormulario = (Array.isArray(edital.camposFormulario) ? edital.camposFormulario : []) as unknown as CampoFormulario[]
+  const etapasCustomizadas = (Array.isArray(edital.etapasCustomizadas) ? edital.etapasCustomizadas : []) as unknown as import('@/types/etapa-customizada').EtapaCustomizada[]
 
   return (
     <section>
@@ -84,6 +85,7 @@ export default async function EditarEditalPage({ params }: Props) {
           regrasElegibilidade: edital.regrasElegibilidade ?? '',
           cronograma,
           camposFormulario,
+          etapasCustomizadas,
           status: edital.status as EditalStatus,
           vagasContemplados: edital.vagasContemplados,
           vagasSuplentes: edital.vagasSuplentes,
