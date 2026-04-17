@@ -292,6 +292,36 @@ Este é um portal público de política cultural — acessibilidade não é opci
 | `style` | Formatação, lint |
 | `chore` | Manutenção (deps, config) |
 
+### Fluxo de trabalho Git (PR-first)
+
+O repo está em plano gratuito privado — branch protection não está disponível tecnicamente. Por isso, o fluxo abaixo é **convenção**, não imposição do GitHub.
+
+**Regra geral**: toda mudança vai via **Pull Request**, não push direto na `main`.
+
+1. Criar branch a partir da `main`: `feat/<nome>`, `fix/<nome>`, `chore/<nome>`, `docs/<nome>`, `test/<nome>`.
+2. Commits atômicos por tema (um commit = uma ideia coerente).
+3. `git push -u origin <branch>`.
+4. Abrir PR via `gh pr create --base main` com título curto (< 70 chars) e descrição com **Summary** + **Test plan**.
+5. Esperar o CI (`Lint, Typecheck & Tests`) ficar verde.
+6. Mergear apenas após o CI passar — preferir "Squash and merge" para manter histórico linear.
+7. O deploy é automático após o merge (gate: `workflow_run` só dispara se CI passou).
+
+**Exceções** (push direto tolerado):
+
+| Caso | Push direto OK? |
+|------|-----------------|
+| Hotfix crítico em produção | ✅ com autorização explícita do usuário |
+| Feature nova | ❌ sempre PR |
+| Mudança em workflow/deploy/CI | ❌ sempre PR |
+| Migração de schema Prisma | ❌ sempre PR |
+| Alteração em segurança/RBAC/auth | ❌ sempre PR |
+
+**Notas para Claude Code**:
+- Não executar `git push origin main` direto (exceto hotfix autorizado).
+- Não auto-aprovar PR próprio — o usuário aprova/mergeia.
+- Ao abrir PR, reportar o link no chat para o usuário revisar.
+- Se precisar de permissão (push, branch protection, etc.) e for negada, **parar e perguntar** em vez de tentar workarounds.
+
 ---
 
 ## Portas
