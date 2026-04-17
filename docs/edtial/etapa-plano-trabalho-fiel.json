@@ -1,0 +1,347 @@
+[
+  {
+    "id": "plano_trabalho",
+    "titulo": "Plano de Trabalho (Anexo 03)",
+    "descricao": "Preencha todas as seções do Plano de Trabalho conforme o Anexo 03 do edital.",
+    "ordem": 0,
+    "campos": [
+      {
+        "nome": "pt_info_despesas",
+        "label": "ORIENTAÇÕES SOBRE A ELABORAÇÃO DO PLANO DE TRABALHO",
+        "tipo": "info",
+        "variante": "info",
+        "conteudo": "PODERÃO SER PAGAS com recursos vinculados à parceria, desde que aprovadas no plano de trabalho, as despesas com:\n\n• Remuneração da equipe dimensionada no projeto, inclusive pessoal próprio da entidade cultural, tais como dirigentes e funcionários da área administrativa, durante a vigência da parceria, podendo contemplar salário, impostos, contribuições sociais, FGTS, férias, 13º salário, salários proporcionais, verbas rescisórias e demais encargos, desde que: estejam previstos no Plano de Trabalho e sejam proporcionais ao tempo efetivamente dedicado; sejam compatíveis com o valor de mercado; observem os acordos e convenções coletivas; não sejam superiores ao teto da remuneração do Poder Executivo federal.\n\n• Deslocamento, hospedagem e alimentação, quando a execução do objeto da parceria o exija e/ou para atuação em rede.\n\n• Locação ou aquisição de equipamentos e materiais essenciais à execução do objeto, desde que justificados no Plano de Trabalho.\n\n• Custos indiretos (internet, transporte, aluguel, telefone, água, energia, contabilidade, assessoria jurídica, taxas bancárias da conta específica) até o limite de 20% do valor global do projeto.\n\n• Despesas com publicidade até 20% do valor global do projeto.\n\n• Despesas de capital e de custeio, previstas nos projetos.\n\nNÃO PODERÃO SER PAGAS com recursos da parceria:\n\n• Despesas para elaboração do projeto e/ou captação de recursos.\n• Taxa de administração, taxa de gerência ou similar.\n• Pagamento a servidor ou empregado público, salvo hipóteses legais.\n• Multas, juros ou correção monetária (salvo atrasos da administração).\n• Despesas com finalidade diversa do objeto do plano de trabalho.\n• Despesas anteriores ao início da vigência do Termo de Compromisso Cultural.\n• Pagamento em data posterior à vigência da parceria (salvo fato gerador durante a vigência).\n• Publicidade sem caráter educativo ou com promoção pessoal.\n• Despesas que desvirtuem a natureza sem fins lucrativos da entidade."
+      },
+      {
+        "nome": "pt_info_acessibilidade",
+        "label": "ACESSIBILIDADE (obrigatória conforme IN/MinC nº 10/2023)",
+        "tipo": "info",
+        "variante": "info",
+        "conteudo": "O projeto DEVERÁ prever medidas de acessibilidade arquitetônica, comunicacional e atitudinal compatíveis com as características dos produtos resultantes, contemplando:\n\nI — ACESSIBILIDADE ARQUITETÔNICA: recursos para acesso de pessoas com deficiência, mobilidade reduzida ou idosas — rotas acessíveis, piso tátil, rampas, elevadores adequados, corrimãos/guarda-corpos, banheiros adaptados, vagas de estacionamento, assentos para PCD/obesos/idosos, iluminação adequada.\n\nII — ACESSIBILIDADE COMUNICACIONAL: Libras, Braille, comunicação tátil, audiodescrição, legendas para surdos, linguagem simples, textos adaptados para leitor de tela.\n\nIII — ACESSIBILIDADE ATITUDINAL: capacitação de equipes, contratação de profissionais com deficiência e especializados, sensibilização de agentes culturais, eliminação de atitudes capacitistas.\n\nOs recursos para medidas de acessibilidade deverão estar previstos nos custos do projeto desde a sua concepção. Os materiais de divulgação serão disponibilizados em formatos acessíveis, com os símbolos universais de acessibilidade de forma expressa e visível."
+      },
+      {
+        "nome": "pt_info_atencao_custos",
+        "label": "Atenção!",
+        "tipo": "info",
+        "variante": "atencao",
+        "conteudo": "Importante observar as regras mencionadas nos itens 8.0 ao 8.9 do edital, referentes à estimativa de custos do plano de trabalho."
+      },
+
+      {
+        "nome": "pt_info_secao1",
+        "label": "1. PROPOSTA DE TRABALHO",
+        "tipo": "info",
+        "variante": "info",
+        "conteudo": "Descreva a proposta detalhando o objeto, o público beneficiado e os resultados esperados."
+      },
+      {
+        "nome": "pt_1_1_objeto",
+        "label": "1.1 Objeto do Termo de Compromisso Cultural",
+        "tipo": "textarea",
+        "obrigatorio": true,
+        "hint": "Defina de forma concisa, indicando O QUE e ONDE se pretende realizar."
+      },
+      {
+        "nome": "pt_1_2_publico_alvo",
+        "label": "1.2 Público-alvo beneficiado",
+        "tipo": "textarea",
+        "obrigatorio": true,
+        "hint": "Quem será beneficiado com a realização do projeto e com o objeto proposto."
+      },
+      {
+        "nome": "pt_1_3_resultados",
+        "label": "1.3 Resultados esperados",
+        "tipo": "textarea",
+        "obrigatorio": true,
+        "hint": "Considerando os desdobramentos e os resultados das metas."
+      },
+
+      {
+        "nome": "pt_info_secao2",
+        "label": "2. MOTIVAÇÃO DO PROJETO",
+        "tipo": "info",
+        "variante": "info",
+        "conteudo": "Defina os objetivos do projeto (geral e específicos)."
+      },
+      {
+        "nome": "pt_2_1_a_objetivo_geral",
+        "label": "2.1.a Objetivo geral",
+        "tipo": "textarea",
+        "obrigatorio": true
+      },
+      {
+        "nome": "pt_2_1_b_objetivos_especificos",
+        "label": "2.1.b Objetivos específicos",
+        "tipo": "textarea",
+        "obrigatorio": true,
+        "hint": "Liste no máximo 10 objetivos específicos, um por linha."
+      },
+
+      {
+        "nome": "pt_info_secao3",
+        "label": "3. METAS DO PROJETO",
+        "tipo": "info",
+        "variante": "atencao",
+        "conteudo": "ATENÇÃO, ENTIDADE CULTURAL!\n\nNa elaboração do seu Plano de Trabalho, devem ser OBRIGATORIAMENTE incluídas as três metas abaixo:\n\na. META 1 — Formação e Educação Cultural\nb. META 2 — Mostra Artística/Cultural\nc. META 3 — Registro e Divulgação"
+      },
+
+      {
+        "nome": "pt_info_meta1",
+        "label": "META 1 — FORMAÇÃO E EDUCAÇÃO CULTURAL",
+        "tipo": "info",
+        "variante": "info",
+        "conteudo": "Desenvolvimento de atividades educativas de forma regular, continuada e gratuita voltadas para a formação cultural — oficinas, cursos, workshops, palestras, seminários —, com elaboração de conteúdos educativos relacionados a cultura, história, artes e temas relevantes para a comunidade, valorizando e fortalecendo a diversidade e as identidades culturais locais, incentivando o protagonismo das comunidades, e/ou promovendo integração entre instituições públicas de educação formal (escolas, Institutos Federais, universidades) e saberes orgânicos, comunitários, populares e/ou tradicionais (mestres e mestras)."
+      },
+      {
+        "nome": "pt_meta1_planos",
+        "label": "a) Planos de Formação e Capacitação",
+        "tipo": "grupo_repetivel",
+        "labelItem": "Plano de Formação",
+        "obrigatorio": true,
+        "itemMin": 1,
+        "hint": "Adicione um bloco para cada Plano previsto.",
+        "subcampos": [
+          { "nome": "tema", "label": "Tema da ação de formação / capacitação", "tipo": "texto", "obrigatorio": true },
+          { "nome": "ementa", "label": "Ementa (resumo do conteúdo)", "tipo": "textarea", "obrigatorio": true },
+          { "nome": "publico", "label": "Público beneficiário", "tipo": "texto", "obrigatorio": true },
+          { "nome": "vagas", "label": "Quantidade de vagas", "tipo": "numero", "obrigatorio": true },
+          { "nome": "criterios_selecao", "label": "Critérios de seleção (se a procura exceder as vagas)", "tipo": "textarea" },
+          { "nome": "num_turmas", "label": "Nº de turmas", "tipo": "numero", "obrigatorio": true },
+          { "nome": "periodo", "label": "Período da formação", "tipo": "textarea", "obrigatorio": true, "hint": "Mês de execução (1º ao 12º), frequência semanal, período do dia, hora/aula" },
+          { "nome": "materiais", "label": "Materiais pedagógicos", "tipo": "textarea", "obrigatorio": true }
+        ]
+      },
+      {
+        "nome": "pt_meta1_acessibilidade",
+        "label": "b) Ações de acessibilidade cultural previstas (META 1)",
+        "tipo": "textarea"
+      },
+      {
+        "nome": "pt_meta1_resultados",
+        "label": "c) Resultados esperados (META 1)",
+        "tipo": "textarea",
+        "obrigatorio": true
+      },
+      {
+        "nome": "pt_meta1_produtos",
+        "label": "d) Produtos gerados (META 1)",
+        "tipo": "textarea",
+        "obrigatorio": true
+      },
+
+      {
+        "nome": "pt_info_meta2",
+        "label": "META 2 — MOSTRA ARTÍSTICA/CULTURAL",
+        "tipo": "info",
+        "variante": "info",
+        "conteudo": "Realização de eventos culturais — festivais, mostras, exposições, apresentações teatrais, musicais, de dança — que valorizem a diversidade cultural, contemplando diferentes linguagens artísticas e expressões, com incentivo à participação de artistas locais, mestres e mestras das culturas populares e tradicionais, grupos culturais e comunidade em geral, divulgando/compartilhando o trabalho artístico-cultural produzido pelos participantes do projeto, localmente e em outras regiões."
+      },
+      {
+        "nome": "pt_meta2_plano_acao",
+        "label": "a) Plano de Ação da META 2",
+        "tipo": "tabela",
+        "obrigatorio": true,
+        "linhaMin": 1,
+        "colunas": [
+          { "nome": "descricao", "label": "Descrição da ação", "tipo": "textarea", "obrigatorio": true },
+          { "nome": "objetivos", "label": "Objetivos da ação", "tipo": "textarea", "obrigatorio": true },
+          { "nome": "como", "label": "Como serão realizadas as atividades?", "tipo": "textarea", "obrigatorio": true }
+        ]
+      },
+      {
+        "nome": "pt_meta2_acessibilidade",
+        "label": "b) Ações de acessibilidade cultural previstas (META 2)",
+        "tipo": "textarea"
+      },
+      {
+        "nome": "pt_meta2_resultados",
+        "label": "c) Resultados esperados (META 2)",
+        "tipo": "textarea",
+        "obrigatorio": true
+      },
+      {
+        "nome": "pt_meta2_produtos",
+        "label": "d) Produtos gerados (META 2)",
+        "tipo": "textarea",
+        "obrigatorio": true
+      },
+
+      {
+        "nome": "pt_info_meta3",
+        "label": "META 3 — REGISTRO E DIVULGAÇÃO",
+        "tipo": "info",
+        "variante": "info",
+        "conteudo": "Desenvolvimento de estratégias de divulgação para ampliar o alcance das ações culturais — materiais impressos, cartazes, faixas, redes sociais, sites, mídia local —, e estabelecimento de parcerias com veículos de comunicação, órgãos públicos, instituições culturais e atores locais.\n\nCriação de mecanismos para o registro e documentação das atividades realizadas — relatórios, fotos, vídeos, áudios."
+      },
+      {
+        "nome": "pt_meta3_plano_acao",
+        "label": "a) Plano de Ação da META 3",
+        "tipo": "tabela",
+        "obrigatorio": true,
+        "linhaMin": 1,
+        "colunas": [
+          { "nome": "descricao", "label": "Descrição da ação", "tipo": "textarea", "obrigatorio": true },
+          { "nome": "objetivos", "label": "Objetivos da ação", "tipo": "textarea", "obrigatorio": true },
+          { "nome": "como", "label": "Como serão realizadas as atividades?", "tipo": "textarea", "obrigatorio": true }
+        ]
+      },
+      {
+        "nome": "pt_meta3_acessibilidade",
+        "label": "b) Ações de acessibilidade cultural previstas (META 3)",
+        "tipo": "textarea"
+      },
+      {
+        "nome": "pt_meta3_resultados",
+        "label": "c) Resultados esperados (META 3)",
+        "tipo": "textarea",
+        "obrigatorio": true
+      },
+      {
+        "nome": "pt_meta3_produtos",
+        "label": "d) Produtos gerados (META 3)",
+        "tipo": "textarea",
+        "obrigatorio": true
+      },
+
+      {
+        "nome": "pt_info_secao4",
+        "label": "4. EQUIPE",
+        "tipo": "info",
+        "variante": "info",
+        "conteudo": "Indique os profissionais e empresas envolvidos no projeto, associados à meta que executam."
+      },
+      {
+        "nome": "pt_4_equipe",
+        "label": "Equipe do projeto",
+        "tipo": "tabela",
+        "obrigatorio": true,
+        "linhaMin": 1,
+        "colunas": [
+          { "nome": "meta", "label": "Meta", "tipo": "select", "obrigatorio": true, "opcoes": ["META 1 — Formação", "META 2 — Mostra Artística", "META 3 — Registro e Divulgação", "Gestão"] },
+          { "nome": "nome", "label": "Nome / Empresa", "tipo": "texto", "obrigatorio": true },
+          { "nome": "funcao", "label": "Função no projeto", "tipo": "texto", "obrigatorio": true },
+          { "nome": "cpf_cnpj", "label": "CPF / CNPJ", "tipo": "texto", "obrigatorio": true },
+          { "nome": "negro", "label": "Pessoa negra?", "tipo": "select", "obrigatorio": true, "opcoes": ["Sim", "Não", "Não informado"] },
+          { "nome": "indigena", "label": "Pessoa indígena?", "tipo": "select", "obrigatorio": true, "opcoes": ["Sim", "Não", "Não informado"] },
+          { "nome": "pcd", "label": "Pessoa com deficiência?", "tipo": "select", "obrigatorio": true, "opcoes": ["Sim", "Não", "Não informado"] }
+        ]
+      },
+
+      {
+        "nome": "pt_info_secao5",
+        "label": "5. CRONOGRAMA DE EXECUÇÃO",
+        "tipo": "info",
+        "variante": "info",
+        "conteudo": "Descreva os passos a serem seguidos para a execução do projeto."
+      },
+      {
+        "nome": "pt_5_cronograma",
+        "label": "Cronograma de execução",
+        "tipo": "tabela",
+        "obrigatorio": true,
+        "linhaMin": 1,
+        "colunas": [
+          { "nome": "meta", "label": "Meta", "tipo": "select", "obrigatorio": true, "opcoes": ["META 1", "META 2", "META 3"] },
+          { "nome": "atividade_geral", "label": "Atividade Geral", "tipo": "texto", "obrigatorio": true },
+          { "nome": "etapa", "label": "Etapa", "tipo": "texto", "obrigatorio": true },
+          { "nome": "descricao", "label": "Descrição", "tipo": "textarea", "obrigatorio": true },
+          { "nome": "inicio", "label": "Início", "tipo": "data", "obrigatorio": true },
+          { "nome": "fim", "label": "Fim", "tipo": "data", "obrigatorio": true }
+        ]
+      },
+
+      {
+        "nome": "pt_info_secao6",
+        "label": "6. PLANO DE COMUNICAÇÃO",
+        "tipo": "info",
+        "variante": "info",
+        "conteudo": "Elabore um Plano de Comunicação e Divulgação de acordo com as ações e atividades previstas nas Metas."
+      },
+      {
+        "nome": "pt_6_comunicacao",
+        "label": "Plano de Comunicação",
+        "tipo": "tabela",
+        "obrigatorio": true,
+        "linhaMin": 1,
+        "colunas": [
+          { "nome": "item_peca", "label": "Item / Peça", "tipo": "texto", "obrigatorio": true, "hint": "O que será realizado?" },
+          { "nome": "formato", "label": "Formato / Suporte", "tipo": "texto", "obrigatorio": true, "hint": "Formato, duração, suporte" },
+          { "nome": "quantidade_periodo", "label": "Quantidade / Período", "tipo": "texto", "obrigatorio": true },
+          { "nome": "veiculo", "label": "Veículo / Circulação", "tipo": "texto", "obrigatorio": true, "hint": "Como e onde será utilizada" },
+          { "nome": "estrategia", "label": "Estratégia de divulgação", "tipo": "textarea", "obrigatorio": true }
+        ]
+      },
+
+      {
+        "nome": "pt_info_secao7",
+        "label": "7. COMITÊ GESTOR",
+        "tipo": "info",
+        "variante": "info",
+        "conteudo": "Este Edital potencializará a atuação dos Pontos de Cultura para que promovam o acesso da população aos bens e serviços culturais nos territórios e comunidades onde atuam, com a participação de um Comitê Gestor.\n\nO Comitê Gestor será formado para a realização das ações do projeto de forma compartilhada com o Ponto de Cultura, sendo composto por:\n\n• No mínimo 4 (quatro) entidades, grupos e/ou coletivos da sociedade civil (com atuação ou não na área da cultura). Não há necessidade de que tenham constituição jurídica.\n• Pelo menos 1 (um) serviço público presente na comunidade de atuação do Ponto de Cultura — equipamento cultural (CEU, centro cultural, teatro, museu, biblioteca etc.), escola, unidade básica de saúde, CRAS, entre outros.\n\nNão há necessidade de formalização de parceria, mas deve haver consentimento e acordo. Sugere-se que os integrantes realizem, no mínimo, um encontro para discussão sobre o projeto.\n\nA responsabilidade pela veracidade das informações é da entidade proponente."
+      },
+      {
+        "nome": "pt_7_1_comite_composicao",
+        "label": "7.1 Composição do Comitê Gestor",
+        "tipo": "tabela",
+        "obrigatorio": true,
+        "linhaMin": 5,
+        "hint": "Mínimo 4 entidades da sociedade civil + 1 serviço público (total ≥ 5 linhas).",
+        "colunas": [
+          { "nome": "entidade", "label": "Nome da Entidade / Coletivo / Instituição", "tipo": "texto", "obrigatorio": true },
+          { "nome": "area_atuacao", "label": "Área de atuação", "tipo": "texto", "obrigatorio": true },
+          { "nome": "tipo_entidade", "label": "Sociedade Civil ou Serviço Público", "tipo": "select", "obrigatorio": true, "opcoes": ["Sociedade Civil", "Serviço Público"] },
+          { "nome": "contato", "label": "Endereço eletrônico / Redes sociais", "tipo": "texto" },
+          { "nome": "responsavel", "label": "Nome da pessoa responsável", "tipo": "texto", "obrigatorio": true },
+          { "nome": "telefone", "label": "Telefone da pessoa responsável", "tipo": "texto", "obrigatorio": true }
+        ]
+      },
+      {
+        "nome": "pt_7_2_comite_papel",
+        "label": "7.2 Qual papel terá o Comitê Gestor no projeto?",
+        "tipo": "textarea",
+        "obrigatorio": true
+      },
+      {
+        "nome": "pt_7_3_comite_organizacao",
+        "label": "7.3 Como a atuação será organizada (frequência de encontros, metodologias etc.)?",
+        "tipo": "textarea",
+        "obrigatorio": true
+      },
+
+      {
+        "nome": "pt_info_secao8",
+        "label": "8. CAPACIDADE TÉCNICA E OPERACIONAL",
+        "tipo": "info",
+        "variante": "info",
+        "conteudo": "Demonstre a capacidade técnica e operacional da entidade cultural para realizar o projeto."
+      },
+      {
+        "nome": "pt_8_1_experiencia",
+        "label": "8.1 Experiência da entidade (mínimo 3 anos no objeto proposto ou similar)",
+        "tipo": "textarea",
+        "obrigatorio": true,
+        "hint": "Indique projetos em planejamento, execução ou já executados com mesmo objeto ou similar — órgão/instituição responsável, duração, período, local/abrangência, atividades desenvolvidas."
+      },
+      {
+        "nome": "pt_8_2_estrutura",
+        "label": "8.2 Estrutura organizacional, equipamentos e estrutura tecnológica",
+        "tipo": "textarea",
+        "obrigatorio": true,
+        "hint": "Espaço físico, quadro de pessoal e ferramentas tecnológicas para o desenvolvimento de atividades compatíveis com o projeto."
+      },
+
+      {
+        "nome": "pt_info_secao9",
+        "label": "9. INFORMAÇÕES COMPLEMENTARES",
+        "tipo": "info",
+        "variante": "info",
+        "conteudo": "Inclua informações relevantes que ainda não foram descritas nos campos deste Plano de Trabalho."
+      },
+      {
+        "nome": "pt_9_complementares",
+        "label": "Informações complementares",
+        "tipo": "textarea"
+      }
+    ]
+  }
+]
