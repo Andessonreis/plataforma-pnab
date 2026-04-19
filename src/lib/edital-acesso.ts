@@ -3,15 +3,26 @@ import { prisma } from '@/lib/db'
 /**
  * Verifica se o usuário tem acesso a um edital específico.
  *
- * Se o edital NÃO tem equipe configurada para aquela função → acesso liberado (backwards compat).
- * Se tem equipe → só membros atribuídos.
+ * AVALIADOR: acesso somente quando explicitamente adicionado à equipe
+ * (sem compat — admin sempre define quem avalia na Seção 9 do edital).
+ * HABILITADOR: se o edital NÃO tem equipe configurada → liberado (backwards compat);
+ * se tem equipe → só membros atribuídos.
  */
 export async function temAcessoEdital(
   userId: string,
   editalId: string,
   funcao: 'AVALIADOR' | 'HABILITADOR',
 ): Promise<boolean> {
-  // Conta membros com essa função nesse edital
+  // AVALIADOR: sem compat. Sempre precisa estar explicitamente na equipe.
+  if (funcao === 'AVALIADOR') {
+    const membro = await prisma.editalMembro.findUnique({
+      where: { editalId_userId_funcao: { editalId, userId, funcao } },
+      select: { id: true },
+    })
+    return !!membro
+  }
+
+  // HABILITADOR: com compat. Conta membros com essa função nesse edital
   const totalMembros = await prisma.editalMembro.count({
     where: { editalId, funcao },
   })
@@ -31,17 +42,28 @@ export async function temAcessoEdital(
 /**
  * Retorna IDs de editais visíveis para o usuário com determinada função.
  *
- * - Editais sem equipe configurada para a função → visíveis para todos com aquele role.
- * - Editais com equipe → só para atribuídos.
+ * AVALIADOR: somente editais onde o user foi explicitamente adicionado
+ * na equipe (sem compat). Retorna sempre array.
  *
- * Retorna null se não há nenhum edital com equipe configurada (ou seja, todos são visíveis).
- * Retorna array de IDs se precisa filtrar.
+ * HABILITADOR (compat):
+ * - Editais sem equipe configurada → visíveis para todos com o role.
+ * - Editais com equipe → só para atribuídos.
+ * - Retorna null se não há nenhum edital com equipe.
  */
 export async function getEditaisVisiveis(
   userId: string,
   funcao: 'AVALIADOR' | 'HABILITADOR',
 ): Promise<string[] | null> {
-  // Editais que TÊM pelo menos um membro com essa função
+  // AVALIADOR: sem compat. Retorna só os editais onde está na equipe (pode ser []).
+  if (funcao === 'AVALIADOR') {
+    const meus = await prisma.editalMembro.findMany({
+      where: { userId, funcao },
+      select: { editalId: true },
+    })
+    return meus.map((e) => e.editalId)
+  }
+
+  // HABILITADOR: compat — editais que TÊM pelo menos um membro com essa função
   const editaisComEquipe = await prisma.editalMembro.groupBy({
     by: ['editalId'],
     where: { funcao },
