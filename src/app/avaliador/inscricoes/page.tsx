@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { Card, Badge, Pagination, Button, EmptyState, FadeIn, IconClipboard } from '@/components/ui'
 import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
+import { getEditaisVisiveis } from '@/lib/edital-acesso'
 import type { InscricaoStatus } from '@prisma/client'
 
 export const metadata: Metadata = {
@@ -24,8 +25,18 @@ export default async function AvaliadorInscricoesPage({ searchParams }: Props) {
   const pageSize = 15
   const searchQuery = params.search || undefined
 
+  // Avaliador vê inscrições de editais onde ele é membro da equipe (função AVALIADOR).
+  // Se o edital não tem equipe configurada, todos os avaliadores veem (compat).
+  // Só aparecem inscrições de editais em fase de avaliação/resultado (não rascunho de inscrição).
+  const editaisVisiveis = await getEditaisVisiveis(session.user.id, 'AVALIADOR')
   const where: Record<string, unknown> = {
-    avaliacoes: { some: { avaliadorId: session.user.id } },
+    status: { notIn: ['RASCUNHO', 'INABILITADA'] },
+    edital: {
+      status: { in: ['AVALIACAO', 'RESULTADO_PRELIMINAR', 'RECURSO', 'RESULTADO_FINAL', 'ENCERRADO'] },
+    },
+  }
+  if (editaisVisiveis !== null) {
+    where.editalId = { in: editaisVisiveis }
   }
   if (searchQuery) {
     where.OR = [

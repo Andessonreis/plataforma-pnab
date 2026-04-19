@@ -54,13 +54,10 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
 
   if (!inscricao) notFound()
 
-  // AVALIADOR só acessa inscrições atribuídas a ele
+  // AVALIADOR acessa inscrições de editais onde é membro da equipe (ou todos, se sem equipe)
   if (isAvaliador) {
-    const assignedById = await prisma.avaliacao.findUnique({
-      where: { inscricaoId_avaliadorId: { inscricaoId: id, avaliadorId: session.user.id } },
-      select: { id: true },
-    })
-    if (!assignedById) {
+    const ok = await temAcessoEdital(session.user.id, inscricao.editalId, 'AVALIADOR')
+    if (!ok) {
       redirect('/admin/inscricoes?aviso=nao-atribuido')
     }
   }

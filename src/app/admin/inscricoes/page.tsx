@@ -48,9 +48,21 @@ export default async function AdminInscricoesPage({ searchParams }: Props) {
     ]
   }
 
-  // AVALIADOR só vê inscrições atribuídas a ele
+  // AVALIADOR vê inscrições de editais onde é membro da equipe (função AVALIADOR),
+  // em fases de avaliação em diante. Se o edital não tem equipe, todos veem (compat).
   if (isAvaliador) {
-    where.avaliacoes = { some: { avaliadorId: session.user.id } }
+    const visiveis = await getEditaisVisiveis(session.user.id, 'AVALIADOR')
+    where.status = { notIn: ['RASCUNHO', 'INABILITADA'] }
+    where.edital = {
+      status: { in: ['AVALIACAO', 'RESULTADO_PRELIMINAR', 'RECURSO', 'RESULTADO_FINAL', 'ENCERRADO'] },
+    }
+    if (visiveis) {
+      if (editalIdFilter && !visiveis.includes(editalIdFilter)) {
+        where.editalId = { in: [] }
+      } else if (!editalIdFilter) {
+        where.editalId = { in: visiveis }
+      }
+    }
   }
 
   // HABILITADOR só vê inscrições de editais atribuídos (ou todos, se sem equipe)
