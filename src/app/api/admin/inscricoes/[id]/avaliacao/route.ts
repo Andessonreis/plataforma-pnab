@@ -7,6 +7,7 @@ import { logAudit } from '@/lib/audit'
 import { CRITERIOS_AVALIACAO_PADRAO } from '@/lib/avaliacao-criterios'
 import type { CriterioAvaliacao } from '@/lib/avaliacao-criterios'
 import { calculateTotal } from '@/lib/results/formula'
+import { temAcessoEdital } from '@/lib/edital-acesso'
 import type { UserRole } from '@prisma/client'
 
 export const runtime = 'nodejs'
@@ -150,6 +151,7 @@ export async function PUT(
         id: true,
         numero: true,
         status: true,
+        editalId: true,
         edital: {
           select: {
             formulaAvaliacao: true,
@@ -167,6 +169,20 @@ export async function PUT(
       res.headers.set('X-Request-Id', requestId)
       res.headers.set('Cache-Control', 'no-store')
       return res
+    }
+
+    // AVALIADOR só pode avaliar inscrições de editais onde está na equipe
+    if (session.user.role === 'AVALIADOR') {
+      const ok = await temAcessoEdital(session.user.id, inscricao.editalId, 'AVALIADOR')
+      if (!ok) {
+        const res = NextResponse.json(
+          { error: 'FORBIDDEN', message: 'Você não é avaliador deste edital.', requestId },
+          { status: 403 },
+        )
+        res.headers.set('X-Request-Id', requestId)
+        res.headers.set('Cache-Control', 'no-store')
+        return res
+      }
     }
 
     // Verificar se já existe avaliação finalizada

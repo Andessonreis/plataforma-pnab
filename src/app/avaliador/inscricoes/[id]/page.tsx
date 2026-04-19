@@ -8,6 +8,7 @@ import { CRITERIOS_AVALIACAO_PADRAO, type CriterioAvaliacao } from '@/lib/avalia
 import type { InscricaoStatus } from '@prisma/client'
 import { AvaliacaoForm } from '@/app/admin/inscricoes/[id]/avaliacao-form'
 import { AnexoViewer } from '@/app/admin/inscricoes/[id]/anexo-viewer'
+import { temAcessoEdital } from '@/lib/edital-acesso'
 import Link from 'next/link'
 
 interface Props {
@@ -42,11 +43,14 @@ export default async function AvaliadorInscricaoDetailPage({ params }: Props) {
 
   if (!inscricao) notFound()
 
-  // Verificar se o avaliador tem acesso a esta inscrição
-  const minhaAvaliacao = inscricao.avaliacoes.find((a) => a.avaliadorId === session.user.id)
-  if (!minhaAvaliacao) {
+  // Verificar se o avaliador tem acesso ao edital (via equipe ou compat quando sem equipe)
+  const hasAcesso = await temAcessoEdital(session.user.id, inscricao.editalId, 'AVALIADOR')
+  if (!hasAcesso) {
     redirect('/avaliador/inscricoes?aviso=nao-atribuido')
   }
+
+  // Avaliação existente do usuário (pode não existir ainda — será criada no primeiro submit)
+  const minhaAvaliacao = inscricao.avaliacoes.find((a) => a.avaliadorId === session.user.id)
 
   const campos = (inscricao.campos && typeof inscricao.campos === 'object') ? inscricao.campos as Record<string, unknown> : {}
 

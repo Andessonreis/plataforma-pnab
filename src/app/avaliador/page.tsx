@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
+import { getEditaisVisiveis } from '@/lib/edital-acesso'
 import {
   Card, Badge, Button, StatCard, EmptyState,
   FadeIn, StaggerContainer, StaggerItem,
@@ -25,29 +26,44 @@ export default async function AvaliadorDashboardPage() {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'America/Sao_Paulo',
   })
 
-  const [pendentes, concluidas, concluidasHoje, avaliacoesRecentes] = await Promise.all([
-    prisma.avaliacao.count({ where: { avaliadorId: userId, finalizada: false } }),
+  // Editais onde o usuário é avaliador (via equipe) — se null, todos são visíveis
+  const editaisVisiveis = await getEditaisVisiveis(userId, 'AVALIADOR')
+
+  // Inscrições passíveis de avaliação nos editais visíveis
+  const inscricoesWhere: Record<string, unknown> = {
+    status: { notIn: ['RASCUNHO', 'INABILITADA'] },
+    edital: {
+      status: { in: ['AVALIACAO', 'RESULTADO_PRELIMINAR', 'RECURSO', 'RESULTADO_FINAL', 'ENCERRADO'] },
+    },
+  }
+  if (editaisVisiveis !== null) {
+    inscricoesWhere.editalId = { in: editaisVisiveis }
+  }
+
+  const [totalAtribuidas, concluidas, concluidasHoje, inscricoesRecentes] = await Promise.all([
+    prisma.inscricao.count({ where: inscricoesWhere }),
     prisma.avaliacao.count({ where: { avaliadorId: userId, finalizada: true } }),
     prisma.avaliacao.count({ where: { avaliadorId: userId, finalizada: true, updatedAt: { gte: startOfToday } } }),
-    prisma.avaliacao.findMany({
-      where: { avaliadorId: userId },
+    prisma.inscricao.findMany({
+      where: inscricoesWhere,
       orderBy: { updatedAt: 'desc' },
       take: 10,
-      include: {
-        inscricao: {
-          select: {
-            id: true,
-            numero: true,
-            categoria: true,
-            proponente: { select: { nome: true } },
-            edital: { select: { titulo: true, ano: true } },
-          },
+      select: {
+        id: true,
+        numero: true,
+        categoria: true,
+        proponente: { select: { nome: true } },
+        edital: { select: { titulo: true, ano: true } },
+        avaliacoes: {
+          where: { avaliadorId: userId },
+          select: { finalizada: true, notaTotal: true, updatedAt: true },
         },
       },
     }),
   ])
 
-  const total = pendentes + concluidas
+  const pendentes = totalAtribuidas - concluidas
+  const total = totalAtribuidas
 
   const stats = [
     {
@@ -116,22 +132,23 @@ export default async function AvaliadorDashboardPage() {
             </Link>
           </div>
 
-          {avaliacoesRecentes.length === 0 ? (
+          {inscricoesRecentes.length === 0 ? (
             <EmptyState
               icon={<IconStar className="h-8 w-8 text-slate-400" />}
-              title="Nenhuma avaliação atribuída"
-              description="Você receberá notificação quando novas inscrições forem designadas para avaliação."
+              title="Nenhuma inscrição disponível"
+              description="Você verá aqui as inscrições dos editais em que você é avaliador, assim que entrarem em fase de avaliação."
             />
           ) : (
             <>
               {/* Mobile */}
               <div className="sm:hidden divide-y divide-slate-100 -mx-4">
-                {avaliacoesRecentes.map((av) => {
-                  const isPending = !av.finalizada
+                {inscricoesRecentes.map((ins) => {
+                  const minha = ins.avaliacoes[0]
+                  const isPending = !minha?.finalizada
                   return (
                     <Link
-                      key={av.id}
-                      href={`/avaliador/inscricoes/${av.inscricaoId}`}
+                      key={ins.id}
+                      href={`/avaliador/inscricoes/${ins.id}`}
                       className="flex items-start gap-3 px-4 py-3.5 hover:bg-slate-50 transition-colors"
                     >
                       <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${isPending ? 'bg-amber-50' : 'bg-green-50'}`}>
@@ -140,12 +157,12 @@ export default async function AvaliadorDashboardPage() {
                           : <IconCheck className="h-4 w-4 text-green-600" />}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate-900 truncate">{av.inscricao.proponente.nome}</p>
-                        <p className="text-xs text-slate-500 truncate">{av.inscricao.edital.titulo}</p>
+                        <p className="text-sm font-medium text-slate-900 truncate">{ins.proponente.nome}</p>
+                        <p className="text-xs text-slate-500 truncate">{ins.edital.titulo}</p>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-[11px] font-mono text-slate-400">{av.inscricao.numero}</span>
+                          <span className="text-[11px] font-mono text-slate-400">{ins.numero}</span>
                           <Badge variant={isPending ? 'warning' : 'success'}>
-                            {isPending ? 'Pendente' : `Nota: ${Number(av.notaTotal)}`}
+                            {isPending ? 'Pendente' : `Nota: ${Number(minha!.notaTotal)}`}
                           </Badge>
                         </div>
                       </div>
@@ -167,23 +184,24 @@ export default async function AvaliadorDashboardPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {avaliacoesRecentes.map((av) => {
-                      const isPending = !av.finalizada
+                    {inscricoesRecentes.map((ins) => {
+                      const minha = ins.avaliacoes[0]
+                      const isPending = !minha?.finalizada
                       return (
-                        <tr key={av.id} className="hover:bg-slate-50/50 transition-colors">
-                          <td className="py-3 px-4 sm:px-6 font-mono text-xs text-slate-600">{av.inscricao.numero}</td>
-                          <td className="py-3 px-4 font-medium text-slate-900">{av.inscricao.proponente.nome}</td>
+                        <tr key={ins.id} className="hover:bg-slate-50/50 transition-colors">
+                          <td className="py-3 px-4 sm:px-6 font-mono text-xs text-slate-600">{ins.numero}</td>
+                          <td className="py-3 px-4 font-medium text-slate-900">{ins.proponente.nome}</td>
                           <td className="py-3 px-4 text-slate-600 max-w-[200px]">
-                            <p className="truncate">{av.inscricao.edital.titulo}</p>
+                            <p className="truncate">{ins.edital.titulo}</p>
                           </td>
                           <td className="py-3 px-4">
                             <Badge variant={isPending ? 'warning' : 'success'}>
-                              {isPending ? 'Pendente' : `Nota: ${Number(av.notaTotal)}`}
+                              {isPending ? 'Pendente' : `Nota: ${Number(minha!.notaTotal)}`}
                             </Badge>
                           </td>
                           <td className="py-3 px-4 sm:px-6 text-right">
                             <Link
-                              href={`/avaliador/inscricoes/${av.inscricaoId}`}
+                              href={`/avaliador/inscricoes/${ins.id}`}
                               className="text-brand-600 hover:text-brand-700 font-medium text-xs"
                             >
                               {isPending ? 'Avaliar' : 'Ver'}

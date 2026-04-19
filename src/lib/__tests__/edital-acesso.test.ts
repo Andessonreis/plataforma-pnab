@@ -51,6 +51,56 @@ describe('temAcessoEdital', () => {
 
     expect(result).toBe(false)
   })
+
+  it('AVALIADOR: edital sem equipe de avaliadores → acesso liberado (compat)', async () => {
+    // Zero avaliadores na equipe do edital
+    mockPrisma.editalMembro.count.mockResolvedValue(0)
+
+    const result = await temAcessoEdital('ana', 'edital-cultura', 'AVALIADOR')
+
+    expect(result).toBe(true)
+    expect(mockPrisma.editalMembro.count).toHaveBeenCalledWith({
+      where: { editalId: 'edital-cultura', funcao: 'AVALIADOR' },
+    })
+  })
+
+  it('AVALIADOR: na equipe do edital → acesso liberado sem precisar de Avaliacao prévia', async () => {
+    mockPrisma.editalMembro.count.mockResolvedValue(2)
+    mockPrisma.editalMembro.findUnique.mockResolvedValue({ id: 'membro-ana' } as never)
+
+    const result = await temAcessoEdital('ana', 'edital-cultura', 'AVALIADOR')
+
+    expect(result).toBe(true)
+  })
+
+  it('AVALIADOR: fora da equipe → acesso negado mesmo sendo AVALIADOR de outros editais', async () => {
+    mockPrisma.editalMembro.count.mockResolvedValue(2)
+    mockPrisma.editalMembro.findUnique.mockResolvedValue(null)
+
+    const result = await temAcessoEdital('outro-avaliador', 'edital-cultura', 'AVALIADOR')
+
+    expect(result).toBe(false)
+  })
+
+  it('AVALIADOR na equipe como HABILITADOR, mas pedindo AVALIADOR → sem acesso', async () => {
+    // Chave única no EditalMembro é (editalId, userId, funcao) — estar lá como HABILITADOR não dá acesso como AVALIADOR
+    mockPrisma.editalMembro.count.mockResolvedValue(2) // tem avaliadores, mas user não é um deles
+    mockPrisma.editalMembro.findUnique.mockResolvedValue(null)
+
+    const result = await temAcessoEdital('user-multi-funcao', 'edital-cultura', 'AVALIADOR')
+
+    expect(result).toBe(false)
+    expect(mockPrisma.editalMembro.findUnique).toHaveBeenCalledWith({
+      where: {
+        editalId_userId_funcao: {
+          editalId: 'edital-cultura',
+          userId: 'user-multi-funcao',
+          funcao: 'AVALIADOR',
+        },
+      },
+      select: { id: true },
+    })
+  })
 })
 
 describe('getEditaisVisiveis', () => {
