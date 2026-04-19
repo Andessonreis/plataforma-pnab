@@ -139,6 +139,8 @@ describe('PUT /api/admin/inscricoes/[id]/avaliacao', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockLogAudit.mockResolvedValue(undefined)
+    // AVALIADOR passa no temAcessoEdital por default (mock "na equipe")
+    mockPrisma.editalMembro.findUnique.mockResolvedValue({ id: 'membro-1' } as never)
   })
 
   it('salvar rascunho → 200 + finalizada: false', async () => {
@@ -147,6 +149,7 @@ describe('PUT /api/admin/inscricoes/[id]/avaliacao', () => {
       id: 'insc-1',
       numero: 'PNAB-2025-0001',
       status: 'EM_AVALIACAO',
+      editalId: 'edital-1',
       edital: baseInscricao.edital,
     } as never)
     mockPrisma.avaliacao.findUnique.mockResolvedValue(null)
@@ -174,6 +177,7 @@ describe('PUT /api/admin/inscricoes/[id]/avaliacao', () => {
       id: 'insc-1',
       numero: 'PNAB-2025-0001',
       status: 'EM_AVALIACAO',
+      editalId: 'edital-1',
       edital: baseInscricao.edital,
     } as never)
     mockPrisma.avaliacao.findUnique.mockResolvedValue(null)
@@ -202,6 +206,7 @@ describe('PUT /api/admin/inscricoes/[id]/avaliacao', () => {
       id: 'insc-1',
       numero: 'PNAB-2025-0001',
       status: 'EM_AVALIACAO',
+      editalId: 'edital-1',
       edital: baseInscricao.edital,
     } as never)
     mockPrisma.avaliacao.findUnique.mockResolvedValue({
@@ -225,6 +230,7 @@ describe('PUT /api/admin/inscricoes/[id]/avaliacao', () => {
       id: 'insc-1',
       numero: 'PNAB-2025-0001',
       status: 'EM_AVALIACAO',
+      editalId: 'edital-1',
       edital: baseInscricao.edital,
     } as never)
     mockPrisma.avaliacao.findUnique.mockResolvedValue({
@@ -275,6 +281,7 @@ describe('PUT /api/admin/inscricoes/[id]/avaliacao', () => {
       id: 'insc-1',
       numero: 'PNAB-2025-0001',
       status: 'EM_AVALIACAO',
+      editalId: 'edital-1',
       edital: baseInscricao.edital,
     } as never)
     mockPrisma.avaliacao.findUnique.mockResolvedValue(null)
