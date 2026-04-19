@@ -52,54 +52,50 @@ describe('temAcessoEdital', () => {
     expect(result).toBe(false)
   })
 
-  it('AVALIADOR: edital sem equipe de avaliadores → acesso liberado (compat)', async () => {
-    // Zero avaliadores na equipe do edital
-    mockPrisma.editalMembro.count.mockResolvedValue(0)
+  it('AVALIADOR: edital sem equipe → SEM acesso (sem compat para avaliador)', async () => {
+    // Para AVALIADOR não é permitido compat — sempre precisa estar explicitamente na equipe
+    mockPrisma.editalMembro.findUnique.mockResolvedValue(null)
 
     const result = await temAcessoEdital('ana', 'edital-cultura', 'AVALIADOR')
 
-    expect(result).toBe(true)
-    expect(mockPrisma.editalMembro.count).toHaveBeenCalledWith({
-      where: { editalId: 'edital-cultura', funcao: 'AVALIADOR' },
-    })
+    expect(result).toBe(false)
+    // Não deve contar membros (short-circuit direto pro findUnique)
+    expect(mockPrisma.editalMembro.count).not.toHaveBeenCalled()
   })
 
-  it('AVALIADOR: na equipe do edital → acesso liberado sem precisar de Avaliacao prévia', async () => {
-    mockPrisma.editalMembro.count.mockResolvedValue(2)
+  it('AVALIADOR: explicitamente na equipe → acesso liberado', async () => {
     mockPrisma.editalMembro.findUnique.mockResolvedValue({ id: 'membro-ana' } as never)
 
     const result = await temAcessoEdital('ana', 'edital-cultura', 'AVALIADOR')
 
     expect(result).toBe(true)
-  })
-
-  it('AVALIADOR: fora da equipe → acesso negado mesmo sendo AVALIADOR de outros editais', async () => {
-    mockPrisma.editalMembro.count.mockResolvedValue(2)
-    mockPrisma.editalMembro.findUnique.mockResolvedValue(null)
-
-    const result = await temAcessoEdital('outro-avaliador', 'edital-cultura', 'AVALIADOR')
-
-    expect(result).toBe(false)
-  })
-
-  it('AVALIADOR na equipe como HABILITADOR, mas pedindo AVALIADOR → sem acesso', async () => {
-    // Chave única no EditalMembro é (editalId, userId, funcao) — estar lá como HABILITADOR não dá acesso como AVALIADOR
-    mockPrisma.editalMembro.count.mockResolvedValue(2) // tem avaliadores, mas user não é um deles
-    mockPrisma.editalMembro.findUnique.mockResolvedValue(null)
-
-    const result = await temAcessoEdital('user-multi-funcao', 'edital-cultura', 'AVALIADOR')
-
-    expect(result).toBe(false)
     expect(mockPrisma.editalMembro.findUnique).toHaveBeenCalledWith({
       where: {
         editalId_userId_funcao: {
           editalId: 'edital-cultura',
-          userId: 'user-multi-funcao',
+          userId: 'ana',
           funcao: 'AVALIADOR',
         },
       },
       select: { id: true },
     })
+  })
+
+  it('AVALIADOR: na equipe de outro edital, mas não deste → sem acesso', async () => {
+    mockPrisma.editalMembro.findUnique.mockResolvedValue(null)
+
+    const result = await temAcessoEdital('ana', 'edital-outro', 'AVALIADOR')
+
+    expect(result).toBe(false)
+  })
+
+  it('AVALIADOR na equipe como HABILITADOR, mas pedindo AVALIADOR → sem acesso', async () => {
+    // Chave única é (editalId, userId, funcao) — estar como HABILITADOR não dá acesso AVALIADOR
+    mockPrisma.editalMembro.findUnique.mockResolvedValue(null)
+
+    const result = await temAcessoEdital('user-multi', 'edital-cultura', 'AVALIADOR')
+
+    expect(result).toBe(false)
   })
 })
 
