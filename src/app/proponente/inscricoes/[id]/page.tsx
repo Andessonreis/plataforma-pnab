@@ -6,6 +6,9 @@ import { prisma } from '@/lib/db'
 import { Card, Badge } from '@/components/ui'
 import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
 import type { InscricaoStatus } from '@prisma/client'
+import { DadosInscricaoView } from '@/components/inscricao/dados-inscricao-view'
+import type { CampoFormulario } from '@/types/campo-formulario'
+import type { EtapaCustomizada } from '@/types/etapa-customizada'
 import { RecursoForm } from './recurso/recurso-form'
 import { RetractAndEditButton } from './retract-and-edit-button'
 
@@ -32,13 +35,6 @@ const statusTimeline: InscricaoStatus[] = [
 // Status do edital em que as notas/avaliacoes podem ser exibidas ao proponente
 const RESULTADO_VISIVEL = ['RESULTADO_PRELIMINAR', 'RECURSO', 'RESULTADO_FINAL', 'ENCERRADO']
 
-// Labels legíveis para campos dinâmicos conhecidos
-const campoLabels: Record<string, string> = {
-  nomeProjeto: 'Nome do Projeto',
-  descricao: 'Descrição',
-  valorSolicitado: 'Valor Solicitado',
-}
-
 export default async function InscricaoDetailPage({ params, searchParams }: Props) {
   const session = await auth()
   if (!session) redirect('/login')
@@ -49,7 +45,15 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
   const inscricao = await prisma.inscricao.findUnique({
     where: { id },
     include: {
-      edital: { select: { titulo: true, slug: true, ano: true, categorias: true, status: true, formulaAvaliacao: true } },
+      edital: {
+        select: {
+          titulo: true, slug: true, ano: true, categorias: true, status: true,
+          formulaAvaliacao: true, camposFormulario: true, etapasCustomizadas: true,
+        },
+      },
+      proponente: {
+        select: { nome: true, cpfCnpj: true, email: true, telefone: true, tipoProponente: true },
+      },
       anexos: true,
       avaliacoes: {
         select: { notaTotal: true, parecer: true, createdAt: true },
@@ -85,6 +89,11 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
   const campos = (camposParsed && typeof camposParsed === 'object' && !Array.isArray(camposParsed))
     ? camposParsed as Record<string, unknown>
     : {} as Record<string, unknown>
+
+  const camposFormulario = (Array.isArray(inscricao.edital.camposFormulario)
+    ? inscricao.edital.camposFormulario : []) as unknown as CampoFormulario[]
+  const etapasCustomizadas = (Array.isArray(inscricao.edital.etapasCustomizadas)
+    ? inscricao.edital.etapasCustomizadas : []) as unknown as EtapaCustomizada[]
 
   const mostrarSucesso = enviada === 'true' && inscricao.status === 'ENVIADA'
 
@@ -245,35 +254,14 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
             </dl>
           </Card>
 
-          {/* Campos preenchidos */}
-          {Object.keys(campos).length > 0 && (
-            <Card>
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">Dados da Proposta</h2>
-              <dl className="space-y-3">
-                {Object.entries(campos).map(([key, value]) => {
-                  // Label legível para campos conhecidos
-                  const label = campoLabels[key] ?? key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').replace(/^\w/, (c) => c.toUpperCase()).trim()
-                  // Formatar valor monetário
-                  const isValor = key.toLowerCase().includes('valor')
-                  const raw = typeof value === 'string' ? value : JSON.stringify(value)
-                  const display = isValor && !isNaN(Number(raw))
-                    ? Number(raw).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-                    : raw
-
-                  return (
-                    <div key={key} className="border-b border-slate-100 pb-3 last:border-0 last:pb-0">
-                      <dt className="text-sm font-medium text-slate-500">
-                        {label}
-                      </dt>
-                      <dd className="text-sm text-slate-900 mt-0.5 whitespace-pre-wrap break-words">
-                        {display}
-                      </dd>
-                    </div>
-                  )
-                })}
-              </dl>
-            </Card>
-          )}
+          {/* Dados preenchidos: proponente + campos + etapas customizadas (accordion) */}
+          <DadosInscricaoView
+            proponente={inscricao.proponente}
+            categoria={inscricao.categoria}
+            campos={campos}
+            camposFormulario={camposFormulario}
+            etapasCustomizadas={etapasCustomizadas}
+          />
 
           {/* Anexos */}
           {inscricao.anexos.length > 0 && (
