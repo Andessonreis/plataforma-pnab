@@ -6,7 +6,7 @@ import { prisma } from '@/lib/db'
 import { Card, Badge } from '@/components/ui'
 import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
 import { CRITERIOS_AVALIACAO_PADRAO, type CriterioAvaliacao } from '@/lib/avaliacao-criterios'
-import type { InscricaoStatus, TipoProponente } from '@prisma/client'
+import type { InscricaoStatus } from '@prisma/client'
 import type { CampoFormulario } from '@/types/campo-formulario'
 import { temAcessoEdital } from '@/lib/edital-acesso'
 import { HabilitacaoActions } from './habilitacao-actions'
@@ -14,7 +14,7 @@ import { AvaliacaoForm } from './avaliacao-form'
 import { RecursoDecision } from './recurso-decision'
 import { AnexoViewer } from './anexo-viewer'
 import { DistribuicaoAvaliadores } from './distribuicao-avaliadores'
-import { CampoEstruturaRevisao } from '@/app/proponente/inscricoes/nova/campo-estrutura'
+import { DadosInscricaoView } from '@/components/inscricao/dados-inscricao-view'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -105,30 +105,11 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
   const canHabilitar = session.user.role === 'ADMIN' || session.user.role === 'HABILITADOR'
   const isHabilitacaoStatus = inscricao.status === 'ENVIADA' || inscricao.status === 'HABILITADA' || inscricao.status === 'INABILITADA'
 
-  const tipoLabels: Record<string, string> = {
-    PF: 'Pessoa Física',
-    PJ: 'Pessoa Jurídica',
-    MEI: 'MEI',
-    COLETIVO: 'Coletivo',
-  }
-
   const camposFormulario = (Array.isArray(inscricao.edital.camposFormulario)
     ? inscricao.edital.camposFormulario : []) as unknown as CampoFormulario[]
   const etapasCustomizadas = (Array.isArray(inscricao.edital.etapasCustomizadas)
     ? inscricao.edital.etapasCustomizadas : []) as unknown as import('@/types/etapa-customizada').EtapaCustomizada[]
-  const camposMap = new Map(camposFormulario.map(c => [c.nome, c]))
-
-  // Conjunto dos nomes de campo "donos" de cada etapa customizada, para agrupar os valores
   const etapasOrdenadas = [...etapasCustomizadas].sort((a, b) => a.ordem - b.ordem)
-  const nomesDaEtapaDados = new Set(camposFormulario.map(c => c.nome))
-  const nomesPorEtapa = new Map<string, Set<string>>()
-  for (const etapa of etapasOrdenadas) {
-    nomesPorEtapa.set(etapa.id, new Set(etapa.campos.map(c => c.nome)))
-  }
-  const etapaCampoMap = new Map<string, CampoFormulario>()
-  for (const etapa of etapasOrdenadas) {
-    for (const c of etapa.campos) etapaCampoMap.set(c.nome, c)
-  }
 
   return (
     <section>
@@ -156,126 +137,32 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Coluna principal */}
         <div className="lg:col-span-2 space-y-4 sm:space-y-6">
-          {/* Dados do proponente */}
-          <Card padding="sm" className="sm:p-6">
-            <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Proponente</h2>
-            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <div>
-                <dt className="text-sm font-medium text-slate-500">Nome</dt>
-                <dd className="text-sm text-slate-900 font-medium">{inscricao.proponente.nome}</dd>
-              </div>
-              <div>
-                <dt className="text-sm font-medium text-slate-500">CPF/CNPJ</dt>
-                <dd className="text-sm text-slate-900 font-mono">{inscricao.proponente.cpfCnpj}</dd>
-              </div>
-              <div>
-                <dt className="text-sm font-medium text-slate-500">E-mail</dt>
-                <dd className="text-sm text-slate-900">{inscricao.proponente.email}</dd>
-              </div>
-              <div>
-                <dt className="text-sm font-medium text-slate-500">Telefone</dt>
-                <dd className="text-sm text-slate-900">{inscricao.proponente.telefone ?? '—'}</dd>
-              </div>
-              <div>
-                <dt className="text-sm font-medium text-slate-500">Tipo</dt>
-                <dd className="text-sm text-slate-900">
-                  {tipoLabels[inscricao.proponente.tipoProponente ?? ''] ?? '—'}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-sm font-medium text-slate-500">Categoria</dt>
-                <dd className="text-sm text-slate-900">{inscricao.categoria ?? '—'}</dd>
-              </div>
-            </dl>
-          </Card>
-
-          {/* Dados da proposta (etapa "Dados") */}
-          {Object.entries(campos).filter(([key]) => nomesDaEtapaDados.has(key)).length > 0 && (
-            <Card padding="sm" className="sm:p-6">
-              <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Dados da Proposta</h2>
-              <dl className="space-y-3">
-                {Object.entries(campos)
-                  .filter(([key]) => nomesDaEtapaDados.has(key))
-                  .map(([key, value]) => {
-                    const campoConfig = camposMap.get(key)
-                    const tiposRestritos = campoConfig?.tiposProponente
-                    return (
-                      <div key={key} className="border-b border-slate-100 pb-3 last:border-0 last:pb-0">
-                        <dt className="text-sm font-medium text-slate-500 flex items-center gap-2">
-                          <span className="capitalize">{campoConfig?.label ?? key.replace(/_/g, ' ')}</span>
-                          {tiposRestritos && tiposRestritos.length > 0 && (
-                            <span className="text-[10px] font-medium text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
-                              {tiposRestritos.map((t: TipoProponente) => tipoLabels[t] ?? t).join(', ')}
-                            </span>
-                          )}
-                        </dt>
-                        <dd className="text-sm text-slate-900 mt-0.5 whitespace-pre-wrap break-words">
-                          {typeof value === 'string' ? value : JSON.stringify(value)}
-                        </dd>
-                      </div>
-                    )
-                  })}
-              </dl>
-            </Card>
-          )}
-
-          {/* Etapas customizadas — renderiza cada elemento na ordem definida */}
-          {etapasOrdenadas.map((etapa) => {
-            if (!etapa.campos || etapa.campos.length === 0) return null
-            return (
-              <Card key={etapa.id} padding="sm" className="sm:p-6">
-                <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-1">{etapa.titulo}</h2>
-                {etapa.descricao && (
-                  <p className="text-xs sm:text-sm text-slate-500 mb-3 sm:mb-4 whitespace-pre-line">{etapa.descricao}</p>
-                )}
-                <div className="space-y-4">
-                  {etapa.campos.map((c, idx) => {
-                    if (c.tipo === 'info' || c.tipo === 'tabela' || c.tipo === 'grupo_repetivel') {
-                      return (
-                        <CampoEstruturaRevisao
-                          key={c.nome || `info_${idx}`}
-                          campo={c}
-                          value={campos[c.nome]}
-                        />
-                      )
-                    }
-                    const valor = campos[c.nome]
-                    const empty = valor === undefined || valor === null || valor === ''
-                    return (
-                      <div key={c.nome} className="border-b border-slate-100 pb-3 last:border-0 last:pb-0">
-                        <dt className="text-sm font-medium text-slate-500">
-                          {c.label}
-                          {c.obrigatorio && <span className="text-red-500 ml-1">*</span>}
-                        </dt>
-                        <dd className={`text-sm mt-0.5 whitespace-pre-wrap break-words ${empty ? 'text-red-500 italic' : 'text-slate-900'}`}>
-                          {empty ? 'Não preenchido' : (Array.isArray(valor) ? (valor as string[]).join(', ') : String(valor))}
-                        </dd>
-                      </div>
-                    )
-                  })}
-                </div>
-              </Card>
-            )
-          })}
-
-          {/* Anexos */}
-          {inscricao.anexos.length > 0 && (
-            <Card padding="sm" className="sm:p-6">
-              <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">
-                Anexos ({inscricao.anexos.length})
-              </h2>
-              <AnexoViewer
-                inscricaoId={inscricao.id}
-                anexos={inscricao.anexos.map((a) => ({
-                  id: a.id,
-                  tipo: a.tipo,
-                  titulo: a.titulo,
-                  valido: a.valido,
-                  observacao: a.observacao,
-                }))}
-              />
-            </Card>
-          )}
+          <DadosInscricaoView
+            proponente={inscricao.proponente}
+            categoria={inscricao.categoria}
+            campos={campos}
+            camposFormulario={camposFormulario}
+            etapasCustomizadas={etapasOrdenadas}
+            anexos={
+              inscricao.anexos.length > 0
+                ? {
+                    count: inscricao.anexos.length,
+                    node: (
+                      <AnexoViewer
+                        inscricaoId={inscricao.id}
+                        anexos={inscricao.anexos.map((a) => ({
+                          id: a.id,
+                          tipo: a.tipo,
+                          titulo: a.titulo,
+                          valido: a.valido,
+                          observacao: a.observacao,
+                        }))}
+                      />
+                    ),
+                  }
+                : undefined
+            }
+          />
 
           {/* Avaliacoes — visível apenas para ADMIN (avaliação cega entre avaliadores) */}
           {inscricao.avaliacoes.length > 0 && !isAvaliador && (
