@@ -15,8 +15,6 @@ const ALLOWED_MIMES = [
   'application/pdf',
   'image/png',
   'image/jpeg',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // XLSX
-  'application/vnd.ms-excel', // XLS legado
 ]
 
 interface RouteParams {
@@ -106,7 +104,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     // Validar MIME type
     if (!ALLOWED_MIMES.includes(file.type)) {
       const res = NextResponse.json(
-        { error: 'BAD_REQUEST', message: 'Tipo de arquivo não permitido. Aceitos: PDF, PNG, JPEG, XLSX.', requestId },
+        { error: 'BAD_REQUEST', message: 'Tipo de arquivo não permitido. Aceitos: PDF, PNG, JPEG.', requestId },
         { status: 400 },
       )
       res.headers.set('X-Request-Id', requestId)
