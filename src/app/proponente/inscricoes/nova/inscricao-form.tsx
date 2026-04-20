@@ -650,11 +650,18 @@ export default function InscricaoForm({
         ).length
         const allObrigatoriosOk = obrigatoriosEnviados === totalObrigatorios
 
+        // Conta quantos arquivos por tipo
+        const countByTipo = anexos.reduce<Record<string, number>>((acc, a) => {
+          acc[a.tipo] = (acc[a.tipo] ?? 0) + 1
+          return acc
+        }, {})
+
         return (
           <Card padding="lg">
             <h2 className="text-lg font-semibold text-slate-900 mb-1">Documentos e Anexos</h2>
             <p className="text-sm text-slate-500 mb-6">
               Envie os documentos necessários para sua inscrição. Formatos aceitos: PDF, PNG, JPEG (máx. 10MB cada).
+              <span className="block mt-1">Você pode enviar <strong>mais de um arquivo</strong> por item se precisar.</span>
             </p>
 
             {/* Checklist de documentos esperados */}
@@ -679,7 +686,8 @@ export default function InscricaoForm({
                 </div>
                 <ul className="space-y-2" role="list">
                   {effectiveTiposAnexo.map((t) => {
-                    const enviado = anexos.find((a) => a.tipo === t.tipo)
+                    const qtd = countByTipo[t.tipo] ?? 0
+                    const enviado = qtd > 0
                     return (
                       <li key={t.tipo} className="flex items-start gap-2 text-sm">
                         {enviado ? (
@@ -704,10 +712,12 @@ export default function InscricaoForm({
                                 opcional
                               </span>
                             )}
+                            {enviado && (
+                              <span className="text-[11px] font-medium text-green-700">
+                                {qtd === 1 ? '1 arquivo' : `${qtd} arquivos`}
+                              </span>
+                            )}
                           </div>
-                          {enviado && (
-                            <p className="text-xs text-slate-500 truncate">{enviado.titulo}</p>
-                          )}
                         </div>
                       </li>
                     )
@@ -878,56 +888,78 @@ function AnexoUpload({
   tiposAnexoEdital?: TipoAnexoEdital[] | null
 }) {
   const [tipo, setTipo] = useState('')
-  const [titulo, setTitulo] = useState('')
-  const [file, setFile] = useState<File | null>(null)
+  const [files, setFiles] = useState<File[]>([])
   const [dragOver, setDragOver] = useState(false)
   const [localError, setLocalError] = useState('')
   const [localSuccess, setLocalSuccess] = useState('')
+  const [progress, setProgress] = useState<{ current: number; total: number } | null>(null)
 
   const tipoOptions: SelectOption[] = tiposAnexoEdital?.length
     ? tiposAnexoEdital.map(t => ({ value: t.tipo, label: t.label }))
     : TIPOS_ANEXO_PADRAO
 
+  const addFiles = (list: FileList | File[]) => {
+    const arr = Array.from(list)
+    if (arr.length === 0) return
+    setLocalError('')
+    setLocalSuccess('')
+    setFiles((prev) => [...prev, ...arr])
+  }
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0]
-    if (f) {
-      setFile(f)
-      setLocalError('')
-      setLocalSuccess('')
-      if (!titulo) setTitulo(f.name.replace(/\.[^.]+$/, ''))
-    }
+    if (e.target.files) addFiles(e.target.files)
+    e.target.value = ''
   }
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     setDragOver(false)
-    const f = e.dataTransfer.files?.[0]
-    if (f) {
-      setFile(f)
-      setLocalError('')
-      setLocalSuccess('')
-      if (!titulo) setTitulo(f.name.replace(/\.[^.]+$/, ''))
-    }
+    if (e.dataTransfer.files) addFiles(e.dataTransfer.files)
+  }
+
+  const removeFile = (idx: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== idx))
   }
 
   const handleSubmit = async () => {
-    if (!file || !tipo || !titulo) return
+    if (files.length === 0 || !tipo) return
     setLocalError('')
     setLocalSuccess('')
 
-    const ok = await onUpload(file, tipo, titulo)
-
-    if (ok) {
-      setLocalSuccess(`"${titulo}" enviado com sucesso!`)
-      setTimeout(() => setLocalSuccess(''), 4000)
-      setFile(null)
-      setTitulo('')
-      setTipo('')
-      const input = document.getElementById('anexo-file') as HTMLInputElement
-      if (input) input.value = ''
-    } else {
-      setLocalError('Falha ao enviar o anexo. Verifique o arquivo e tente novamente.')
+    let enviados = 0
+    const falhas: string[] = []
+    for (let i = 0; i < files.length; i++) {
+      setProgress({ current: i + 1, total: files.length })
+      const f = files[i]
+      const titulo = f.name.replace(/\.[^.]+$/, '')
+      const ok = await onUpload(f, tipo, titulo)
+      if (ok) enviados++
+      else falhas.push(f.name)
     }
+    setProgress(null)
+
+    if (falhas.length === 0) {
+      setLocalSuccess(
+        enviados === 1
+          ? 'Arquivo enviado com sucesso!'
+          : `${enviados} arquivos enviados com sucesso!`,
+      )
+      setTimeout(() => setLocalSuccess(''), 4000)
+      setFiles([])
+      setTipo('')
+    } else {
+      setLocalError(
+        `Falha no envio de ${falhas.length} arquivo(s): ${falhas.join(', ')}. Verifique os arquivos e tente novamente.`,
+      )
+      // mantém os arquivos falhos pra o usuário reenviar
+      setFiles((prev) => prev.filter((f) => falhas.includes(f.name)))
+    }
+  }
+
+  const formatSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
+    return `${(bytes / 1024 / 1024).toFixed(1)} MB`
   }
 
   return (
@@ -954,50 +986,75 @@ function AnexoUpload({
       >
         <IconDocument className="h-8 w-8 text-slate-400 mx-auto mb-2" />
         <p className="text-sm text-slate-600">
-          {file ? (
-            <span className="font-medium text-brand-700">{file.name}</span>
+          {files.length > 0 ? (
+            <span className="font-medium text-brand-700">
+              {files.length === 1 ? files[0].name : `${files.length} arquivos selecionados`}
+            </span>
           ) : (
-            <>Arraste um arquivo ou <span className="text-brand-600 font-medium">clique para selecionar</span></>
+            <>Arraste arquivos ou <span className="text-brand-600 font-medium">clique para selecionar</span></>
           )}
         </p>
-        <p className="text-xs text-slate-400 mt-1">PDF, PNG ou JPEG — máx. 10MB</p>
+        <p className="text-xs text-slate-400 mt-1">
+          PDF, PNG ou JPEG — máx. 10MB cada. Você pode selecionar vários arquivos de uma vez.
+        </p>
         <input
           id="anexo-file"
           type="file"
           accept=".pdf,.png,.jpg,.jpeg"
+          multiple
           onChange={handleFileChange}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-          aria-label="Selecionar arquivo para upload"
+          aria-label="Selecionar arquivos para upload"
         />
       </div>
 
-      {/* Metadados */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Select
-          label="Tipo do documento"
-          value={tipo}
-          onChange={(e) => setTipo(e.target.value)}
-          options={tipoOptions}
-          placeholder="Selecione o tipo..."
-          required
-        />
-        <Input
-          label="Título"
-          value={titulo}
-          onChange={(e) => setTitulo(e.target.value)}
-          placeholder="Ex: Projeto Cultural"
-          required
-        />
-      </div>
+      {/* Lista de arquivos selecionados (ainda não enviados) */}
+      {files.length > 0 && (
+        <ul className="space-y-2" role="list" aria-label="Arquivos selecionados">
+          {files.map((f, i) => (
+            <li key={`${f.name}-${i}`} className="flex items-center justify-between gap-3 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm">
+              <div className="min-w-0 flex-1 flex items-center gap-2">
+                <IconDocument className="h-4 w-4 text-slate-400 shrink-0" />
+                <span className="truncate text-slate-800">{f.name}</span>
+                <span className="text-xs text-slate-400 shrink-0">{formatSize(f.size)}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => removeFile(i)}
+                disabled={uploading}
+                className="text-slate-400 hover:text-red-600 text-xs font-medium px-2 disabled:opacity-50"
+                aria-label={`Remover ${f.name} da seleção`}
+              >
+                Remover
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {/* Tipo (aplicado a todos os arquivos) */}
+      <Select
+        label="Tipo do documento"
+        value={tipo}
+        onChange={(e) => setTipo(e.target.value)}
+        options={tipoOptions}
+        placeholder="Selecione o tipo..."
+        required
+        hint="O tipo será aplicado a todos os arquivos selecionados. Para tipos diferentes, envie em lotes separados."
+      />
 
       <Button
         onClick={handleSubmit}
-        disabled={!file || !tipo || !titulo}
+        disabled={files.length === 0 || !tipo}
         loading={uploading}
         variant="secondary"
         type="button"
       >
-        Enviar Anexo
+        {progress
+          ? `Enviando ${progress.current}/${progress.total}...`
+          : files.length > 1
+            ? `Enviar ${files.length} arquivos`
+            : 'Enviar Anexo'}
       </Button>
     </div>
   )
