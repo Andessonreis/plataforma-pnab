@@ -654,7 +654,7 @@ export default function InscricaoForm({
           <Card padding="lg">
             <h2 className="text-lg font-semibold text-slate-900 mb-1">Documentos e Anexos</h2>
             <p className="text-sm text-slate-500 mb-6">
-              Envie os documentos necessários para sua inscrição. Formatos aceitos: PDF, PNG, JPEG, XLSX (máx. 10MB cada).
+              Envie os documentos necessários para sua inscrição. Formatos aceitos: PDF, PNG, JPEG (máx. 10MB cada).
             </p>
 
             {/* Checklist de documentos esperados */}
@@ -960,11 +960,11 @@ function AnexoUpload({
             <>Arraste um arquivo ou <span className="text-brand-600 font-medium">clique para selecionar</span></>
           )}
         </p>
-        <p className="text-xs text-slate-400 mt-1">PDF, PNG, JPEG ou XLSX — máx. 10MB</p>
+        <p className="text-xs text-slate-400 mt-1">PDF, PNG ou JPEG — máx. 10MB</p>
         <input
           id="anexo-file"
           type="file"
-          accept=".pdf,.png,.jpg,.jpeg,.xlsx,.xls"
+          accept=".pdf,.png,.jpg,.jpeg"
           onChange={handleFileChange}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           aria-label="Selecionar arquivo para upload"
