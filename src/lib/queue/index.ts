@@ -69,7 +69,7 @@ export async function enqueuePdf(data: PdfJobData) {
  * Seguro chamar múltiplas vezes — BullMQ deduplica por jobId.
  */
 export async function initSchedulerRepeatableJobs() {
-  const defaultInterval = process.env.NODE_ENV === 'production' ? 30 * 60 * 1000 : 60 * 1000
+  const defaultInterval = process.env.NODE_ENV === 'production' ? 10 * 60 * 1000 : 60 * 1000
   const interval = Number(process.env.SCHEDULER_INTERVAL_MS) || defaultInterval
 
   await schedulerQueue.upsertJobScheduler(
