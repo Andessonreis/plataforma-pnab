@@ -1,3 +1,9 @@
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
 services:
   # ── Aplicação Next.js ────────────────────────────────────────────────────────
   app:
@@ -13,6 +19,13 @@ services:
     networks:
       - pnab-network
     restart: unless-stopped
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
 
   # ── Worker BullMQ (email, PDF) ──────────────────────────────────────────────
   worker:
@@ -27,6 +40,7 @@ services:
     networks:
       - pnab-network
     restart: unless-stopped
+    logging: *default-logging
 
   # ── Migration (on-demand) ───────────────────────────────────────────────────
   migrate:
@@ -42,6 +56,7 @@ services:
       - pnab-network
     profiles:
       - tools
+    logging: *default-logging
 
   # ── PostgreSQL (isolado) ────────────────────────────────────────────────────
   pnab-postgres:
@@ -60,6 +75,7 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    logging: *default-logging
 
   # ── Redis (isolado) ─────────────────────────────────────────────────────────
   pnab-redis:
@@ -75,6 +91,7 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    logging: *default-logging
 
 volumes:
   pnab_postgres_data:
