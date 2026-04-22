@@ -155,6 +155,32 @@ model AuditLog {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Log de erros técnicos (exceptions capturadas em runtime)
+// "Sentry-lite" self-hosted — captureError() persiste aqui.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model ErrorLog {
+  id          String   @id @default(cuid())
+  timestamp   DateTime @default(now())
+  level       String   // 'error' | 'warn'
+  message     String
+  stack       String?  @db.Text
+  fingerprint String   // hash pra agrupar erros iguais
+  requestId   String?
+  userId      String?
+  path        String?  // /api/admin/editais
+  method      String?  // GET, POST, ...
+  statusCode  Int?
+  userAgent   String?
+  ip          String?
+  context     Json?    // extras sanitizados (sem PII)
+
+  @@index([timestamp])
+  @@index([fingerprint])
+  @@index([level, timestamp])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Newsletter
 // ─────────────────────────────────────────────────────────────────────────────
 

@@ -96,6 +96,10 @@ export default async function AdminLogsPage({ searchParams }: Props) {
             <p className="text-xs sm:text-sm text-slate-600 mt-0.5 sm:mt-1">
               {total} registro(s) encontrado(s) &middot; Retenção: {retentionDays} dias
             </p>
+            <nav className="flex gap-3 mt-2 text-xs">
+              <span className="text-brand-700 font-semibold">Auditoria</span>
+              <Link href="/admin/logs/erros" className="text-slate-500 hover:text-brand-700">Erros</Link>
+            </nav>
           </div>
           <PurgeButton retentionDays={retentionDays} totalLogs={totalAllLogs} />
         </div>

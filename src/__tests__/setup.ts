@@ -142,6 +142,15 @@ vi.mock('@/lib/db', () => ({
       if (typeof ops === 'function') return ops({ /* proxy prisma */ })
       return Promise.all(ops as Promise<unknown>[])
     }),
+    $queryRaw: vi.fn().mockResolvedValue([{ '?column?': 1 }]),
+    errorLog: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      deleteMany: vi.fn(),
+      count: vi.fn(),
+      groupBy: vi.fn(),
+    },
   },
 }))
 
@@ -270,6 +279,7 @@ vi.mock('@/lib/redis', () => ({
     setex: vi.fn().mockResolvedValue('OK'),
     del: vi.fn().mockResolvedValue(1),
     expire: vi.fn().mockResolvedValue(1),
+    ping: vi.fn().mockResolvedValue('PONG'),
   },
 }))
 
