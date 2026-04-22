@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Input, Button, Card, Textarea, Select } from '@/components/ui'
 import type { EditalStatus } from '@prisma/client'
 import { EditalArquivos, type EditalArquivosHandle } from './edital-arquivos'
+import { PdfOficialField } from './pdf-oficial-field'
 import type { CronogramaItem, CronogramaFormItem } from '@/types/cronograma'
 import { cronogramaToFormItems, formItemsToCronograma, validateCronogramaOrder } from '@/lib/utils/cronograma'
 import { CHAR_LIMIT_DEFAULTS } from '@/lib/campo-limits'
@@ -596,38 +597,8 @@ export function EditalForm({ initialData }: EditalFormProps) {
               </p>
             )}
           </div>
+          <PdfOficialField editalId={initialData?.id} />
         </div>}
-      </Card>
-
-      {/* Documento oficial do edital — destaque no topo, logo após Informações Básicas.
-          Qualquer edital grande começa pela publicação do PDF assinado; só depois
-          vêm os demais campos estruturados. */}
-      <Card padding="sm" className="sm:p-6 border-brand-200 bg-brand-50/30">
-        <div className="flex items-start justify-between gap-3 flex-wrap">
-          <div>
-            <h2 className="text-base sm:text-lg font-semibold text-slate-900">
-              Documentos e Arquivos do Edital
-            </h2>
-            <p className="text-sm text-slate-600 mt-1">
-              Publique o <strong>PDF oficial</strong> do edital (Chamamento Público) e os modelos de anexos.
-              O arquivo do tipo <strong>&ldquo;PDF do Edital&rdquo;</strong> será destacado com o botão
-              &ldquo;Baixar Edital Completo&rdquo; na página pública.
-            </p>
-          </div>
-          {!initialData?.id && (
-            <span className="text-xs font-semibold bg-amber-100 text-amber-800 px-2.5 py-1 rounded">
-              Disponível após salvar o edital
-            </span>
-          )}
-        </div>
-        {initialData?.id && (
-          <div className="mt-4 sm:mt-5">
-            <EditalArquivos
-              ref={arquivosRef}
-              editalId={initialData.id}
-            />
-          </div>
-        )}
       </Card>
 
       {/* Secao 2 - Categorias */}
@@ -1268,11 +1239,22 @@ export function EditalForm({ initialData }: EditalFormProps) {
       </Card>
 
       {/* Secao 7 - Arquivos */}
-      {/* Secao 7 - Cronograma (anteriormente era 8; documentos foram movidos para o topo) */}
+      {/* Secao 7 - Documentos e Arquivos */}
       <Card padding="sm" className="sm:p-6">
-        <SectionHeader number={7} title="Cronograma" />
-
+        <SectionHeader number={7} title="Documentos e Arquivos" />
         {!collapsedSections[7] && <div className="mt-4 sm:mt-5">
+          <EditalArquivos
+            ref={arquivosRef}
+            editalId={initialData?.id}
+          />
+        </div>}
+      </Card>
+
+      {/* Secao 8 - Cronograma */}
+      <Card padding="sm" className="sm:p-6">
+        <SectionHeader number={8} title="Cronograma" />
+
+        {!collapsedSections[8] && <div className="mt-4 sm:mt-5">
           <CronogramaEditor
             items={cronogramaItems}
             onChange={setCronogramaItems}
@@ -1283,13 +1265,13 @@ export function EditalForm({ initialData }: EditalFormProps) {
 
       {/* Secao 9 — Equipe do Edital */}
       <Card padding="sm" className="sm:p-6">
-        <SectionHeader number={8} title="Equipe do Edital">
+        <SectionHeader number={9} title="Equipe do Edital">
           <p className="text-sm text-slate-500 mt-2">
             Defina quais habilitadores e avaliadores trabalham neste edital. Se nenhum for atribuído, todos com o respectivo cargo terão acesso.
           </p>
         </SectionHeader>
 
-        {!collapsedSections[8] && (
+        {!collapsedSections[9] && (
           <div className="space-y-6 mt-4">
             {/* Habilitadores */}
             <div>
@@ -1461,7 +1443,7 @@ export function EditalForm({ initialData }: EditalFormProps) {
       {/* Secao 10 — Etapas customizadas da inscrição */}
       <Card padding="sm" className="sm:p-6">
         <SectionHeader
-          number={9}
+          number={10}
           title="Etapas Customizadas da Inscrição"
           actions={
             <span className="inline-flex items-center text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
@@ -1477,7 +1459,7 @@ export function EditalForm({ initialData }: EditalFormProps) {
           </p>
         </SectionHeader>
 
-        {!collapsedSections[9] && (
+        {!collapsedSections[10] && (
           <div className="mt-4">
             <EtapasCustomizadasEditor
               value={etapasCustomizadas}
