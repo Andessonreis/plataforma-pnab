@@ -59,7 +59,7 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
         select: { notaTotal: true, parecer: true, createdAt: true },
       },
       recursos: {
-        select: { fase: true, decisao: true, justificativa: true, createdAt: true },
+        select: { fase: true, texto: true, urlAnexos: true, decisao: true, justificativa: true, createdAt: true },
         orderBy: { createdAt: 'desc' },
       },
     },
@@ -331,17 +331,44 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
                   <div key={i} className="p-3 bg-slate-50 rounded-lg">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs font-medium text-slate-500">{recurso.fase}</span>
-                      {recurso.decisao && (
+                      {recurso.decisao ? (
                         <Badge variant={recurso.decisao === 'DEFERIDO' ? 'success' : 'error'}>
                           {recurso.decisao}
                         </Badge>
+                      ) : (
+                        <Badge variant="warning">Em análise</Badge>
                       )}
                     </div>
-                    {recurso.justificativa && (
-                      <p className="text-xs text-slate-600 mt-1 break-words">{recurso.justificativa}</p>
+                    {recurso.texto && (
+                      <p className="text-xs text-slate-700 mt-1 mb-1 whitespace-pre-wrap break-words">{recurso.texto}</p>
                     )}
-                    <p className="text-xs text-slate-400 mt-1">
-                      {new Date(recurso.createdAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
+                    {recurso.urlAnexos && recurso.urlAnexos.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-[11px] uppercase font-semibold text-slate-500 tracking-wide mb-1">Evidências</p>
+                        <ul className="space-y-0.5">
+                          {recurso.urlAnexos.map((url, idx) => (
+                            <li key={idx}>
+                              <a
+                                href={url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-brand-700 hover:underline break-all"
+                              >
+                                Anexo {idx + 1}
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {recurso.justificativa && (
+                      <div className="mt-2 pt-2 border-t border-slate-200">
+                        <p className="text-[11px] uppercase font-semibold text-slate-500 tracking-wide mb-0.5">Decisão da comissão</p>
+                        <p className="text-xs text-slate-700 whitespace-pre-wrap break-words">{recurso.justificativa}</p>
+                      </div>
+                    )}
+                    <p className="text-xs text-slate-400 mt-2">
+                      Enviado em {new Date(recurso.createdAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
                     </p>
                   </div>
                 ))}
@@ -359,6 +386,11 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
                   inscricao.status === 'RESULTADO_PRELIMINAR' ? 'RESULTADO_PRELIMINAR' :
                   'RESULTADO_FINAL'
                 }
+                contexto={{
+                  entidadeNome: inscricao.proponente.nome,
+                  projetoNome: inscricao.numero,
+                  responsavelNome: inscricao.proponente.nome,
+                }}
               />
             </Card>
           )}

@@ -35,6 +35,9 @@ vi.mock('@/lib/db', () => ({
     recurso: {
       findMany: vi.fn(),
       findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
       count: vi.fn(),
     },
     atendimento: {
