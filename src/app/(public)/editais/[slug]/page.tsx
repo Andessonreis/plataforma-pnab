@@ -101,6 +101,12 @@ export default async function EditalPage({ params }: Props) {
 
   const nextDeadline = getNextDeadline(edital.cronograma)
 
+  // PDF oficial do edital em destaque (botão "Baixar Edital Completo").
+  // Prioriza tipo PDF_EDITAL; se não houver, cai pro primeiro arquivo do tipo PDF.
+  const editalPdf =
+    edital.arquivos.find((a) => a.tipo === 'PDF_EDITAL') ??
+    edital.arquivos.find((a) => a.tipo === 'PDF')
+
   return (
     <>
       {isAdmin && edital.status === 'RASCUNHO' && (
@@ -142,6 +148,15 @@ export default async function EditalPage({ params }: Props) {
               {formatCurrency(edital.valorTotal)}
             </span>
           )}
+          {(edital.vagasContemplados || edital.vagasSuplentes) && (
+            <span className="inline-flex items-center gap-2">
+              <IconCheckSimple className="h-4 w-4 text-brand-200" />
+              <span className="font-medium text-white">
+                {edital.vagasContemplados ?? 0} contemplado{edital.vagasContemplados !== 1 ? 's' : ''}
+                {edital.vagasSuplentes ? ` + ${edital.vagasSuplentes} suplente${edital.vagasSuplentes !== 1 ? 's' : ''}` : ''}
+              </span>
+            </span>
+          )}
           {nextDeadline && (
             <span className="inline-flex items-center gap-2">
               <IconClock className="h-4 w-4 text-brand-200" />
@@ -154,6 +169,22 @@ export default async function EditalPage({ params }: Props) {
             Publicado em {formatDate(edital.createdAt)}
           </span>
         </div>
+
+        {/* Botão de destaque: Baixar Edital Completo */}
+        {editalPdf && (
+          <div className="mt-4 sm:mt-5">
+            <a
+              href={editalPdf.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-lg bg-white/15 hover:bg-white/25 border border-white/30 px-4 py-2.5 text-sm sm:text-base font-semibold text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-700 min-h-[44px]"
+              aria-label="Baixar o edital completo em PDF"
+            >
+              <IconDownload className="h-5 w-5" aria-hidden="true" />
+              Baixar Edital Completo (PDF)
+            </a>
+          </div>
+        )}
       </PageHeader>
 
       {/* Conteúdo principal */}
