@@ -13,6 +13,7 @@
     "db:studio": "prisma studio",
     "worker": "tsx src/worker.ts",
     "db:seed": "tsx prisma/seed.ts",
+    "db:seed:uat": "tsx prisma/seed-uat.ts",
     "seed:prod": "tsx prisma/seed-production.ts",
     "test": "vitest run",
     "test:watch": "vitest",
