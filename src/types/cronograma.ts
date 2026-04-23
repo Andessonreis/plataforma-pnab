@@ -6,14 +6,12 @@ export interface CronogramaFaseItem {
   tipo: 'fase'
   fase: EditalStatus
   dataHora: string
-  destaque?: boolean
 }
 
 export interface CronogramaCustomItem {
   tipo: 'custom'
   label: string
   dataHora: string
-  destaque?: boolean
 }
 
 export type CronogramaItem = CronogramaFaseItem | CronogramaCustomItem
@@ -34,14 +32,12 @@ export interface CronogramaValidationWarning {
 export interface CronogramaLegacyItem {
   label: string
   dataHora: string
-  destaque?: boolean
 }
 
 // Item para exibição (já com label resolvido)
 export interface CronogramaDisplayItem {
   label: string
   dataHora: string
-  destaque?: boolean
   /** Fase do edital (presente se o item veio de uma fase fixa, ausente em custom/legado) */
   fase?: EditalStatus
 }

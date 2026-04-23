@@ -17,7 +17,6 @@ function faseItem(
     tipo: 'fase',
     fase: fase as CronogramaFormItem['tipo'] extends 'fase' ? typeof fase : never,
     dataHora,
-    destaque: false,
   } as CronogramaFormItem
 }
 
@@ -32,7 +31,6 @@ function customItem(
     tipo: 'custom',
     label,
     dataHora,
-    destaque: false,
   } as CronogramaFormItem
 }
 
@@ -154,9 +152,9 @@ describe('validateCronogramaOrder', () => {
 describe('cronogramaToFormItems', () => {
   it('gera IDs únicos para cada item', () => {
     const raw = [
-      { tipo: 'fase', fase: 'INSCRICOES_ABERTAS', dataHora: '2025-04-01T09:00', destaque: false },
-      { tipo: 'fase', fase: 'INSCRICOES_ENCERRADAS', dataHora: '2025-04-15T18:00', destaque: true },
-      { tipo: 'custom', label: 'Oficina', dataHora: '2025-03-15T10:00', destaque: false },
+      { tipo: 'fase', fase: 'INSCRICOES_ABERTAS', dataHora: '2025-04-01T09:00' },
+      { tipo: 'fase', fase: 'INSCRICOES_ENCERRADAS', dataHora: '2025-04-15T18:00' },
+      { tipo: 'custom', label: 'Oficina', dataHora: '2025-03-15T10:00' },
     ]
     const items = cronogramaToFormItems(raw)
     expect(items).toHaveLength(3)
@@ -168,8 +166,8 @@ describe('cronogramaToFormItems', () => {
 
   it('preserva todos os campos dos items', () => {
     const raw = [
-      { tipo: 'fase', fase: 'HABILITACAO', dataHora: '2025-05-01T09:00', destaque: true },
-      { tipo: 'custom', label: 'Etapa Extra', dataHora: '2025-06-01T09:00', destaque: false },
+      { tipo: 'fase', fase: 'HABILITACAO', dataHora: '2025-05-01T09:00' },
+      { tipo: 'custom', label: 'Etapa Extra', dataHora: '2025-06-01T09:00' },
     ]
     const items = cronogramaToFormItems(raw)
 
@@ -179,7 +177,6 @@ describe('cronogramaToFormItems', () => {
       expect(faseItem.fase).toBe('HABILITACAO')
     }
     expect(faseItem.dataHora).toBe('2025-05-01T09:00')
-    expect(faseItem.destaque).toBe(true)
     expect(faseItem.id).toBeTruthy()
 
     const customItem = items[1]
@@ -188,14 +185,13 @@ describe('cronogramaToFormItems', () => {
       expect(customItem.label).toBe('Etapa Extra')
     }
     expect(customItem.dataHora).toBe('2025-06-01T09:00')
-    expect(customItem.destaque).toBe(false)
     expect(customItem.id).toBeTruthy()
   })
 
   it('converte dados legados (sem campo tipo)', () => {
     const raw = [
-      { label: 'Início das Inscrições', dataHora: '2025-04-01T09:00', destaque: false },
-      { label: 'Encerramento das Inscrições', dataHora: '2025-04-15T18:00', destaque: true },
+      { label: 'Início das Inscrições', dataHora: '2025-04-01T09:00' },
+      { label: 'Encerramento das Inscrições', dataHora: '2025-04-15T18:00' },
     ]
     const items = cronogramaToFormItems(raw)
     expect(items).toHaveLength(2)
@@ -223,8 +219,8 @@ describe('cronogramaToFormItems', () => {
 describe('validateCronogramaOrderServer', () => {
   it('retorna erro quando fases estão fora de ordem', () => {
     const items = [
-      { tipo: 'fase' as const, fase: 'INSCRICOES_ABERTAS' as const, dataHora: '2025-04-05T09:00', destaque: false },
-      { tipo: 'fase' as const, fase: 'INSCRICOES_ENCERRADAS' as const, dataHora: '2025-04-04T09:00', destaque: false },
+      { tipo: 'fase' as const, fase: 'INSCRICOES_ABERTAS' as const, dataHora: '2025-04-05T09:00' },
+      { tipo: 'fase' as const, fase: 'INSCRICOES_ENCERRADAS' as const, dataHora: '2025-04-04T09:00' },
     ]
     const errors = validateCronogramaOrderServer(items)
     expect(errors).toHaveLength(1)
@@ -234,8 +230,8 @@ describe('validateCronogramaOrderServer', () => {
 
   it('retorna vazio quando cronograma está correto', () => {
     const items = [
-      { tipo: 'fase' as const, fase: 'INSCRICOES_ABERTAS' as const, dataHora: '2025-04-01T09:00', destaque: false },
-      { tipo: 'fase' as const, fase: 'INSCRICOES_ENCERRADAS' as const, dataHora: '2025-04-15T18:00', destaque: false },
+      { tipo: 'fase' as const, fase: 'INSCRICOES_ABERTAS' as const, dataHora: '2025-04-01T09:00' },
+      { tipo: 'fase' as const, fase: 'INSCRICOES_ENCERRADAS' as const, dataHora: '2025-04-15T18:00' },
     ]
     expect(validateCronogramaOrderServer(items)).toEqual([])
   })

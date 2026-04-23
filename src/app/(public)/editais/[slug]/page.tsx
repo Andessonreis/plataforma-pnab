@@ -240,7 +240,6 @@ export default async function EditalPage({ params }: Props) {
                         const isCurrent = item.fase
                           ? isFaseCurrent(item.fase, edital.status)
                           : false
-                        const isHighlight = item.destaque === true
 
                         return (
                           <li key={index} className="relative pl-10">
@@ -251,9 +250,7 @@ export default async function EditalPage({ params }: Props) {
                                   ? 'bg-brand-200 border-brand-300'
                                   : isCurrent
                                     ? 'bg-accent-400 border-accent-500 animate-pulse'
-                                    : isHighlight
-                                      ? 'bg-brand-600 border-brand-600 shadow-sm shadow-brand-600/30'
-                                      : 'bg-white border-brand-400',
+                                    : 'bg-white border-brand-400',
                               ].join(' ')}
                               aria-hidden="true"
                             />
@@ -265,9 +262,7 @@ export default async function EditalPage({ params }: Props) {
                                   ? 'opacity-60'
                                   : isCurrent
                                     ? 'bg-accent-50 border border-accent-200'
-                                    : isHighlight
-                                      ? 'bg-brand-50 border border-brand-200'
-                                      : 'hover:bg-slate-50',
+                                    : 'hover:bg-slate-50',
                               ].join(' ')}
                             >
                               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
@@ -275,7 +270,7 @@ export default async function EditalPage({ params }: Props) {
                                   className={[
                                     'font-medium',
                                     isPast ? 'text-slate-500' : 'text-slate-900',
-                                    (isCurrent || (isHighlight && !isPast)) ? 'font-semibold' : '',
+                                    isCurrent ? 'font-semibold' : '',
                                   ].join(' ')}
                                 >
                                   {item.label}
