@@ -1,5 +1,20 @@
-import { createHash } from 'node:crypto'
 import { prisma } from '@/lib/db'
+
+/**
+ * FNV-1a 64-bit — hash não-criptográfico, determinístico e compatível
+ * com Node e Edge runtime (nenhuma dependência nativa).
+ * Só usamos pra agrupar erros "iguais" no ErrorLog.
+ */
+function fnv1a64(input: string): string {
+  let h = 14695981039346656037n
+  const prime = 1099511628211n
+  const mask = 0xffffffffffffffffn
+  for (let i = 0; i < input.length; i++) {
+    h ^= BigInt(input.charCodeAt(i))
+    h = (h * prime) & mask
+  }
+  return h.toString(16).padStart(16, '0')
+}
 
 /**
  * Contexto capturado junto com o erro. Nunca inclua dados sensíveis
@@ -38,7 +53,7 @@ export function computeFingerprint(err: Error): string {
     .slice(0, 3)
 
   const signature = [name, err.message?.slice(0, 200), ...appFrames].join('|')
-  return createHash('sha256').update(signature).digest('hex').slice(0, 16)
+  return fnv1a64(signature)
 }
 
 /**
