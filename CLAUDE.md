@@ -304,7 +304,13 @@ O repo está em plano gratuito privado — branch protection não está disponí
 4. Abrir PR via `gh pr create --base main` com título curto (< 70 chars) e descrição com **Summary** + **Test plan**.
 5. Esperar o CI (`Lint, Typecheck & Tests`) ficar verde.
 6. Mergear apenas após o CI passar — preferir "Squash and merge" para manter histórico linear.
-7. O deploy é automático após o merge (gate: `workflow_run` só dispara se CI passou).
+7. **Sincronizar o fork `andessonreis` com o main atualizado** — a VPS faz `git pull` do `andessonreis/main`, então sem esse passo o deploy não pega os commits mergeados:
+   ```bash
+   git checkout main && git pull origin main && git push andessonreis main
+   ```
+8. O deploy é automático após o merge (gate: `workflow_run` só dispara se CI passou).
+
+**⚠️ Dois remotes — por quê?** O repo `Cidades-Inteligentes-IFBA-Irece/plataforma-pnab` (`origin`) é privado e a VPS não tem acesso SSH a ele. A VPS clona do mirror público `Andessonreis/plataforma-pnab` (`andessonreis`). PRs sempre nascem e são mergeados em `origin`, mas a `main` do `andessonreis` precisa ser empurrada manualmente após cada merge. Sem isso, o deploy roda mas `git merge --ff-only origin/main` responde "Already up to date." e serve o código antigo.
 
 **Exceções** (push direto tolerado):
 
@@ -321,6 +327,7 @@ O repo está em plano gratuito privado — branch protection não está disponí
 - Não auto-aprovar PR próprio — o usuário aprova/mergeia.
 - Ao abrir PR, reportar o link no chat para o usuário revisar.
 - Se precisar de permissão (push, branch protection, etc.) e for negada, **parar e perguntar** em vez de tentar workarounds.
+- **Após o usuário mergear um PR, rodar `git push andessonreis main` para sincronizar o fork** — senão o deploy automático da VPS não pega os commits novos.
 
 ---
 
