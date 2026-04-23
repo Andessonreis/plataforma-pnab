@@ -137,7 +137,6 @@ export function parseCronograma(raw: unknown): CronogramaDisplayItem[] {
         return {
           label: editalCronogramaLabel[item.fase as EditalStatus] ?? String(item.fase),
           dataHora: String(item.dataHora),
-          destaque: item.destaque === true,
           fase: item.fase as EditalStatus,
         }
       }
@@ -146,7 +145,6 @@ export function parseCronograma(raw: unknown): CronogramaDisplayItem[] {
       return {
         label: typeof item.label === 'string' ? item.label : '—',
         dataHora: String(item.dataHora),
-        destaque: item.destaque === true,
         ...(legacyFase ? { fase: legacyFase } : {}),
       }
     })
@@ -174,7 +172,6 @@ export function parseCronogramaPublico(
   const publicacaoItem: CronogramaDisplayItem = {
     label: editalCronogramaLabel.PUBLICADO,
     dataHora: typeof publishedAt === 'string' ? publishedAt : publishedAt.toISOString(),
-    destaque: false,
     fase: 'PUBLICADO',
   }
 
@@ -236,7 +233,7 @@ export function isFaseCurrent(fase: EditalStatus, currentStatus: EditalStatus): 
 // ── migrateLegacyCronograma — converte formato antigo para novo ─────────────
 
 /**
- * Converte cronograma legado (array de { label, dataHora, destaque })
+ * Converte cronograma legado (array de { label, dataHora })
  * para o formato novo (discriminated union com tipo 'fase' ou 'custom').
  *
  * Se o dado já está no formato novo (items com campo `tipo`), retorna como está.
@@ -271,14 +268,12 @@ export function migrateLegacyCronograma(raw: unknown): CronogramaItem[] {
         tipo: 'fase',
         fase,
         dataHora: item.dataHora ?? '',
-        destaque: item.destaque ?? false,
       })
     } else {
       result.push({
         tipo: 'custom',
         label: item.label,
         dataHora: item.dataHora ?? '',
-        destaque: item.destaque ?? false,
       })
     }
   }
@@ -290,20 +285,20 @@ export function migrateLegacyCronograma(raw: unknown): CronogramaItem[] {
 
 /**
  * Extrai as fases fixas de um cronograma (formato novo),
- * retornando um record de EditalStatus → { dataHora, destaque }.
+ * retornando um record de EditalStatus → { dataHora }.
  */
 export function extractFases(
   cronograma: CronogramaItem[],
-): Record<string, { dataHora: string; destaque: boolean }> {
-  const fases: Record<string, { dataHora: string; destaque: boolean }> = {}
+): Record<string, { dataHora: string }> {
+  const fases: Record<string, { dataHora: string }> = {}
 
   for (const fase of CRONOGRAMA_FASES_ORDENADAS) {
-    fases[fase] = { dataHora: '', destaque: false }
+    fases[fase] = { dataHora: '' }
   }
 
   for (const item of cronograma) {
     if (item.tipo === 'fase' && item.fase in fases) {
-      fases[item.fase] = { dataHora: item.dataHora, destaque: item.destaque ?? false }
+      fases[item.fase] = { dataHora: item.dataHora }
     }
   }
 
@@ -315,13 +310,12 @@ export function extractFases(
  */
 export function extractCustomItems(
   cronograma: CronogramaItem[],
-): Array<{ label: string; dataHora: string; destaque: boolean }> {
+): Array<{ label: string; dataHora: string }> {
   return cronograma
     .filter((item): item is CronogramaItem & { tipo: 'custom' } => item.tipo === 'custom')
     .map((item) => ({
       label: item.label,
       dataHora: item.dataHora,
-      destaque: item.destaque ?? false,
     }))
 }
 

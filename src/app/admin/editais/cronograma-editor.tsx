@@ -74,7 +74,7 @@ export function CronogramaEditor({ items, onChange, warnings }: CronogramaEditor
   )
 
   const handleUpdate = useCallback(
-    (id: string, field: 'dataHora' | 'destaque' | 'label', value: string | boolean) => {
+    (id: string, field: 'dataHora' | 'label', value: string) => {
       onChange(
         items.map((item) =>
           item.id === id ? { ...item, [field]: value } : item,
@@ -98,7 +98,6 @@ export function CronogramaEditor({ items, onChange, warnings }: CronogramaEditor
       tipo: 'fase' as const,
       fase,
       dataHora: '',
-      destaque: false,
     }))
     onChange(templateItems)
   }
@@ -110,7 +109,6 @@ export function CronogramaEditor({ items, onChange, warnings }: CronogramaEditor
       tipo: 'fase',
       fase,
       dataHora: '',
-      destaque: false,
     }
     onChange([...items, newItem])
     setAddFaseOpen(false)
@@ -123,7 +121,6 @@ export function CronogramaEditor({ items, onChange, warnings }: CronogramaEditor
       tipo: 'custom',
       label: '',
       dataHora: '',
-      destaque: false,
     }
     onChange([...items, newItem])
   }

@@ -9,7 +9,7 @@ import { getItemValidationWarnings } from '@/lib/utils/cronograma'
 interface CronogramaSortableItemProps {
   item: CronogramaFormItem
   warnings: CronogramaValidationWarning[]
-  onUpdate: (id: string, field: 'dataHora' | 'destaque' | 'label', value: string | boolean) => void
+  onUpdate: (id: string, field: 'dataHora' | 'label', value: string) => void
   onRemove: (id: string) => void
 }
 
@@ -46,9 +46,7 @@ export function CronogramaSortableItem({
         isDragging ? 'opacity-50 shadow-lg z-10' : '',
         hasWarning
           ? 'border-red-300 bg-red-50'
-          : item.destaque
-            ? 'border-blue-200 bg-blue-50'
-            : 'border-slate-200 bg-white',
+          : 'border-slate-200 bg-white',
       ].join(' ')}
     >
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
@@ -111,36 +109,6 @@ export function CronogramaSortableItem({
             </p>
           )}
         </div>
-
-        {/* Toggle destaque */}
-        <button
-          type="button"
-          role="switch"
-          aria-checked={item.destaque ?? false}
-          aria-label={`Destaque para ${label}`}
-          onClick={() => onUpdate(item.id, 'destaque', !(item.destaque ?? false))}
-          className={[
-            'flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors shrink-0',
-            item.destaque
-              ? 'border-blue-300 bg-blue-100 text-blue-700'
-              : 'border-slate-300 bg-white text-slate-600 hover:border-slate-400',
-          ].join(' ')}
-        >
-          <span
-            className={[
-              'inline-flex h-4 w-7 rounded-full border transition-colors',
-              item.destaque ? 'border-blue-600 bg-blue-600' : 'border-slate-300 bg-slate-200',
-            ].join(' ')}
-          >
-            <span
-              className={[
-                'my-auto block h-3 w-3 rounded-full bg-white shadow transition-transform',
-                item.destaque ? 'translate-x-3.5' : 'translate-x-0.5',
-              ].join(' ')}
-            />
-          </span>
-          Destaque
-        </button>
 
         {/* Botao remover */}
         <button

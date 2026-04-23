@@ -18,21 +18,18 @@ const cronogramaFaseSchema = z.object({
     'RESULTADO_FINAL', 'ENCERRADO',
   ]),
   dataHora: z.string().default(''),
-  destaque: z.boolean().default(false),
 })
 
 const cronogramaCustomSchema = z.object({
   tipo: z.literal('custom'),
   label: z.string().min(1, 'Descrição do marco é obrigatória'),
   dataHora: z.string().default(''),
-  destaque: z.boolean().default(false),
 })
 
 // Aceita formato novo (discriminated union) E formato legado (sem tipo)
 const cronogramaLegacySchema = z.object({
   label: z.string().min(1),
   dataHora: z.string().default(''),
-  destaque: z.boolean().default(false),
 })
 
 const cronogramaItemSchema = z.union([

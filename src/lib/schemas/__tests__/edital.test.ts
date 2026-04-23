@@ -12,7 +12,6 @@ describe('cronogramaItemSchema', () => {
       tipo: 'fase',
       fase: 'INSCRICOES_ABERTAS',
       dataHora: '2026-05-01T09:00',
-      destaque: true,
     })
     expect(result.success).toBe(true)
   })

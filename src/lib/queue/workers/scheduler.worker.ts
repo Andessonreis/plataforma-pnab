@@ -20,7 +20,6 @@ interface CronogramaRawItem {
   fase?: string
   label?: string
   dataHora: string
-  destaque?: boolean
 }
 
 // ── Funções utilitárias (exportadas para testes) ────────────────────────────
