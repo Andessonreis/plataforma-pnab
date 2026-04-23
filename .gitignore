@@ -2,7 +2,7 @@
 node_modules/
 .pnp
 .pnp.js
-
+.omc/state/
 # Next.js
 /.next/
 /out/
