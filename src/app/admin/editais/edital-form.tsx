@@ -301,7 +301,7 @@ export function EditalForm({ initialData }: EditalFormProps) {
     const collapsed = !!collapsedSections[number]
     return (
       <>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <button
             type="button"
             onClick={() => toggleSection(number)}
@@ -916,7 +916,7 @@ export function EditalForm({ initialData }: EditalFormProps) {
           number={5}
           title="Critérios de Avaliação"
           actions={
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {criteriosAvaliacao.length === 0 ? (
                 <span className="inline-flex items-center text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
                   Usando critérios padrão PNAB (5)
@@ -926,14 +926,16 @@ export function EditalForm({ initialData }: EditalFormProps) {
                   {criteriosAvaliacao.length} critérios customizados
                 </span>
               )}
-              {criteriosAvaliacao.length > 0 && (
-                <Button type="button" variant="outline" size="sm" onClick={duplicarUltimoCriterio}>
-                  + Duplicar último
+              <div className="flex items-center gap-2">
+                {criteriosAvaliacao.length > 0 && (
+                  <Button type="button" variant="outline" size="sm" onClick={duplicarUltimoCriterio}>
+                    + Duplicar último
+                  </Button>
+                )}
+                <Button type="button" variant="outline" size="sm" onClick={addCriterio}>
+                  + Adicionar critério
                 </Button>
-              )}
-              <Button type="button" variant="outline" size="sm" onClick={addCriterio}>
-                + Adicionar critério
-              </Button>
+              </div>
             </div>
           }
         >
