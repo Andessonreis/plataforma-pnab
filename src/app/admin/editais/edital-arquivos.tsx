@@ -236,8 +236,8 @@ export const EditalArquivos = forwardRef<EditalArquivosHandle, EditalArquivosPro
             />
           </div>
 
-          <div className="flex items-end gap-3">
-            <div className="flex-1">
+          <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+            <div className="flex-1 min-w-0">
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Arquivo
               </label>
@@ -259,7 +259,7 @@ export const EditalArquivos = forwardRef<EditalArquivosHandle, EditalArquivosPro
               size="sm"
               onClick={handleUpload}
               loading={uploading}
-              className="whitespace-nowrap"
+              className="whitespace-nowrap w-full sm:w-auto"
             >
               <IconPlus className="h-4 w-4 mr-1" />
               {editalId ? 'Enviar' : 'Adicionar'}
@@ -281,17 +281,19 @@ export const EditalArquivos = forwardRef<EditalArquivosHandle, EditalArquivosPro
         {pending.length > 0 && (
           <ul className="divide-y divide-slate-100 mb-2">
             {pending.map((item) => (
-              <li key={item.localId} className="flex items-center justify-between py-3 gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <IconPdf className="h-5 w-5 text-slate-400 shrink-0" />
-                  <div className="min-w-0">
+              <li key={item.localId} className="flex items-start justify-between py-3 gap-3">
+                <div className="flex items-start gap-3 min-w-0 flex-1">
+                  <IconPdf className="h-5 w-5 text-slate-400 shrink-0 mt-0.5" />
+                  <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-slate-900 truncate">{item.titulo}</p>
                     <p className="text-xs text-slate-400 truncate">{item.file.name}</p>
+                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+                      <Badge variant={getBadgeVariantForTipo(item.tipo)}>
+                        {tipoOptions.find((t) => t.value === item.tipo)?.label ?? item.tipo}
+                      </Badge>
+                      <Badge variant="warning">Pendente</Badge>
+                    </div>
                   </div>
-                  <Badge variant={getBadgeVariantForTipo(item.tipo)}>
-                    {tipoOptions.find((t) => t.value === item.tipo)?.label ?? item.tipo}
-                  </Badge>
-                  <Badge variant="warning">Pendente</Badge>
                 </div>
                 <button
                   type="button"
@@ -320,15 +322,17 @@ export const EditalArquivos = forwardRef<EditalArquivosHandle, EditalArquivosPro
         ) : (
           <ul className="divide-y divide-slate-100">
             {arquivos.map((arq) => (
-              <li key={arq.id} className="flex items-center justify-between py-3 gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <IconPdf className="h-5 w-5 text-slate-400 shrink-0" />
-                  <div className="min-w-0">
+              <li key={arq.id} className="flex items-start justify-between py-3 gap-3">
+                <div className="flex items-start gap-3 min-w-0 flex-1">
+                  <IconPdf className="h-5 w-5 text-slate-400 shrink-0 mt-0.5" />
+                  <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-slate-900 truncate">{arq.titulo}</p>
+                    <div className="mt-1.5">
+                      <Badge variant={getBadgeVariantForTipo(arq.tipo)}>
+                        {tipoOptions.find((t) => t.value === arq.tipo)?.label ?? arq.tipo}
+                      </Badge>
+                    </div>
                   </div>
-                  <Badge variant={getBadgeVariantForTipo(arq.tipo)}>
-                    {tipoOptions.find((t) => t.value === arq.tipo)?.label ?? arq.tipo}
-                  </Badge>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <a

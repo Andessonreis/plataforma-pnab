@@ -1153,10 +1153,10 @@ export function EditalForm({ initialData }: EditalFormProps) {
           number={6}
           title="Tipos de Anexo"
           actions={
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {tiposAnexo.length > 0 && (
                 <>
-                  <span className="inline-flex items-center text-xs font-medium text-brand-700 bg-brand-50 px-2.5 py-0.5 rounded-full">
+                  <span className="inline-flex items-center text-xs font-medium text-brand-700 bg-brand-50 px-2.5 py-0.5 rounded-full whitespace-nowrap">
                     {tiposAnexo.length} tipo{tiposAnexo.length !== 1 ? 's' : ''} selecionado{tiposAnexo.length !== 1 ? 's' : ''}
                   </span>
                   <Button type="button" variant="outline" size="sm" onClick={() => setTiposAnexo([])}>
