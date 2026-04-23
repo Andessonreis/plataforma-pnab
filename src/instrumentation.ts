@@ -57,6 +57,9 @@ export async function onRequestError(
     renderType?: 'dynamic' | 'dynamic-resume'
   },
 ) {
+  // captureError usa node:crypto e prisma — só roda em runtime Node
+  if (process.env.NEXT_RUNTIME && process.env.NEXT_RUNTIME !== 'nodejs') return
+
   try {
     const { captureError } = await import('@/lib/errors/capture')
 
