@@ -20,6 +20,15 @@ RUN npm install --omit=dev
 FROM base AS builder
 WORKDIR /app
 
+# Vars NEXT_PUBLIC_* precisam estar presentes em build time — .env fica fora do
+# contexto Docker (ver .dockerignore), então recebem via --build-arg.
+ARG NEXT_PUBLIC_BASE_PATH=""
+ARG NEXT_PUBLIC_SITE_URL=""
+ARG NEXT_PUBLIC_SENTRY_DSN=""
+ENV NEXT_PUBLIC_BASE_PATH=$NEXT_PUBLIC_BASE_PATH
+ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
+ENV NEXT_PUBLIC_SENTRY_DSN=$NEXT_PUBLIC_SENTRY_DSN
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 

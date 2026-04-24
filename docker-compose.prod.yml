@@ -7,7 +7,12 @@ x-logging: &default-logging
 services:
   # ── Aplicação Next.js ────────────────────────────────────────────────────────
   app:
-    build: .
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_BASE_PATH: ${NEXT_PUBLIC_BASE_PATH:-}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-}
+        NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
     ports:
       - "3001:3000"
     env_file: .env
@@ -29,7 +34,12 @@ services:
 
   # ── Worker BullMQ (email, PDF) ──────────────────────────────────────────────
   worker:
-    build: .
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_BASE_PATH: ${NEXT_PUBLIC_BASE_PATH:-}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-}
+        NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
     command: ["node", "worker.cjs"]
     env_file: .env
     depends_on:
