@@ -4,6 +4,7 @@ import type { UserRole } from '@prisma/client'
 // Configuração compatível com Edge Runtime (sem bcrypt, prisma, etc.)
 // Usada pelo middleware para verificar sessão JWT.
 export const authConfig: NextAuthConfig = {
+  trustHost: true,
   session: { strategy: 'jwt' },
   pages: {
     signIn: '/login',
