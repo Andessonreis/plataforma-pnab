@@ -6,7 +6,7 @@ Bem-vindo ao UAT do **Portal PNAB Irecê**. Este é o material oficial de testes
 
 ## Acessos
 
-- **URL do sistema:** https://cidadeslab.dev
+- **URL do sistema:** https://www.irece.ba.gov.br/culturaeturismo
 - **Senha padrão (todos os usuários do seed):** `Teste@123`
 - **Planilha de testes:** [PREENCHA O LINK DO GOOGLE SHEETS AQUI]
 - **Canal de dúvidas:** [PREENCHA O LINK DO GRUPO WHATSAPP/TELEGRAM]
