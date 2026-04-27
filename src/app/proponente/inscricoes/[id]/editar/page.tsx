@@ -35,6 +35,10 @@ export default async function EditarInscricaoPage({ params }: Props) {
           etapasCustomizadas: true,
           tiposAnexo: true,
           status: true,
+          arquivos: {
+            orderBy: { createdAt: 'asc' },
+            select: { id: true, tipo: true, titulo: true, url: true, acessivel: true },
+          },
         },
       },
       anexos: {
@@ -52,6 +56,19 @@ export default async function EditarInscricaoPage({ params }: Props) {
 
   if (!inscricao) {
     notFound()
+  }
+
+  // Mapa tipo→label para exibir labels humanos nos badges dos arquivos do edital
+  const tipoLabels: Record<string, string> = {}
+  if (inscricao.edital.arquivos.length > 0) {
+    const tiposUsados = [...new Set(inscricao.edital.arquivos.map((a) => a.tipo))]
+    const attachmentTypes = await prisma.attachmentType.findMany({
+      where: { tipo: { in: tiposUsados } },
+      select: { tipo: true, label: true },
+    })
+    for (const at of attachmentTypes) {
+      tipoLabels[at.tipo] = at.label
+    }
   }
 
   if (inscricao.proponenteId !== session.user.id) {
@@ -106,6 +123,8 @@ export default async function EditarInscricaoPage({ params }: Props) {
           tiposAnexo: Array.isArray(inscricao.edital.tiposAnexo)
             ? (inscricao.edital.tiposAnexo as Array<{ tipo: string; label: string; obrigatorio: boolean }>)
             : null,
+          arquivos: inscricao.edital.arquivos,
+          tipoLabels,
         }}
         tipoProponente={user?.tipoProponente ?? null}
         inscricaoId={inscricao.id}
