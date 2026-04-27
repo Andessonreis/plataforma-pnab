@@ -33,25 +33,25 @@ const staff: StaffUser[] = [
     email: 'seculturismoirece@gmail.com',
     nome: 'Gestor — Secretaria de Arte e Cultura de Irecê',
     role: UserRole.ADMIN,
-    cpfCnpj: '00000000001',
+    cpfCnpj: '99999999901',
   },
   {
     email: 'atendimento@seculturismoirece.com.br',
     nome: 'Atendimento — Secretaria de Arte e Cultura',
     role: UserRole.ATENDIMENTO,
-    cpfCnpj: '00000000002',
+    cpfCnpj: '99999999902',
   },
   {
     email: 'habilitador@seculturismoirece.com.br',
     nome: 'Habilitador — Secretaria de Arte e Cultura',
     role: UserRole.HABILITADOR,
-    cpfCnpj: '00000000003',
+    cpfCnpj: '99999999903',
   },
   {
     email: 'avaliador@seculturismoirece.com.br',
     nome: 'Avaliador — Secretaria de Arte e Cultura',
     role: UserRole.AVALIADOR,
-    cpfCnpj: '00000000004',
+    cpfCnpj: '99999999904',
   },
 ]
 
@@ -90,10 +90,10 @@ async function main() {
   console.log(`  Senha padrão para TODAS as contas: ${DEFAULT_PASSWORD}`)
   console.log('  ⚠ Trocar a senha no primeiro acesso (cada usuário, individualmente)\n')
 
-  console.log('  ADMIN          → CPF 000.000.000-01  → seculturismoirece@gmail.com')
-  console.log('  ATENDIMENTO    → CPF 000.000.000-02  → atendimento@seculturismoirece.com.br')
-  console.log('  HABILITADOR    → CPF 000.000.000-03  → habilitador@seculturismoirece.com.br')
-  console.log('  AVALIADOR      → CPF 000.000.000-04  → avaliador@seculturismoirece.com.br')
+  console.log('  ADMIN          → CPF 999.999.999-01  → seculturismoirece@gmail.com')
+  console.log('  ATENDIMENTO    → CPF 999.999.999-02  → atendimento@seculturismoirece.com.br')
+  console.log('  HABILITADOR    → CPF 999.999.999-03  → habilitador@seculturismoirece.com.br')
+  console.log('  AVALIADOR      → CPF 999.999.999-04  → avaliador@seculturismoirece.com.br')
   console.log('')
 }
 
