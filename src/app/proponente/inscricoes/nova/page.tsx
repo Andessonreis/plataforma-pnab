@@ -37,11 +37,28 @@ export default async function NovaInscricaoPage({ searchParams }: Props) {
       tiposAnexo: true,
       tiposProponentePermitidos: true,
       status: true,
+      arquivos: {
+        orderBy: { createdAt: 'asc' },
+        select: { id: true, tipo: true, titulo: true, url: true, acessivel: true },
+      },
     },
   })
 
   if (!edital || edital.status !== 'INSCRICOES_ABERTAS') {
     redirect('/editais')
+  }
+
+  // Mapa tipo→label para exibir labels humanos nos badges dos arquivos do edital
+  const tipoLabels: Record<string, string> = {}
+  if (edital.arquivos.length > 0) {
+    const tiposUsados = [...new Set(edital.arquivos.map((a) => a.tipo))]
+    const attachmentTypes = await prisma.attachmentType.findMany({
+      where: { tipo: { in: tiposUsados } },
+      select: { tipo: true, label: true },
+    })
+    for (const at of attachmentTypes) {
+      tipoLabels[at.tipo] = at.label
+    }
   }
 
   // Buscar tipo de proponente do usuário
@@ -141,6 +158,8 @@ export default async function NovaInscricaoPage({ searchParams }: Props) {
           tiposAnexo: Array.isArray(edital.tiposAnexo)
             ? (edital.tiposAnexo as Array<{ tipo: string; label: string; obrigatorio: boolean }>)
             : null,
+          arquivos: edital.arquivos,
+          tipoLabels,
         }}
         tipoProponente={user?.tipoProponente ?? null}
       />
