@@ -138,6 +138,13 @@ export default function InscricaoForm({
 
   const step = steps[currentStep]
 
+  // Anexos obrigatórios faltando — usado para bloquear avanço da etapa "anexos"
+  // e desabilitar o botão "Próximo" quando não estiverem todos enviados.
+  const anexosObrigatoriosFaltando = effectiveTiposAnexo
+    .filter((t) => t.obrigatorio)
+    .filter((t) => !anexos.some((a) => a.tipo === t.tipo))
+  const podeAvancarDeAnexos = anexosObrigatoriosFaltando.length === 0
+
   // ─── Criar inscrição (rascunho) ────────────────────────────────────────────
 
   const createInscricao = useCallback(async () => {
@@ -288,6 +295,16 @@ export default function InscricaoForm({
 
   const goNext = async () => {
     setError('')
+    // Bloquear avanço da etapa "anexos" sem os obrigatórios — evita usuário
+    // descobrir só na revisão/submit que o backend vai rejeitar.
+    if (step.kind === 'anexos' && !podeAvancarDeAnexos) {
+      setError(
+        `Envie os anexos obrigatórios antes de prosseguir: ${anexosObrigatoriosFaltando
+          .map((t) => t.label)
+          .join(', ')}`,
+      )
+      return
+    }
     // Ao sair de etapas com campos (categoria, dados, customizadas), salvar rascunho
     if (step.kind === 'categoria' || step.kind === 'dados' || step.kind === 'etapa_custom') {
       await saveRascunho()
@@ -916,12 +933,28 @@ export default function InscricaoForm({
           )}
         </div>
 
-        <div>
+        <div className="flex flex-col items-end gap-1">
           {step.kind !== 'revisao' ? (
-            <Button onClick={goNext} type="button">
-              Próximo
-              <IconArrowRight className="h-4 w-4 ml-1" />
-            </Button>
+            <>
+              <Button
+                onClick={goNext}
+                type="button"
+                disabled={step.kind === 'anexos' && !podeAvancarDeAnexos}
+                title={
+                  step.kind === 'anexos' && !podeAvancarDeAnexos
+                    ? `Faltam anexos obrigatórios: ${anexosObrigatoriosFaltando.map((t) => t.label).join(', ')}`
+                    : undefined
+                }
+              >
+                Próximo
+                <IconArrowRight className="h-4 w-4 ml-1" />
+              </Button>
+              {step.kind === 'anexos' && !podeAvancarDeAnexos && (
+                <p className="text-xs text-amber-700" aria-live="polite">
+                  Envie os anexos obrigatórios para avançar
+                </p>
+              )}
+            </>
           ) : (
             <Button onClick={handleSubmit} loading={submitting} type="button">
               <IconCheck className="h-4 w-4 mr-1" />

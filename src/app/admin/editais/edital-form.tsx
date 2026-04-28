@@ -94,15 +94,34 @@ const ANO_OPTIONS = Array.from({ length: 6 }, (_, i) => {
   return { value: String(y), label: String(y) }
 })
 
-/** Formata dígitos digitados como moeda BRL: 150000 → "1.500,00" */
+/**
+ * Formata valor monetário em reais conforme o usuário digita.
+ * "50000" → "50.000", "50000,5" → "50.000,5", "50000,50" → "50.000,50".
+ * Decimais limitados a 2 casas.
+ *
+ * Por que não tratar como centavos: o admin tende a digitar o valor em
+ * reais diretamente — interpretar "50000" como "R$ 500,00" causa risco de
+ * publicar edital com valor 100× menor que o pretendido.
+ */
 function formatarMoeda(raw: string): string {
-  const digits = raw.replace(/\D/g, '')
-  if (!digits) return ''
-  const cents = parseInt(digits, 10)
-  return (cents / 100).toLocaleString('pt-BR', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })
+  const cleaned = raw.replace(/[^\d,]/g, '')
+  if (!cleaned) return ''
+
+  const firstComma = cleaned.indexOf(',')
+  const intRaw = (firstComma === -1 ? cleaned : cleaned.slice(0, firstComma)).replace(/\D/g, '')
+  const decRaw = firstComma === -1 ? null : cleaned.slice(firstComma + 1).replace(/\D/g, '').slice(0, 2)
+
+  if (!intRaw && decRaw === null) return ''
+
+  const intFormatted = parseInt(intRaw || '0', 10).toLocaleString('pt-BR')
+  return decRaw === null ? intFormatted : `${intFormatted},${decRaw}`
+}
+
+/** Ao sair do campo, completa para 2 casas: "1.500" → "1.500,00", "1.500,5" → "1.500,50" */
+function normalizarMoedaOnBlur(value: string): string {
+  if (!value) return ''
+  const [intPart, decPart = ''] = value.split(',')
+  return `${intPart},${(decPart + '00').slice(0, 2)}`
 }
 
 export function EditalForm({ initialData }: EditalFormProps) {
@@ -522,10 +541,12 @@ export function EditalForm({ initialData }: EditalFormProps) {
               label="Valor Total (R$)"
               required
               type="text"
-              inputMode="numeric"
+              inputMode="decimal"
               value={valorTotal}
               onChange={e => setValorTotal(formatarMoeda(e.target.value))}
-              placeholder="0,00"
+              onBlur={e => setValorTotal(normalizarMoedaOnBlur(e.target.value))}
+              placeholder="50.000,00"
+              hint="Use vírgula para separar centavos. Ex: 50.000,00"
             />
           </div>
           <Select
