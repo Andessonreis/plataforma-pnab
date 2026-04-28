@@ -54,17 +54,17 @@ export function CmsForm({ initialData }: CmsFormProps) {
         if (data.fieldErrors) {
           setErrors(data.fieldErrors)
         } else {
-          setMessage({ type: 'error', text: data.message || 'Erro ao salvar pagina.' })
+          setMessage({ type: 'error', text: data.message || 'Erro ao salvar página.' })
         }
         return
       }
 
-      setMessage({ type: 'success', text: isEdit ? 'Pagina atualizada.' : 'Pagina criada com sucesso.' })
+      setMessage({ type: 'success', text: isEdit ? 'Página atualizada.' : 'Página criada com sucesso.' })
       if (!isEdit) {
         router.push(`/admin/cms/${data.id}`)
       }
     } catch {
-      setMessage({ type: 'error', text: 'Erro de conexao. Tente novamente.' })
+      setMessage({ type: 'error', text: 'Erro de conexão. Tente novamente.' })
     } finally {
       setLoading(false)
     }
@@ -72,7 +72,7 @@ export function CmsForm({ initialData }: CmsFormProps) {
 
   async function handleDelete() {
     if (!isEdit) return
-    if (!confirm('Tem certeza que deseja excluir esta pagina? Esta acao nao pode ser desfeita.')) return
+    if (!confirm('Tem certeza que deseja excluir esta página? Esta ação não pode ser desfeita.')) return
 
     setLoading(true)
     setMessage(null)
@@ -84,13 +84,13 @@ export function CmsForm({ initialData }: CmsFormProps) {
 
       if (!res.ok) {
         const data = await res.json()
-        setMessage({ type: 'error', text: data.message || 'Erro ao excluir pagina.' })
+        setMessage({ type: 'error', text: data.message || 'Erro ao excluir página.' })
         return
       }
 
       router.push('/admin/cms')
     } catch {
-      setMessage({ type: 'error', text: 'Erro de conexao. Tente novamente.' })
+      setMessage({ type: 'error', text: 'Erro de conexão. Tente novamente.' })
     } finally {
       setLoading(false)
     }
@@ -111,17 +111,17 @@ export function CmsForm({ initialData }: CmsFormProps) {
         </div>
       )}
 
-      {/* Conteudo */}
+      {/* Conteúdo */}
       <Card padding="sm" className="sm:p-6">
-        <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Conteudo</h2>
+        <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Conteúdo</h2>
         <div className="space-y-4">
           <Input
-            label="Titulo da Pagina"
+            label="Título da Página"
             value={titulo}
             onChange={(e) => setTitulo(e.target.value)}
             error={errors.titulo}
             required
-            placeholder="Ex: Politica de Privacidade"
+            placeholder="Ex: Política de Privacidade"
           />
 
           <div>
@@ -131,17 +131,17 @@ export function CmsForm({ initialData }: CmsFormProps) {
               onChange={(e) => setCorpo(e.target.value)}
               error={errors.corpo}
               required
-              placeholder="<h2>Titulo da secao</h2>&#10;<p>Conteudo do paragrafo...</p>"
+              placeholder="<h2>Título da seção</h2>&#10;<p>Conteúdo do parágrafo...</p>"
               rows={16}
-              hint="Escreva o conteudo em HTML. Tags suportadas: h2, h3, p, ul, ol, li, a, strong, em."
+              hint="Escreva o conteúdo em HTML. Tags suportadas: h2, h3, p, ul, ol, li, a, strong, em."
             />
           </div>
         </div>
       </Card>
 
-      {/* Publicacao */}
+      {/* Publicação */}
       <Card padding="sm" className="sm:p-6">
-        <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Publicacao</h2>
+        <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Publicação</h2>
         <label className="flex items-center gap-3 cursor-pointer min-h-[44px]">
           <input
             type="checkbox"
@@ -150,15 +150,15 @@ export function CmsForm({ initialData }: CmsFormProps) {
             className="h-5 w-5 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
           />
           <div>
-            <span className="text-sm font-medium text-slate-900">Publicar pagina</span>
+            <span className="text-sm font-medium text-slate-900">Publicar página</span>
             <p className="text-xs text-slate-500 mt-0.5">
-              Paginas publicadas ficam visiveis no site em /pagina/slug
+              Páginas publicadas ficam visíveis no site em /pagina/slug
             </p>
           </div>
         </label>
       </Card>
 
-      {/* Botoes */}
+      {/* Botões */}
       <div className="flex items-center justify-between">
         <div>
           {isEdit && (
@@ -169,7 +169,7 @@ export function CmsForm({ initialData }: CmsFormProps) {
               disabled={loading}
               className="text-red-600 hover:text-red-700 hover:bg-red-50"
             >
-              Excluir Pagina
+              Excluir Página
             </Button>
           )}
         </div>
@@ -182,7 +182,7 @@ export function CmsForm({ initialData }: CmsFormProps) {
             Cancelar
           </Button>
           <Button type="submit" loading={loading}>
-            {isEdit ? 'Salvar Alteracoes' : 'Criar Pagina'}
+            {isEdit ? 'Salvar Alterações' : 'Criar Página'}
           </Button>
         </div>
       </div>

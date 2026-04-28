@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     where: { id },
     select: { titulo: true },
   })
-  return { title: `Editar: ${page?.titulo ?? id} — Portal PNAB Irece` }
+  return { title: `Editar: ${page?.titulo ?? id} — Portal PNAB Irecê` }
 }
 
 export default async function EditarCmsPage({ params }: Props) {
@@ -37,9 +37,9 @@ export default async function EditarCmsPage({ params }: Props) {
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
-          Voltar para Paginas
+          Voltar para Páginas
         </Link>
-        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Editar Pagina</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Editar Página</h1>
         <p className="text-xs sm:text-sm text-slate-600 mt-1 line-clamp-1">{page.titulo}</p>
       </div>
 

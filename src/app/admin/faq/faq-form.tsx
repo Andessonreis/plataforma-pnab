@@ -76,7 +76,7 @@ export function FaqForm({ initialData, faqItemId, editais }: FaqFormProps) {
         router.push(`/admin/faq/${data.id}`)
       }
     } catch {
-      setMessage({ type: 'error', text: 'Erro de conexao. Tente novamente.' })
+      setMessage({ type: 'error', text: 'Erro de conexão. Tente novamente.' })
     } finally {
       setLoading(false)
     }
@@ -97,9 +97,9 @@ export function FaqForm({ initialData, faqItemId, editais }: FaqFormProps) {
         </div>
       )}
 
-      {/* Conteudo */}
+      {/* Conteúdo */}
       <Card padding="sm" className="sm:p-6">
-        <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Conteudo</h2>
+        <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Conteúdo</h2>
         <div className="space-y-4">
           <Input
             label="Pergunta"
@@ -122,9 +122,9 @@ export function FaqForm({ initialData, faqItemId, editais }: FaqFormProps) {
         </div>
       </Card>
 
-      {/* Configuracao */}
+      {/* Configuração */}
       <Card padding="sm" className="sm:p-6">
-        <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Configuracao</h2>
+        <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Configuração</h2>
         <div className="space-y-4">
           <Select
             label="Edital Relacionado"
@@ -134,12 +134,12 @@ export function FaqForm({ initialData, faqItemId, editais }: FaqFormProps) {
           />
 
           <Input
-            label="Ordem de Exibicao"
+            label="Ordem de Exibição"
             type="number"
             value={String(ordem)}
             onChange={(e) => setOrdem(Number(e.target.value))}
             error={errors.ordem}
-            hint="Itens com menor numero aparecem primeiro."
+            hint="Itens com menor número aparecem primeiro."
             min={0}
           />
 
@@ -154,12 +154,12 @@ export function FaqForm({ initialData, faqItemId, editais }: FaqFormProps) {
               />
               <span className="text-sm font-medium text-slate-700">Publicado</span>
             </label>
-            <p className="text-xs text-slate-500">Itens ocultos nao aparecem na pagina publica de FAQ.</p>
+            <p className="text-xs text-slate-500">Itens ocultos não aparecem na página pública de FAQ.</p>
           </div>
         </div>
       </Card>
 
-      {/* Botoes */}
+      {/* Botões */}
       <div className="flex items-center justify-end gap-3">
         <Button
           type="button"
@@ -169,7 +169,7 @@ export function FaqForm({ initialData, faqItemId, editais }: FaqFormProps) {
           Cancelar
         </Button>
         <Button type="submit" loading={loading}>
-          {isEdit ? 'Salvar Alteracoes' : 'Criar Item'}
+          {isEdit ? 'Salvar Alterações' : 'Criar Item'}
         </Button>
       </div>
     </form>

@@ -38,13 +38,13 @@ function Pagination({ currentPage, totalPages, baseUrl, className = '' }: Pagina
   }
 
   return (
-    <nav aria-label="Paginacao" className={`flex items-center justify-center gap-1 ${className}`}>
+    <nav aria-label="Paginação" className={`flex items-center justify-center gap-1 ${className}`}>
       {/* Anterior */}
       {currentPage > 1 ? (
         <a
           href={buildUrl(currentPage - 1)}
           className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg border border-slate-300 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
-          aria-label="Pagina anterior"
+          aria-label="Página anterior"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -91,7 +91,7 @@ function Pagination({ currentPage, totalPages, baseUrl, className = '' }: Pagina
         <a
           href={buildUrl(currentPage + 1)}
           className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg border border-slate-300 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
-          aria-label="Proxima pagina"
+          aria-label="Próxima página"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />

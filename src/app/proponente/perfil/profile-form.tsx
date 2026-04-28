@@ -94,7 +94,7 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
 
       setMessage({ type: 'success', text: 'Perfil atualizado com sucesso.' })
     } catch {
-      setMessage({ type: 'error', text: 'Erro de conexao. Tente novamente.' })
+      setMessage({ type: 'error', text: 'Erro de conexão. Tente novamente.' })
     } finally {
       setLoading(false)
     }
@@ -206,7 +206,7 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
           </div>
           <div className="grid grid-cols-3 gap-3">
             <Input
-              label="Numero"
+              label="Número"
               value={numero}
               onChange={(e) => setNumero(e.target.value)}
               error={errors.numero}
@@ -250,7 +250,7 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
 
           <div className="flex justify-end">
             <Button type="submit" loading={loading}>
-              Salvar Alteracoes
+              Salvar Alterações
             </Button>
           </div>
         </form>
@@ -306,7 +306,7 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             required
-            hint="Minimo 8 caracteres"
+            hint="Mínimo 8 caracteres"
             rightIcon={
               <button
                 type="button"

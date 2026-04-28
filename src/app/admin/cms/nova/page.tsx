@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import { CmsForm } from '../cms-form'
 
 export const metadata: Metadata = {
-  title: 'Nova Pagina — Portal PNAB Irece',
+  title: 'Nova Página — Portal PNAB Irecê',
 }
 
 export default async function NovaCmsPage() {
@@ -22,10 +22,10 @@ export default async function NovaCmsPage() {
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
-          Voltar para Paginas
+          Voltar para Páginas
         </Link>
-        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Nova Pagina</h1>
-        <p className="text-xs sm:text-sm text-slate-600 mt-1">Crie uma nova pagina institucional.</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Nova Página</h1>
+        <p className="text-xs sm:text-sm text-slate-600 mt-1">Crie uma nova página institucional.</p>
       </div>
 
       <CmsForm />

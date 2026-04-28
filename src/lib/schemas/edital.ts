@@ -51,7 +51,7 @@ export const etapaCustomizadaSchema = z.object({
 })
 
 export const editalSchema = z.object({
-  titulo: z.string().min(3, 'Titulo deve ter no minimo 3 caracteres'),
+  titulo: z.string().min(3, 'Título deve ter no mínimo 3 caracteres'),
   resumo: z.string().nullable().optional(),
   ano: z.number().int().min(2020).max(2099),
   valorTotal: z.number().nullable().optional(),

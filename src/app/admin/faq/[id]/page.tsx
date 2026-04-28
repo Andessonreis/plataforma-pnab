@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     where: { id },
     select: { pergunta: true },
   })
-  return { title: `Editar: ${faqItem?.pergunta?.slice(0, 50) ?? id} — Portal PNAB Irece` }
+  return { title: `Editar: ${faqItem?.pergunta?.slice(0, 50) ?? id} — Portal PNAB Irecê` }
 }
 
 export default async function EditarFaqPage({ params }: Props) {

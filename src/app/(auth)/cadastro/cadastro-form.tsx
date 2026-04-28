@@ -63,7 +63,7 @@ export function CadastroForm() {
     }
 
     if (!formData.cep || !formData.logradouro || !formData.bairro || !formData.cidade || !formData.uf) {
-      setError('Preencha todos os campos de endereco obrigatorios.')
+      setError('Preencha todos os campos de endereço obrigatórios.')
       return
     }
 
@@ -319,10 +319,10 @@ export function CadastroForm() {
         autoComplete="tel"
       />
 
-      {/* Endereco */}
+      {/* Endereço */}
       <fieldset className="space-y-4 pt-2">
         <legend className="block text-sm font-medium text-slate-700 mb-2">
-          Endereco
+          Endereço
         </legend>
 
         <div className="grid grid-cols-3 gap-3">
@@ -352,7 +352,7 @@ export function CadastroForm() {
 
         <div className="grid grid-cols-3 gap-3">
           <Input
-            label="Numero"
+            label="Número"
             type="text"
             placeholder="123"
             value={formData.numero}
