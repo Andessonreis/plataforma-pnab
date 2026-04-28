@@ -75,7 +75,7 @@ export function ImportForm({ editais }: ImportFormProps) {
         }
       }
     } catch {
-      setErrorMessage('Erro de conexao. Tente novamente.')
+      setErrorMessage('Erro de conexão. Tente novamente.')
     } finally {
       setLoading(false)
     }
@@ -137,13 +137,13 @@ export function ImportForm({ editais }: ImportFormProps) {
           <p className="text-sm font-medium text-slate-700 mb-2">Formato esperado do CSV:</p>
           <code className="block text-xs bg-white rounded px-3 py-2 border border-slate-200 text-slate-700 overflow-x-auto whitespace-pre">
 {`numero;valorAprovado;statusExecucao;contrapartida
-PNAB-2025-000001;50000.00;EM_EXECUCAO;Apresentacao publica
-PNAB-2025-000002;30000.00;CONCLUIDO;Oficina comunitaria`}
+PNAB-2025-000001;50000.00;EM_EXECUCAO;Apresentação pública
+PNAB-2025-000002;30000.00;CONCLUIDO;Oficina comunitária`}
           </code>
           <ul className="mt-2 text-xs text-slate-500 space-y-1">
-            <li>Delimitador: <strong>ponto e virgula (;)</strong></li>
-            <li>Codificacao: <strong>UTF-8</strong> (com ou sem BOM)</li>
-            <li>Status validos: <strong>EM_EXECUCAO</strong>, <strong>CONCLUIDO</strong>, <strong>CANCELADO</strong>, <strong>SUSPENSO</strong></li>
+            <li>Delimitador: <strong>ponto e vírgula (;)</strong></li>
+            <li>Codificação: <strong>UTF-8</strong> (com ou sem BOM)</li>
+            <li>Status válidos: <strong>EM_EXECUCAO</strong>, <strong>CONCLUIDO</strong>, <strong>CANCELADO</strong>, <strong>SUSPENSO</strong></li>
             <li>Valor com ponto decimal (ex: 50000.00)</li>
           </ul>
         </div>
@@ -197,7 +197,7 @@ PNAB-2025-000002;30000.00;CONCLUIDO;Oficina comunitaria`}
                   <thead>
                     <tr className="border-b border-red-100 text-left">
                       <th className="px-4 py-2 font-medium text-red-700">Linha</th>
-                      <th className="px-4 py-2 font-medium text-red-700">Numero</th>
+                      <th className="px-4 py-2 font-medium text-red-700">Número</th>
                       <th className="px-4 py-2 font-medium text-red-700">Erro</th>
                     </tr>
                   </thead>

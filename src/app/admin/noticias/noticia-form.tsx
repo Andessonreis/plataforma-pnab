@@ -69,17 +69,17 @@ export function NoticiaForm({ initialData, noticiaId }: NoticiaFormProps) {
         if (data.fieldErrors) {
           setErrors(data.fieldErrors)
         } else {
-          setMessage({ type: 'error', text: data.message || 'Erro ao salvar noticia.' })
+          setMessage({ type: 'error', text: data.message || 'Erro ao salvar notícia.' })
         }
         return
       }
 
-      setMessage({ type: 'success', text: isEdit ? 'Noticia atualizada.' : 'Noticia criada com sucesso.' })
+      setMessage({ type: 'success', text: isEdit ? 'Notícia atualizada.' : 'Notícia criada com sucesso.' })
       if (!isEdit) {
-        router.push(`/admin/noticias/${data.id}`)
+        setTimeout(() => router.push(`/admin/noticias/${data.id}`), 1500)
       }
     } catch {
-      setMessage({ type: 'error', text: 'Erro de conexao. Tente novamente.' })
+      setMessage({ type: 'error', text: 'Erro de conexão. Tente novamente.' })
     } finally {
       setLoading(false)
     }
@@ -100,12 +100,12 @@ export function NoticiaForm({ initialData, noticiaId }: NoticiaFormProps) {
         </div>
       )}
 
-      {/* Conteudo */}
+      {/* Conteúdo */}
       <Card padding="sm" className="sm:p-6">
-        <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Conteudo</h2>
+        <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Conteúdo</h2>
         <div className="space-y-4">
           <Input
-            label="Titulo da Noticia"
+            label="Título da Notícia"
             value={titulo}
             onChange={(e) => setTitulo(e.target.value)}
             error={errors.titulo}
@@ -114,12 +114,12 @@ export function NoticiaForm({ initialData, noticiaId }: NoticiaFormProps) {
           />
 
           <Textarea
-            label="Corpo da Noticia"
+            label="Corpo da Notícia"
             value={corpo}
             onChange={(e) => setCorpo(e.target.value)}
             error={errors.corpo}
             required
-            placeholder="Escreva o conteudo da noticia..."
+            placeholder="Escreva o conteúdo da notícia..."
             rows={10}
           />
 
@@ -134,9 +134,9 @@ export function NoticiaForm({ initialData, noticiaId }: NoticiaFormProps) {
         </div>
       </Card>
 
-      {/* Publicacao */}
+      {/* Publicação */}
       <Card padding="sm" className="sm:p-6">
-        <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Publicacao</h2>
+        <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Publicação</h2>
         <div className="space-y-4">
           <label className="flex items-center gap-3 cursor-pointer min-h-[44px]">
             <input
@@ -145,11 +145,11 @@ export function NoticiaForm({ initialData, noticiaId }: NoticiaFormProps) {
               onChange={(e) => setPublicado(e.target.checked)}
               className="h-5 w-5 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
             />
-            <span className="text-sm font-medium text-slate-700">Publicar noticia</span>
+            <span className="text-sm font-medium text-slate-700">Publicar notícia</span>
           </label>
 
           <Input
-            label="Data de Publicacao"
+            label="Data de Publicação"
             type="datetime-local"
             value={publicadoEm}
             onChange={(e) => setPublicadoEm(e.target.value)}
@@ -162,13 +162,13 @@ export function NoticiaForm({ initialData, noticiaId }: NoticiaFormProps) {
             value={tagsText}
             onChange={(e) => setTagsText(e.target.value)}
             error={errors.tags}
-            hint="Separe por virgula. Ex: Cultura, Edital, Resultado"
+            hint="Separe por vírgula. Ex: Cultura, Edital, Resultado"
             placeholder="Cultura, Edital, Resultado"
           />
         </div>
       </Card>
 
-      {/* Botoes */}
+      {/* Botões */}
       <div className="flex items-center justify-end gap-3">
         <Button
           type="button"
@@ -178,7 +178,7 @@ export function NoticiaForm({ initialData, noticiaId }: NoticiaFormProps) {
           Cancelar
         </Button>
         <Button type="submit" loading={loading}>
-          {isEdit ? 'Salvar Alteracoes' : 'Criar Noticia'}
+          {isEdit ? 'Salvar Alterações' : 'Criar Notícia'}
         </Button>
       </div>
     </form>

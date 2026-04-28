@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import Image from 'next/image'
 import Link from 'next/link'
 import { prisma } from '@/lib/db'
 import { Badge, PageHeader, EmptyState, Pagination } from '@/components/ui'
@@ -102,13 +101,12 @@ export default async function NoticiasPage({ searchParams }: NoticiasPageProps) 
                     <div className="grid grid-cols-1 lg:grid-cols-2">
                       <div className="relative h-48 sm:h-64 lg:h-full min-h-[200px] sm:min-h-[300px] overflow-hidden">
                         {featured.imagemUrl ? (
-                          <Image
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
                             src={featured.imagemUrl}
                             alt={featured.titulo}
-                            fill
-                            className="object-cover group-hover:scale-105 transition-transform duration-500"
-                            sizes="(max-width: 1024px) 100vw, 50vw"
-                            priority
+                            loading="eager"
+                            className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
                         ) : (
                           <div className="h-full w-full bg-gradient-to-br from-brand-600 via-brand-500 to-accent-500 flex items-center justify-center">
@@ -219,12 +217,12 @@ function NoticiaCard({ noticia }: { noticia: NoticiaData }) {
     >
       <div className="relative h-48 overflow-hidden">
         {noticia.imagemUrl ? (
-          <Image
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
             src={noticia.imagemUrl}
             alt={noticia.titulo}
-            fill
-            className="object-cover group-hover:scale-105 transition-transform duration-500"
-            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            loading="lazy"
+            className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
           <div className="h-full w-full bg-gradient-to-br from-brand-600 via-brand-500 to-accent-500 flex items-center justify-center">

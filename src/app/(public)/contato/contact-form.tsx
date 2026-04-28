@@ -34,7 +34,7 @@ export function ContactForm({ editais }: ContactFormProps) {
       return
     }
     if (!formData.emailContato.trim() || !formData.emailContato.includes('@')) {
-      setError('Informe um e-mail valido.')
+      setError('Informe um e-mail válido.')
       return
     }
     if (!formData.assunto.trim()) {
@@ -42,7 +42,7 @@ export function ContactForm({ editais }: ContactFormProps) {
       return
     }
     if (!formData.mensagem.trim() || formData.mensagem.trim().length < 10) {
-      setError('A mensagem deve ter no minimo 10 caracteres.')
+      setError('A mensagem deve ter no mínimo 10 caracteres.')
       return
     }
 
@@ -83,7 +83,7 @@ export function ContactForm({ editais }: ContactFormProps) {
         mensagem: '',
       })
     } catch {
-      setError('Erro de conexao. Verifique sua internet e tente novamente.')
+      setError('Erro de conexão. Verifique sua internet e tente novamente.')
     } finally {
       setLoading(false)
     }
@@ -100,14 +100,14 @@ export function ContactForm({ editais }: ContactFormProps) {
           Mensagem enviada com sucesso!
         </h3>
         <p className="mt-2 text-sm text-brand-700">
-          Seu numero de protocolo e:
+          Seu número de protocolo é:
         </p>
         <p className="mt-2 text-2xl font-bold text-brand-900 font-mono tracking-wider">
           {protocolo}
         </p>
         <p className="mt-4 text-sm text-brand-600">
-          Guarde este numero para acompanhar o atendimento. Voce tambem recebera uma
-          confirmacao no e-mail informado.
+          Guarde este número para acompanhar o atendimento. Você também receberá uma
+          confirmação no e-mail informado.
         </p>
         <button
           type="button"
@@ -157,7 +157,7 @@ export function ContactForm({ editais }: ContactFormProps) {
             onChange={(e) => updateField('editalId', e.target.value)}
             className="block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-0 focus:border-brand-500 focus:ring-brand-200 min-h-[44px] bg-white"
           >
-            <option value="">Nenhum edital especifico</option>
+            <option value="">Nenhum edital específico</option>
             {editais.map((edital) => (
               <option key={edital.id} value={edital.id}>
                 {edital.titulo}
@@ -187,14 +187,14 @@ export function ContactForm({ editais }: ContactFormProps) {
         <textarea
           id="mensagem"
           rows={5}
-          placeholder="Descreva sua duvida ou solicitacao com detalhes..."
+          placeholder="Descreva sua dúvida ou solicitação com detalhes..."
           value={formData.mensagem}
           onChange={(e) => updateField('mensagem', e.target.value)}
           required
           className="block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-0 focus:border-brand-500 focus:ring-brand-200 resize-y min-h-[120px]"
         />
         <p className="mt-1.5 text-sm text-slate-500">
-          Minimo de 10 caracteres
+          Mínimo de 10 caracteres
         </p>
       </div>
 
@@ -209,7 +209,7 @@ export function ContactForm({ editais }: ContactFormProps) {
       </Button>
 
       <p className="text-xs text-slate-500 text-center">
-        Ao enviar, voce recebera um numero de protocolo para acompanhamento.
+        Ao enviar, você receberá um número de protocolo para acompanhamento.
         Respeitamos limites de envio para garantir a qualidade do atendimento.
       </p>
     </form>

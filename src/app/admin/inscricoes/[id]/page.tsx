@@ -22,7 +22,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params
-  return { title: `Inscricao ${id} — Admin PNAB` }
+  return { title: `Inscrição ${id} — Admin PNAB` }
 }
 
 export default async function AdminInscricaoDetailPage({ params }: Props) {

@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import { EditalForm } from '../edital-form'
 
 export const metadata: Metadata = {
-  title: 'Novo Edital — Portal PNAB Irece',
+  title: 'Novo Edital — Portal PNAB Irecê',
 }
 
 export default async function NovoEditalPage() {

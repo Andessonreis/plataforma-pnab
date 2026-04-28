@@ -19,7 +19,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params
-  return { title: `Inscricao ${id} — Portal PNAB Irece` }
+  return { title: `Inscrição ${id} — Portal PNAB Irecê` }
 }
 
 // Timeline de status: a ordem esperada pelo fluxo
@@ -162,7 +162,7 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
             </svg>
             Voltar
           </Link>
-          <h1 className="text-2xl font-bold text-slate-900">Inscricao {inscricao.numero}</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Inscrição {inscricao.numero}</h1>
           <p className="text-slate-600 mt-1">{inscricao.edital.titulo} ({inscricao.edital.ano})</p>
         </div>
         <Badge variant={inscricaoStatusVariant[inscricao.status as InscricaoStatus]} className="text-sm px-3 py-1">
@@ -216,17 +216,17 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Dados da inscricao */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Informacoes gerais */}
+          {/* Informações gerais */}
           <Card>
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">Informacoes Gerais</h2>
+            <h2 className="text-lg font-semibold text-slate-900 mb-4">Informações Gerais</h2>
             <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <dt className="text-sm font-medium text-slate-500">Numero</dt>
+                <dt className="text-sm font-medium text-slate-500">Número</dt>
                 <dd className="text-sm text-slate-900 font-mono">{inscricao.numero}</dd>
               </div>
               <div>
                 <dt className="text-sm font-medium text-slate-500">Categoria</dt>
-                <dd className="text-sm text-slate-900">{inscricao.categoria ?? 'Nao informada'}</dd>
+                <dd className="text-sm text-slate-900">{inscricao.categoria ?? 'Não informada'}</dd>
               </div>
               <div>
                 <dt className="text-sm font-medium text-slate-500">Data de Envio</dt>
@@ -240,7 +240,7 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
                         minute: '2-digit',
                         timeZone: 'America/Sao_Paulo',
                       })
-                    : 'Nao enviada'}
+                    : 'Não enviada'}
                 </dd>
               </div>
               {RESULTADO_VISIVEL.includes(inscricao.edital.status) && inscricao.notaFinal && (
@@ -279,7 +279,7 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
                     </div>
                     {anexo.valido !== null && (
                       <Badge variant={anexo.valido ? 'success' : 'error'}>
-                        {anexo.valido ? 'Valido' : 'Invalido'}
+                        {anexo.valido ? 'Válido' : 'Inválido'}
                       </Badge>
                     )}
                   </li>
@@ -288,26 +288,26 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
             </Card>
           )}
 
-          {/* Motivo inabilitacao */}
+          {/* Motivo inabilitação */}
           {inscricao.motivoInabilitacao && (
             <Card className="border-red-200 bg-red-50">
-              <h2 className="text-lg font-semibold text-red-800 mb-2">Motivo da Inabilitacao</h2>
+              <h2 className="text-lg font-semibold text-red-800 mb-2">Motivo da Inabilitação</h2>
               <p className="text-sm text-red-700 break-words">{inscricao.motivoInabilitacao}</p>
             </Card>
           )}
         </div>
 
-        {/* Sidebar — avaliacoes e recursos */}
+        {/* Sidebar — avaliações e recursos */}
         <div className="space-y-6">
-          {/* Avaliacoes */}
+          {/* Avaliações */}
           {RESULTADO_VISIVEL.includes(inscricao.edital.status) && inscricao.avaliacoes.length > 0 && (
             <Card>
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">Avaliacoes</h2>
+              <h2 className="text-lg font-semibold text-slate-900 mb-4">Avaliações</h2>
               <div className="space-y-3">
                 {inscricao.avaliacoes.map((avaliacao, i) => (
                   <div key={i} className="p-3 bg-slate-50 rounded-lg">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium text-slate-700">Avaliacao {i + 1}</span>
+                      <span className="text-sm font-medium text-slate-700">Avaliação {i + 1}</span>
                       <span className="text-lg font-bold text-brand-700">{String(avaliacao.notaTotal)}</span>
                     </div>
                     {avaliacao.parecer && (
@@ -424,9 +424,9 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
             </Card>
           )}
 
-          {/* Acoes */}
+          {/* Ações */}
           <Card>
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">Acoes</h2>
+            <h2 className="text-lg font-semibold text-slate-900 mb-4">Ações</h2>
             <div className="space-y-2">
               {inscricao.status === 'RASCUNHO' && (
                 <Link

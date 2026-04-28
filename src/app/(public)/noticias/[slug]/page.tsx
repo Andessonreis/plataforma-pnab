@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
@@ -159,13 +158,12 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
                   {/* Imagem de capa */}
                   {noticia.imagemUrl && (
                     <div className="relative h-64 sm:h-80 lg:h-96 overflow-hidden">
-                      <Image
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
                         src={noticia.imagemUrl}
                         alt={noticia.titulo}
-                        fill
-                        priority
-                        className="object-cover"
-                        sizes="(max-width: 1024px) 100vw, 66vw"
+                        loading="eager"
+                        className="absolute inset-0 h-full w-full object-cover"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent" />
                     </div>
@@ -325,12 +323,12 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
                   >
                     <div className="relative h-44 overflow-hidden">
                       {item.imagemUrl ? (
-                        <Image
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
                           src={item.imagemUrl}
                           alt={item.titulo}
-                          fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-500"
-                          sizes="(max-width: 768px) 100vw, 33vw"
+                          loading="lazy"
+                          className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                       ) : (
                         <div className="h-full w-full bg-gradient-to-br from-brand-600 via-brand-500 to-accent-500 flex items-center justify-center">

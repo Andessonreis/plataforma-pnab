@@ -46,15 +46,15 @@ function CookieBanner() {
               className="text-sm text-slate-600 leading-relaxed"
             >
               Este portal utiliza cookies essenciais para seu funcionamento
-              e cookies de desempenho para melhorar sua experiencia. Ao
-              clicar em &ldquo;Aceitar todos&rdquo;, voce consente com o
-              uso de todos os cookies. Voce pode optar por aceitar apenas
+              e cookies de desempenho para melhorar sua experiência. Ao
+              clicar em &ldquo;Aceitar todos&rdquo;, você consente com o
+              uso de todos os cookies. Você pode optar por aceitar apenas
               os essenciais. Saiba mais em nossa{' '}
               <Link
                 href="/privacidade"
                 className="text-brand-600 hover:text-brand-700 underline font-medium"
               >
-                Politica de Privacidade
+                Política de Privacidade
               </Link>
               .
             </p>
