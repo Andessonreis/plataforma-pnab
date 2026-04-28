@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import { NoticiaForm } from '../noticia-form'
 
 export const metadata: Metadata = {
-  title: 'Nova Noticia — Portal PNAB Irece',
+  title: 'Nova Notícia — Portal PNAB Irecê',
 }
 
 export default async function NovaNoticiaPage() {
@@ -22,10 +22,10 @@ export default async function NovaNoticiaPage() {
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
-          Voltar para Noticias
+          Voltar para Notícias
         </Link>
-        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Nova Noticia</h1>
-        <p className="text-xs sm:text-sm text-slate-600 mt-1">Preencha os dados da nova noticia.</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Nova Notícia</h1>
+        <p className="text-xs sm:text-sm text-slate-600 mt-1">Preencha os dados da nova notícia.</p>
       </div>
 
       <NoticiaForm />

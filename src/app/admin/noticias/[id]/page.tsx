@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     where: { id },
     select: { titulo: true },
   })
-  return { title: `Editar: ${noticia?.titulo ?? id} — Portal PNAB Irece` }
+  return { title: `Editar: ${noticia?.titulo ?? id} — Portal PNAB Irecê` }
 }
 
 export default async function EditarNoticiaPage({ params }: Props) {
@@ -43,11 +43,11 @@ export default async function EditarNoticiaPage({ params }: Props) {
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
-          Voltar para Noticias
+          Voltar para Notícias
         </Link>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Editar Noticia</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Editar Notícia</h1>
             <p className="text-xs sm:text-sm text-slate-600 mt-1 line-clamp-1">{noticia.titulo}</p>
           </div>
           <DeleteNoticiaButton noticiaId={noticia.id} noticiaTitle={noticia.titulo} />
