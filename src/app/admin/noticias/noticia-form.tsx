@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { Input, Button, Card, Textarea } from '@/components/ui'
+import { toast } from '@/hooks/use-toast'
 
 interface NoticiaFormProps {
   initialData?: {
@@ -29,13 +30,11 @@ export function NoticiaForm({ initialData, noticiaId }: NoticiaFormProps) {
   const [publicadoEm, setPublicadoEm] = useState(initialData?.publicadoEm ?? '')
 
   const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setLoading(true)
-    setMessage(null)
     setErrors({})
 
     const tags = tagsText
@@ -68,18 +67,32 @@ export function NoticiaForm({ initialData, noticiaId }: NoticiaFormProps) {
       if (!res.ok) {
         if (data.fieldErrors) {
           setErrors(data.fieldErrors)
+          toast({
+            variant: 'destructive',
+            title: 'Verifique os campos do formulário',
+          })
         } else {
-          setMessage({ type: 'error', text: data.message || 'Erro ao salvar notícia.' })
+          toast({
+            variant: 'destructive',
+            title: 'Erro ao salvar notícia',
+            description: data.message || 'Tente novamente em instantes.',
+          })
         }
         return
       }
 
-      setMessage({ type: 'success', text: isEdit ? 'Notícia atualizada.' : 'Notícia criada com sucesso.' })
+      toast({
+        title: isEdit ? 'Notícia atualizada' : 'Notícia criada com sucesso',
+      })
       if (!isEdit) {
-        setTimeout(() => router.push(`/admin/noticias/${data.id}`), 1500)
+        router.push('/admin/noticias')
       }
     } catch {
-      setMessage({ type: 'error', text: 'Erro de conexão. Tente novamente.' })
+      toast({
+        variant: 'destructive',
+        title: 'Erro de conexão',
+        description: 'Verifique sua internet e tente novamente.',
+      })
     } finally {
       setLoading(false)
     }
@@ -87,19 +100,6 @@ export function NoticiaForm({ initialData, noticiaId }: NoticiaFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="max-w-2xl space-y-5 sm:space-y-6">
-      {message && (
-        <div
-          className={`p-3 rounded-lg text-sm ${
-            message.type === 'success'
-              ? 'bg-brand-50 text-brand-800 border border-brand-200'
-              : 'bg-red-50 text-red-800 border border-red-200'
-          }`}
-          role="alert"
-        >
-          {message.text}
-        </div>
-      )}
-
       {/* Conteúdo */}
       <Card padding="sm" className="sm:p-6">
         <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Conteúdo</h2>
