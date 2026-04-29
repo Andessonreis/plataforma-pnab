@@ -38,6 +38,9 @@ export type { FilterTabsProps } from './filter-tabs'
 
 export { FadeIn, StaggerContainer, StaggerItem, CountUp, AnnouncementBanner, ScaleHover } from './animated'
 
+export { ImageUpload } from './image-upload'
+export type { ImageUploadProps } from './image-upload'
+
 export {
   IconCalendar,
   IconCurrency,

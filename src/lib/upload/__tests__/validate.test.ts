@@ -25,6 +25,17 @@ describe('validateMagicBytes', () => {
     expect(validateMagicBytes(buffer, 'image/jpeg')).toBe(true)
   })
 
+  it('WEBP: aceita magic bytes RIFF', () => {
+    // RIFF header (52 49 46 46) — bytes 0-3 de qualquer arquivo RIFF, incluindo WEBP
+    const buffer = Buffer.from([0x52, 0x49, 0x46, 0x46, 0x24, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50])
+    expect(validateMagicBytes(buffer, 'image/webp')).toBe(true)
+  })
+
+  it('WEBP: rejeita PNG declarado como WEBP', () => {
+    const pngBuffer = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
+    expect(validateMagicBytes(pngBuffer, 'image/webp')).toBe(false)
+  })
+
   it('XLSX: aceita magic bytes PK (ZIP header)', () => {
     // PK ZIP: 50 4B 03 04
     const buffer = Buffer.from([0x50, 0x4b, 0x03, 0x04, 0x14, 0x00])

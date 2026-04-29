@@ -14,6 +14,10 @@ const MAGIC_BYTES: Record<string, { signature: number[]; offset?: number }[]> = 
   'image/jpeg': [
     { signature: [0xff, 0xd8, 0xff] }, // JPEG SOI + marker
   ],
+  'image/webp': [
+    // RIFF....WEBP — bytes 0–3 = "RIFF", bytes 8–11 = "WEBP" (ignoramos tamanho intermediário)
+    { signature: [0x52, 0x49, 0x46, 0x46] },
+  ],
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': [
     { signature: [0x50, 0x4b, 0x03, 0x04] }, // PK (ZIP header — XLSX é ZIP)
   ],
