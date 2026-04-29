@@ -11,13 +11,24 @@ export const runtime = 'nodejs'
 const profileSchema = z.object({
   nome: z.string().min(3, 'Nome deve ter no minimo 3 caracteres').optional(),
   email: z.string().email('E-mail invalido').optional(),
-  telefone: z.string().optional(),
+  telefone: z
+    .string()
+    .refine(
+      (v) => v === '' || /^\d{10,11}$/.test(v),
+      'Telefone deve ter 10 ou 11 dígitos (com DDD).',
+    )
+    .optional(),
   cep: z.string().max(8).optional(),
-  logradouro: z.string().optional(),
-  numero: z.string().optional(),
-  complemento: z.string().optional(),
-  bairro: z.string().optional(),
-  cidade: z.string().optional(),
+  logradouro: z.string().max(120).optional(),
+  // Aceita número, letra ("123A") e "S/N", até 20 caracteres. Rejeita sinal negativo e símbolos.
+  numero: z
+    .string()
+    .max(20, 'Número deve ter no máximo 20 caracteres.')
+    .regex(/^[A-Za-z0-9 /]*$/, 'Número inválido. Use dígitos, letras ou "S/N".')
+    .optional(),
+  complemento: z.string().max(100, 'Complemento deve ter no máximo 100 caracteres.').optional(),
+  bairro: z.string().max(80).optional(),
+  cidade: z.string().max(80).optional(),
   uf: z.string().max(2).optional(),
   currentPassword: z.string().optional(),
   newPassword: z.string().min(8, 'Senha deve ter no minimo 8 caracteres').optional(),

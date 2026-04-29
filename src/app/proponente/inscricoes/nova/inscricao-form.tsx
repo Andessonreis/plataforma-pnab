@@ -447,8 +447,13 @@ export default function InscricaoForm({
             <Input
               label={campo.label}
               type="number"
+              min={0}
               value={value}
-              onChange={(e) => updateCampo(campo.nome, e.target.value)}
+              onChange={(e) => {
+                const v = e.target.value
+                // Rejeita números negativos: input "type=number" aceita "-" por padrão
+                if (v === '' || Number(v) >= 0) updateCampo(campo.nome, v)
+              }}
               placeholder={campo.placeholder}
               required={campo.obrigatorio}
               hint={campo.hint}

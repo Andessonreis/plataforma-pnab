@@ -63,6 +63,32 @@ export function formatDate(date: Date | string | null | undefined): string {
 }
 
 /**
+ * Remove tudo que não for dígito de uma string.
+ * Útil pra normalizar telefones antes de salvar/validar.
+ */
+export function unmaskTelefone(value: string): string {
+  return value.replace(/\D/g, '').slice(0, 11)
+}
+
+/**
+ * Formata um telefone BR. Aceita string com ou sem máscara.
+ * 10 dígitos → fixo "(77) 9999-0000"; 11 dígitos → celular "(77) 99999-0000".
+ * Para inputs parciais (digitação em curso), formata o que conseguir.
+ *
+ * @example formatTelefoneBR("77999990000") => "(77) 99999-0000"
+ * @example formatTelefoneBR("7733330000")  => "(77) 3333-0000"
+ */
+export function formatTelefoneBR(value: string): string {
+  const d = unmaskTelefone(value)
+  if (d.length === 0) return ''
+  if (d.length <= 2) return `(${d}`
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`
+  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`
+  // 11 dígitos = celular com 9 na frente
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7, 11)}`
+}
+
+/**
  * Formata uma data como dd/mm/aaaa HH:mm.
  *
  * @example formatDateTime("2026-04-30T23:59:00") => "30/04/2026 23:59"

@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react'
 import { Input, Button, Card } from '@/components/ui'
+import { formatTelefoneBR, unmaskTelefone } from '@/lib/utils/format'
 
 interface ProfileFormProps {
   initialData: {
@@ -26,7 +27,7 @@ const UF_OPTIONS = [
 export function ProfileForm({ initialData }: ProfileFormProps) {
   const [nome, setNome] = useState(initialData.nome)
   const [email, setEmail] = useState(initialData.email)
-  const [telefone, setTelefone] = useState(initialData.telefone)
+  const [telefone, setTelefone] = useState(formatTelefoneBR(initialData.telefone))
   const [cep, setCep] = useState(initialData.cep)
   const [logradouro, setLogradouro] = useState(initialData.logradouro)
   const [numero, setNumero] = useState(initialData.numero)
@@ -76,7 +77,8 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          nome, email, telefone,
+          nome, email,
+          telefone: unmaskTelefone(telefone),
           cep: cep.replace(/\D/g, ''), logradouro, numero, complemento, bairro, cidade, uf,
         }),
       })
@@ -179,10 +181,12 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
           <Input
             label="Telefone"
             type="tel"
+            inputMode="numeric"
             value={telefone}
-            onChange={(e) => setTelefone(e.target.value)}
+            onChange={(e) => setTelefone(formatTelefoneBR(e.target.value))}
             error={errors.telefone}
             hint="Com DDD. Ex: (77) 99999-0000"
+            maxLength={15}
           />
 
           <h3 className="text-sm font-semibold text-slate-700 pt-2">Endereco</h3>
@@ -208,8 +212,14 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
             <Input
               label="Número"
               value={numero}
-              onChange={(e) => setNumero(e.target.value)}
+              onChange={(e) => {
+                // Aceita números, letras (ex: "123A") e "S/N", mas rejeita sinal negativo
+                const v = e.target.value.replace(/-/g, '')
+                setNumero(v)
+              }}
               error={errors.numero}
+              hint="Ex: 123, 123A ou S/N"
+              maxLength={20}
             />
             <div className="col-span-2">
               <Input
@@ -217,6 +227,8 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
                 value={complemento}
                 onChange={(e) => setComplemento(e.target.value)}
                 error={errors.complemento}
+                hint="Ex: Apto 302, Casa dos fundos, próximo ao mercado"
+                maxLength={100}
               />
             </div>
           </div>
