@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { Input, Button, Card, Textarea } from '@/components/ui'
+import { Input, Button, Card, Textarea, ImageUpload } from '@/components/ui'
 import { toast } from '@/hooks/use-toast'
 
 interface NoticiaFormProps {
@@ -123,13 +123,12 @@ export function NoticiaForm({ initialData, noticiaId }: NoticiaFormProps) {
             rows={10}
           />
 
-          <Input
-            label="URL da Imagem"
+          <ImageUpload
+            label="Imagem de Capa"
+            hint="Arraste uma imagem ou clique para selecionar. JPG, PNG ou WEBP, até 5 MB."
             value={imagemUrl}
-            onChange={(e) => setImagemUrl(e.target.value)}
-            error={errors.imagemUrl}
-            placeholder="https://exemplo.com/imagem.jpg"
-            hint="URL da imagem de capa (opcional)"
+            onChange={setImagemUrl}
+            pasta="noticias"
           />
         </div>
       </Card>
