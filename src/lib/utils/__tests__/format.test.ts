@@ -6,6 +6,8 @@ import {
   parseBrazilDateTime,
   formatDate,
   formatDateTime,
+  formatTelefoneBR,
+  unmaskTelefone,
 } from '@/lib/utils/format'
 
 describe('TZ_BR', () => {
@@ -124,5 +126,52 @@ describe('formatDateTime', () => {
 
   it('retorna traço para string inválida', () => {
     expect(formatDateTime('abc')).toBe('—')
+  })
+})
+
+describe('unmaskTelefone', () => {
+  it('remove tudo que não for dígito', () => {
+    expect(unmaskTelefone('(77) 99999-0000')).toBe('77999990000')
+  })
+
+  it('limita a 11 dígitos (ignora extras)', () => {
+    expect(unmaskTelefone('77999990000123')).toBe('77999990000')
+  })
+
+  it('string vazia retorna vazio', () => {
+    expect(unmaskTelefone('')).toBe('')
+  })
+
+  it('aceita só letras retorna vazio', () => {
+    expect(unmaskTelefone('abc')).toBe('')
+  })
+})
+
+describe('formatTelefoneBR', () => {
+  it('formata celular completo (11 dígitos)', () => {
+    expect(formatTelefoneBR('77999990000')).toBe('(77) 99999-0000')
+  })
+
+  it('formata fixo (10 dígitos)', () => {
+    expect(formatTelefoneBR('7733330000')).toBe('(77) 3333-0000')
+  })
+
+  it('formata input parcial (digitação em curso)', () => {
+    expect(formatTelefoneBR('77')).toBe('(77')
+    expect(formatTelefoneBR('779')).toBe('(77) 9')
+    expect(formatTelefoneBR('7799999')).toBe('(77) 9999-9')
+  })
+
+  it('ignora tudo após o 11º dígito', () => {
+    expect(formatTelefoneBR('779999900001234')).toBe('(77) 99999-0000')
+  })
+
+  it('ignora caracteres não numéricos', () => {
+    expect(formatTelefoneBR('(77) 99999-0000')).toBe('(77) 99999-0000')
+    expect(formatTelefoneBR('77 abc 99999 def 0000')).toBe('(77) 99999-0000')
+  })
+
+  it('string vazia retorna vazio', () => {
+    expect(formatTelefoneBR('')).toBe('')
   })
 })
