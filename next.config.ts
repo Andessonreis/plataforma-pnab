@@ -18,7 +18,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'www.irece.ba.gov.br',
+        hostname: 'culturaeturismo.irece.ba.gov.br',
       },
       {
         protocol: 'https',
