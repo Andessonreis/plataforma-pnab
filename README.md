@@ -2,7 +2,7 @@
 
 > Plataforma oficial da **Política Nacional Aldir Blanc de Fomento à Cultura** (PNAB) para o município de Irecê/BA, gerida pela Secretaria de Arte e Cultura.
 
-[![Deploy](https://img.shields.io/badge/deploy-irece.ba.gov.br%2Fculturaeturismo-059669)](https://www.irece.ba.gov.br/culturaeturismo)
+[![Deploy](https://img.shields.io/badge/deploy-culturaeturismo.irece.ba.gov.br-059669)](https://culturaeturismo.irece.ba.gov.br)
 [![Status](https://img.shields.io/badge/status-MVP%20em%20desenvolvimento-d97706)]()
 [![Acessibilidade](https://img.shields.io/badge/WCAG-AA-059669)]()
 
@@ -197,7 +197,7 @@ O middleware (`src/middleware.ts`) protege `/proponente`, `/admin` e `/avaliador
 
 ## Deploy
 
-- **Produção:** [www.irece.ba.gov.br/culturaeturismo](https://www.irece.ba.gov.br/culturaeturismo) — VPS Linux com Docker Compose
+- **Produção:** [culturaeturismo.irece.ba.gov.br](https://culturaeturismo.irece.ba.gov.br) — VPS Linux com Docker Compose
 - **CI/CD:** GitHub Actions (`.github/workflows/`)
   - `ci.yml` — lint + typecheck a cada push
   - `deploy.yml` — deploy SSH na VPS após push em `main`
