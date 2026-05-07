@@ -16,7 +16,11 @@ const navLinks = [
   { href: '/contato', label: 'Contato' },
 ]
 
-function Header() {
+type HeaderProps = {
+  userAreaHref?: string
+}
+
+function Header({ userAreaHref = '/login' }: HeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const pathname = usePathname()
@@ -104,7 +108,7 @@ function Header() {
             {/* Ações */}
             <div className="flex items-center gap-3">
               <Link
-                href="/login"
+                href={userAreaHref}
                 className="hidden sm:inline-flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 active:bg-brand-800 transition-colors min-h-[44px] shadow-sm shadow-brand-600/20"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
@@ -200,7 +204,7 @@ function Header() {
                 })}
                 <div className="pt-3 border-t border-slate-100">
                   <Link
-                    href="/login"
+                    href={userAreaHref}
                     className="flex items-center justify-center gap-2 w-full rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 transition-colors min-h-[44px]"
                   >
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
