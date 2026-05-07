@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { randomUUID } from 'crypto'
+import { revalidatePath } from 'next/cache'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { logAudit } from '@/lib/audit'
@@ -112,6 +113,9 @@ export async function POST(req: NextRequest) {
       details: { titulo: slide.titulo, ativo: slide.ativo },
       ip: req.headers.get('x-forwarded-for') ?? undefined,
     })
+
+    // #63 — invalida o cache da home pra slide aparecer imediatamente
+    revalidatePath('/')
 
     const res = NextResponse.json(
       { message: 'Slide criado com sucesso.', id: slide.id, requestId },
