@@ -9,6 +9,7 @@ import type { EditalStatus } from '@prisma/client'
 import type { CronogramaItem } from '@/types/cronograma'
 import { migrateLegacyCronograma } from '@/lib/utils/cronograma'
 import { RelatorioFinalButton } from './relatorio-final-button'
+import { AvancarFasePanel } from './avancar-fase-panel'
 import type { CriterioAvaliacao } from '@/lib/avaliacao-criterios'
 import type { CampoFormulario } from '@/types/campo-formulario'
 
@@ -130,6 +131,12 @@ export default async function EditarEditalPage({ params }: Props) {
         {(['RESULTADO_FINAL', 'ENCERRADO'] as EditalStatus[]).includes(edital.status as EditalStatus) && (
           <RelatorioFinalButton editalId={edital.id} />
         )}
+      </div>
+
+      {/* Painel de avanço manual de fase — uso excepcional, fica no fim
+          pra não distrair do fluxo normal de edição. */}
+      <div className="mt-10">
+        <AvancarFasePanel editalId={edital.id} statusAtual={edital.status as EditalStatus} />
       </div>
     </section>
   )
