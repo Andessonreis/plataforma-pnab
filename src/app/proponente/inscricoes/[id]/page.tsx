@@ -12,6 +12,8 @@ import type { EtapaCustomizada } from '@/types/etapa-customizada'
 import { RecursoForm } from './recurso/recurso-form'
 import { RetractAndEditButton } from './retract-and-edit-button'
 import { formatNotaTotal } from '@/lib/services/avaliacao-view'
+import { janelaParaAcao, mensagemJanela } from '@/lib/utils/cronograma-janela'
+import type { AcaoJanela } from '@/types/cronograma'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -50,6 +52,7 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
         select: {
           titulo: true, slug: true, ano: true, categorias: true, status: true,
           formulaAvaliacao: true, camposFormulario: true, etapasCustomizadas: true,
+          cronograma: true,
         },
       },
       proponente: {
@@ -382,24 +385,59 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
             </Card>
           )}
 
-          {/* Interpor Recurso */}
-          {['INABILITADA', 'RESULTADO_PRELIMINAR', 'NAO_CONTEMPLADA', 'SUPLENTE'].includes(inscricao.status) && (
-            <Card>
-              <RecursoForm
-                inscricaoId={inscricao.id}
-                fase={
-                  inscricao.status === 'INABILITADA' ? 'HABILITACAO' :
-                  inscricao.status === 'RESULTADO_PRELIMINAR' ? 'RESULTADO_PRELIMINAR' :
-                  'RESULTADO_FINAL'
-                }
-                contexto={{
-                  entidadeNome: inscricao.proponente.nome,
-                  projetoNome: inscricao.numero,
-                  responsavelNome: inscricao.proponente.nome,
-                }}
-              />
-            </Card>
-          )}
+          {/* Interpor Recurso — gateado por status + janela do cronograma */}
+          {['INABILITADA', 'RESULTADO_PRELIMINAR', 'NAO_CONTEMPLADA', 'SUPLENTE'].includes(inscricao.status) && (() => {
+            const fase =
+              inscricao.status === 'INABILITADA' ? 'HABILITACAO' :
+              inscricao.status === 'RESULTADO_PRELIMINAR' ? 'RESULTADO_PRELIMINAR' :
+              'RESULTADO_FINAL'
+
+            const acaoJanela: AcaoJanela | null =
+              fase === 'HABILITACAO' ? 'RECURSO_HABILITACAO_JANELA' :
+              fase === 'RESULTADO_PRELIMINAR' ? 'RECURSO_RESULTADO_JANELA' :
+              null
+
+            const janelaInfo = acaoJanela
+              ? janelaParaAcao(inscricao.edital.cronograma, acaoJanela)
+              : null
+
+            // Se tem janela configurada e não está ativa, mostra alerta no lugar do form
+            if (janelaInfo && !janelaInfo.ativa) {
+              const titulo = janelaInfo.status === 'antes' ? 'Recurso ainda não disponível' : 'Período de recurso encerrado'
+              return (
+                <Card>
+                  <div className="flex items-start gap-3">
+                    <svg className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-semibold text-slate-900">{titulo}</h3>
+                      <p className="text-xs text-slate-600 mt-1">{mensagemJanela(janelaInfo)}.</p>
+                    </div>
+                  </div>
+                </Card>
+              )
+            }
+
+            return (
+              <Card>
+                {janelaInfo?.ativa && (
+                  <div className="mb-3 rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2 text-xs text-emerald-800">
+                    {mensagemJanela(janelaInfo)}.
+                  </div>
+                )}
+                <RecursoForm
+                  inscricaoId={inscricao.id}
+                  fase={fase}
+                  contexto={{
+                    entidadeNome: inscricao.proponente.nome,
+                    projetoNome: inscricao.numero,
+                    responsavelNome: inscricao.proponente.nome,
+                  }}
+                />
+              </Card>
+            )
+          })()}
 
           {/* Documentos */}
           {inscricao.status !== 'RASCUNHO' && (

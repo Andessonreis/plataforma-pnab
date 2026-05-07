@@ -4,6 +4,8 @@ import { randomUUID } from 'crypto'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
+import { janelaParaAcao, mensagemJanela } from '@/lib/utils/cronograma-janela'
+import type { AcaoJanela } from '@/types/cronograma'
 
 export const runtime = 'nodejs'
 
@@ -19,6 +21,15 @@ const STATUS_ALLOWS_RECURSO: Record<string, string[]> = {
   RESULTADO_PRELIMINAR: ['RESULTADO_PRELIMINAR'],
   NAO_CONTEMPLADA: ['RESULTADO_FINAL'],
   SUPLENTE: ['RESULTADO_FINAL'],
+}
+
+// Mapeamento: fase do recurso → ação do cronograma que controla a janela.
+// Se o cronograma do edital tiver um item custom com essa ação, o recurso
+// só é aceito dentro da janela [dataHora, fimEm]. Sem item, aceita sempre
+// (compatibilidade — comportamento antigo).
+const RECURSO_FASE_TO_JANELA: Partial<Record<string, AcaoJanela>> = {
+  HABILITACAO: 'RECURSO_HABILITACAO_JANELA',
+  RESULTADO_PRELIMINAR: 'RECURSO_RESULTADO_JANELA',
 }
 
 // GET — Listar recursos da inscrição
@@ -102,7 +113,12 @@ export async function POST(
 
     const inscricao = await prisma.inscricao.findUnique({
       where: { id },
-      select: { proponenteId: true, status: true, editalId: true },
+      select: {
+        proponenteId: true,
+        status: true,
+        editalId: true,
+        edital: { select: { cronograma: true } },
+      },
     })
 
     if (!inscricao) {
@@ -127,6 +143,23 @@ export async function POST(
         { error: 'BAD_REQUEST', message: 'Não é possível interpor recurso nesta fase.', requestId },
         { status: 400 },
       )
+    }
+
+    // Verifica janela do cronograma (se existir item custom com ação correspondente).
+    // Sem item custom configurado, mantém comportamento antigo (aceita sempre).
+    const acaoJanela = RECURSO_FASE_TO_JANELA[data.fase]
+    if (acaoJanela) {
+      const info = janelaParaAcao(inscricao.edital.cronograma, acaoJanela)
+      if (info && !info.ativa) {
+        return NextResponse.json(
+          {
+            error: 'FORA_DA_JANELA',
+            message: `Recurso fora da janela. ${mensagemJanela(info)}.`,
+            requestId,
+          },
+          { status: 422 },
+        )
+      }
     }
 
     // Verifica se já existe recurso para esta fase

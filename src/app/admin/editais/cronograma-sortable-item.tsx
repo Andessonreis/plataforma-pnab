@@ -2,14 +2,19 @@
 
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import type { CronogramaFormItem, CronogramaValidationWarning } from '@/types/cronograma'
+import type { CronogramaFormItem, CronogramaValidationWarning, AcaoJanela } from '@/types/cronograma'
 import { editalCronogramaLabel } from '@/lib/status-maps'
 import { getItemValidationWarnings } from '@/lib/utils/cronograma'
+
+const ACOES_JANELA: { value: AcaoJanela; label: string }[] = [
+  { value: 'RECURSO_HABILITACAO_JANELA', label: 'Janela de recurso de habilitação' },
+  { value: 'RECURSO_RESULTADO_JANELA', label: 'Janela de recurso do resultado preliminar' },
+]
 
 interface CronogramaSortableItemProps {
   item: CronogramaFormItem
   warnings: CronogramaValidationWarning[]
-  onUpdate: (id: string, field: 'dataHora' | 'label', value: string) => void
+  onUpdate: (id: string, field: 'dataHora' | 'label' | 'fimEm' | 'acao', value: string) => void
   onRemove: (id: string) => void
 }
 
@@ -120,6 +125,45 @@ export function CronogramaSortableItem({
           Remover
         </button>
       </div>
+
+      {/* Linha extra para items custom: fimEm + ação */}
+      {item.tipo === 'custom' && (
+        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 pl-0 sm:pl-12">
+          <div>
+            <label className="block text-[11px] font-medium text-slate-500 uppercase tracking-wide mb-1">
+              Fim da janela (opcional)
+            </label>
+            <input
+              type="datetime-local"
+              value={item.fimEm ?? ''}
+              onChange={(e) => onUpdate(item.id, 'fimEm', e.target.value)}
+              aria-label="Fim da janela"
+              className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-500"
+            />
+          </div>
+          <div>
+            <label className="block text-[11px] font-medium text-slate-500 uppercase tracking-wide mb-1">
+              Ação (opcional)
+            </label>
+            <select
+              value={item.acao ?? ''}
+              onChange={(e) => onUpdate(item.id, 'acao', e.target.value)}
+              aria-label="Ação da janela"
+              className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-500"
+            >
+              <option value="">— Nenhuma (apenas informativo) —</option>
+              {ACOES_JANELA.map((a) => (
+                <option key={a.value} value={a.value}>{a.label}</option>
+              ))}
+            </select>
+            {item.acao && (
+              <p className="mt-1 text-[11px] text-slate-500">
+                Durante a janela, a funcionalidade fica liberada para o proponente.
+              </p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

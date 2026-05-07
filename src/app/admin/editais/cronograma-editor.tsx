@@ -74,11 +74,18 @@ export function CronogramaEditor({ items, onChange, warnings }: CronogramaEditor
   )
 
   const handleUpdate = useCallback(
-    (id: string, field: 'dataHora' | 'label', value: string) => {
+    (id: string, field: 'dataHora' | 'label' | 'fimEm' | 'acao', value: string) => {
       onChange(
-        items.map((item) =>
-          item.id === id ? { ...item, [field]: value } : item,
-        ),
+        items.map((item) => {
+          if (item.id !== id) return item
+          // Strings vazias em fimEm/acao significam "limpar campo"
+          if ((field === 'fimEm' || field === 'acao') && value === '') {
+            const next = { ...item } as Record<string, unknown>
+            delete next[field]
+            return next as unknown as typeof item
+          }
+          return { ...item, [field]: value }
+        }),
       )
     },
     [items, onChange],

@@ -64,6 +64,7 @@ describe('POST /api/proponente/inscricoes/[id]/recurso', () => {
       proponenteId: 'user-B',
       status: 'INABILITADA',
       editalId: 'ed-1',
+      edital: { cronograma: [] },
     } as never)
     const res = await POST(
       makeReq({ fase: 'HABILITACAO', texto: 'motivo com tamanho suficiente' }),
@@ -78,6 +79,7 @@ describe('POST /api/proponente/inscricoes/[id]/recurso', () => {
       proponenteId: 'u1',
       status: 'ENVIADA', // não permite recurso ainda
       editalId: 'ed-1',
+      edital: { cronograma: [] },
     } as never)
     const res = await POST(
       makeReq({ fase: 'HABILITACAO', texto: 'motivo com tamanho suficiente' }),
@@ -92,6 +94,7 @@ describe('POST /api/proponente/inscricoes/[id]/recurso', () => {
       proponenteId: 'u1',
       status: 'INABILITADA',
       editalId: 'ed-1',
+      edital: { cronograma: [] },
     } as never)
     mockPrisma.recurso.findFirst.mockResolvedValue({ id: 'rec-existente' } as never)
     const res = await POST(
@@ -107,6 +110,7 @@ describe('POST /api/proponente/inscricoes/[id]/recurso', () => {
       proponenteId: 'u1',
       status: 'INABILITADA',
       editalId: 'ed-1',
+      edital: { cronograma: [] },
     } as never)
     mockPrisma.recurso.findFirst.mockResolvedValue(null)
     mockPrisma.recurso.create.mockResolvedValue({
@@ -154,6 +158,128 @@ describe('POST /api/proponente/inscricoes/[id]/recurso', () => {
     expect(res.status).toBe(400)
     const body = await res.json()
     expect(body.error).toBe('VALIDATION_ERROR')
+  })
+
+  // ── Gating de janela (#cronograma-acao) ─────────────────────────────────
+
+  it('janela ativa permite POST → 201', async () => {
+    // Janela larga (2 dias atrás a 2 dias a frente) — evita flake por TZ.
+    const agora = new Date()
+    const inicio = new Date(agora.getTime() - 2 * 24 * 60 * 60 * 1000)
+    const fim = new Date(agora.getTime() + 2 * 24 * 60 * 60 * 1000)
+    const fmt = (d: Date) => d.toISOString().slice(0, 16)
+
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'PROPONENTE' } } as never)
+    mockPrisma.inscricao.findUnique.mockResolvedValue({
+      proponenteId: 'u1',
+      status: 'INABILITADA',
+      editalId: 'ed-1',
+      edital: {
+        cronograma: [
+          {
+            tipo: 'custom',
+            label: 'Janela recurso',
+            dataHora: fmt(inicio),
+            fimEm: fmt(fim),
+            acao: 'RECURSO_HABILITACAO_JANELA',
+          },
+        ],
+      },
+    } as never)
+    mockPrisma.recurso.findFirst.mockResolvedValue(null)
+    mockPrisma.recurso.create.mockResolvedValue({ id: 'rec-1', fase: 'HABILITACAO' } as never)
+    mockPrisma.inscricao.update.mockResolvedValue({} as never)
+
+    const res = await POST(
+      makeReq({ fase: 'HABILITACAO', texto: 'Fundamentação detalhada do recurso.' }),
+      params(),
+    )
+    expect(res.status).toBe(201)
+  })
+
+  it('janela futura → 422 FORA_DA_JANELA', async () => {
+    const futuro = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 dias a frente
+    const futuroFim = new Date(futuro.getTime() + 24 * 60 * 60 * 1000)
+    const fmt = (d: Date) => d.toISOString().slice(0, 16)
+
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'PROPONENTE' } } as never)
+    mockPrisma.inscricao.findUnique.mockResolvedValue({
+      proponenteId: 'u1',
+      status: 'INABILITADA',
+      editalId: 'ed-1',
+      edital: {
+        cronograma: [
+          {
+            tipo: 'custom',
+            label: 'Janela recurso',
+            dataHora: fmt(futuro),
+            fimEm: fmt(futuroFim),
+            acao: 'RECURSO_HABILITACAO_JANELA',
+          },
+        ],
+      },
+    } as never)
+
+    const res = await POST(
+      makeReq({ fase: 'HABILITACAO', texto: 'Fundamentação detalhada do recurso.' }),
+      params(),
+    )
+    expect(res.status).toBe(422)
+    const body = await res.json()
+    expect(body.error).toBe('FORA_DA_JANELA')
+    expect(body.message).toMatch(/abre em/i)
+  })
+
+  it('janela passada → 422 FORA_DA_JANELA', async () => {
+    const passado = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    const passadoFim = new Date(passado.getTime() + 24 * 60 * 60 * 1000)
+    const fmt = (d: Date) => d.toISOString().slice(0, 16)
+
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'PROPONENTE' } } as never)
+    mockPrisma.inscricao.findUnique.mockResolvedValue({
+      proponenteId: 'u1',
+      status: 'INABILITADA',
+      editalId: 'ed-1',
+      edital: {
+        cronograma: [
+          {
+            tipo: 'custom',
+            label: 'Janela recurso',
+            dataHora: fmt(passado),
+            fimEm: fmt(passadoFim),
+            acao: 'RECURSO_HABILITACAO_JANELA',
+          },
+        ],
+      },
+    } as never)
+
+    const res = await POST(
+      makeReq({ fase: 'HABILITACAO', texto: 'Fundamentação detalhada do recurso.' }),
+      params(),
+    )
+    expect(res.status).toBe(422)
+    const body = await res.json()
+    expect(body.error).toBe('FORA_DA_JANELA')
+    expect(body.message).toMatch(/encerrou/i)
+  })
+
+  it('cronograma sem janela configurada → mantém comportamento antigo (aceita sempre)', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'PROPONENTE' } } as never)
+    mockPrisma.inscricao.findUnique.mockResolvedValue({
+      proponenteId: 'u1',
+      status: 'INABILITADA',
+      editalId: 'ed-1',
+      edital: { cronograma: [] }, // nada configurado
+    } as never)
+    mockPrisma.recurso.findFirst.mockResolvedValue(null)
+    mockPrisma.recurso.create.mockResolvedValue({ id: 'rec-2', fase: 'HABILITACAO' } as never)
+    mockPrisma.inscricao.update.mockResolvedValue({} as never)
+
+    const res = await POST(
+      makeReq({ fase: 'HABILITACAO', texto: 'Fundamentação detalhada do recurso.' }),
+      params(),
+    )
+    expect(res.status).toBe(201)
   })
 })
 
