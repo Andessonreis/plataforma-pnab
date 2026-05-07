@@ -12,6 +12,12 @@ import type { EtapaCustomizada } from '@/types/etapa-customizada'
 import type { TipoProponente } from '@prisma/client'
 import { PNAB_DEFAULT_ATTACHMENT_TYPES } from '@/lib/constants/attachment-types'
 import {
+  validateAnexoFile,
+  describeValidationError,
+  MAX_FILE_SIZE_MB,
+  MIME_LABEL,
+} from '@/lib/upload/anexo-config'
+import {
   BlocoInfo,
   TabelaInput,
   GrupoRepetivelInput,
@@ -1003,9 +1009,29 @@ function AnexoUpload({
   const addFiles = (list: FileList | File[]) => {
     const arr = Array.from(list)
     if (arr.length === 0) return
-    setLocalError('')
     setLocalSuccess('')
-    setFiles((prev) => [...prev, ...arr])
+
+    // #78 — validação client-side imediata: tamanho + tipo, antes do upload
+    const aceitos: File[] = []
+    const rejeitados: string[] = []
+    for (const f of arr) {
+      const err = validateAnexoFile(f)
+      if (err) {
+        rejeitados.push(describeValidationError(err))
+      } else {
+        aceitos.push(f)
+      }
+    }
+
+    if (rejeitados.length > 0) {
+      setLocalError(rejeitados.join(' '))
+    } else {
+      setLocalError('')
+    }
+
+    if (aceitos.length > 0) {
+      setFiles((prev) => [...prev, ...aceitos])
+    }
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1097,7 +1123,7 @@ function AnexoUpload({
           )}
         </p>
         <p className="text-xs text-slate-400 mt-1">
-          PDF, PNG ou JPEG — máx. 10MB cada. Você pode selecionar vários arquivos de uma vez.
+          {MIME_LABEL} — máx. {MAX_FILE_SIZE_MB}MB cada. Você pode selecionar vários arquivos de uma vez.
         </p>
         <input
           id="anexo-file"
