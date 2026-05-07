@@ -232,14 +232,18 @@ export default async function EditalPage({ params }: Props) {
                     <ol className="space-y-1">
                       {cronograma.map((item, index) => {
                         const itemDate = parseBrazilDateTime(item.dataHora)
-                        const datePast = itemDate < now
-                        // 3 estados: concluído (já passou), em andamento (fase atual), futuro
+                        const itemFim = item.fimEm ? parseBrazilDateTime(item.fimEm) : null
+                        // Para items com janela (fimEm), "passou" só quando o fim passou.
+                        // Para marcos pontuais (sem fimEm), passou quando a data passou.
+                        const datePast = itemFim ? itemFim < now : itemDate < now
+                        const dateActive = itemFim ? itemDate <= now && now <= itemFim : false
+                        // 3 estados: concluído (já passou), em andamento (fase atual ou janela ativa), futuro
                         const isPast = item.fase
                           ? isFaseCompleted(item.fase, edital.status)
                           : datePast
                         const isCurrent = item.fase
                           ? isFaseCurrent(item.fase, edital.status)
-                          : false
+                          : dateActive
 
                         return (
                           <li key={index} className="relative pl-10">
@@ -275,19 +279,36 @@ export default async function EditalPage({ params }: Props) {
                                 >
                                   {item.label}
                                 </span>
-                                <time
-                                  dateTime={item.dataHora}
-                                  className={[
-                                    'text-sm font-medium tabular-nums',
-                                    isPast
-                                      ? 'text-slate-400'
-                                      : isCurrent
-                                        ? 'text-accent-700'
-                                        : 'text-brand-700',
-                                  ].join(' ')}
-                                >
-                                  {formatDateTime(item.dataHora)}
-                                </time>
+                                {item.fimEm ? (
+                                  <span
+                                    className={[
+                                      'text-sm font-medium tabular-nums',
+                                      isPast
+                                        ? 'text-slate-400'
+                                        : isCurrent
+                                          ? 'text-accent-700'
+                                          : 'text-brand-700',
+                                    ].join(' ')}
+                                  >
+                                    <time dateTime={item.dataHora}>{formatDateTime(item.dataHora)}</time>
+                                    <span className="mx-1.5 text-slate-400">→</span>
+                                    <time dateTime={item.fimEm}>{formatDateTime(item.fimEm)}</time>
+                                  </span>
+                                ) : (
+                                  <time
+                                    dateTime={item.dataHora}
+                                    className={[
+                                      'text-sm font-medium tabular-nums',
+                                      isPast
+                                        ? 'text-slate-400'
+                                        : isCurrent
+                                          ? 'text-accent-700'
+                                          : 'text-brand-700',
+                                    ].join(' ')}
+                                  >
+                                    {formatDateTime(item.dataHora)}
+                                  </time>
+                                )}
                               </div>
                               {isPast && (
                                 <span className="inline-flex items-center gap-1 text-xs text-slate-400 mt-1">

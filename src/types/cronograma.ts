@@ -53,6 +53,8 @@ export interface CronogramaDisplayItem {
   dataHora: string
   /** Fase do edital (presente se o item veio de uma fase fixa, ausente em custom/legado) */
   fase?: EditalStatus
+  /** Fim da janela (apenas custom items com range temporal) */
+  fimEm?: string
 }
 
 // ── Fases do ciclo de vida do edital (sem RASCUNHO) ─────────────────────────
