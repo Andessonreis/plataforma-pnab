@@ -5,17 +5,10 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { uploadFile, deleteFile } from '@/lib/storage'
 import { validateMagicBytes, sanitizeFilename } from '@/lib/upload/validate'
+import { MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_MB, ALLOWED_MIMES, MIME_LABEL } from '@/lib/upload/anexo-config'
 import { logAudit } from '@/lib/audit'
 
 export const runtime = 'nodejs'
-
-const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
-
-const ALLOWED_MIMES = [
-  'application/pdf',
-  'image/png',
-  'image/jpeg',
-]
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -91,9 +84,9 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     }
 
     // Validar tamanho
-    if (file.size > MAX_FILE_SIZE) {
+    if (file.size > MAX_FILE_SIZE_BYTES) {
       const res = NextResponse.json(
-        { error: 'BAD_REQUEST', message: 'Arquivo excede o limite de 10MB.', requestId },
+        { error: 'BAD_REQUEST', message: `Arquivo excede o limite de ${MAX_FILE_SIZE_MB}MB.`, requestId },
         { status: 400 },
       )
       res.headers.set('X-Request-Id', requestId)
@@ -102,9 +95,9 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     }
 
     // Validar MIME type
-    if (!ALLOWED_MIMES.includes(file.type)) {
+    if (!ALLOWED_MIMES.includes(file.type as typeof ALLOWED_MIMES[number])) {
       const res = NextResponse.json(
-        { error: 'BAD_REQUEST', message: 'Tipo de arquivo não permitido. Aceitos: PDF, PNG, JPEG.', requestId },
+        { error: 'BAD_REQUEST', message: `Tipo de arquivo não permitido. Aceitos: ${MIME_LABEL}.`, requestId },
         { status: 400 },
       )
       res.headers.set('X-Request-Id', requestId)
