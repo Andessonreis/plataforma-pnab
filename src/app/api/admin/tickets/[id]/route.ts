@@ -120,10 +120,6 @@ export async function PATCH(
 
     const updateData: Record<string, unknown> = {}
 
-    if (data.status) {
-      updateData.status = data.status
-    }
-
     if (data.resposta) {
       const novaEntrada: HistoricoItem = {
         de: session.user.name ?? 'Atendente',
@@ -132,6 +128,15 @@ export async function PATCH(
       }
       const historicoAtual = (ticket.historico ?? []) as unknown as HistoricoItem[]
       updateData.historico = [...historicoAtual, novaEntrada] as unknown as Prisma.InputJsonValue[]
+    }
+
+    // #70 — Status auto: status explícito do body sempre vence;
+    // sem status explícito + nova resposta + ticket ABERTO → progride
+    // automaticamente para EM_ATENDIMENTO.
+    if (data.status) {
+      updateData.status = data.status
+    } else if (data.resposta && ticket.status === 'ABERTO') {
+      updateData.status = 'EM_ATENDIMENTO'
     }
 
     const updated = await prisma.atendimento.update({
