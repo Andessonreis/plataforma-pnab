@@ -168,63 +168,74 @@ export function HabilitacaoActions({ inscricaoId, currentStatus, motivoAtual: _m
           </div>
         )}
 
-        {/* Estado idle — botões primários */}
-        {step === 'idle' && (
+        {/* Estado idle — botões primários condicionais ao status atual (#79).
+            ENVIADA   → decisão inicial: Habilitar + Inabilitar (2 transições válidas)
+            HABILITADA → apenas "Reverter para inabilitada" (correção)
+            INABILITADA → apenas "Reverter para habilitada" (correção) */}
+        {step === 'idle' && currentStatus === 'ENVIADA' && (
           <>
-            {currentStatus !== 'HABILITADA' && (
-              <button
-                type="button"
-                onClick={() => { setFeedback(null); setStep('confirming-habilitar') }}
-                className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-green-700 focus-visible:outline-2 focus-visible:outline-green-600 min-h-[44px]"
-              >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-                Habilitar inscrição
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => { setFeedback(null); setStep('confirming-habilitar') }}
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-green-700 focus-visible:outline-2 focus-visible:outline-green-600 min-h-[44px]"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              Habilitar inscrição
+            </button>
 
-            {currentStatus !== 'INABILITADA' && (
-              <button
-                type="button"
-                onClick={openFormInabilitar}
-                className="flex w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-medium text-red-700 transition-colors hover:bg-red-100 hover:border-red-300 focus-visible:outline-2 focus-visible:outline-red-500 min-h-[44px]"
-              >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-                Inabilitar inscrição
-              </button>
-            )}
-
-            {currentStatus === 'HABILITADA' && (
-              <button
-                type="button"
-                onClick={openFormInabilitar}
-                className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-slate-400 min-h-[44px]"
-              >
-                Reverter para inabilitada
-              </button>
-            )}
-
-            {currentStatus === 'INABILITADA' && (
-              <button
-                type="button"
-                onClick={() => { setFeedback(null); setStep('confirming-habilitar') }}
-                className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-slate-400 min-h-[44px]"
-              >
-                Reverter para habilitada
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={openFormInabilitar}
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-medium text-red-700 transition-colors hover:bg-red-100 hover:border-red-300 focus-visible:outline-2 focus-visible:outline-red-500 min-h-[44px]"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              Inabilitar inscrição
+            </button>
           </>
+        )}
+
+        {step === 'idle' && currentStatus === 'HABILITADA' && (
+          <button
+            type="button"
+            onClick={openFormInabilitar}
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-medium text-red-700 transition-colors hover:bg-red-100 hover:border-red-300 focus-visible:outline-2 focus-visible:outline-red-500 min-h-[44px]"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            Reverter para inabilitada
+          </button>
+        )}
+
+        {step === 'idle' && currentStatus === 'INABILITADA' && (
+          <button
+            type="button"
+            onClick={() => { setFeedback(null); setStep('confirming-habilitar') }}
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-green-700 focus-visible:outline-2 focus-visible:outline-green-600 min-h-[44px]"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            Reverter para habilitada
+          </button>
         )}
 
         {/* Confirmação de habilitação */}
         {step === 'confirming-habilitar' && (
           <div className="rounded-lg border border-green-200 bg-green-50 p-4 space-y-3">
-            <p className="text-sm text-green-900 font-medium">Confirmar habilitação?</p>
+            <p className="text-sm text-green-900 font-medium">
+              {currentStatus === 'INABILITADA' ? 'Confirmar reversão?' : 'Confirmar habilitação?'}
+            </p>
             <p className="text-xs text-green-800">
-              A inscrição será marcada como <strong>Habilitada</strong> e encaminhada para a fase de avaliação.
+              {currentStatus === 'INABILITADA' ? (
+                <>A inscrição voltará para <strong>Habilitada</strong>. O motivo de inabilitação anterior será removido.</>
+              ) : (
+                <>A inscrição será marcada como <strong>Habilitada</strong> e encaminhada para a fase de avaliação.</>
+              )}
             </p>
             <div className="flex gap-2">
               <button
