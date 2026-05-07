@@ -74,11 +74,6 @@ export default async function EditarEditalPage({ params }: Props) {
         <p className="text-slate-600 mt-1">{edital.titulo}</p>
       </div>
 
-      {/* Painel de avanço manual de fase — uso excepcional */}
-      <div className="mb-6">
-        <AvancarFasePanel editalId={edital.id} statusAtual={edital.status as EditalStatus} />
-      </div>
-
       <EditalForm
         initialData={{
           id: edital.id,
@@ -136,6 +131,12 @@ export default async function EditarEditalPage({ params }: Props) {
         {(['RESULTADO_FINAL', 'ENCERRADO'] as EditalStatus[]).includes(edital.status as EditalStatus) && (
           <RelatorioFinalButton editalId={edital.id} />
         )}
+      </div>
+
+      {/* Painel de avanço manual de fase — uso excepcional, fica no fim
+          pra não distrair do fluxo normal de edição. */}
+      <div className="mt-10">
+        <AvancarFasePanel editalId={edital.id} statusAtual={edital.status as EditalStatus} />
       </div>
     </section>
   )
