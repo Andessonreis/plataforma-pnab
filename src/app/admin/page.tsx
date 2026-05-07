@@ -106,7 +106,7 @@ export default async function AdminDashboardPage() {
         color: 'bg-amber-50',
         iconColor: 'text-amber-600',
         icon: <IconTicket className="h-6 w-6" />,
-        href: '/admin/tickets?status=ABERTO',
+        href: '/admin/atendimentos?status=ABERTO',
       },
       {
         label: 'Em Andamento',
@@ -115,7 +115,7 @@ export default async function AdminDashboardPage() {
         color: 'bg-blue-50',
         iconColor: 'text-blue-600',
         icon: <IconChatBubble className="h-6 w-6" />,
-        href: '/admin/tickets?status=EM_ATENDIMENTO',
+        href: '/admin/atendimentos?status=EM_ATENDIMENTO',
       },
       {
         label: 'Fechados Hoje',
@@ -124,7 +124,7 @@ export default async function AdminDashboardPage() {
         color: 'bg-green-50',
         iconColor: 'text-green-600',
         icon: <IconCheck className="h-6 w-6" />,
-        href: '/admin/tickets?status=FECHADO',
+        href: '/admin/atendimentos?status=FECHADO',
       },
       {
         label: 'FAQ Publicados',
@@ -161,11 +161,11 @@ export default async function AdminDashboardPage() {
         {/* Ações rápidas */}
         <FadeIn delay={0.2}>
           <div className="flex flex-wrap gap-3 mb-6 sm:mb-8">
-            <Button href="/admin/tickets" size="sm">
+            <Button href="/admin/atendimentos" size="sm">
               <IconTicket className="h-4 w-4 mr-1.5" />
               Ver Atendimentos
             </Button>
-            <Button href="/admin/tickets?status=ABERTO" variant="outline" size="sm">
+            <Button href="/admin/atendimentos?status=ABERTO" variant="outline" size="sm">
               <IconClock className="h-4 w-4 mr-1.5" />
               Pendentes ({atdAbertos})
             </Button>
@@ -184,7 +184,7 @@ export default async function AdminDashboardPage() {
                 Atendimentos Pendentes
               </h2>
               <Link
-                href="/admin/tickets"
+                href="/admin/atendimentos"
                 className="text-sm text-brand-600 hover:text-brand-700 font-medium"
               >
                 Ver todos
@@ -204,7 +204,7 @@ export default async function AdminDashboardPage() {
                   {atdRecentes.map((ticket) => (
                     <Link
                       key={ticket.id}
-                      href={`/admin/tickets/${ticket.id}`}
+                      href={`/admin/atendimentos/${ticket.id}`}
                       className="flex items-start gap-3 px-4 py-3 hover:bg-slate-50 transition-colors"
                     >
                       <div className="h-8 w-8 rounded-lg bg-amber-50 flex items-center justify-center shrink-0 mt-0.5">
@@ -236,7 +236,7 @@ export default async function AdminDashboardPage() {
                   {atdRecentes.map((ticket) => (
                     <Link
                       key={ticket.id}
-                      href={`/admin/tickets/${ticket.id}`}
+                      href={`/admin/atendimentos/${ticket.id}`}
                       className="flex items-center gap-3 py-3 hover:bg-slate-50/50 transition-colors rounded-lg px-2 -mx-2"
                     >
                       <div className="h-8 w-8 rounded-lg bg-amber-50 flex items-center justify-center shrink-0">
