@@ -69,7 +69,7 @@ export default async function TicketDetailPage({ params }: Props) {
   async function responder(formData: FormData) {
     'use server'
     const texto = (formData.get('texto') as string)?.trim()
-    const novoStatus = formData.get('novoStatus') as AtendimentoStatus | null
+    const statusForcado = formData.get('novoStatus') as AtendimentoStatus | null
 
     if (!texto || texto.length < 5) return
 
@@ -82,16 +82,30 @@ export default async function TicketDetailPage({ params }: Props) {
       criadoEm: new Date().toISOString(),
     }
 
-    // Busca o ticket atual para obter o histórico existente
-    const ticketAtual = await prisma.atendimento.findUnique({ where: { id }, select: { historico: true } })
-    const historicoAtual = (ticketAtual?.historico ?? []) as unknown as HistoricoItem[]
+    // Busca o ticket atual para obter o histórico existente + status atual
+    const ticketAtual = await prisma.atendimento.findUnique({
+      where: { id },
+      select: { historico: true, status: true },
+    })
+    if (!ticketAtual) return
+
+    const historicoAtual = (ticketAtual.historico ?? []) as unknown as HistoricoItem[]
     const novoHistorico = [...historicoAtual, entrada]
+
+    // #70 — Status auto: ao responder, ABERTO progride para EM_ATENDIMENTO.
+    // Botões dedicados (ex.: Encerrar) podem forçar outro status via novoStatus.
+    let novoStatus: AtendimentoStatus = ticketAtual.status
+    if (statusForcado) {
+      novoStatus = statusForcado
+    } else if (ticketAtual.status === 'ABERTO') {
+      novoStatus = 'EM_ATENDIMENTO'
+    }
 
     await prisma.atendimento.update({
       where: { id },
       data: {
         historico: novoHistorico as unknown as Prisma.InputJsonValue[],
-        status: novoStatus ?? undefined,
+        status: novoStatus,
         updatedAt: new Date(),
       },
     })
@@ -221,24 +235,11 @@ export default async function TicketDetailPage({ params }: Props) {
                     />
                   </div>
 
-                  <div>
-                    <label
-                      htmlFor="novoStatus"
-                      className="block text-sm font-medium text-slate-700 mb-1.5"
-                    >
-                      Atualizar status
-                    </label>
-                    <select
-                      id="novoStatus"
-                      name="novoStatus"
-                      defaultValue={ticket.status}
-                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
-                    >
-                      <option value="ABERTO">Aberto — aguardando ação</option>
-                      <option value="EM_ATENDIMENTO">Em Atendimento — em andamento</option>
-                      <option value="FECHADO">Fechado — resolvido</option>
-                    </select>
-                  </div>
+                  {ticket.status === 'ABERTO' && (
+                    <p className="text-xs text-slate-500 -mt-2">
+                      Ao enviar a resposta, o status passa para <strong>Em Atendimento</strong>.
+                    </p>
+                  )}
 
                   <div className="flex items-center gap-3 flex-wrap">
                     <Button type="submit" size="sm">
@@ -248,7 +249,7 @@ export default async function TicketDetailPage({ params }: Props) {
                     {podeFechar && (
                       <Button type="submit" name="novoStatus" value="FECHADO" variant="outline" size="sm">
                         <IconCheck className="h-4 w-4 mr-1.5" />
-                        Encerrar Atendimento
+                        Responder e Encerrar
                       </Button>
                     )}
                   </div>
