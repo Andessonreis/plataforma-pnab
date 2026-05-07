@@ -11,6 +11,7 @@ import type { CampoFormulario } from '@/types/campo-formulario'
 import type { EtapaCustomizada } from '@/types/etapa-customizada'
 import { RecursoForm } from './recurso/recurso-form'
 import { RetractAndEditButton } from './retract-and-edit-button'
+import { formatNotaTotal } from '@/lib/services/avaliacao-view'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -56,7 +57,10 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
       },
       anexos: true,
       avaliacoes: {
-        select: { notaTotal: true, parecer: true, createdAt: true },
+        // Proponente só vê avaliações finalizadas — rascunhos e placeholders
+        // não devem expor "0" como se fosse nota recebida (bug #66).
+        where: { finalizada: true },
+        select: { notaTotal: true, parecer: true, finalizada: true, createdAt: true },
       },
       recursos: {
         select: { fase: true, texto: true, urlAnexos: true, decisao: true, justificativa: true, createdAt: true },
@@ -308,7 +312,7 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
                   <div key={i} className="p-3 bg-slate-50 rounded-lg">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-sm font-medium text-slate-700">Avaliação {i + 1}</span>
-                      <span className="text-lg font-bold text-brand-700">{String(avaliacao.notaTotal)}</span>
+                      <span className="text-lg font-bold text-brand-700">{formatNotaTotal(avaliacao)}</span>
                     </div>
                     {avaliacao.parecer && (
                       <p className="text-xs text-slate-500 mt-1 break-words">{avaliacao.parecer}</p>

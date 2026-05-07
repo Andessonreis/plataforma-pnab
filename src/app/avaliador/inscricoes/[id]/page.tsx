@@ -135,7 +135,7 @@ export default async function AvaliadorInscricaoDetailPage({ params }: Props) {
               id: minhaAvaliacao.id,
               notas: minhaAvaliacao.notas as { criterio: string; nota: number; peso: number }[],
               parecer: minhaAvaliacao.parecer,
-              notaTotal: String(minhaAvaliacao.notaTotal),
+              notaTotal: minhaAvaliacao.notaTotal === null ? null : String(minhaAvaliacao.notaTotal),
               finalizada: minhaAvaliacao.finalizada,
               updatedAt: minhaAvaliacao.updatedAt.toISOString(),
             }

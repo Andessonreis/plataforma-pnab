@@ -77,13 +77,15 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
         return { created: 0, inscricao }
       }
 
-      // Criar avaliações
+      // Criar avaliações como placeholders (apenas marcam atribuição).
+      // notaTotal fica null até o avaliador salvar/finalizar — distinguir
+      // "não avaliado" de "avaliado e zerado" é requisito de auditoria.
       await tx.avaliacao.createMany({
         data: newIds.map((avaliadorId) => ({
           inscricaoId,
           avaliadorId,
           notas: [],
-          notaTotal: 0,
+          notaTotal: null,
           finalizada: false,
         })),
       })

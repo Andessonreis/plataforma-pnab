@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { calculateTotal, type NotaAvaliacao } from '@/lib/results/formula'
 import type { CriterioAvaliacao } from '@/lib/avaliacao-criterios'
+import { viewNotaTotal } from '@/lib/services/avaliacao-view'
 
 interface CriterioConfig {
   criterio: string
@@ -27,7 +28,7 @@ interface AvaliacaoData {
   id: string
   notas: NotaItem[]
   parecer: string | null
-  notaTotal: string | number
+  notaTotal: string | number | null
   finalizada: boolean
   updatedAt: string
 }
@@ -182,10 +183,22 @@ export function AvaliacaoForm({
           {/* Nota total destaque */}
           <div className="text-center py-3 bg-slate-50 rounded-lg">
             <p className="text-xs font-medium text-slate-500 mb-1">{hasFormula ? 'Pontuação Final' : 'Nota Final Ponderada'}</p>
-            <p className={`text-4xl font-bold tabular-nums ${hasFormula ? 'text-brand-700' : totalColor(parseFloat(String(initialAvaliacao?.notaTotal ?? 0)))}`}>
-              {parseFloat(String(initialAvaliacao?.notaTotal ?? 0)).toFixed(hasFormula ? 2 : 1)}
-              <span className="text-lg font-normal text-slate-400 ml-0.5">{hasFormula ? ' pts' : '/10'}</span>
-            </p>
+            {(() => {
+              const nota = initialAvaliacao
+                ? viewNotaTotal(initialAvaliacao)
+                : null
+              if (nota === null) {
+                return (
+                  <p className="text-4xl font-bold tabular-nums text-slate-400">Pendente</p>
+                )
+              }
+              return (
+                <p className={`text-4xl font-bold tabular-nums ${hasFormula ? 'text-brand-700' : totalColor(nota)}`}>
+                  {nota.toFixed(hasFormula ? 2 : 1)}
+                  <span className="text-lg font-normal text-slate-400 ml-0.5">{hasFormula ? ' pts' : '/10'}</span>
+                </p>
+              )
+            })()}
           </div>
 
           {/* Notas por critério */}
