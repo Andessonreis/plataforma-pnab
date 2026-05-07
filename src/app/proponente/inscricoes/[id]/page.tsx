@@ -154,9 +154,11 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
         </div>
       )}
 
-      {/* Cabecalho */}
-      <div className="flex items-start justify-between mb-6">
-        <div>
+      {/* Cabecalho — #81: flex-wrap + min-w-0 evitam horizontal overflow
+          em viewports estreitos quando título do edital + label do status
+          são longos */}
+      <div className="flex items-start justify-between gap-3 flex-wrap mb-6">
+        <div className="min-w-0 flex-1">
           <Link
             href="/proponente/inscricoes"
             className="text-sm text-brand-600 hover:text-brand-700 font-medium flex items-center gap-1 mb-2"
@@ -166,8 +168,8 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
             </svg>
             Voltar
           </Link>
-          <h1 className="text-2xl font-bold text-slate-900">Inscrição {inscricao.numero}</h1>
-          <p className="text-slate-600 mt-1">{inscricao.edital.titulo} ({inscricao.edital.ano})</p>
+          <h1 className="text-2xl font-bold text-slate-900 break-words">Inscrição {inscricao.numero}</h1>
+          <p className="text-slate-600 mt-1 break-words">{inscricao.edital.titulo} ({inscricao.edital.ano})</p>
         </div>
         <Badge variant={inscricaoStatusVariant[inscricao.status as InscricaoStatus]} className="text-sm px-3 py-1">
           {inscricaoStatusLabel[inscricao.status as InscricaoStatus]}
