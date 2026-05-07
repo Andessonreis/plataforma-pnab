@@ -8,10 +8,23 @@ export interface CronogramaFaseItem {
   dataHora: string
 }
 
+// Ações que items custom podem disparar/janelar.
+// Usadas pra gating de funcionalidades por janela temporal:
+//   - RECURSO_HABILITACAO_JANELA: libera form de recurso fase HABILITACAO
+//   - RECURSO_RESULTADO_JANELA:   libera form de recurso fase RESULTADO_PRELIMINAR
+// Outras ações futuras podem ser adicionadas sem mudar schema.
+export type AcaoJanela =
+  | 'RECURSO_HABILITACAO_JANELA'
+  | 'RECURSO_RESULTADO_JANELA'
+
 export interface CronogramaCustomItem {
   tipo: 'custom'
   label: string
   dataHora: string
+  /** Fim da janela. Se ausente, o item é um marco pontual (sem range). */
+  fimEm?: string
+  /** Ação opcional disparada/janelada por este item. */
+  acao?: AcaoJanela
 }
 
 export type CronogramaItem = CronogramaFaseItem | CronogramaCustomItem

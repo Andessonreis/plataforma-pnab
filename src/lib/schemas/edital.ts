@@ -18,6 +18,8 @@ const cronogramaCustomSchema = z.object({
   tipo: z.literal('custom'),
   label: z.string().min(1, 'Descrição do marco é obrigatória'),
   dataHora: z.string().default(''),
+  fimEm: z.string().optional(),
+  acao: z.enum(['RECURSO_HABILITACAO_JANELA', 'RECURSO_RESULTADO_JANELA']).optional(),
 })
 
 const cronogramaLegacySchema = z.object({
