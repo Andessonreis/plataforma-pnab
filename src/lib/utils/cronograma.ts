@@ -146,6 +146,7 @@ export function parseCronograma(raw: unknown): CronogramaDisplayItem[] {
         label: typeof item.label === 'string' ? item.label : '—',
         dataHora: String(item.dataHora),
         ...(legacyFase ? { fase: legacyFase } : {}),
+        ...(typeof item.fimEm === 'string' && item.fimEm ? { fimEm: item.fimEm } : {}),
       }
     })
     // PUBLICADO não aparece no cronograma — a publicação é ação manual do admin
