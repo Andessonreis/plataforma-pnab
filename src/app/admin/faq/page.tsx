@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { Card, Badge, Pagination, Button, EmptyState, FadeIn, IconPlus, IconQuestion } from '@/components/ui'
+import { EditalFilterSelect } from './edital-filter-select'
 
 export const metadata: Metadata = {
   title: 'Gestão de FAQ — Portal PNAB Irecê',
@@ -88,35 +89,11 @@ export default async function AdminFaqPage({ searchParams }: Props) {
 
       {/* Filtros */}
       <div className="flex flex-wrap gap-3 sm:gap-4 mb-4 sm:mb-6">
-        <div className="flex flex-wrap gap-2 items-center">
-          <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Edital:</span>
-          <Link
-            href={buildFilterUrl({ editalId: undefined, publicado: publicadoFilter })}
-            className={[
-              'px-3 py-1.5 rounded-full text-xs font-medium transition-colors min-h-[36px] inline-flex items-center',
-              !editalFilter
-                ? 'bg-brand-600 text-white'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
-            ].join(' ')}
-          >
-            Todos
-          </Link>
-          {editais.map((edital) => (
-            <Link
-              key={edital.id}
-              href={`/admin/faq?editalId=${edital.id}${publicadoFilter ? `&publicado=${publicadoFilter}` : ''}`}
-              className={[
-                'px-3 py-1.5 rounded-full text-xs font-medium transition-colors min-h-[36px] inline-flex items-center max-w-[200px] truncate',
-                editalFilter === edital.id
-                  ? 'bg-brand-600 text-white'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
-              ].join(' ')}
-              title={edital.titulo}
-            >
-              {edital.titulo}
-            </Link>
-          ))}
-        </div>
+        <EditalFilterSelect
+          editais={editais}
+          selectedId={editalFilter}
+          preserveParams={{ publicado: publicadoFilter ?? undefined }}
+        />
 
         <div className="flex flex-wrap gap-2 items-center">
           <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Status:</span>
