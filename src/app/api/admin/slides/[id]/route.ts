@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { randomUUID } from 'crypto'
+import { revalidatePath } from 'next/cache'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { logAudit } from '@/lib/audit'
@@ -79,6 +80,9 @@ export async function PUT(
       details: { titulo: slide.titulo, ativo: slide.ativo },
       ip: req.headers.get('x-forwarded-for') ?? undefined,
     })
+
+    // #63 — invalida cache da home para refletir alterações
+    revalidatePath('/')
 
     const res = NextResponse.json(
       { message: 'Slide atualizado.', id: slide.id, requestId },
@@ -166,6 +170,9 @@ export async function DELETE(
       details: { titulo: existing.titulo },
       ip: req.headers.get('x-forwarded-for') ?? undefined,
     })
+
+    // #63 — invalida cache da home após remoção
+    revalidatePath('/')
 
     const res = NextResponse.json(
       { message: 'Slide excluído com sucesso.', requestId },

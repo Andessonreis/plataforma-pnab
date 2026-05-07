@@ -1,4 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+
+// Mock next/cache antes do import da route — revalidatePath roda no contexto Next
+vi.mock('next/cache', () => ({
+  revalidatePath: vi.fn(),
+}))
+
 import { POST } from '../route'
 import { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'

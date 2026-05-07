@@ -33,8 +33,10 @@ export const metadata: Metadata = {
 // ── Página ──────────────────────────────────────────────────────────────────
 
 export default async function HomePage() {
-  // Buscar métricas reais e editais em destaque
-  const [editaisAbertos, totalFomento, projetosCount, editaisDestaque] = await Promise.all([
+  const agora = new Date()
+
+  // Buscar métricas reais, editais em destaque e slides admin ativos
+  const [editaisAbertos, totalFomento, projetosCount, editaisDestaque, slidesAdmin] = await Promise.all([
     prisma.edital.count({
       where: { status: { in: ['PUBLICADO', 'INSCRICOES_ABERTAS'] } },
     }),
@@ -57,6 +59,26 @@ export default async function HomePage() {
         valorTotal: true,
         categorias: true,
         cronograma: true,
+      },
+    }),
+    // #63 — Slides Destaque criados no admin: ativos e dentro da janela
+    // de exibição (inicioEm/fimEm opcionais — null = sem limite).
+    prisma.slideDestaque.findMany({
+      where: {
+        ativo: true,
+        AND: [
+          { OR: [{ inicioEm: null }, { inicioEm: { lte: agora } }] },
+          { OR: [{ fimEm: null }, { fimEm: { gte: agora } }] },
+        ],
+      },
+      orderBy: [{ ordem: 'asc' }, { createdAt: 'desc' }],
+      select: {
+        id: true,
+        titulo: true,
+        descricao: true,
+        imagemUrl: true,
+        ctaLabel: true,
+        ctaUrl: true,
       },
     }),
   ])
@@ -82,7 +104,21 @@ export default async function HomePage() {
     },
   ]
 
-  // Slides 2+: editais reais do banco
+  // Slides admin (Banner Destaque) — controlados pela secretaria, vêm
+  // logo após o hero institucional fixo (#63).
+  for (const slide of slidesAdmin) {
+    heroSlides.push({
+      id: `slide-${slide.id}`,
+      tipo: 'custom',
+      titulo: slide.titulo,
+      descricao: slide.descricao ?? '',
+      imagemUrl: slide.imagemUrl ?? undefined,
+      ctaLabel: slide.ctaLabel ?? 'Saiba mais',
+      ctaUrl: slide.ctaUrl ?? '#',
+    })
+  }
+
+  // Slides seguintes: editais reais do banco
   for (const ed of editaisDestaque) {
     const statusInfo = getStatusDisplay(ed.status)
     const nextDeadline = getNextDeadline(ed.cronograma)
