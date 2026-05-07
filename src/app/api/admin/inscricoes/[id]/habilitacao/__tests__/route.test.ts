@@ -28,7 +28,7 @@ const baseInscricao = {
   numero: 'INS-001',
   status: 'ENVIADA',
   proponente: { email: 'ana@test.com', nome: 'Ana' },
-  edital: { titulo: 'Edital PNAB 2025' },
+  edital: { titulo: 'Edital PNAB 2025', status: 'HABILITACAO' },
 }
 
 describe('PUT /api/admin/inscricoes/[id]/habilitacao', () => {

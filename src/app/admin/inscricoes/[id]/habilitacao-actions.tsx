@@ -23,27 +23,38 @@ interface HabilitacaoActionsProps {
   inscricaoId: string
   currentStatus: InscricaoStatus
   motivoAtual: string
+  /** Quando true, a ação está fora da fase e precisa de justificativa de override admin */
+  overrideMode?: boolean
 }
 
 type Step = 'idle' | 'confirming-habilitar' | 'form-inabilitar'
 
-export function HabilitacaoActions({ inscricaoId, currentStatus, motivoAtual: _motivoAtual }: HabilitacaoActionsProps) {
+export function HabilitacaoActions({ inscricaoId, currentStatus, motivoAtual: _motivoAtual, overrideMode = false }: HabilitacaoActionsProps) {
   const router = useRouter()
   const [step, setStep] = useState<Step>('idle')
   const [loading, setLoading] = useState(false)
   const [motivoPadrao, setMotivoPadrao] = useState<MotivoPadrao>(MOTIVOS_PADRONIZADOS[0])
   const [motivoComplemento, setMotivoComplemento] = useState('')
+  const [overrideJustificativa, setOverrideJustificativa] = useState('')
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   async function submitHabilitacao(payload: { status: 'HABILITADA' | 'INABILITADA'; motivo?: string }) {
+    if (overrideMode && overrideJustificativa.trim().length < 10) {
+      setFeedback({ type: 'error', text: 'Justificativa do override é obrigatória (mínimo 10 caracteres).' })
+      return
+    }
+
     setLoading(true)
     setFeedback(null)
 
     try {
+      const body = overrideMode
+        ? { ...payload, adminOverride: true, adminOverrideJustificativa: overrideJustificativa.trim() }
+        : payload
       const res = await fetch(`/api/admin/inscricoes/${inscricaoId}/habilitacao`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(body),
       })
 
       const data = await res.json()
@@ -113,6 +124,26 @@ export function HabilitacaoActions({ inscricaoId, currentStatus, motivoAtual: _m
       </div>
 
       <div className="p-4 space-y-3">
+        {/* Override mode — justificativa obrigatória */}
+        {overrideMode && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 space-y-2">
+            <label htmlFor="override-justificativa" className="block text-xs font-semibold text-amber-900">
+              Justificativa do override (obrigatória, mín. 10 caracteres)
+            </label>
+            <textarea
+              id="override-justificativa"
+              value={overrideJustificativa}
+              onChange={(e) => setOverrideJustificativa(e.target.value)}
+              rows={2}
+              placeholder="Ex.: ajuste retroativo solicitado pelo TCM em 07/05/2026, processo 1234..."
+              className="block w-full resize-none rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-500"
+            />
+            <p className="text-[11px] text-amber-700">
+              Será registrado em auditoria com seu usuário, data e motivo.
+            </p>
+          </div>
+        )}
+
         {/* Feedback */}
         {feedback && (
           <div
