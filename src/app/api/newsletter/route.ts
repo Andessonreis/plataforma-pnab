@@ -27,17 +27,28 @@ export async function POST(req: NextRequest) {
     // Verificar se já está inscrito
     const existing = await prisma.newsletterSubscriber.findUnique({
       where: { email },
+      select: { id: true, ativo: true },
     })
 
-    if (existing) {
-      // Se estava inativo, reativar
-      if (!existing.ativo) {
-        await prisma.newsletterSubscriber.update({
-          where: { email },
-          data: { ativo: true, nome },
-        })
-      }
-      // Não revelar se já existia — retornar sucesso genérico
+    if (existing?.ativo) {
+      // Newsletter pública de portal de governo — feedback claro vence
+      // privacidade contra enumeration neste contexto (#83).
+      const res = NextResponse.json(
+        { error: 'ALREADY_SUBSCRIBED', message: 'Este e-mail já está cadastrado na newsletter.', requestId },
+        { status: 409 },
+      )
+      res.headers.set('X-Request-Id', requestId)
+      res.headers.set('Cache-Control', 'no-store')
+      console.log({ requestId, method: 'POST', path: '/api/newsletter', status: 409, durationMs: Date.now() - start })
+      return res
+    }
+
+    if (existing && !existing.ativo) {
+      // Reativar inscrição cancelada — UX legítima
+      await prisma.newsletterSubscriber.update({
+        where: { email },
+        data: { ativo: true, nome },
+      })
     } else {
       await prisma.newsletterSubscriber.create({
         data: { nome, email },

@@ -45,21 +45,19 @@ describe('POST /api/newsletter', () => {
     })
   })
 
-  it('email existente ativo → 201 sem revelar existencia', async () => {
+  it('email existente ativo → 409 com mensagem clara (#83)', async () => {
     mockPrisma.newsletterSubscriber.findUnique.mockResolvedValue({
       id: 'sub-existing',
-      nome: 'Joao',
-      email: validBody.email,
       ativo: true,
     } as never)
 
     const res = await POST(makePostRequest(validBody))
 
-    // Retorna 201 (sucesso generico) — nao revela que ja existia
-    expect(res.status).toBe(201)
+    expect(res.status).toBe(409)
     const body = await res.json()
-    expect(body.message).toContain('sucesso')
-    // Nao deve criar nem atualizar
+    expect(body.error).toBe('ALREADY_SUBSCRIBED')
+    expect(body.message).toMatch(/já está cadastrado/i)
+    // Não deve criar nem atualizar
     expect(mockPrisma.newsletterSubscriber.create).not.toHaveBeenCalled()
     expect(mockPrisma.newsletterSubscriber.update).not.toHaveBeenCalled()
   })
