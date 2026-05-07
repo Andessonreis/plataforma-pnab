@@ -79,7 +79,7 @@ export async function saveAvaliacao(
     details: {
       inscricaoId,
       inscricaoNumero: inscricao.numero,
-      notaTotal: String(avaliacao.notaTotal),
+      notaTotal: avaliacao.notaTotal === null ? null : String(avaliacao.notaTotal),
       finalizada: avaliacao.finalizada,
     },
   })
@@ -127,7 +127,7 @@ export async function assignAvaliadores(
         inscricaoId,
         avaliadorId,
         notas: [],
-        notaTotal: 0,
+        notaTotal: null,
         finalizada: false,
       })),
     })

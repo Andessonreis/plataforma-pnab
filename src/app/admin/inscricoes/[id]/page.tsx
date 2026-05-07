@@ -15,6 +15,7 @@ import { RecursoDecision } from './recurso-decision'
 import { AnexoViewer } from './anexo-viewer'
 import { DistribuicaoAvaliadores } from './distribuicao-avaliadores'
 import { DadosInscricaoView } from '@/components/inscricao/dados-inscricao-view'
+import { formatNotaTotal, viewNotaTotal } from '@/lib/services/avaliacao-view'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -184,8 +185,8 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
                           </span>
                         )}
                         <span className="text-xl font-bold text-brand-700 tabular-nums">
-                          {parseFloat(String(avaliacao.notaTotal)).toFixed(hasFormula ? 2 : 1)}
-                          {hasFormula ? ' pts' : ''}
+                          {formatNotaTotal(avaliacao, hasFormula ? 2 : 1)}
+                          {viewNotaTotal(avaliacao) !== null && hasFormula ? ' pts' : ''}
                         </span>
                       </div>
                     </div>
@@ -285,8 +286,8 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
               editalId={inscricao.editalId}
               avaliacoes={inscricao.avaliacoes.map((a) => ({
                 avaliador: { id: a.avaliadorId, nome: a.avaliador.nome },
-                finalizada: (a as unknown as { finalizada: boolean }).finalizada,
-                notaTotal: a.notaTotal ? Number(a.notaTotal) : null,
+                finalizada: a.finalizada,
+                notaTotal: viewNotaTotal(a),
               }))}
             />
           )}
@@ -303,7 +304,7 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
                     id: meuAvaliacao.id,
                     notas: meuAvaliacao.notas as { criterio: string; nota: number; peso: number }[],
                     parecer: meuAvaliacao.parecer,
-                    notaTotal: String(meuAvaliacao.notaTotal),
+                    notaTotal: meuAvaliacao.notaTotal === null ? null : String(meuAvaliacao.notaTotal),
                     finalizada: meuAvaliacao.finalizada,
                     updatedAt: meuAvaliacao.updatedAt.toISOString(),
                   }

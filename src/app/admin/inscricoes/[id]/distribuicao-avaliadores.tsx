@@ -15,7 +15,7 @@ interface AvaliacaoAtribuida {
   avaliadorId: string
   avaliadorNome: string
   finalizada: boolean
-  notaTotal: number
+  notaTotal: number | null
 }
 
 interface Props {
@@ -24,7 +24,7 @@ interface Props {
   avaliacoes: {
     avaliador: { id: string; nome: string }
     finalizada: boolean
-    notaTotal: unknown
+    notaTotal: number | null
   }[]
 }
 
@@ -42,7 +42,7 @@ export function DistribuicaoAvaliadores({ inscricaoId, editalId, avaliacoes }: P
     avaliadorId: a.avaliador.id,
     avaliadorNome: a.avaliador.nome,
     finalizada: a.finalizada,
-    notaTotal: parseFloat(String(a.notaTotal)),
+    notaTotal: a.notaTotal,
   }))
 
   const atribuidosIds = new Set(atribuidos.map((a) => a.avaliadorId))
@@ -156,7 +156,7 @@ export function DistribuicaoAvaliadores({ inscricaoId, editalId, avaliacoes }: P
               <div className="min-w-0">
                 <p className="text-sm font-medium text-slate-900 truncate">{a.avaliadorNome}</p>
                 <p className="text-xs text-slate-500">
-                  {a.finalizada ? (
+                  {a.finalizada && a.notaTotal !== null ? (
                     <span className="text-emerald-700">Nota {a.notaTotal.toFixed(1)}</span>
                   ) : (
                     <span className="text-amber-600">Pendente</span>

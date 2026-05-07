@@ -87,6 +87,37 @@ describe('POST /api/admin/inscricoes/[id]/avaliacao/assign', () => {
     expect(body.created).toBe(1)
   })
 
+  it('regressão #66 — placeholder criado com notaTotal null (não 0)', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'admin-1', role: 'ADMIN' } } as never)
+    mockPrisma.inscricao.findUnique.mockResolvedValue({
+      id: 'insc-1',
+      status: 'HABILITADA',
+      numero: 'PNAB-2025-0001',
+    } as never)
+    mockPrisma.user.findMany.mockResolvedValue([
+      { id: 'aval-1', nome: 'Avaliador 1' },
+    ] as never)
+    mockPrisma.avaliacao.findMany.mockResolvedValue([] as never)
+    mockPrisma.avaliacao.createMany.mockResolvedValue({ count: 1 } as never)
+    mockPrisma.inscricao.update.mockResolvedValue({} as never)
+
+    await POST(
+      makePostRequest({ avaliadorIds: ['aval-1'] }),
+      makeParams(),
+    )
+
+    expect(mockPrisma.avaliacao.createMany).toHaveBeenCalledWith({
+      data: [
+        expect.objectContaining({
+          inscricaoId: 'insc-1',
+          avaliadorId: 'aval-1',
+          notaTotal: null,
+          finalizada: false,
+        }),
+      ],
+    })
+  })
+
   it('inscricao INABILITADA → 422', async () => {
     mockAuth.mockResolvedValue({ user: { id: 'admin-1', role: 'ADMIN' } } as never)
     mockPrisma.inscricao.findUnique.mockResolvedValue({
