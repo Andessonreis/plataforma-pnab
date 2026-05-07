@@ -100,7 +100,7 @@ export default async function AdminTicketsPage({ searchParams }: Props) {
     },
   ]
 
-  const baseUrl = statusFilter ? `/admin/tickets?status=${statusFilter}` : '/admin/tickets'
+  const baseUrl = statusFilter ? `/admin/atendimentos?status=${statusFilter}` : '/admin/atendimentos'
 
   return (
     <section>
@@ -120,7 +120,7 @@ export default async function AdminTicketsPage({ searchParams }: Props) {
           return (
             <Link
               key={opt.value}
-              href={opt.value ? `/admin/tickets?status=${opt.value}` : '/admin/tickets'}
+              href={opt.value ? `/admin/atendimentos?status=${opt.value}` : '/admin/atendimentos'}
               aria-current={isActive ? 'page' : undefined}
               className={[
                 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors min-h-[36px]',
@@ -163,7 +163,7 @@ export default async function AdminTicketsPage({ searchParams }: Props) {
             {tickets.map((ticket) => (
               <Link
                 key={ticket.id}
-                href={`/admin/tickets/${ticket.id}`}
+                href={`/admin/atendimentos/${ticket.id}`}
                 className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-3.5 hover:bg-slate-50 active:bg-slate-100 transition-colors shadow-sm"
               >
                 <div
@@ -263,7 +263,7 @@ export default async function AdminTicketsPage({ searchParams }: Props) {
                       </td>
                       <td className="py-3 px-4 text-right">
                         <Link
-                          href={`/admin/tickets/${ticket.id}`}
+                          href={`/admin/atendimentos/${ticket.id}`}
                           className="text-brand-600 hover:text-brand-700 font-medium text-xs min-h-[44px] inline-flex items-center"
                         >
                           Atender

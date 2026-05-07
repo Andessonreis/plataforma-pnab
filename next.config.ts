@@ -26,6 +26,21 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Redirects de URLs antigas para preservar bookmarks após renomes (#72)
+  async redirects() {
+    return [
+      {
+        source: '/admin/tickets',
+        destination: '/admin/atendimentos',
+        permanent: true,
+      },
+      {
+        source: '/admin/tickets/:path*',
+        destination: '/admin/atendimentos/:path*',
+        permanent: true,
+      },
+    ]
+  },
 }
 
 // Sentry só em produção com DSN configurado

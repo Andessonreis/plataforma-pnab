@@ -96,7 +96,7 @@ export default async function TicketDetailPage({ params }: Props) {
       },
     })
 
-    redirect(`/admin/tickets/${id}`)
+    redirect(`/admin/atendimentos/${id}`)
   }
 
   const podeFechar = ticket.status !== 'FECHADO'
@@ -106,7 +106,7 @@ export default async function TicketDetailPage({ params }: Props) {
       <FadeIn>
         {/* Voltar */}
         <Link
-          href="/admin/tickets"
+          href="/admin/atendimentos"
           className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors mb-4 sm:mb-6"
         >
           <IconArrowLeft className="h-4 w-4" />
