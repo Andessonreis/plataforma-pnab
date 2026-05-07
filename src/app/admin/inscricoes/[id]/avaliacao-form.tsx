@@ -40,6 +40,8 @@ interface AvaliacaoFormProps {
   initialAvaliacao: AvaliacaoData | null
   isAdmin?: boolean
   formulaAvaliacao?: string | null
+  /** Quando true, a ação está fora da fase e precisa de justificativa de override admin */
+  overrideMode?: boolean
 }
 
 function notaColor(nota: number): string {
@@ -67,9 +69,11 @@ export function AvaliacaoForm({
   initialAvaliacao,
   isAdmin = false,
   formulaAvaliacao,
+  overrideMode = false,
 }: AvaliacaoFormProps) {
   const hasFormula = !!formulaAvaliacao
   const router = useRouter()
+  const [overrideJustificativa, setOverrideJustificativa] = useState('')
 
   const buildInitialNotas = useCallback((): NotaItem[] => {
     if (initialAvaliacao?.notas?.length) {
@@ -131,15 +135,25 @@ export function AvaliacaoForm({
   }
 
   async function submit(finalizar: boolean) {
+    if (overrideMode && overrideJustificativa.trim().length < 10) {
+      setFeedback({ type: 'error', text: 'Justificativa do override é obrigatória (mínimo 10 caracteres).' })
+      return
+    }
+
     setLoading(finalizar ? 'finalize' : 'draft')
     setFeedback(null)
     setShowConfirm(false)
 
     try {
+      const body: Record<string, unknown> = { notas, parecer: parecer.trim() || undefined, finalizar }
+      if (overrideMode) {
+        body.adminOverride = true
+        body.adminOverrideJustificativa = overrideJustificativa.trim()
+      }
       const res = await fetch(`/api/admin/inscricoes/${inscricaoId}/avaliacao`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ notas, parecer: parecer.trim() || undefined, finalizar }),
+        body: JSON.stringify(body),
       })
       const data = await res.json()
 
@@ -249,6 +263,26 @@ export function AvaliacaoForm({
         </div>
 
         <div className="p-4 space-y-5">
+          {/* Override mode — justificativa obrigatória */}
+          {overrideMode && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 space-y-2">
+              <label htmlFor="aval-override-justificativa" className="block text-xs font-semibold text-amber-900">
+                Justificativa do override (obrigatória, mín. 10 caracteres)
+              </label>
+              <textarea
+                id="aval-override-justificativa"
+                value={overrideJustificativa}
+                onChange={(e) => setOverrideJustificativa(e.target.value)}
+                rows={2}
+                placeholder="Ex.: ajuste retroativo solicitado pelo TCM em 07/05/2026, processo 1234..."
+                className="block w-full resize-none rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-500"
+              />
+              <p className="text-[11px] text-amber-700">
+                Será registrado em auditoria com seu usuário, data e motivo.
+              </p>
+            </div>
+          )}
+
           {/* Feedback */}
           {feedback && (
             <div

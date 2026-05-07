@@ -5,6 +5,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { logAudit } from '@/lib/audit'
 import { enqueueEmail } from '@/lib/queue'
+import { gateAcaoFase } from '@/lib/edital/gate'
 import type { UserRole } from '@prisma/client'
 
 export const runtime = 'nodejs'
@@ -12,6 +13,8 @@ export const runtime = 'nodejs'
 const habilitacaoSchema = z.object({
   status: z.enum(['HABILITADA', 'INABILITADA']),
   motivo: z.string().optional(),
+  adminOverride: z.boolean().optional(),
+  adminOverrideJustificativa: z.string().trim().min(10).optional(),
 }).refine(
   (data) => {
     if (data.status === 'INABILITADA' && (!data.motivo || !data.motivo.trim())) {
@@ -20,6 +23,17 @@ const habilitacaoSchema = z.object({
     return true
   },
   { message: 'Motivo e obrigatorio para inabilitacao.', path: ['motivo'] },
+).refine(
+  (data) => {
+    if (data.adminOverride === true) {
+      return Boolean(data.adminOverrideJustificativa && data.adminOverrideJustificativa.length >= 10)
+    }
+    return true
+  },
+  {
+    message: 'Justificativa é obrigatória para override (mínimo 10 caracteres).',
+    path: ['adminOverrideJustificativa'],
+  },
 )
 
 const ROLES_PERMITIDOS: UserRole[] = ['ADMIN', 'HABILITADOR']
@@ -52,7 +66,7 @@ export async function PUT(
         numero: true,
         status: true,
         proponente: { select: { email: true, nome: true } },
-        edital: { select: { titulo: true } },
+        edital: { select: { titulo: true, status: true } },
       },
     })
 
@@ -68,6 +82,38 @@ export async function PUT(
 
     const body = await req.json()
     const data = habilitacaoSchema.parse(body)
+
+    // ── Gate de fase do edital — bloqueia fora de HABILITACAO ───────────────
+    const gate = gateAcaoFase({
+      editalStatus: inscricao.edital.status,
+      acao: 'habilitar',
+      role: session.user.role as UserRole,
+      override: data.adminOverride,
+    })
+
+    if (!gate.ok) {
+      // Loga tentativa para detectar padrões suspeitos
+      await logAudit({
+        userId: session.user.id,
+        action: 'HABILITACAO_FORA_DA_FASE_BLOQUEADA',
+        entity: 'Inscricao',
+        entityId: id,
+        details: {
+          editalStatus: inscricao.edital.status,
+          tentativaStatus: data.status,
+          motivo: gate.mensagem,
+        },
+        ip: req.headers.get('x-forwarded-for') ?? undefined,
+      })
+
+      const res = NextResponse.json(
+        { error: 'FORA_DA_FASE', message: gate.mensagem, requestId },
+        { status: 422 },
+      )
+      res.headers.set('X-Request-Id', requestId)
+      res.headers.set('Cache-Control', 'no-store')
+      return res
+    }
 
     const updateData: Record<string, unknown> = {
       status: data.status,
@@ -94,6 +140,9 @@ export async function PUT(
         statusAnterior: inscricao.status,
         novoStatus: data.status,
         motivo: data.motivo ?? null,
+        adminOverride: gate.overrideUsed,
+        adminOverrideJustificativa: gate.overrideUsed ? data.adminOverrideJustificativa : null,
+        editalStatus: inscricao.edital.status,
       },
       ip: req.headers.get('x-forwarded-for') ?? undefined,
     })

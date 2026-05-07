@@ -8,6 +8,7 @@ import { CRITERIOS_AVALIACAO_PADRAO } from '@/lib/avaliacao-criterios'
 import type { CriterioAvaliacao } from '@/lib/avaliacao-criterios'
 import { calculateTotal } from '@/lib/results/formula'
 import { temAcessoEdital } from '@/lib/edital-acesso'
+import { gateAcaoFase } from '@/lib/edital/gate'
 import type { UserRole } from '@prisma/client'
 
 export const runtime = 'nodejs'
@@ -22,7 +23,20 @@ const avaliacaoBodySchema = z.object({
   notas: z.array(notaItemSchema).min(1),
   parecer: z.string().optional(),
   finalizar: z.boolean().default(false),
-})
+  adminOverride: z.boolean().optional(),
+  adminOverrideJustificativa: z.string().trim().min(10).optional(),
+}).refine(
+  (data) => {
+    if (data.adminOverride === true) {
+      return Boolean(data.adminOverrideJustificativa && data.adminOverrideJustificativa.length >= 10)
+    }
+    return true
+  },
+  {
+    message: 'Justificativa é obrigatória para override (mínimo 10 caracteres).',
+    path: ['adminOverrideJustificativa'],
+  },
+)
 
 const ROLES_PERMITIDOS: UserRole[] = ['ADMIN', 'AVALIADOR']
 
@@ -154,6 +168,7 @@ export async function PUT(
         editalId: true,
         edital: {
           select: {
+            status: true,
             formulaAvaliacao: true,
             criteriosAvaliacao: true,
           },
@@ -183,6 +198,35 @@ export async function PUT(
         res.headers.set('Cache-Control', 'no-store')
         return res
       }
+    }
+
+    // ── Gate de fase do edital — bloqueia fora de AVALIACAO ─────────────────
+    const gate = gateAcaoFase({
+      editalStatus: inscricao.edital.status,
+      acao: 'avaliar',
+      role: session.user.role as UserRole,
+      override: data.adminOverride,
+    })
+
+    if (!gate.ok) {
+      await logAudit({
+        userId: session.user.id,
+        action: 'AVALIACAO_FORA_DA_FASE_BLOQUEADA',
+        entity: 'Inscricao',
+        entityId: id,
+        details: {
+          editalStatus: inscricao.edital.status,
+          motivo: gate.mensagem,
+        },
+      })
+
+      const res = NextResponse.json(
+        { error: 'FORA_DA_FASE', message: gate.mensagem, requestId },
+        { status: 422 },
+      )
+      res.headers.set('X-Request-Id', requestId)
+      res.headers.set('Cache-Control', 'no-store')
+      return res
     }
 
     // Verificar se já existe avaliação finalizada
@@ -236,6 +280,9 @@ export async function PUT(
         inscricaoNumero: inscricao.numero,
         notaTotal: String(avaliacao.notaTotal),
         finalizada: avaliacao.finalizada,
+        adminOverride: gate.overrideUsed,
+        adminOverrideJustificativa: gate.overrideUsed ? data.adminOverrideJustificativa : null,
+        editalStatus: inscricao.edital.status,
       },
     })
 

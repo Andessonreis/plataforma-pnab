@@ -10,6 +10,8 @@ import { AvaliacaoForm } from '@/app/admin/inscricoes/[id]/avaliacao-form'
 import { AnexoViewer } from '@/app/admin/inscricoes/[id]/anexo-viewer'
 import { temAcessoEdital } from '@/lib/edital-acesso'
 import { DadosInscricaoView } from '@/components/inscricao/dados-inscricao-view'
+import { podeAvaliar, mensagemForaDaFase } from '@/lib/edital/fase'
+import { ForaDaFaseAlert } from '@/components/edital/fora-da-fase-alert'
 import type { CampoFormulario } from '@/types/campo-formulario'
 import type { EtapaCustomizada } from '@/types/etapa-customizada'
 import Link from 'next/link'
@@ -34,7 +36,7 @@ export default async function AvaliadorInscricaoDetailPage({ params }: Props) {
     include: {
       edital: {
         select: {
-          titulo: true, slug: true, ano: true,
+          titulo: true, slug: true, ano: true, status: true,
           criteriosAvaliacao: true, formulaAvaliacao: true,
           camposFormulario: true, etapasCustomizadas: true,
         },
@@ -124,25 +126,32 @@ export default async function AvaliadorInscricaoDetailPage({ params }: Props) {
         }
       />
 
-      {/* Formulário de avaliação */}
-      <AvaliacaoForm
-        inscricaoId={inscricao.id}
-        inscricaoNumero={inscricao.numero}
-        criterios={criterios}
-        initialAvaliacao={
-          minhaAvaliacao
-            ? {
-              id: minhaAvaliacao.id,
-              notas: minhaAvaliacao.notas as { criterio: string; nota: number; peso: number }[],
-              parecer: minhaAvaliacao.parecer,
-              notaTotal: minhaAvaliacao.notaTotal === null ? null : String(minhaAvaliacao.notaTotal),
-              finalizada: minhaAvaliacao.finalizada,
-              updatedAt: minhaAvaliacao.updatedAt.toISOString(),
-            }
-            : null
-        }
-        formulaAvaliacao={inscricao.edital.formulaAvaliacao}
-      />
+      {/* Formulário de avaliação — gateado por fase do edital (#84) */}
+      {podeAvaliar(inscricao.edital.status) ? (
+        <AvaliacaoForm
+          inscricaoId={inscricao.id}
+          inscricaoNumero={inscricao.numero}
+          criterios={criterios}
+          initialAvaliacao={
+            minhaAvaliacao
+              ? {
+                id: minhaAvaliacao.id,
+                notas: minhaAvaliacao.notas as { criterio: string; nota: number; peso: number }[],
+                parecer: minhaAvaliacao.parecer,
+                notaTotal: minhaAvaliacao.notaTotal === null ? null : String(minhaAvaliacao.notaTotal),
+                finalizada: minhaAvaliacao.finalizada,
+                updatedAt: minhaAvaliacao.updatedAt.toISOString(),
+              }
+              : null
+          }
+          formulaAvaliacao={inscricao.edital.formulaAvaliacao}
+        />
+      ) : (
+        <ForaDaFaseAlert
+          mensagem={mensagemForaDaFase(inscricao.edital.status, 'avaliar')}
+          isAdmin={false}
+        />
+      )}
     </section>
   )
 }

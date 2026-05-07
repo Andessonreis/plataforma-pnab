@@ -41,6 +41,7 @@ const baseInscricao = {
   status: 'EM_AVALIACAO',
   edital: {
     id: 'edital-1',
+    status: 'AVALIACAO',
     criteriosAvaliacao: [
       { criterio: 'Qualidade Artistica', peso: 40, notaMax: 10 },
       { criterio: 'Relevancia Social', peso: 30, notaMax: 10 },

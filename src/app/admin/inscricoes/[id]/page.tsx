@@ -16,6 +16,8 @@ import { AnexoViewer } from './anexo-viewer'
 import { DistribuicaoAvaliadores } from './distribuicao-avaliadores'
 import { DadosInscricaoView } from '@/components/inscricao/dados-inscricao-view'
 import { formatNotaTotal, viewNotaTotal } from '@/lib/services/avaliacao-view'
+import { podeAvaliar, podeHabilitar, podeAtribuirAvaliador, mensagemForaDaFase } from '@/lib/edital/fase'
+import { ForaDaFaseAlert } from '@/components/edital/fora-da-fase-alert'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -38,7 +40,7 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
   const inscricao = await prisma.inscricao.findUnique({
     where: { id },
     include: {
-      edital: { select: { titulo: true, slug: true, ano: true, criteriosAvaliacao: true, camposFormulario: true, etapasCustomizadas: true, formulaAvaliacao: true } },
+      edital: { select: { titulo: true, slug: true, ano: true, status: true, criteriosAvaliacao: true, camposFormulario: true, etapasCustomizadas: true, formulaAvaliacao: true } },
       proponente: {
         select: { nome: true, cpfCnpj: true, email: true, telefone: true, tipoProponente: true },
       },
@@ -105,6 +107,12 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
         : {}
   const canHabilitar = session.user.role === 'ADMIN' || session.user.role === 'HABILITADOR'
   const isHabilitacaoStatus = inscricao.status === 'ENVIADA' || inscricao.status === 'HABILITADA' || inscricao.status === 'INABILITADA'
+
+  // Gating por fase do edital — bugs #84/#85
+  const editalStatus = inscricao.edital.status
+  const podeAvaliarAgora = podeAvaliar(editalStatus)
+  const podeHabilitarAgora = podeHabilitar(editalStatus)
+  const podeAtribuirAgora = podeAtribuirAvaliador(editalStatus)
 
   const camposFormulario = (Array.isArray(inscricao.edital.camposFormulario)
     ? inscricao.edital.camposFormulario : []) as unknown as CampoFormulario[]
@@ -279,49 +287,90 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
             </dl>
           </Card>
 
-          {/* Distribuição de avaliadores — ADMIN */}
+          {/* Distribuição de avaliadores — ADMIN, gateado por fase */}
           {isAdmin && (inscricao.status === 'HABILITADA' || inscricao.status === 'EM_AVALIACAO') && (
-            <DistribuicaoAvaliadores
-              inscricaoId={inscricao.id}
-              editalId={inscricao.editalId}
-              avaliacoes={inscricao.avaliacoes.map((a) => ({
-                avaliador: { id: a.avaliadorId, nome: a.avaliador.nome },
-                finalizada: a.finalizada,
-                notaTotal: viewNotaTotal(a),
-              }))}
-            />
+            podeAtribuirAgora ? (
+              <DistribuicaoAvaliadores
+                inscricaoId={inscricao.id}
+                editalId={inscricao.editalId}
+                avaliacoes={inscricao.avaliacoes.map((a) => ({
+                  avaliador: { id: a.avaliadorId, nome: a.avaliador.nome },
+                  finalizada: a.finalizada,
+                  notaTotal: viewNotaTotal(a),
+                }))}
+              />
+            ) : (
+              <ForaDaFaseAlert
+                mensagem={mensagemForaDaFase(editalStatus, 'atribuir_avaliador')}
+                isAdmin={isAdmin}
+              >
+                <DistribuicaoAvaliadores
+                  inscricaoId={inscricao.id}
+                  editalId={inscricao.editalId}
+                  avaliacoes={inscricao.avaliacoes.map((a) => ({
+                    avaliador: { id: a.avaliadorId, nome: a.avaliador.nome },
+                    finalizada: a.finalizada,
+                    notaTotal: viewNotaTotal(a),
+                  }))}
+                />
+              </ForaDaFaseAlert>
+            )
           )}
 
-          {/* Formulário de avaliação — AVALIADOR e ADMIN */}
-          {(isAvaliador || isAdmin) && (
-            <AvaliacaoForm
-              inscricaoId={inscricao.id}
-              inscricaoNumero={inscricao.numero}
-              criterios={criterios}
-              initialAvaliacao={
-                meuAvaliacao
-                  ? {
-                    id: meuAvaliacao.id,
-                    notas: meuAvaliacao.notas as { criterio: string; nota: number; peso: number }[],
-                    parecer: meuAvaliacao.parecer,
-                    notaTotal: meuAvaliacao.notaTotal === null ? null : String(meuAvaliacao.notaTotal),
-                    finalizada: meuAvaliacao.finalizada,
-                    updatedAt: meuAvaliacao.updatedAt.toISOString(),
-                  }
-                  : null
-              }
-              isAdmin={isAdmin}
-              formulaAvaliacao={inscricao.edital.formulaAvaliacao}
-            />
-          )}
+          {/* Formulário de avaliação — AVALIADOR e ADMIN, gateado por fase */}
+          {(isAvaliador || isAdmin) && (() => {
+            const formProps = {
+              inscricaoId: inscricao.id,
+              inscricaoNumero: inscricao.numero,
+              criterios,
+              initialAvaliacao: meuAvaliacao
+                ? {
+                  id: meuAvaliacao.id,
+                  notas: meuAvaliacao.notas as { criterio: string; nota: number; peso: number }[],
+                  parecer: meuAvaliacao.parecer,
+                  notaTotal: meuAvaliacao.notaTotal === null ? null : String(meuAvaliacao.notaTotal),
+                  finalizada: meuAvaliacao.finalizada,
+                  updatedAt: meuAvaliacao.updatedAt.toISOString(),
+                }
+                : null,
+              isAdmin,
+              formulaAvaliacao: inscricao.edital.formulaAvaliacao,
+            }
 
-          {/* Habilitação */}
+            if (podeAvaliarAgora) {
+              return <AvaliacaoForm {...formProps} />
+            }
+            return (
+              <ForaDaFaseAlert
+                mensagem={mensagemForaDaFase(editalStatus, 'avaliar')}
+                isAdmin={isAdmin}
+              >
+                <AvaliacaoForm {...formProps} overrideMode />
+              </ForaDaFaseAlert>
+            )
+          })()}
+
+          {/* Habilitação — gateado por fase */}
           {canHabilitar && isHabilitacaoStatus && (
-            <HabilitacaoActions
-              inscricaoId={inscricao.id}
-              currentStatus={inscricao.status as InscricaoStatus}
-              motivoAtual={inscricao.motivoInabilitacao ?? ''}
-            />
+            podeHabilitarAgora ? (
+              <HabilitacaoActions
+                inscricaoId={inscricao.id}
+                currentStatus={inscricao.status as InscricaoStatus}
+                motivoAtual={inscricao.motivoInabilitacao ?? ''}
+              />
+            ) : (
+              <ForaDaFaseAlert
+                mensagem={mensagemForaDaFase(editalStatus, 'habilitar')}
+                isAdmin={isAdmin}
+              >
+                <HabilitacaoActions
+                  inscricaoId={inscricao.id}
+                  currentStatus={inscricao.status as InscricaoStatus}
+                  motivoAtual={inscricao.motivoInabilitacao ?? ''}
+                  overrideMode
+                />
+              </ForaDaFaseAlert>
+            )
           )}
 
           {/* Motivo inabilitação */}

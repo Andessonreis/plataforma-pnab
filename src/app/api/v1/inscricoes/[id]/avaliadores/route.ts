@@ -10,7 +10,20 @@ interface RouteParams { params: Promise<{ id: string }> }
 
 const assignSchema = z.object({
   avaliadorIds: z.array(z.string().min(1)).min(1, 'Informe ao menos um avaliador'),
-})
+  adminOverride: z.boolean().optional(),
+  adminOverrideJustificativa: z.string().trim().min(10).optional(),
+}).refine(
+  (data) => {
+    if (data.adminOverride === true) {
+      return Boolean(data.adminOverrideJustificativa && data.adminOverrideJustificativa.length >= 10)
+    }
+    return true
+  },
+  {
+    message: 'Justificativa é obrigatória para override (mínimo 10 caracteres).',
+    path: ['adminOverrideJustificativa'],
+  },
+)
 
 const removeSchema = z.object({
   avaliadorId: z.string().min(1, 'ID do avaliador é obrigatório'),
@@ -22,8 +35,11 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     const caller = await resolveAuth(req)
     if (!requireRole(caller, 'ADMIN')) return forbidden(ctx)
     const { id } = await params
-    const { avaliadorIds } = assignSchema.parse(await req.json())
-    const result = await avaliacaoService.assignAvaliadores(id, avaliadorIds, caller.userId)
+    const { avaliadorIds, adminOverride, adminOverrideJustificativa } = assignSchema.parse(await req.json())
+    const result = await avaliacaoService.assignAvaliadores(id, avaliadorIds, caller.userId, {
+      adminOverride,
+      adminOverrideJustificativa,
+    })
     logRequest(ctx, 'POST', `/api/v1/inscricoes/${id}/avaliadores`, 201)
     return created(ctx, result)
   } catch (err) {

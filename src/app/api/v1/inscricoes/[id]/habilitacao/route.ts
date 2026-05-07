@@ -15,7 +15,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     if (!requireRole(caller, 'ADMIN', 'HABILITADOR')) return forbidden(ctx)
     const { id } = await params
     const data = habilitacaoSchema.parse(await req.json())
-    await habilitacaoService.updateHabilitacao(id, data, caller.userId, getIp(req))
+    await habilitacaoService.updateHabilitacao(id, data, caller.userId, caller.role, getIp(req))
     logRequest(ctx, 'PUT', `/api/v1/inscricoes/${id}/habilitacao`, 200)
     return ok(ctx, { message: 'Habilitação atualizada.' })
   } catch (err) {

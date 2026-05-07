@@ -1,13 +1,16 @@
 import { prisma } from '@/lib/db'
 import { logAudit } from '@/lib/audit'
 import { enqueueEmail } from '@/lib/queue'
+import { gateAcaoFase } from '@/lib/edital/gate'
 import { ServiceError } from './errors'
 import type { HabilitacaoInput } from '@/lib/schemas/habilitacao'
+import type { UserRole } from '@prisma/client'
 
 export async function updateHabilitacao(
   inscricaoId: string,
   data: HabilitacaoInput,
   userId: string,
+  role: UserRole,
   ip?: string,
 ) {
   const inscricao = await prisma.inscricao.findUnique({
@@ -17,11 +20,31 @@ export async function updateHabilitacao(
       numero: true,
       status: true,
       proponente: { select: { email: true, nome: true } },
-      edital: { select: { titulo: true } },
+      edital: { select: { titulo: true, status: true } },
     },
   })
 
   if (!inscricao) throw new ServiceError('NOT_FOUND', 'Inscrição não encontrada.')
+
+  // Gate de fase do edital — bloqueia fora de HABILITACAO
+  const gate = gateAcaoFase({
+    editalStatus: inscricao.edital.status,
+    acao: 'habilitar',
+    role,
+    override: data.adminOverride,
+  })
+
+  if (!gate.ok) {
+    await logAudit({
+      userId,
+      action: 'HABILITACAO_FORA_DA_FASE_BLOQUEADA',
+      entity: 'Inscricao',
+      entityId: inscricaoId,
+      details: { editalStatus: inscricao.edital.status, motivo: gate.mensagem },
+      ip,
+    })
+    throw new ServiceError('BAD_REQUEST', gate.mensagem)
+  }
 
   const updateData: Record<string, unknown> = { status: data.status }
   if (data.status === 'INABILITADA') {
@@ -42,6 +65,9 @@ export async function updateHabilitacao(
       statusAnterior: inscricao.status,
       novoStatus: data.status,
       motivo: data.motivo ?? null,
+      adminOverride: gate.overrideUsed,
+      adminOverrideJustificativa: gate.overrideUsed ? data.adminOverrideJustificativa : null,
+      editalStatus: inscricao.edital.status,
     },
     ip,
   })

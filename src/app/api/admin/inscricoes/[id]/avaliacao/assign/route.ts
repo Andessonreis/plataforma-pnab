@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
+import { gateAcaoFase } from '@/lib/edital/gate'
 
 export const runtime = 'nodejs'
 
@@ -11,7 +12,20 @@ export const runtime = 'nodejs'
 
 const assignSchema = z.object({
   avaliadorIds: z.array(z.string().min(1)).min(1, 'Informe ao menos um avaliador'),
-})
+  adminOverride: z.boolean().optional(),
+  adminOverrideJustificativa: z.string().trim().min(10).optional(),
+}).refine(
+  (data) => {
+    if (data.adminOverride === true) {
+      return Boolean(data.adminOverrideJustificativa && data.adminOverrideJustificativa.length >= 10)
+    }
+    return true
+  },
+  {
+    message: 'Justificativa é obrigatória para override (mínimo 10 caracteres).',
+    path: ['adminOverrideJustificativa'],
+  },
+)
 
 const removeSchema = z.object({
   avaliadorId: z.string().min(1, 'ID do avaliador é obrigatório'),
@@ -38,7 +52,42 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     }
 
     const body = await req.json()
-    const { avaliadorIds } = assignSchema.parse(body)
+    const parsed = assignSchema.parse(body)
+    const { avaliadorIds, adminOverride, adminOverrideJustificativa } = parsed
+
+    // Pré-checagens fora da transaction: existência + fase do edital
+    const inscricaoCheck = await prisma.inscricao.findUnique({
+      where: { id: inscricaoId },
+      select: { id: true, edital: { select: { status: true } } },
+    })
+
+    if (!inscricaoCheck) {
+      return NextResponse.json(
+        { error: 'NOT_FOUND', message: 'Inscrição não encontrada', requestId },
+        { status: 404, headers: { 'X-Request-Id': requestId, 'Cache-Control': 'no-store' } },
+      )
+    }
+
+    const gate = gateAcaoFase({
+      editalStatus: inscricaoCheck.edital.status,
+      acao: 'atribuir_avaliador',
+      role: 'ADMIN',
+      override: adminOverride,
+    })
+
+    if (!gate.ok) {
+      await logAudit({
+        userId: session.user.id,
+        action: 'AVALIADOR_ATRIBUIDO_FORA_DA_FASE_BLOQUEADO',
+        entity: 'Inscricao',
+        entityId: inscricaoId,
+        details: { editalStatus: inscricaoCheck.edital.status, motivo: gate.mensagem },
+      })
+      return NextResponse.json(
+        { error: 'FORA_DA_FASE', message: gate.mensagem, requestId },
+        { status: 422, headers: { 'X-Request-Id': requestId, 'Cache-Control': 'no-store' } },
+      )
+    }
 
     const result = await prisma.$transaction(async (tx) => {
       // Verificar inscrição
@@ -108,7 +157,13 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
         action: AUDIT_ACTIONS.AVALIADOR_ATRIBUIDO,
         entity: 'Inscricao',
         entityId: inscricaoId,
-        details: { avaliadorIds: result.newIds, numero: result.inscricao.numero },
+        details: {
+          avaliadorIds: result.newIds,
+          numero: result.inscricao.numero,
+          adminOverride: gate.overrideUsed,
+          adminOverrideJustificativa: gate.overrideUsed ? adminOverrideJustificativa : null,
+          editalStatus: inscricaoCheck.edital.status,
+        },
       })
     }
 

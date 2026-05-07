@@ -69,6 +69,7 @@ describe('POST /api/admin/inscricoes/[id]/avaliacao/assign', () => {
       id: 'insc-1',
       status: 'HABILITADA',
       numero: 'PNAB-2025-0001',
+      edital: { status: 'AVALIACAO' },
     } as never)
     mockPrisma.user.findMany.mockResolvedValue([
       { id: 'aval-1', nome: 'Avaliador 1' },
@@ -93,6 +94,7 @@ describe('POST /api/admin/inscricoes/[id]/avaliacao/assign', () => {
       id: 'insc-1',
       status: 'HABILITADA',
       numero: 'PNAB-2025-0001',
+      edital: { status: 'AVALIACAO' },
     } as never)
     mockPrisma.user.findMany.mockResolvedValue([
       { id: 'aval-1', nome: 'Avaliador 1' },
@@ -124,6 +126,7 @@ describe('POST /api/admin/inscricoes/[id]/avaliacao/assign', () => {
       id: 'insc-1',
       status: 'INABILITADA',
       numero: 'PNAB-2025-0001',
+      edital: { status: 'AVALIACAO' },
     } as never)
 
     const res = await POST(
@@ -140,6 +143,7 @@ describe('POST /api/admin/inscricoes/[id]/avaliacao/assign', () => {
       id: 'insc-1',
       status: 'ENVIADA',
       numero: 'PNAB-2025-0001',
+      edital: { status: 'AVALIACAO' },
     } as never)
 
     const res = await POST(
@@ -190,6 +194,7 @@ describe('POST /api/admin/inscricoes/[id]/avaliacao/assign', () => {
       id: 'insc-1',
       status: 'HABILITADA',
       numero: 'PNAB-2025-0001',
+      edital: { status: 'AVALIACAO' },
     } as never)
     mockPrisma.user.findMany.mockResolvedValue([
       { id: 'aval-1', nome: 'Avaliador 1' },
@@ -243,6 +248,7 @@ describe('DELETE /api/admin/inscricoes/[id]/avaliacao/assign', () => {
       id: 'insc-1',
       status: 'EM_AVALIACAO',
       numero: 'PNAB-2025-0001',
+      edital: { status: 'AVALIACAO' },
     } as never)
     mockPrisma.avaliacao.findUnique.mockResolvedValue({
       id: 'aval-1',
@@ -267,6 +273,7 @@ describe('DELETE /api/admin/inscricoes/[id]/avaliacao/assign', () => {
       id: 'insc-1',
       status: 'EM_AVALIACAO',
       numero: 'PNAB-2025-0001',
+      edital: { status: 'AVALIACAO' },
     } as never)
     mockPrisma.avaliacao.findUnique.mockResolvedValue({
       id: 'aval-1',
@@ -311,6 +318,7 @@ describe('DELETE /api/admin/inscricoes/[id]/avaliacao/assign', () => {
       id: 'insc-1',
       status: 'EM_AVALIACAO',
       numero: 'PNAB-2025-0001',
+      edital: { status: 'AVALIACAO' },
     } as never)
     mockPrisma.avaliacao.findUnique.mockResolvedValue(null)
 
@@ -328,6 +336,7 @@ describe('DELETE /api/admin/inscricoes/[id]/avaliacao/assign', () => {
       id: 'insc-1',
       status: 'EM_AVALIACAO',
       numero: 'PNAB-2025-0001',
+      edital: { status: 'AVALIACAO' },
     } as never)
     mockPrisma.avaliacao.findUnique.mockResolvedValue({
       id: 'aval-1',

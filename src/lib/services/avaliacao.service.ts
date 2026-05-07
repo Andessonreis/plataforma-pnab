@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/db'
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
 import { CRITERIOS_AVALIACAO_PADRAO } from '@/lib/avaliacao-criterios'
+import { gateAcaoFase } from '@/lib/edital/gate'
 import { ServiceError } from './errors'
 import type { AvaliacaoInput } from '@/lib/schemas/avaliacao'
 
@@ -38,10 +39,34 @@ export async function saveAvaliacao(
 ) {
   const inscricao = await prisma.inscricao.findUnique({
     where: { id: inscricaoId },
-    select: { id: true, numero: true, status: true },
+    select: {
+      id: true,
+      numero: true,
+      status: true,
+      edital: { select: { status: true } },
+    },
   })
 
   if (!inscricao) throw new ServiceError('NOT_FOUND', 'Inscrição não encontrada.')
+
+  // Gate de fase do edital — bloqueia fora de AVALIACAO
+  const gate = gateAcaoFase({
+    editalStatus: inscricao.edital.status,
+    acao: 'avaliar',
+    role: isAdmin ? 'ADMIN' : 'AVALIADOR',
+    override: data.adminOverride,
+  })
+
+  if (!gate.ok) {
+    await logAudit({
+      userId: avaliadorId,
+      action: 'AVALIACAO_FORA_DA_FASE_BLOQUEADA',
+      entity: 'Inscricao',
+      entityId: inscricaoId,
+      details: { editalStatus: inscricao.edital.status, motivo: gate.mensagem },
+    })
+    throw new ServiceError('BAD_REQUEST', gate.mensagem)
+  }
 
   const existingAvaliacao = await prisma.avaliacao.findUnique({
     where: { inscricaoId_avaliadorId: { inscricaoId, avaliadorId } },
@@ -81,6 +106,9 @@ export async function saveAvaliacao(
       inscricaoNumero: inscricao.numero,
       notaTotal: avaliacao.notaTotal === null ? null : String(avaliacao.notaTotal),
       finalizada: avaliacao.finalizada,
+      adminOverride: gate.overrideUsed,
+      adminOverrideJustificativa: gate.overrideUsed ? data.adminOverrideJustificativa : null,
+      editalStatus: inscricao.edital.status,
     },
   })
 
@@ -91,7 +119,34 @@ export async function assignAvaliadores(
   inscricaoId: string,
   avaliadorIds: string[],
   adminId: string,
+  options?: { adminOverride?: boolean; adminOverrideJustificativa?: string },
 ) {
+  // Pré-checagem: existência + fase do edital
+  const inscricaoCheck = await prisma.inscricao.findUnique({
+    where: { id: inscricaoId },
+    select: { id: true, edital: { select: { status: true } } },
+  })
+
+  if (!inscricaoCheck) throw new ServiceError('NOT_FOUND', 'Inscrição não encontrada.')
+
+  const gate = gateAcaoFase({
+    editalStatus: inscricaoCheck.edital.status,
+    acao: 'atribuir_avaliador',
+    role: 'ADMIN',
+    override: options?.adminOverride,
+  })
+
+  if (!gate.ok) {
+    await logAudit({
+      userId: adminId,
+      action: 'AVALIADOR_ATRIBUIDO_FORA_DA_FASE_BLOQUEADO',
+      entity: 'Inscricao',
+      entityId: inscricaoId,
+      details: { editalStatus: inscricaoCheck.edital.status, motivo: gate.mensagem },
+    })
+    throw new ServiceError('BAD_REQUEST', gate.mensagem)
+  }
+
   const result = await prisma.$transaction(async (tx) => {
     const inscricao = await tx.inscricao.findUnique({
       where: { id: inscricaoId },
@@ -145,7 +200,13 @@ export async function assignAvaliadores(
       action: AUDIT_ACTIONS.AVALIADOR_ATRIBUIDO,
       entity: 'Inscricao',
       entityId: inscricaoId,
-      details: { avaliadorIds: result.newIds, numero: result.numero },
+      details: {
+        avaliadorIds: result.newIds,
+        numero: result.numero,
+        adminOverride: gate.overrideUsed,
+        adminOverrideJustificativa: gate.overrideUsed ? options?.adminOverrideJustificativa : null,
+        editalStatus: inscricaoCheck.edital.status,
+      },
     })
   }
 
