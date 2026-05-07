@@ -176,7 +176,7 @@ export default async function ProponenteDashboardPage() {
                     className="block rounded-lg border border-slate-200 p-4 hover:bg-slate-50 transition-colors"
                   >
                     <div className="flex items-start justify-between gap-3 mb-2">
-                      <p className="text-sm font-medium text-slate-900 leading-snug">{inscricao.edital.titulo}</p>
+                      <p className="text-sm font-medium text-slate-900 leading-snug min-w-0 break-words">{inscricao.edital.titulo}</p>
                       <Badge variant={inscricaoStatusVariant[inscricao.status as InscricaoStatus]}>
                         {inscricaoStatusLabel[inscricao.status as InscricaoStatus]}
                       </Badge>

@@ -115,8 +115,8 @@ export default async function MinhasInscricoesPage({ searchParams }: Props) {
             {inscricoes.map((inscricao) => (
               <Card key={inscricao.id} hover padding="sm">
                 <Link href={`/proponente/inscricoes/${inscricao.id}`} className="block">
-                  <div className="flex items-start justify-between mb-2">
-                    <span className="font-mono text-xs text-slate-500">{inscricao.numero}</span>
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <span className="font-mono text-xs text-slate-500 min-w-0 break-all">{inscricao.numero}</span>
                     <Badge variant={inscricaoStatusVariant[inscricao.status as InscricaoStatus]}>
                       {inscricaoStatusLabel[inscricao.status as InscricaoStatus]}
                     </Badge>

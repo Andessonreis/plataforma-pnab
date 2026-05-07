@@ -29,7 +29,10 @@ function Badge({ variant = 'neutral', dot, children, className = '' }: BadgeProp
   return (
     <span
       className={[
-        'inline-flex items-center rounded-full px-2.5 py-0.5',
+        // shrink-0 + whitespace-nowrap garantem que o badge não estoura
+        // o flex parent em viewports estreitos (#81). Use flex-wrap + gap
+        // no parent para que o badge cai pra próxima linha quando precisar.
+        'inline-flex items-center rounded-full px-2.5 py-0.5 shrink-0 whitespace-nowrap',
         'text-xs font-medium ring-1 ring-inset',
         variantStyles[variant],
         className,
