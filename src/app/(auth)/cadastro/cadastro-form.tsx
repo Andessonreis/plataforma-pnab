@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button, Input } from '@/components/ui'
+import { formatTelefoneBR, unmaskTelefone } from '@/lib/utils/format'
 
 type TipoProponente = 'PF' | 'PJ' | 'MEI' | 'COLETIVO'
 
@@ -95,7 +96,7 @@ export function CadastroForm() {
           nome: formData.nome,
           cpfCnpj: docLimpo,
           email: formData.email,
-          telefone: formData.telefone,
+          telefone: unmaskTelefone(formData.telefone),
           cep: formData.cep.replace(/\D/g, ''),
           logradouro: formData.logradouro,
           numero: formData.numero,
@@ -312,9 +313,11 @@ export function CadastroForm() {
       <Input
         label="Telefone"
         type="tel"
+        inputMode="numeric"
         placeholder="(74) 99999-0000"
         value={formData.telefone}
-        onChange={(e) => updateField('telefone', e.target.value)}
+        onChange={(e) => updateField('telefone', formatTelefoneBR(e.target.value))}
+        maxLength={15}
         required
         autoComplete="tel"
       />
