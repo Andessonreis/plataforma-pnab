@@ -89,6 +89,50 @@ export function formatTelefoneBR(value: string): string {
 }
 
 /**
+ * Remove tudo que não for dígito de uma string e limita a 14 dígitos
+ * (tamanho máximo de um CNPJ). CPF tem 11.
+ */
+export function unmaskCpfCnpj(value: string): string {
+  return value.replace(/\D/g, '').slice(0, 14)
+}
+
+/**
+ * Formata CPF (11 dígitos) ou CNPJ (14 dígitos). Para inputs parciais
+ * (digitação em curso), formata o que conseguir como CPF até passar de
+ * 11 dígitos, então passa a formatar como CNPJ.
+ *
+ * @example formatCpfCnpj("12345678901")    => "123.456.789-01"
+ * @example formatCpfCnpj("12345678000199") => "12.345.678/0001-99"
+ */
+export function formatCpfCnpj(value: string): string {
+  const d = unmaskCpfCnpj(value)
+  if (d.length === 0) return ''
+  if (d.length <= 11) {
+    if (d.length <= 3) return d
+    if (d.length <= 6) return `${d.slice(0, 3)}.${d.slice(3)}`
+    if (d.length <= 9) return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6)}`
+    return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9, 11)}`
+  }
+  return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12, 14)}`
+}
+
+/** Remove tudo que não for dígito e limita a 8 (tamanho de um CEP). */
+export function unmaskCep(value: string): string {
+  return value.replace(/\D/g, '').slice(0, 8)
+}
+
+/**
+ * Formata CEP brasileiro como "00000-000". Aceita parciais.
+ *
+ * @example formatCep("40000123") => "40000-123"
+ */
+export function formatCep(value: string): string {
+  const d = unmaskCep(value)
+  if (d.length <= 5) return d
+  return `${d.slice(0, 5)}-${d.slice(5)}`
+}
+
+/**
  * Formata uma data como dd/mm/aaaa HH:mm.
  *
  * @example formatDateTime("2026-04-30T23:59:00") => "30/04/2026 23:59"

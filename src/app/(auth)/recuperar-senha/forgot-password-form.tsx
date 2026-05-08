@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Button, Input } from '@/components/ui'
+import { formatCpfCnpj } from '@/lib/utils/format'
 
 export function ForgotPasswordForm() {
   const [cpfCnpj, setCpfCnpj] = useState('')
@@ -81,9 +82,11 @@ export function ForgotPasswordForm() {
       <Input
         label="CPF ou CNPJ"
         type="text"
+        inputMode="numeric"
         placeholder="000.000.000-00"
         value={cpfCnpj}
-        onChange={(e) => setCpfCnpj(e.target.value)}
+        onChange={(e) => setCpfCnpj(formatCpfCnpj(e.target.value))}
+        maxLength={18}
         required
         autoComplete="username"
         leftIcon={

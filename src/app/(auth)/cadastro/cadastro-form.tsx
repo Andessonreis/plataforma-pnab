@@ -4,7 +4,13 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button, Input } from '@/components/ui'
-import { formatTelefoneBR, unmaskTelefone } from '@/lib/utils/format'
+import {
+  formatTelefoneBR,
+  unmaskTelefone,
+  formatCpfCnpj,
+  formatCep,
+  unmaskCep,
+} from '@/lib/utils/format'
 
 type TipoProponente = 'PF' | 'PJ' | 'MEI' | 'COLETIVO'
 
@@ -97,7 +103,7 @@ export function CadastroForm() {
           cpfCnpj: docLimpo,
           email: formData.email,
           telefone: unmaskTelefone(formData.telefone),
-          cep: formData.cep.replace(/\D/g, ''),
+          cep: unmaskCep(formData.cep),
           logradouro: formData.logradouro,
           numero: formData.numero,
           complemento: formData.complemento,
@@ -285,12 +291,14 @@ export function CadastroForm() {
       <Input
         label={isCnpj ? 'CNPJ' : 'CPF'}
         type="text"
+        inputMode="numeric"
         placeholder={isCnpj ? '00.000.000/0000-00' : '000.000.000-00'}
         value={formData.cpfCnpj}
-        onChange={(e) => updateField('cpfCnpj', e.target.value)}
+        onChange={(e) => updateField('cpfCnpj', formatCpfCnpj(e.target.value))}
         onBlur={isCnpj ? handleCnpjBlur : undefined}
+        maxLength={isCnpj ? 18 : 14}
         required
-        autoComplete={isCnpj ? 'off' : 'off'}
+        autoComplete="off"
         hint={
           isCnpj
             ? loadingCnpj
@@ -333,10 +341,12 @@ export function CadastroForm() {
             <Input
               label="CEP"
               type="text"
+              inputMode="numeric"
               placeholder="00000-000"
               value={formData.cep}
-              onChange={(e) => updateField('cep', e.target.value)}
+              onChange={(e) => updateField('cep', formatCep(e.target.value))}
               onBlur={handleCepBlur}
+              maxLength={9}
               required
               hint={loadingCep ? 'Buscando...' : undefined}
             />
