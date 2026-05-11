@@ -36,7 +36,7 @@ export default async function RegraDetalhePage({ params }: Props) {
 
   const editais = await prisma.edital.findMany({
     where: { status: { not: 'RASCUNHO' } },
-    select: { id: true, titulo: true },
+    select: { id: true, titulo: true, slug: true },
     orderBy: { createdAt: 'desc' },
   })
 

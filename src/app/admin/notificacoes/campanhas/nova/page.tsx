@@ -15,13 +15,13 @@ export default async function NovaCampanhaPage() {
 
   const editais = await prisma.edital.findMany({
     where: { status: { not: 'RASCUNHO' } },
-    select: { id: true, titulo: true },
+    select: { id: true, titulo: true, slug: true },
     orderBy: { createdAt: 'desc' },
   })
 
   return (
     <section>
-      <div className="mb-4 sm:mb-6">
+      <div className="mx-auto max-w-3xl mb-4 sm:mb-6">
         <Link
           href="/admin/notificacoes/campanhas"
           className="text-sm text-brand-600 hover:text-brand-700 font-medium flex items-center gap-1 mb-2"

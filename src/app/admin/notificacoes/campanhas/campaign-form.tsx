@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { Card, Input, Textarea, Button } from '@/components/ui'
 import { toast } from '@/hooks/use-toast'
 import { AudienceBuilder, type EditalOption } from '../audience-builder'
+import { LinkPicker } from '../link-picker'
+import { MESSAGE_TEMPLATES, type MessageTemplate } from '../templates'
 import type { AudienceFilterInput } from '@/lib/notifications/schemas'
 
 interface CampaignFormProps {
@@ -31,16 +33,45 @@ export function CampaignForm({ editais, initialData, campaignId }: CampaignFormP
   const [corpo, setCorpo] = useState(initialData?.corpo ?? '')
   const [link, setLink] = useState(initialData?.link ?? '')
   const [ctaLabel, setCtaLabel] = useState(initialData?.ctaLabel ?? '')
-  const [canalInApp, setCanalInApp] = useState<boolean>(
-    initialData?.canais?.includes('IN_APP') ?? true,
-  )
-  const [canalEmail, setCanalEmail] = useState<boolean>(
-    initialData?.canais?.includes('EMAIL') ?? false,
-  )
+  const canalInApp = true
+  const canalEmail = initialData?.canais?.includes('EMAIL') ?? false
   const [filtro, setFiltro] = useState<AudienceFilterInput>(initialData?.filtro ?? {})
 
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [templateId, setTemplateId] = useState<string>('')
+
+  function applyTemplate(id: string) {
+    setTemplateId(id)
+    if (!id) return
+    const tpl = MESSAGE_TEMPLATES.find((t) => t.id === id)
+    if (!tpl) return
+
+    const hasContent = (titulo || assunto || corpo || ctaLabel).trim().length > 0
+    if (hasContent && !confirm('Aplicar o modelo vai sobrescrever o que você já digitou. Continuar?')) {
+      setTemplateId('')
+      return
+    }
+
+    setTitulo(tpl.titulo)
+    setAssunto(tpl.assunto)
+    setCorpo(tpl.corpo)
+    setCtaLabel(tpl.ctaLabel)
+    setLink(resolveTemplateLink(tpl))
+  }
+
+  function resolveTemplateLink(tpl: MessageTemplate): string {
+    switch (tpl.link.mode) {
+      case 'NONE':
+        return ''
+      case 'MY_INSCRICOES':
+        return '/proponente/inscricoes'
+      case 'EDITAL':
+        return ''
+      case 'CUSTOM':
+        return tpl.link.value
+    }
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -110,12 +141,38 @@ export function CampaignForm({ editais, initialData, campaignId }: CampaignFormP
   }
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-3xl space-y-5 sm:space-y-6">
+    <form onSubmit={handleSubmit} className="mx-auto max-w-3xl space-y-5 sm:space-y-6">
       <Card padding="sm" className="sm:p-6">
-        <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">
+        <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-1">
           Mensagem
         </h2>
+        <p className="text-xs text-slate-500 mb-3 sm:mb-4">
+          Comece de um modelo pronto ou escreva do zero.
+        </p>
         <div className="space-y-4">
+          <div>
+            <label htmlFor="template-select" className="block text-sm font-medium text-slate-700 mb-1.5">
+              Modelo pronto (opcional)
+            </label>
+            <select
+              id="template-select"
+              value={templateId}
+              onChange={(e) => applyTemplate(e.target.value)}
+              className="block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-500 min-h-[44px]"
+            >
+              <option value="">— Escolher modelo —</option>
+              {MESSAGE_TEMPLATES.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
+            {templateId && (
+              <p className="mt-1.5 text-xs text-slate-500">
+                {MESSAGE_TEMPLATES.find((t) => t.id === templateId)?.description}
+              </p>
+            )}
+          </div>
           <Input
             label="Título interno"
             value={titulo}
@@ -141,56 +198,17 @@ export function CampaignForm({ editais, initialData, campaignId }: CampaignFormP
             rows={6}
             placeholder="Mensagem completa. Texto puro — aceita quebras de linha."
           />
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <LinkPicker value={link} onChange={setLink} editais={editais} />
+          {link && (
             <Input
-              label="Link de ação (opcional)"
-              value={link}
-              onChange={(e) => setLink(e.target.value)}
-              error={errors.link}
-              placeholder="/proponente/inscricoes/abc123"
-            />
-            <Input
-              label="Rótulo do botão"
+              label="Texto do botão"
               value={ctaLabel}
               onChange={(e) => setCtaLabel(e.target.value)}
               error={errors.ctaLabel}
-              placeholder="Ex: Acessar inscrição"
+              placeholder='Ex: "Ver minhas inscrições"'
+              hint="É o texto que aparece no botão da notificação."
             />
-          </div>
-        </div>
-      </Card>
-
-      <Card padding="sm" className="sm:p-6">
-        <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">
-          Canais de entrega
-        </h2>
-        <div className="space-y-3">
-          <label className="flex items-center gap-3 cursor-pointer min-h-[44px]">
-            <input
-              type="checkbox"
-              checked={canalInApp}
-              onChange={(e) => setCanalInApp(e.target.checked)}
-              className="h-5 w-5 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
-            />
-            <span className="text-sm font-medium text-slate-700">
-              Na plataforma (sininho + página)
-            </span>
-          </label>
-          <label className="flex items-center gap-3 cursor-pointer min-h-[44px]">
-            <input
-              type="checkbox"
-              checked={canalEmail}
-              onChange={(e) => setCanalEmail(e.target.checked)}
-              className="h-5 w-5 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
-            />
-            <span className="text-sm font-medium text-slate-700">
-              Email
-              <span className="ml-2 text-xs text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
-                gated por NOTIFICATION_EMAIL_ENABLED
-              </span>
-            </span>
-          </label>
-          {errors.canais && <p className="text-xs text-red-600">{errors.canais}</p>}
+          )}
         </div>
       </Card>
 

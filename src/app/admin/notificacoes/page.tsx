@@ -23,8 +23,6 @@ export default async function AdminNotificacoesPage() {
     prisma.notification.count({ where: { createdAt: { gte: yesterday } } }),
   ])
 
-  const emailEnabled = process.env.NOTIFICATION_EMAIL_ENABLED === 'true'
-
   return (
     <section>
       <FadeIn>
@@ -35,17 +33,6 @@ export default async function AdminNotificacoesPage() {
           </p>
         </div>
       </FadeIn>
-
-      {!emailEnabled && (
-        <Card padding="sm" className="sm:p-4 mb-4 bg-amber-50 border-amber-200">
-          <p className="text-xs sm:text-sm text-amber-900">
-            <strong>Canal de email desativado</strong> — {' '}
-            <code className="text-[11px] bg-amber-100 px-1 rounded">NOTIFICATION_EMAIL_ENABLED=false</code>.
-            Notificações marcadas pra email ficam registradas com{' '}
-            <code className="text-[11px] bg-amber-100 px-1 rounded">emailErro=&quot;disabled&quot;</code> e não são enviadas. Trocar a variável de ambiente quando o domínio Resend estiver verificado.
-          </p>
-        </Card>
-      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <Card padding="sm" className="sm:p-5">
