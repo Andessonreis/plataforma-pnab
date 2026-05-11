@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { ProponenteSidebar } from './sidebar'
 import { IconMenu } from '@/components/ui'
+import { NotificationBell } from '@/components/layout'
 
 export default async function ProponenteLayout({ children }: { children: React.ReactNode }) {
   const session = await auth()
@@ -22,7 +23,8 @@ export default async function ProponenteLayout({ children }: { children: React.R
             <IconMenu className="h-6 w-6" />
           </label>
 
-          <div className="flex items-center gap-3 ml-auto">
+          <div className="flex items-center gap-2 sm:gap-3 ml-auto">
+            <NotificationBell listLink="/proponente/notificacoes" />
             <span className="text-sm text-slate-600 hidden sm:block">
               {session.user.name}
             </span>

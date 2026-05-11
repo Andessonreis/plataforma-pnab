@@ -8,6 +8,7 @@ import {
   IconClipboard,
   IconUser,
   IconClose,
+  IconChatBubble,
 } from '@/components/ui'
 
 interface ProponenteSidebarProps {
@@ -24,6 +25,11 @@ const navItems = [
     label: 'Minhas Inscrições',
     href: '/proponente/inscricoes',
     icon: <IconClipboard className="h-5 w-5" />,
+  },
+  {
+    label: 'Notificações',
+    href: '/proponente/notificacoes',
+    icon: <IconChatBubble className="h-5 w-5" />,
   },
   {
     label: 'Meu Perfil',

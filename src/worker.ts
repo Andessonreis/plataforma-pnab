@@ -7,10 +7,21 @@ import 'dotenv/config'
 import { emailWorker } from '@/lib/queue/workers/email.worker'
 import { pdfWorker } from '@/lib/queue/workers/pdf.worker'
 import { schedulerWorker } from '@/lib/queue/workers/scheduler.worker'
+import {
+  notificationDispatchWorker,
+  notificationDeliveryWorker,
+} from '@/lib/queue/workers/notification.worker'
 import { initSchedulerRepeatableJobs } from '@/lib/queue'
 
 console.log('[Worker] Iniciado — aguardando jobs nas filas...')
-console.log('[Worker] Filas ativas:', emailWorker.name, pdfWorker.name, schedulerWorker.name)
+console.log(
+  '[Worker] Filas ativas:',
+  emailWorker.name,
+  pdfWorker.name,
+  schedulerWorker.name,
+  notificationDispatchWorker.name,
+  notificationDeliveryWorker.name,
+)
 
 // Configura jobs repetíveis
 initSchedulerRepeatableJobs().catch((err) => {
@@ -19,7 +30,13 @@ initSchedulerRepeatableJobs().catch((err) => {
 
 const gracefulShutdown = async (signal: string) => {
   console.log(`[Worker] Recebido ${signal}, encerrando...`)
-  await Promise.all([emailWorker.close(), pdfWorker.close(), schedulerWorker.close()])
+  await Promise.all([
+    emailWorker.close(),
+    pdfWorker.close(),
+    schedulerWorker.close(),
+    notificationDispatchWorker.close(),
+    notificationDeliveryWorker.close(),
+  ])
   process.exit(0)
 }
 

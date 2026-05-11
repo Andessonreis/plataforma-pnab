@@ -241,6 +241,20 @@ export const schedulerWorker = new Worker<SchedulerJobData>(
   async (job) => {
     console.log(`[Scheduler] Verificando transições de status (job ${job.id})`)
     await processSchedulerJob()
+
+    // Avalia regras periódicas de notificação (rascunho pendente etc.)
+    try {
+      const { evaluatePeriodicRules } = await import('@/lib/notifications/dispatch')
+      const disparadas = await evaluatePeriodicRules()
+      if (disparadas > 0) {
+        console.log(`[Scheduler] ${disparadas} regra(s) de notificação periódica disparada(s)`)
+      }
+    } catch (err) {
+      console.error(
+        '[Scheduler] Falha ao avaliar regras de notificação:',
+        err instanceof Error ? err.message : err,
+      )
+    }
   },
   {
     connection: redis,

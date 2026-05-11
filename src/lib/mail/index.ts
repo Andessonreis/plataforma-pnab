@@ -20,6 +20,7 @@ export type EmailTemplate =
   | 'recurso_submetido'
   | 'recurso_decidido'
   | 'habilitacao'
+  | 'notificacao_generica'
 
 export interface SendEmailOptions {
   to: string
@@ -109,6 +110,20 @@ export function renderTemplate(template: EmailTemplate, data: Record<string, unk
         </p>
       ` : ''}
       <p style="margin-top:16px;">Acesse sua área: <a href="${data.url}">${data.url}</a></p>
+    `,
+    notificacao_generica: `
+      <h2>${data.titulo}</h2>
+      ${data.nome ? `<p>Olá, <strong>${data.nome}</strong>!</p>` : ''}
+      <div style="white-space:pre-wrap;font-size:15px;color:#1f2937;line-height:1.55;">${data.corpo}</div>
+      ${data.link && data.ctaLabel ? `
+        <p style="margin-top:24px;">
+          <a href="${data.link}" style="display:inline-block;padding:12px 24px;background-color:#059669;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;">
+            ${data.ctaLabel}
+          </a>
+        </p>
+      ` : data.link ? `
+        <p style="margin-top:16px;">Acesse: <a href="${data.link}">${data.link}</a></p>
+      ` : ''}
     `,
   }
 
