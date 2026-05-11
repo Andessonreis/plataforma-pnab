@@ -52,28 +52,10 @@ services:
     restart: unless-stopped
     logging: *default-logging
 
-  # ── Migration (on-demand) ───────────────────────────────────────────────────
-  migrate:
-    build:
-      context: .
-      target: builder
-      # Mesmos args de app/worker — o stage `builder` é compartilhado, então
-      # sem isso o cache não bate e o Docker re-roda `npm run build` com as
-      # vars vazias, quebrando o deploy.
-      args:
-        NEXT_PUBLIC_BASE_PATH: ${NEXT_PUBLIC_BASE_PATH:-}
-        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-}
-        NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
-    command: ["npx", "prisma", "db", "push", "--skip-generate"]
-    env_file: .env
-    depends_on:
-      pnab-postgres:
-        condition: service_healthy
-    networks:
-      - pnab-network
-    profiles:
-      - tools
-    logging: *default-logging
+  # Migration: rodada via `docker compose run --rm app npx prisma db push`
+  # no workflow de deploy (não há service `migrate` separado — antigo service
+  # usava `target: builder` e o cache do Docker servia um schema.prisma antigo,
+  # fazendo `db push` reportar "in sync" enquanto a DB ficava desatualizada).
 
   # ── PostgreSQL (isolado) ────────────────────────────────────────────────────
   pnab-postgres:
