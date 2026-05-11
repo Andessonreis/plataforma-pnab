@@ -114,10 +114,16 @@ const navSections: NavSection[] = [
         icon: <IconDocument className="h-5 w-5" />,
       },
       {
-        label: 'Banner Destaque',
+        label: 'Slide Carrossel',
         href: '/admin/slides',
         roles: ['ADMIN'],
         icon: <IconSlides className="h-5 w-5" />,
+      },
+      {
+        label: 'Banner Topo',
+        href: '/admin/banners',
+        roles: ['ADMIN'],
+        icon: <IconInfo className="h-5 w-5" />,
       },
     ],
   },
