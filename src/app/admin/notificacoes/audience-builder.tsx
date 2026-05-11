@@ -2,11 +2,13 @@
 
 import { useState } from 'react'
 import type { AudienceFilterInput } from '@/lib/notifications/schemas'
-import { Card, Textarea } from '@/components/ui'
+import { Card } from '@/components/ui'
+import { UserPicker } from './user-picker'
 
 export interface EditalOption {
   id: string
   titulo: string
+  slug: string
 }
 
 interface AudienceBuilderProps {
@@ -36,8 +38,7 @@ export function AudienceBuilder({ value, onChange, editais }: AudienceBuilderPro
   const [semInscricaoNoEdital, setSemInscricaoNoEdital] = useState<string>(
     value.semInscricaoNoEdital ?? '',
   )
-  const [userIdsText, setUserIdsText] = useState<string>((value.userIds ?? []).join('\n'))
-  const [emailsText, setEmailsText] = useState<string>((value.emails ?? []).join('\n'))
+  const [userIds, setUserIds] = useState<string[]>(value.userIds ?? [])
 
   function emit(next: Partial<AudienceFilterInput>) {
     const merged: AudienceFilterInput = {
@@ -50,22 +51,7 @@ export function AudienceBuilder({ value, onChange, editais }: AudienceBuilderPro
         : {}),
       ...(semInscricao ? { semInscricao: true } : {}),
       ...(semInscricaoNoEdital ? { semInscricaoNoEdital } : {}),
-      ...(userIdsText.trim()
-        ? {
-            userIds: userIdsText
-              .split(/\s+/)
-              .map((s) => s.trim())
-              .filter(Boolean),
-          }
-        : {}),
-      ...(emailsText.trim()
-        ? {
-            emails: emailsText
-              .split(/\s+/)
-              .map((s) => s.trim())
-              .filter(Boolean),
-          }
-        : {}),
+      ...(userIds.length > 0 ? { userIds } : {}),
       ...next,
     }
     onChange(merged)
@@ -218,37 +204,16 @@ export function AudienceBuilder({ value, onChange, editais }: AudienceBuilderPro
         </div>
       </div>
 
-      {/* Listas manuais */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Textarea
-          label="IDs de usuário"
-          value={userIdsText}
-          onChange={(e) => {
-            setUserIdsText(e.target.value)
-            const ids = e.target.value
-              .split(/\s+/)
-              .map((s) => s.trim())
-              .filter(Boolean)
+      {/* Lista manual de destinatários */}
+      <div>
+        <UserPicker
+          selectedIds={userIds}
+          onChange={(ids) => {
+            setUserIds(ids)
             emit({ userIds: ids.length > 0 ? ids : undefined })
           }}
-          placeholder="Um ID por linha (cuid)"
-          hint="Adicionados à audiência (UNIÃO)"
-          rows={4}
-        />
-        <Textarea
-          label="Emails"
-          value={emailsText}
-          onChange={(e) => {
-            setEmailsText(e.target.value)
-            const emails = e.target.value
-              .split(/\s+/)
-              .map((s) => s.trim())
-              .filter(Boolean)
-            emit({ emails: emails.length > 0 ? emails : undefined })
-          }}
-          placeholder="Um email por linha"
-          hint="Emails sem usuário válido são ignorados"
-          rows={4}
+          label="Adicionar pessoas específicas"
+          hint="Busque pelo nome, e-mail ou CPF/CNPJ do proponente. Os escolhidos entram na audiência por UNIÃO com os filtros acima."
         />
       </div>
     </Card>
