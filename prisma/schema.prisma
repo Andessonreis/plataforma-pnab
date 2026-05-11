@@ -64,6 +64,34 @@ enum FuncaoEdital {
   HABILITADOR
 }
 
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+}
+
+enum CampaignType {
+  MANUAL
+  REGRA
+}
+
+enum CampaignStatus {
+  RASCUNHO
+  ENVIANDO
+  ENVIADA
+  CANCELADA
+  FALHA
+}
+
+enum NotificationRuleTrigger {
+  INSCRICAO_RASCUNHO_PENDENTE
+  EDITAL_PUBLICADO
+  INSCRICAO_INABILITADA
+  INSCRICAO_ANEXOS_FALTANDO
+  RESULTADO_PUBLICADO
+  ATENDIMENTO_RESPONDIDO
+  USER_SEM_INSCRICAO
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Usuários
 // ─────────────────────────────────────────────────────────────────────────────
@@ -88,13 +116,16 @@ model User {
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 
-  inscricoes          Inscricao[]
-  avaliacoes          Avaliacao[]
-  atendimentos        Atendimento[]
-  passwordResetTokens PasswordResetToken[]
-  auditLogs           AuditLog[]
-  apiKeys             ApiKey[]
-  editalMembros       EditalMembro[]
+  inscricoes            Inscricao[]
+  avaliacoes            Avaliacao[]
+  atendimentos          Atendimento[]
+  passwordResetTokens   PasswordResetToken[]
+  auditLogs             AuditLog[]
+  apiKeys               ApiKey[]
+  editalMembros         EditalMembro[]
+  notifications         Notification[]
+  notificationCampaigns NotificationCampaign[] @relation("CampaignCreatedBy")
+  notificationRules     NotificationRule[]     @relation("RuleCreatedBy")
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -105,8 +136,8 @@ model ApiKey {
   id         String    @id @default(cuid())
   userId     String
   label      String
-  keyHash    String    @unique   // SHA-256 da chave
-  prefix     String              // primeiros 12 caracteres (ex: pnab_abc12345)
+  keyHash    String    @unique // SHA-256 da chave
+  prefix     String // primeiros 12 caracteres (ex: pnab_abc12345)
   scopes     String[]
   revokedAt  DateTime?
   lastUsedAt DateTime?
@@ -140,8 +171,8 @@ model PasswordResetToken {
 model AuditLog {
   id        String   @id @default(cuid())
   userId    String?
-  action    String   // LOGIN, LOGOUT, CADASTRO, INSCRICAO_CRIADA, STATUS_ALTERADO, EDITAL_PUBLICADO, etc.
-  entity    String?  // User, Inscricao, Edital, etc.
+  action    String // LOGIN, LOGOUT, CADASTRO, INSCRICAO_CRIADA, STATUS_ALTERADO, EDITAL_PUBLICADO, etc.
+  entity    String? // User, Inscricao, Edital, etc.
   entityId  String?
   details   Json?
   ip        String?
@@ -162,18 +193,18 @@ model AuditLog {
 model ErrorLog {
   id          String   @id @default(cuid())
   timestamp   DateTime @default(now())
-  level       String   // 'error' | 'warn'
+  level       String // 'error' | 'warn'
   message     String
   stack       String?  @db.Text
-  fingerprint String   // hash pra agrupar erros iguais
+  fingerprint String // hash pra agrupar erros iguais
   requestId   String?
   userId      String?
-  path        String?  // /api/admin/editais
-  method      String?  // GET, POST, ...
+  path        String? // /api/admin/editais
+  method      String? // GET, POST, ...
   statusCode  Int?
   userAgent   String?
   ip          String?
-  context     Json?    // extras sanitizados (sem PII)
+  context     Json? // extras sanitizados (sem PII)
 
   @@index([timestamp])
   @@index([fingerprint])
@@ -213,46 +244,46 @@ model Banner {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model Edital {
-  id                  String       @id @default(cuid())
-  titulo              String
-  slug                String       @unique
-  ano                 Int
-  status              EditalStatus @default(RASCUNHO)
-  resumo              String?
-  valorTotal          Decimal?     @db.Decimal(12, 2)
-  categorias          String[]
-  acoesAfirmativas    String?
-  regrasElegibilidade String?
+  id                        String       @id @default(cuid())
+  titulo                    String
+  slug                      String       @unique
+  ano                       Int
+  status                    EditalStatus @default(RASCUNHO)
+  resumo                    String?
+  valorTotal                Decimal?     @db.Decimal(12, 2)
+  categorias                String[]
+  acoesAfirmativas          String?
+  regrasElegibilidade       String?
   // Tipos de proponente aceitos (vazio = todos): PF, MEI, PJ, COLETIVO
-  tiposProponentePermitidos String[] @default([])
+  tiposProponentePermitidos String[]     @default([])
   // Array de marcos: [{ label: string, dataHora: string, destaque?: boolean }]
-  cronograma          Json         @default("[]")
+  cronograma                Json         @default("[]")
   // Definição dinâmica dos campos do formulário de inscrição (etapa "Dados")
-  camposFormulario    Json         @default("[]")
+  camposFormulario          Json         @default("[]")
   // Etapas customizadas adicionais do wizard de inscrição (além de categoria/dados/anexos/revisão).
   // Renderizadas entre "dados" e "anexos" na ordem definida.
   // [{ id: string, titulo: string, descricao?: string, ordem: number, campos: CampoFormulario[] }]
-  etapasCustomizadas  Json         @default("[]")
+  etapasCustomizadas        Json         @default("[]")
   // Critérios de avaliação: [{ criterio: string, peso: number, descricao?: string, notaMax: number }]
-  criteriosAvaliacao  Json         @default("[]")
+  criteriosAvaliacao        Json         @default("[]")
   // Tipos de anexo aceitos: [{ tipo: string, label: string, obrigatorio: boolean }]
-  tiposAnexo          Json?
+  tiposAnexo                Json?
   // Nota mínima para classificação (null = sem corte). Escala 0-10.
-  notaMinima          Decimal?     @db.Decimal(5, 2)
+  notaMinima                Decimal?     @db.Decimal(5, 2)
   // Regras de desempate: [{ descricao: string, tipo: 'bloco'|'criterio', ref: string, direcao: 'desc'|'asc' }]
-  desempate           Json?
+  desempate                 Json?
   // Fórmula de cálculo da nota final (ex: "((B1+B2)/2)+B3"). Null = média ponderada padrão.
-  formulaAvaliacao    String?
+  formulaAvaliacao          String?
   // Versão acessível do edital em HTML (WCAG AA)
-  conteudoAcessivel   String?
+  conteudoAcessivel         String?
   // Número de vagas para contemplados (null = ilimitado)
-  vagasContemplados   Int?
+  vagasContemplados         Int?
   // Número de vagas para suplentes (null = todos restantes com nota)
-  vagasSuplentes      Int?
+  vagasSuplentes            Int?
   // Data real de publicação (preenchida quando status sai de RASCUNHO)
-  publishedAt         DateTime?
-  createdAt           DateTime     @default(now())
-  updatedAt           DateTime     @updatedAt
+  publishedAt               DateTime?
+  createdAt                 DateTime     @default(now())
+  updatedAt                 DateTime     @updatedAt
 
   arquivos   ArquivoEdital[]
   inscricoes Inscricao[]
@@ -261,13 +292,13 @@ model Edital {
 }
 
 model ArquivoEdital {
-  id          String   @id @default(cuid())
-  editalId    String
-  tipo        String   // PDF | ANEXO | MODELO | PLANILHA | DECLARACAO
-  titulo      String
-  url         String
-  acessivel   Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  editalId  String
+  tipo      String // PDF | ANEXO | MODELO | PLANILHA | DECLARACAO
+  titulo    String
+  url       String
+  acessivel Boolean  @default(false)
+  createdAt DateTime @default(now())
 
   edital Edital @relation(fields: [editalId], references: [id], onDelete: Cascade)
 }
@@ -293,23 +324,23 @@ model Inscricao {
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
 
-  edital      Edital           @relation(fields: [editalId], references: [id])
-  proponente  User             @relation(fields: [proponenteId], references: [id])
-  anexos      AnexoInscricao[]
-  avaliacoes  Avaliacao[]
-  recursos    Recurso[]
+  edital         Edital           @relation(fields: [editalId], references: [id])
+  proponente     User             @relation(fields: [proponenteId], references: [id])
+  anexos         AnexoInscricao[]
+  avaliacoes     Avaliacao[]
+  recursos       Recurso[]
   projetoApoiado ProjetoApoiado?
 }
 
 model AnexoInscricao {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   inscricaoId String
   tipo        String
   titulo      String
   url         String
   valido      Boolean?
   observacao  String?
-  createdAt   DateTime  @default(now())
+  createdAt   DateTime @default(now())
 
   inscricao Inscricao @relation(fields: [inscricaoId], references: [id], onDelete: Cascade)
 }
@@ -343,10 +374,10 @@ model Avaliacao {
 model Recurso {
   id            String    @id @default(cuid())
   inscricaoId   String
-  fase          String    // HABILITACAO | RESULTADO_PRELIMINAR | RESULTADO_FINAL
+  fase          String // HABILITACAO | RESULTADO_PRELIMINAR | RESULTADO_FINAL
   texto         String
   urlAnexos     String[]
-  decisao       String?   // DEFERIDO | INDEFERIDO
+  decisao       String? // DEFERIDO | INDEFERIDO
   justificativa String?
   createdAt     DateTime  @default(now())
   decidedAt     DateTime?
@@ -419,7 +450,7 @@ model CmsPage {
   id        String   @id @default(cuid())
   titulo    String
   slug      String   @unique
-  corpo     String   // HTML do editor rich text
+  corpo     String // HTML do editor rich text
   publicado Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -430,18 +461,18 @@ model CmsPage {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model SlideDestaque {
-  id          String    @id @default(cuid())
-  titulo      String
-  descricao   String?
-  imagemUrl   String?
-  ctaLabel    String?
-  ctaUrl      String?
-  ordem       Int       @default(0)
-  ativo       Boolean   @default(true)
-  inicioEm    DateTime?
-  fimEm       DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id        String    @id @default(cuid())
+  titulo    String
+  descricao String?
+  imagemUrl String?
+  ctaLabel  String?
+  ctaUrl    String?
+  ordem     Int       @default(0)
+  ativo     Boolean   @default(true)
+  inicioEm  DateTime?
+  fimEm     DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -469,10 +500,10 @@ model EditalMembro {
 
 model AttachmentType {
   id          String   @id @default(cuid())
-  tipo        String   @unique   // ID interno (ex: DOCUMENTO_PESSOAL)
-  label       String             // Nome visível (ex: Documento Pessoal)
+  tipo        String   @unique // ID interno (ex: DOCUMENTO_PESSOAL)
+  label       String // Nome visível (ex: Documento Pessoal)
   obrigatorio Boolean  @default(false)
-  tag         String             // Grupo (ex: "PNAB", "Cultura Viva")
+  tag         String // Grupo (ex: "PNAB", "Cultura Viva")
   isSystem    Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -524,19 +555,101 @@ model EvaluationTemplate {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model Atendimento {
-  id           String             @id @default(cuid())
-  protocolo    String             @unique
+  id           String            @id @default(cuid())
+  protocolo    String            @unique
   editalId     String?
   autorId      String?
   nomeContato  String
   emailContato String
   assunto      String
   mensagem     String
-  status       AtendimentoStatus  @default(ABERTO)
+  status       AtendimentoStatus @default(ABERTO)
   // [{ de: string, texto: string, criadoEm: string }]
   historico    Json[]
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
 
   autor User? @relation(fields: [autorId], references: [id])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Notificações — disparos manuais, regras automáticas, entregas individuais
+// ─────────────────────────────────────────────────────────────────────────────
+
+model NotificationCampaign {
+  id           String                @id @default(cuid())
+  tipo         CampaignType          @default(MANUAL)
+  status       CampaignStatus        @default(RASCUNHO)
+  titulo       String
+  assunto      String
+  corpo        String                @db.Text
+  link         String?
+  ctaLabel     String?
+  canais       NotificationChannel[] @default([IN_APP])
+  // Filtro de audiência (snapshot do que foi escolhido na criação)
+  filtro       Json                  @default("{}")
+  scheduledAt  DateTime?
+  sentAt       DateTime?
+  totalAlvo    Int                   @default(0)
+  totalEnviado Int                   @default(0)
+  totalErro    Int                   @default(0)
+  ruleId       String?
+  createdById  String?
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+
+  rule          NotificationRule? @relation(fields: [ruleId], references: [id], onDelete: SetNull)
+  createdBy     User?             @relation("CampaignCreatedBy", fields: [createdById], references: [id])
+  notifications Notification[]
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([ruleId])
+}
+
+model NotificationRule {
+  id          String                  @id @default(cuid())
+  nome        String
+  descricao   String?
+  trigger     NotificationRuleTrigger
+  ativo       Boolean                 @default(false)
+  // Configuração específica do trigger (ex: { horas: 24, editalIds: [...] })
+  config      Json                    @default("{}")
+  assunto     String
+  corpo       String                  @db.Text
+  link        String?
+  ctaLabel    String?
+  canais      NotificationChannel[]   @default([IN_APP])
+  filtro      Json                    @default("{}")
+  createdById String?
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+
+  createdBy User?                  @relation("RuleCreatedBy", fields: [createdById], references: [id])
+  campaigns NotificationCampaign[]
+
+  @@index([trigger, ativo])
+}
+
+model Notification {
+  id             String                @id @default(cuid())
+  userId         String
+  campaignId     String?
+  titulo         String
+  corpo          String                @db.Text
+  link           String?
+  ctaLabel       String?
+  canais         NotificationChannel[] @default([IN_APP])
+  lidaEm         DateTime?
+  emailEnviadoEm DateTime?
+  emailErro      String?
+  createdAt      DateTime              @default(now())
+
+  user     User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  campaign NotificationCampaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+
+  @@unique([campaignId, userId])
+  @@index([userId, lidaEm])
+  @@index([userId, createdAt])
+  @@index([createdAt])
 }
