@@ -86,7 +86,7 @@ export default async function RegraDetalhePage({ params }: Props) {
       {rule.ativo && (
         <Card padding="sm" className="sm:p-4 mb-4 bg-emerald-50 border-emerald-200">
           <p className="text-sm text-emerald-900">
-            <strong>Regra ativa.</strong> {def?.periodico ? 'Será avaliada a cada tick do scheduler (1x por minuto em dev, 10 min em prod).' : 'Será disparada sob demanda quando o evento correspondente ocorrer.'}
+            <strong>Regra ativa.</strong> {def?.periodico ? 'É avaliada periodicamente pelo scheduler.' : 'Dispara sob demanda quando o evento correspondente acontece.'}
           </p>
         </Card>
       )}
