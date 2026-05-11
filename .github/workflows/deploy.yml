@@ -37,8 +37,10 @@ jobs:
             # Build das imagens
             docker compose -f docker-compose.prod.yml build
 
-            # Executa migrations (banco já rodando do deploy anterior)
-            docker compose -f docker-compose.prod.yml run --rm migrate
+            # Aplica schema do Prisma via a imagem `app` recém-buildada
+            # (stage `runner` rebuilda fresh — não tem o problema de cache que
+            # o antigo service `migrate` tinha quando reusava o stage `builder`).
+            docker compose -f docker-compose.prod.yml run --rm app npx prisma db push --skip-generate
 
             # Reinicia app e worker com as novas imagens
             docker compose -f docker-compose.prod.yml up -d app worker pnab-postgres pnab-redis
