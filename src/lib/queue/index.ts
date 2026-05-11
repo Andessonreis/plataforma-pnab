@@ -1,6 +1,7 @@
 import { Queue } from 'bullmq'
 import { redis } from '@/lib/redis'
 import type { EmailTemplate } from '@/lib/mail'
+import type { NotificationChannel } from '@prisma/client'
 
 // ─── Tipos de jobs ────────────────────────────────────────────────────────────
 
@@ -20,6 +21,20 @@ export interface PdfJobData {
 
 export interface SchedulerJobData {
   trigger: 'cron'
+}
+
+export interface NotificationDispatchJobData {
+  campaignId: string
+}
+
+export interface NotificationDeliveryJobData {
+  campaignId: string
+  userId: string
+  titulo: string
+  corpo: string
+  link: string | null
+  ctaLabel: string | null
+  canais: NotificationChannel[]
 }
 
 // ─── Filas ────────────────────────────────────────────────────────────────────
@@ -53,6 +68,32 @@ export const schedulerQueue = new Queue<SchedulerJobData>('scheduler', {
   },
 })
 
+export const notificationDispatchQueue = new Queue<NotificationDispatchJobData>(
+  'notification-dispatch',
+  {
+    connection: redis,
+    defaultJobOptions: {
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 5000 },
+      removeOnComplete: 50,
+      removeOnFail: 200,
+    },
+  },
+)
+
+export const notificationDeliveryQueue = new Queue<NotificationDeliveryJobData>(
+  'notification-delivery',
+  {
+    connection: redis,
+    defaultJobOptions: {
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 5000 },
+      removeOnComplete: 500,
+      removeOnFail: 1000,
+    },
+  },
+)
+
 // ─── Helpers para enfileirar jobs ─────────────────────────────────────────────
 
 export async function enqueueEmail(data: EmailJobData) {
@@ -61,6 +102,19 @@ export async function enqueueEmail(data: EmailJobData) {
 
 export async function enqueuePdf(data: PdfJobData) {
   return pdfQueue.add('generate', data)
+}
+
+export async function enqueueCampaignDispatch(data: NotificationDispatchJobData) {
+  return notificationDispatchQueue.add('dispatch', data, {
+    // jobId garante idempotência: re-enqueue da mesma campanha não cria job duplicado.
+    jobId: `dispatch-${data.campaignId}`,
+  })
+}
+
+export async function enqueueNotificationDelivery(data: NotificationDeliveryJobData) {
+  return notificationDeliveryQueue.add('deliver', data, {
+    jobId: `delivery-${data.campaignId}-${data.userId}`,
+  })
 }
 
 /**
