@@ -128,6 +128,17 @@ const navSections: NavSection[] = [
     ],
   },
   {
+    title: 'Comunicação',
+    items: [
+      {
+        label: 'Notificações',
+        href: '/admin/notificacoes',
+        roles: ['ADMIN'],
+        icon: <IconChatBubble className="h-5 w-5" />,
+      },
+    ],
+  },
+  {
     title: 'Sistema',
     items: [
       {

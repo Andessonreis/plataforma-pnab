@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import type { UserRole } from '@prisma/client'
 import { AdminSidebar } from './sidebar'
 import { IconMenu } from '@/components/ui'
+import { NotificationBell } from '@/components/layout'
 
 const ROLES_PERMITIDOS: UserRole[] = ['ADMIN', 'ATENDIMENTO', 'HABILITADOR', 'AVALIADOR']
 
@@ -48,7 +49,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <IconMenu className="h-6 w-6" />
           </label>
 
-          <div className="flex items-center gap-3 ml-auto">
+          <div className="flex items-center gap-2 sm:gap-3 ml-auto">
+            <NotificationBell listLink="/admin/notificacoes/historico" />
             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ring-1 ring-inset ${roleBadgeColors[role] ?? 'bg-slate-100 text-slate-700 ring-slate-200'}`}>
               {roleLabels[role] ?? role}
             </span>
