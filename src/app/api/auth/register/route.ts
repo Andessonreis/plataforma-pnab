@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/db'
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
+import { enqueueEmail } from '@/lib/queue'
 import { rateLimit } from '@/lib/rate-limit'
 import { RATE_LIMITS } from '@/lib/rate-limit/config'
 
@@ -87,6 +88,23 @@ export async function POST(req: NextRequest) {
       details: { tipoProponente: data.tipoProponente },
       ip: req.headers.get('x-forwarded-for') ?? undefined,
     })
+
+    // Enfileira e-mail de boas-vindas (não bloqueia a resposta — falha do
+    // enqueue não deve derrubar o cadastro).
+    try {
+      const proponenteUrl = `${process.env.NEXTAUTH_URL ?? ''}/proponente`
+      await enqueueEmail({
+        to: user.email,
+        template: 'boas_vindas',
+        data: { nome: user.nome, url: proponenteUrl },
+      })
+    } catch (mailErr) {
+      console.error({
+        requestId,
+        warn: 'enqueue_boas_vindas_failed',
+        error: mailErr instanceof Error ? mailErr.message : 'Unknown',
+      })
+    }
 
     const res = NextResponse.json(
       { message: 'Conta criada com sucesso.', userId: user.id, requestId },

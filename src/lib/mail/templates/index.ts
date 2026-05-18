@@ -3,6 +3,11 @@
 
 import type { ComponentType } from 'react'
 import {
+  BoasVindas,
+  boasVindasSubject,
+  type BoasVindasData,
+} from './boas-vindas'
+import {
   ComprovanteInscricao,
   comprovanteInscricaoSubject,
   type ComprovanteInscricaoData,
@@ -54,6 +59,7 @@ import {
 } from './resultado-preliminar'
 
 export type EmailTemplate =
+  | 'boas_vindas'
   | 'comprovante_inscricao'
   | 'resultado_preliminar'
   | 'resultado_final'
@@ -66,6 +72,7 @@ export type EmailTemplate =
   | 'notificacao_generica'
 
 export interface TemplateDataMap {
+  boas_vindas: BoasVindasData
   comprovante_inscricao: ComprovanteInscricaoData
   resultado_preliminar: ResultadoPreliminarData
   resultado_final: ResultadoFinalData
@@ -86,6 +93,10 @@ interface TemplateEntry<K extends EmailTemplate> {
 type Registry = { [K in EmailTemplate]: TemplateEntry<K> }
 
 export const templateRegistry: Registry = {
+  boas_vindas: {
+    Component: BoasVindas,
+    defaultSubject: boasVindasSubject,
+  },
   comprovante_inscricao: {
     Component: ComprovanteInscricao,
     defaultSubject: comprovanteInscricaoSubject,

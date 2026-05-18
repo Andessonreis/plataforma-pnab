@@ -7,7 +7,8 @@ import type { NotificationChannel } from '@prisma/client'
 
 export interface EmailJobData {
   to: string
-  subject: string
+  /** Opcional — quando omitido, o template usa o assunto padrão (`defaultSubjectFor`). */
+  subject?: string
   template: EmailTemplate
   data: Record<string, unknown>
 }
