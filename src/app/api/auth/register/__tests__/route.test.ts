@@ -3,6 +3,7 @@ import { POST } from '../route'
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/db'
 import { logAudit } from '@/lib/audit'
+import { enqueueEmail } from '@/lib/queue'
 import { rateLimit } from '@/lib/rate-limit'
 import bcrypt from 'bcryptjs'
 
@@ -10,6 +11,7 @@ const mockPrisma = vi.mocked(prisma)
 const mockLogAudit = vi.mocked(logAudit)
 const mockRateLimit = vi.mocked(rateLimit)
 const mockBcrypt = vi.mocked(bcrypt)
+const mockEnqueueEmail = vi.mocked(enqueueEmail)
 
 const validBody = {
   nome: 'Maria Silva',
@@ -151,5 +153,44 @@ describe('POST /api/auth/register', () => {
     expect(mockLogAudit).toHaveBeenCalledWith(
       expect.objectContaining({ action: 'CADASTRO' }),
     )
+  })
+
+  it('cadastro válido enfileira e-mail de boas-vindas', async () => {
+    mockPrisma.user.findFirst.mockResolvedValue(null)
+    mockPrisma.user.create.mockResolvedValue({
+      id: 'user-1',
+      nome: validBody.nome,
+      cpfCnpj: validBody.cpfCnpj,
+      email: validBody.email,
+      role: 'PROPONENTE',
+    } as never)
+
+    await POST(makeRequest(validBody))
+
+    expect(mockEnqueueEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: validBody.email,
+        template: 'boas_vindas',
+        data: expect.objectContaining({ nome: validBody.nome }),
+      }),
+    )
+  })
+
+  it('falha no enqueue de boas-vindas não derruba o cadastro (still 201)', async () => {
+    mockPrisma.user.findFirst.mockResolvedValue(null)
+    mockPrisma.user.create.mockResolvedValue({
+      id: 'user-1',
+      nome: validBody.nome,
+      cpfCnpj: validBody.cpfCnpj,
+      email: validBody.email,
+      role: 'PROPONENTE',
+    } as never)
+    mockEnqueueEmail.mockRejectedValueOnce(new Error('redis down'))
+
+    const res = await POST(makeRequest(validBody))
+
+    expect(res.status).toBe(201)
+    const json = await res.json()
+    expect(json.userId).toBe('user-1')
   })
 })

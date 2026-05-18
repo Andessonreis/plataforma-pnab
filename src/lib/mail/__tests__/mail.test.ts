@@ -2,6 +2,28 @@ import { describe, expect, it } from 'vitest'
 import { defaultSubjectFor, renderTemplate } from '../index'
 
 describe('renderTemplate', () => {
+  it('boas_vindas — contém nome, link e CTA', async () => {
+    const { html, text } = await renderTemplate('boas_vindas', {
+      nome: 'Andesson dos Reis',
+      url: 'http://localhost:3000/proponente',
+    })
+    expect(html).toContain('Andesson')
+    expect(html).toContain('Bem-vindo')
+    expect(html).toContain('http://localhost:3000/proponente')
+    expect(html).toContain('Acessar minha área')
+    // Plain-text render do react-email às vezes omite o Heading; valida só o corpo.
+    expect(text).toContain('http://localhost:3000/proponente')
+  })
+
+  it('boas_vindas — saudação usa só o primeiro nome', async () => {
+    const { html } = await renderTemplate('boas_vindas', {
+      nome: 'Maria das Graças Silva',
+      url: 'http://x',
+    })
+    expect(html).toContain('Maria') // só primeiro nome no heading
+    expect(html).not.toContain('Bem-vindo(a), Maria das Graças Silva!')
+  })
+
   it('comprovante_inscricao — html contém número e edital', async () => {
     const { html, text } = await renderTemplate('comprovante_inscricao', {
       numero: 'INS-001',
@@ -176,5 +198,14 @@ describe('defaultSubjectFor', () => {
       resetUrl: 'http://x',
     })
     expect(subject).toMatch(/Recupera[cç][aã]o de Senha/i)
+  })
+
+  it('boas_vindas — assunto usa primeiro nome', () => {
+    const subject = defaultSubjectFor('boas_vindas', {
+      nome: 'Carlos Eduardo da Silva',
+      url: 'http://x',
+    })
+    expect(subject).toContain('Carlos')
+    expect(subject).not.toContain('Carlos Eduardo da Silva')
   })
 })
