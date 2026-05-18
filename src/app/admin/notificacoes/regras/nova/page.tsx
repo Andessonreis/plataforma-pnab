@@ -20,13 +20,17 @@ export default async function NovaRegraPage() {
     orderBy: { createdAt: 'desc' },
   })
 
-  const triggers = Object.values(TRIGGER_REGISTRY).map((t) => ({
-    trigger: t.trigger,
-    label: t.label,
-    descricao: t.descricao,
-    implementado: t.implementado,
-    periodico: t.periodico,
-  }))
+  // Só mostra triggers implementados — esconde "em breve" pra não confundir
+  // o operador da Secretaria com opções que nem funcionam ainda.
+  const triggers = Object.values(TRIGGER_REGISTRY)
+    .filter((t) => t.implementado)
+    .map((t) => ({
+      trigger: t.trigger,
+      label: t.label,
+      descricao: t.descricao,
+      implementado: t.implementado,
+      periodico: t.periodico,
+    }))
 
   return (
     <section>

@@ -6,6 +6,7 @@ import { Card, Input, Textarea, Button } from '@/components/ui'
 import { toast } from '@/hooks/use-toast'
 import { AudienceBuilder, type EditalOption } from '../audience-builder'
 import { LinkPicker } from '../link-picker'
+import { NotificationPreview } from '../notification-preview'
 import { MESSAGE_TEMPLATES, type MessageTemplate } from '../templates'
 import type { AudienceFilterInput } from '@/lib/notifications/schemas'
 
@@ -141,13 +142,14 @@ export function CampaignForm({ editais, initialData, campaignId }: CampaignFormP
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mx-auto max-w-3xl space-y-5 sm:space-y-6">
+    <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6 items-start">
+      <div className="lg:col-span-2 space-y-5 sm:space-y-6">
       <Card padding="sm" className="sm:p-6">
         <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-1">
-          Mensagem
+          1. O que dizer?
         </h2>
         <p className="text-xs text-slate-500 mb-3 sm:mb-4">
-          Comece de um modelo pronto ou escreva do zero.
+          Comece de um modelo pronto ou escreva do zero. O preview ao lado mostra como vai aparecer.
         </p>
         <div className="space-y-4">
           <div>
@@ -174,20 +176,20 @@ export function CampaignForm({ editais, initialData, campaignId }: CampaignFormP
             )}
           </div>
           <Input
-            label="Título interno"
+            label="Nome interno (não aparece pro destinatário)"
             value={titulo}
             onChange={(e) => setTitulo(e.target.value)}
             error={errors.titulo}
             required
-            placeholder="Ex: Lembrete rascunhos PNAB 2026 (visível só no admin)"
+            placeholder='Ex: "Lembrete rascunhos PNAB 2026"'
           />
           <Input
-            label="Assunto"
+            label="Título da notificação"
             value={assunto}
             onChange={(e) => setAssunto(e.target.value)}
             error={errors.assunto}
             required
-            placeholder="Título exibido pro destinatário"
+            placeholder="Aparece como assunto do e-mail e título do card"
           />
           <Textarea
             label="Corpo"
@@ -225,6 +227,18 @@ export function CampaignForm({ editais, initialData, campaignId }: CampaignFormP
         <Button type="submit" loading={loading}>
           {isEdit ? 'Salvar Alterações' : 'Criar Rascunho'}
         </Button>
+      </div>
+      </div>
+
+      {/* Coluna lateral: preview ao vivo */}
+      <div className="lg:col-span-1">
+        <NotificationPreview
+          titulo={titulo}
+          assunto={assunto}
+          corpo={corpo}
+          link={link}
+          ctaLabel={ctaLabel}
+        />
       </div>
     </form>
   )

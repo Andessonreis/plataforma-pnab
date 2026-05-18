@@ -86,10 +86,11 @@ export function AudienceBuilder({ value, onChange, editais }: AudienceBuilderPro
   return (
     <Card padding="sm" className="sm:p-6 space-y-5">
       <div>
-        <h3 className="text-base font-semibold text-slate-900 mb-1">Audiência</h3>
+        <h3 className="text-base font-semibold text-slate-900 mb-1">Para quem recebe</h3>
         <p className="text-xs text-slate-500">
-          Os filtros são combinados por <strong>UNIÃO</strong> — quem se encaixar em qualquer uma das
-          opções recebe a notificação. Deixar tudo vazio = nenhum destinatário.
+          Quem se encaixar em <strong>qualquer</strong> um dos filtros abaixo recebe a notificação.
+          Importante: se você não marcar nenhum filtro, <strong>ninguém</strong> recebe — então selecione
+          ao menos uma opção.
         </p>
       </div>
 

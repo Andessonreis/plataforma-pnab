@@ -113,6 +113,38 @@ export function TemplateEditor({ templateKey, meta, initial }: Props) {
     }
   }
 
+  const [testSending, setTestSending] = useState(false)
+  const [testFeedback, setTestFeedback] = useState<
+    { type: 'success' | 'error'; message: string } | null
+  >(null)
+
+  async function handleTestSend() {
+    setTestSending(true)
+    setTestFeedback(null)
+    try {
+      const res = await fetch(`/api/admin/email-templates/${templateKey}/test-send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subject, body }),
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        setTestFeedback({ type: 'error', message: json.message ?? 'Falha ao enviar teste' })
+        return
+      }
+      setTestFeedback({ type: 'success', message: json.message })
+      // Limpa a notificação após 8s
+      setTimeout(() => setTestFeedback(null), 8000)
+    } catch (err) {
+      setTestFeedback({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Erro de rede',
+      })
+    } finally {
+      setTestSending(false)
+    }
+  }
+
   return (
     <div className="space-y-4">
       {/* Top bar: status + ações */}
@@ -135,7 +167,7 @@ export function TemplateEditor({ templateKey, meta, initial }: Props) {
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
               <input
                 type="checkbox"
@@ -145,6 +177,15 @@ export function TemplateEditor({ templateKey, meta, initial }: Props) {
               />
               Ativar override
             </label>
+            <Button
+              onClick={handleTestSend}
+              disabled={testSending}
+              size="sm"
+              variant="secondary"
+              title="Envia o template (com as alterações atuais) pro seu e-mail"
+            >
+              {testSending ? 'Enviando...' : 'Enviar pra mim'}
+            </Button>
             <Button onClick={handleSave} disabled={saving || !dirty} size="sm">
               {saving ? 'Salvando...' : 'Salvar'}
             </Button>
@@ -153,6 +194,17 @@ export function TemplateEditor({ templateKey, meta, initial }: Props) {
         {saveError && (
           <div className="mt-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
             {saveError}
+          </div>
+        )}
+        {testFeedback && (
+          <div
+            className={`mt-3 text-sm rounded px-3 py-2 ${
+              testFeedback.type === 'success'
+                ? 'text-emerald-800 bg-emerald-50 border border-emerald-200'
+                : 'text-red-700 bg-red-50 border border-red-200'
+            }`}
+          >
+            {testFeedback.message}
           </div>
         )}
       </Card>
