@@ -6,6 +6,7 @@ import { Card, Input, Textarea, Button, Badge } from '@/components/ui'
 import { toast } from '@/hooks/use-toast'
 import { AudienceBuilder, type EditalOption } from '../audience-builder'
 import { LinkPicker } from '../link-picker'
+import { NotificationPreview } from '../notification-preview'
 import { MESSAGE_TEMPLATES, type MessageTemplate } from '../templates'
 import type { AudienceFilterInput } from '@/lib/notifications/schemas'
 
@@ -170,33 +171,40 @@ export function RuleForm({ editais, triggers, initialData, ruleId }: RuleFormPro
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mx-auto max-w-3xl space-y-5 sm:space-y-6">
+    <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6 items-start">
+      <div className="lg:col-span-2 space-y-5 sm:space-y-6">
       <Card padding="sm" className="sm:p-6">
-        <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">
-          Identificação
+        <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-1">
+          1. Identificar
         </h2>
+        <p className="text-xs text-slate-500 mb-3 sm:mb-4">
+          Só pra você organizar internamente — esses textos não vão pro destinatário.
+        </p>
         <div className="space-y-4">
           <Input
-            label="Nome da regra"
+            label="Nome curto da regra"
             value={nome}
             onChange={(e) => setNome(e.target.value)}
             error={errors.nome}
             required
-            placeholder='Ex: "Lembrete rascunhos 24h"'
+            placeholder='Ex: "Lembrete rascunho 24h"'
           />
           <Textarea
-            label="Descrição"
+            label="Anotação interna (opcional)"
             value={descricao}
             onChange={(e) => setDescricao(e.target.value)}
             error={errors.descricao}
             rows={2}
-            placeholder="Anotações internas — não aparece pro destinatário."
+            placeholder="Pra que serve essa regra, quem decidiu, etc."
           />
         </div>
       </Card>
 
       <Card padding="sm" className="sm:p-6">
-        <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Gatilho</h2>
+        <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-1">2. Quando enviar?</h2>
+        <p className="text-xs text-slate-500 mb-3 sm:mb-4">
+          Escolha o evento ou condição que dispara a notificação automaticamente.
+        </p>
         <div className="space-y-3">
           {triggers.map((t) => (
             <label
@@ -250,9 +258,9 @@ export function RuleForm({ editais, triggers, initialData, ruleId }: RuleFormPro
       </Card>
 
       <Card padding="sm" className="sm:p-6">
-        <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-1">Mensagem</h2>
+        <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-1">3. O que dizer?</h2>
         <p className="text-xs text-slate-500 mb-3 sm:mb-4">
-          Comece de um modelo pronto ou escreva do zero.
+          Comece de um modelo pronto ou escreva do zero. O preview ao lado mostra como vai aparecer.
         </p>
         <div className="space-y-4">
           <div>
@@ -320,6 +328,18 @@ export function RuleForm({ editais, triggers, initialData, ruleId }: RuleFormPro
         <Button type="submit" loading={loading}>
           {isEdit ? 'Salvar Alterações' : 'Criar Regra (inativa)'}
         </Button>
+      </div>
+      </div>
+
+      {/* Coluna lateral: preview ao vivo */}
+      <div className="lg:col-span-1">
+        <NotificationPreview
+          titulo={assunto}
+          assunto={assunto}
+          corpo={corpo}
+          link={link}
+          ctaLabel={ctaLabel}
+        />
       </div>
     </form>
   )
