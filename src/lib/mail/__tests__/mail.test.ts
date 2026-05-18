@@ -1,6 +1,45 @@
 import { describe, expect, it } from 'vitest'
 import { defaultSubjectFor, renderTemplate } from '../index'
 
+describe('Layout compartilhado', () => {
+  it('todos os templates incluem o logo da Prefeitura (URL absoluta)', async () => {
+    const { html } = await renderTemplate('boas_vindas', {
+      nome: 'Teste',
+      url: 'http://x',
+    })
+    expect(html).toContain('/images/logo-irece-color.png')
+    expect(html).toMatch(/https?:\/\/[^"]+\/images\/logo-irece-color\.png/)
+    expect(html).toContain('Prefeitura de Irecê')
+  })
+
+  it('logo usa NEXT_PUBLIC_SITE_URL quando setada', async () => {
+    const prev = process.env.NEXT_PUBLIC_SITE_URL
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://example.test'
+    try {
+      const { html } = await renderTemplate('protocolo_atendimento', {
+        protocolo: 'X',
+      })
+      expect(html).toContain('https://example.test/images/logo-irece-color.png')
+    } finally {
+      if (prev === undefined) delete process.env.NEXT_PUBLIC_SITE_URL
+      else process.env.NEXT_PUBLIC_SITE_URL = prev
+    }
+  })
+
+  it('logo cai no fallback culturaeturismo quando NEXT_PUBLIC_SITE_URL ausente', async () => {
+    const prev = process.env.NEXT_PUBLIC_SITE_URL
+    delete process.env.NEXT_PUBLIC_SITE_URL
+    try {
+      const { html } = await renderTemplate('protocolo_atendimento', {
+        protocolo: 'X',
+      })
+      expect(html).toContain('https://culturaeturismo.irece.ba.gov.br/images/logo-irece-color.png')
+    } finally {
+      if (prev !== undefined) process.env.NEXT_PUBLIC_SITE_URL = prev
+    }
+  })
+})
+
 describe('renderTemplate', () => {
   it('boas_vindas — contém nome, link e CTA', async () => {
     const { html, text } = await renderTemplate('boas_vindas', {
