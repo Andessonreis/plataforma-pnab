@@ -1,131 +1,33 @@
-import nodemailer from 'nodemailer'
+// Fachada pública do módulo de e-mail.
+// Implementação: Resend (HTTP API) + templates React Email.
+//
+// Callers usam apenas `sendEmail`. Para renderizar um template sem enviar
+// (útil em testes ou pré-visualização), `renderTemplate` está disponível.
 
-export const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT) || 587,
-  secure: process.env.SMTP_SECURE === 'true',
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-})
+import { sendViaResend } from './client'
+import { defaultSubjectFor, renderTemplate } from './render'
+import type { EmailTemplate } from './templates'
 
-export type EmailTemplate =
-  | 'comprovante_inscricao'
-  | 'resultado_preliminar'
-  | 'resultado_final'
-  | 'protocolo_atendimento'
-  | 'notificacao_prazo'
-  | 'recuperacao_senha'
-  | 'recurso_submetido'
-  | 'recurso_decidido'
-  | 'habilitacao'
-  | 'notificacao_generica'
+export type { EmailTemplate, TemplateDataMap } from './templates'
+export { renderTemplate, defaultSubjectFor } from './render'
 
 export interface SendEmailOptions {
   to: string
-  subject: string
   template: EmailTemplate
   data: Record<string, unknown>
+  /** Sobrescreve o assunto padrão do template. */
+  subject?: string
+  replyTo?: string
 }
 
-// Templates são renderizados no worker; esta função é para envio direto (opcional)
-export async function sendEmail(options: SendEmailOptions): Promise<void> {
-  await transporter.sendMail({
-    from: process.env.SMTP_FROM,
+export async function sendEmail(options: SendEmailOptions): Promise<{ id: string }> {
+  const { html, text } = await renderTemplate(options.template, options.data)
+  const subject = options.subject ?? defaultSubjectFor(options.template, options.data)
+  return sendViaResend({
     to: options.to,
-    subject: options.subject,
-    html: renderTemplate(options.template, options.data),
+    subject,
+    html,
+    text,
+    replyTo: options.replyTo,
   })
-}
-
-// Renderização básica — substituir por react-email ou mjml quando necessário
-export function renderTemplate(template: EmailTemplate, data: Record<string, unknown>): string {
-  const templates: Record<EmailTemplate, string> = {
-    comprovante_inscricao: `
-      <h2>Inscrição recebida com sucesso!</h2>
-      <p>Número: <strong>${data.numero}</strong></p>
-      <p>Edital: <strong>${data.edital}</strong></p>
-      <p>Acompanhe o status em: <a href="${data.url}">${data.url}</a></p>
-    `,
-    resultado_preliminar: `
-      <h2>Resultado Preliminar Publicado</h2>
-      <p>O resultado preliminar do edital <strong>${data.edital}</strong> foi publicado.</p>
-      <p>Acesse: <a href="${data.url}">${data.url}</a></p>
-    `,
-    resultado_final: `
-      <h2>Resultado Final Publicado</h2>
-      <p>O resultado final do edital <strong>${data.edital}</strong> foi publicado.</p>
-      <p>Acesse: <a href="${data.url}">${data.url}</a></p>
-    `,
-    protocolo_atendimento: `
-      <h2>Protocolo de Atendimento</h2>
-      <p>Seu protocolo: <strong>${data.protocolo}</strong></p>
-      <p>Responderemos no prazo de até 5 dias úteis.</p>
-    `,
-    notificacao_prazo: `
-      <h2>Lembrete de Prazo</h2>
-      <p>${data.mensagem}</p>
-      <p>Acesse: <a href="${data.url}">${data.url}</a></p>
-    `,
-    recuperacao_senha: `
-      <h2>Recuperação de Senha</h2>
-      <p>Olá, <strong>${data.nome}</strong>!</p>
-      <p>Recebemos uma solicitação para redefinir sua senha no Portal PNAB Irecê.</p>
-      <p>Clique no link abaixo para criar uma nova senha:</p>
-      <p>
-        <a href="${data.resetUrl}" style="display:inline-block;padding:12px 24px;background-color:#059669;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;">
-          Redefinir minha senha
-        </a>
-      </p>
-      <p style="margin-top:16px;font-size:14px;color:#64748b;">
-        Este link é válido por <strong>1 hora</strong>. Se você não solicitou a recuperação, ignore este e-mail.
-      </p>
-      <p style="font-size:12px;color:#94a3b8;margin-top:24px;">
-        Se o botão não funcionar, copie e cole o link: ${data.resetUrl}
-      </p>
-    `,
-    recurso_submetido: `
-      <h2>Novo Recurso Recebido</h2>
-      <p>Um recurso foi interposto para o edital <strong>${data.edital}</strong>.</p>
-      <p>Fase: <strong>${data.fase}</strong></p>
-      <p>Acesse o painel para analisar: <a href="${data.url}">${data.url}</a></p>
-    `,
-    recurso_decidido: `
-      <h2>Recurso Analisado</h2>
-      <p>Seu recurso referente ao edital <strong>${data.edital}</strong> foi analisado.</p>
-      <p>Decisão: <strong>${data.decisao}</strong></p>
-      <p>Acesse sua área para mais detalhes: <a href="${data.url}">${data.url}</a></p>
-    `,
-    habilitacao: `
-      <h2>Resultado da Habilitação</h2>
-      <p>Olá, <strong>${data.nome}</strong>!</p>
-      <p>Sua inscrição <strong>${data.numero}</strong> no edital <strong>${data.edital}</strong> foi analisada na fase de habilitação.</p>
-      <p>Resultado: <strong>${data.resultado === 'HABILITADA' ? 'HABILITADA' : 'INABILITADA'}</strong></p>
-      ${data.resultado === 'INABILITADA' ? `
-        <p>Motivo: ${data.motivo}</p>
-        <p style="margin-top:16px;padding:12px;background-color:#fef3c7;border-radius:8px;font-size:14px;">
-          <strong>Atenção:</strong> Você pode interpor recurso contra esta decisão dentro do prazo previsto no cronograma do edital.
-          Acesse sua área para mais detalhes.
-        </p>
-      ` : ''}
-      <p style="margin-top:16px;">Acesse sua área: <a href="${data.url}">${data.url}</a></p>
-    `,
-    notificacao_generica: `
-      <h2>${data.titulo}</h2>
-      ${data.nome ? `<p>Olá, <strong>${data.nome}</strong>!</p>` : ''}
-      <div style="white-space:pre-wrap;font-size:15px;color:#1f2937;line-height:1.55;">${data.corpo}</div>
-      ${data.link && data.ctaLabel ? `
-        <p style="margin-top:24px;">
-          <a href="${data.link}" style="display:inline-block;padding:12px 24px;background-color:#059669;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;">
-            ${data.ctaLabel}
-          </a>
-        </p>
-      ` : data.link ? `
-        <p style="margin-top:16px;">Acesse: <a href="${data.link}">${data.link}</a></p>
-      ` : ''}
-    `,
-  }
-
-  return templates[template] ?? `<p>${JSON.stringify(data)}</p>`
 }

@@ -1,6 +1,5 @@
 import { Worker } from 'bullmq'
 import { redis } from '@/lib/redis'
-import { transporter } from '@/lib/mail'
 import type { EmailJobData } from '@/lib/queue'
 
 export const emailWorker = new Worker<EmailJobData>(
