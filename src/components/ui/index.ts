@@ -41,6 +41,8 @@ export { FadeIn, StaggerContainer, StaggerItem, CountUp, AnnouncementBanner, Sca
 export { ImageUpload } from './image-upload'
 export type { ImageUploadProps } from './image-upload'
 
+export { UserAvatar } from './user-avatar'
+
 export {
   IconCalendar,
   IconCurrency,

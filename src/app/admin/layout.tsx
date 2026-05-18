@@ -2,7 +2,8 @@ import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import type { UserRole } from '@prisma/client'
 import { AdminSidebar } from './sidebar'
-import { IconMenu } from '@/components/ui'
+import { prisma } from '@/lib/db'
+import { IconMenu, UserAvatar } from '@/components/ui'
 import { NotificationBell } from '@/components/layout'
 
 const ROLES_PERMITIDOS: UserRole[] = ['ADMIN', 'ATENDIMENTO', 'HABILITADOR', 'AVALIADOR']
@@ -29,12 +30,21 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const role = session.user.role as UserRole
   if (!ROLES_PERMITIDOS.includes(role)) redirect('/')
 
+  // Carrega avatarUrl (não está na session). Hit leve no DB pelo layout.
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { avatarUrl: true },
+  })
+  const nome = session.user.name ?? 'Usuário'
+  const avatarUrl = user?.avatarUrl ?? null
+
   return (
     <div className="flex min-h-screen bg-slate-50">
       <AdminSidebar
-        userName={session.user.name ?? 'Usuário'}
+        userName={nome}
         userRole={role}
         roleLabel={roleLabels[role] ?? role}
+        userAvatarUrl={avatarUrl}
       />
 
       <div className="flex-1 min-w-0 lg:ml-64">
@@ -55,11 +65,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               {roleLabels[role] ?? role}
             </span>
             <span className="text-sm text-slate-600 hidden sm:block">
-              {session.user.name}
+              {nome}
             </span>
-            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-white flex items-center justify-center text-sm font-medium shadow-sm ring-2 ring-brand-100">
-              {(session.user.name ?? 'A').charAt(0).toUpperCase()}
-            </div>
+            <UserAvatar nome={nome} src={avatarUrl} size={32} className="ring-2 ring-brand-100" />
           </div>
         </header>
 

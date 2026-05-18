@@ -1,16 +1,26 @@
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { ProponenteSidebar } from './sidebar'
-import { IconMenu } from '@/components/ui'
+import { prisma } from '@/lib/db'
+import { IconMenu, UserAvatar } from '@/components/ui'
 import { NotificationBell } from '@/components/layout'
 
 export default async function ProponenteLayout({ children }: { children: React.ReactNode }) {
   const session = await auth()
   if (!session) redirect('/login')
 
+  // Carrega avatarUrl pra mostrar no header e na sidebar.
+  // Não está na session (NextAuth) — buscar é leve e dispensa migração de schema da session.
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { avatarUrl: true },
+  })
+  const nome = session.user.name ?? 'Proponente'
+  const avatarUrl = user?.avatarUrl ?? null
+
   return (
     <div className="flex min-h-screen bg-slate-50">
-      <ProponenteSidebar userName={session.user.name ?? 'Proponente'} />
+      <ProponenteSidebar userName={nome} userAvatarUrl={avatarUrl} />
 
       <div className="flex-1 min-w-0 lg:ml-64">
         {/* Barra superior */}
@@ -26,11 +36,9 @@ export default async function ProponenteLayout({ children }: { children: React.R
           <div className="flex items-center gap-2 sm:gap-3 ml-auto">
             <NotificationBell listLink="/proponente/notificacoes" />
             <span className="text-sm text-slate-600 hidden sm:block">
-              {session.user.name}
+              {nome}
             </span>
-            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-white flex items-center justify-center text-sm font-medium shadow-sm ring-2 ring-brand-100">
-              {(session.user.name ?? 'P').charAt(0).toUpperCase()}
-            </div>
+            <UserAvatar nome={nome} src={avatarUrl} size={32} className="ring-2 ring-brand-100" />
           </div>
         </header>
 
