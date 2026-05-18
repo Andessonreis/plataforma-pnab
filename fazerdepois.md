@@ -48,6 +48,26 @@ Resultado: hoje só dá pra editar a linha da `Banner` direto no banco (foi o qu
 
 ---
 
+## Editor de templates de e-mail no admin
+
+**Contexto:** hoje os 10 templates transacionais vivem em `src/lib/mail/templates/*.tsx` como componentes React Email. Mudar qualquer texto exige PR (abrir editor, commit, review, merge, redeploy). Para o time da Secretaria isso é proibitivo — quem opera a plataforma não programa.
+
+A tela `/admin/notificacoes` (https://culturaeturismo.irece.ba.gov.br/admin/notificacoes) já permite criar campanhas com `corpo` HTML livre (via `notificacao_generica`), mas os templates "do sistema" (comprovante, habilitação, recuperação de senha, etc.) seguem fixos no código.
+
+**Direção:**
+1. Tabela nova `EmailTemplate { id, name, subject, body, placeholders, version, updatedBy, updatedAt }`.
+2. Reescrever `templateRegistry` (`src/lib/mail/templates/index.ts`) pra hidratar do banco quando houver override, com fallback pro componente React Email caso o template não exista na tabela.
+3. Rework da tela `/admin/notificacoes` (ou criar `/admin/templates-email`): editor WYSIWYG (Tiptap/MDX) com preview lado a lado renderizando React Email, lista de placeholders disponíveis por template (`{{numero}}`, `{{edital}}`, etc.), validação de campos obrigatórios, e modo "envio de teste".
+4. Sanitização forte do HTML salvo (DOMPurify server-side) — o admin é confiável mas spoofing/erro humano não.
+5. Versionamento: cada save vira nova versão; histórico de quem mudou o quê (AuditLog).
+6. **Cuidado especial** com transacionais sensíveis (recuperação de senha): considerar travar edição do `resetUrl` ou exigir placeholder obrigatório, senão o admin pode publicar template sem o link e ninguém consegue recuperar senha.
+
+**Por que isso importa:** reduzir dependência do dev pra ajustes de copy. Está alinhado com a operação da Secretaria.
+
+**Risco:** se mal feito, pode quebrar emails críticos (recuperação, comprovante). Migração precisa começar pelos templates de baixo risco (notificação genérica, prazo) antes dos transacionais críticos.
+
+---
+
 ## Email "guiado" com instruções visuais
 
 **Contexto:** vários estados intermediários (proponente com inscrição em rascunho, edital quase fechando, doc faltando) hoje só são visíveis se a pessoa loga no portal. Pra reduzir abandono, dá pra mandar emails com print/seta apontando onde clicar no portal.

@@ -1,8 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-// Mock isolado por arquivo: substitui o mock global do setup.ts para podermos
-// inspecionar/reconfigurar o `emails.send` por teste.
-// `vi.hoisted` garante que `mockSend` exista quando o factory do mock roda.
+// NOTA: este arquivo testa `sendViaResend` direto do módulo `../client`, então
+// o mock global `vi.mock('@/lib/mail', ...)` do `src/__tests__/setup.ts` (que
+// stuba `sendEmail`) NÃO intercepta esses testes — a chamada nem passa pelo
+// `src/lib/mail/index.ts`. O que importa aqui é o mock de `resend` definido
+// localmente abaixo, que controla o que `new Resend(...).emails.send(...)`
+// retorna por teste.
+//
+// `vi.hoisted` garante que `mockSend` exista quando o factory do `vi.mock` roda
+// (vitest içar `vi.mock` para o topo do arquivo).
 const { mockSend } = vi.hoisted(() => ({ mockSend: vi.fn() }))
 vi.mock('resend', () => {
   class MockResend {
