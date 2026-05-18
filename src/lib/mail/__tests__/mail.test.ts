@@ -14,22 +14,22 @@ describe('renderTemplate', () => {
     expect(text).toContain('INS-001')
   })
 
-  it('resultado_preliminar — contém link', async () => {
+  it('resultado_preliminar — contém heading e link', async () => {
     const { html } = await renderTemplate('resultado_preliminar', {
       edital: 'Edital X',
       url: 'http://localhost:3000/resultados',
     })
+    expect(html).toContain('Resultado preliminar publicado')
     expect(html).toContain('http://localhost:3000/resultados')
-    expect(html).toContain('preliminar')
   })
 
-  it('resultado_final — contém link', async () => {
+  it('resultado_final — contém heading e link', async () => {
     const { html } = await renderTemplate('resultado_final', {
       edital: 'Edital X',
       url: 'http://localhost:3000/resultados',
     })
+    expect(html).toContain('Resultado final publicado')
     expect(html).toContain('http://localhost:3000/resultados')
-    expect(html).toContain('final')
   })
 
   it('habilitacao — HABILITADA contém status', async () => {
@@ -66,6 +66,33 @@ describe('renderTemplate', () => {
       url: 'http://localhost:3000',
     })
     expect(html).toContain('recurso')
+  })
+
+  it('habilitacao — normaliza resultado case-insensitive (habilitada minúsculo)', async () => {
+    const { html } = await renderTemplate('habilitacao', {
+      nome: 'Ana',
+      numero: 'INS-001',
+      edital: 'Edital X',
+      // Caller passou minúsculo — não pode virar INABILITADA por engano.
+      resultado: 'habilitada' as 'HABILITADA',
+      url: 'http://localhost:3000',
+    })
+    expect(html).toContain('HABILITADA')
+    // Bloco amarelo de inabilitação NÃO deve aparecer.
+    expect(html).not.toContain('Motivo da inabilitação')
+  })
+
+  it('habilitacao — valor inesperado não mostra bloco amarelo nem classifica como INABILITADA', async () => {
+    const { html } = await renderTemplate('habilitacao', {
+      nome: 'Ana',
+      numero: 'INS-001',
+      edital: 'Edital X',
+      resultado: 'EM_ANALISE' as 'HABILITADA',
+      motivo: 'qualquer coisa',
+      url: 'http://localhost:3000',
+    })
+    expect(html).not.toContain('Motivo da inabilitação')
+    expect(html).toContain('EM_ANALISE')
   })
 
   it('recuperacao_senha — contém link de reset', async () => {

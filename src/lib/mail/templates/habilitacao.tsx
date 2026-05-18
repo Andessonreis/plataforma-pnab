@@ -3,17 +3,32 @@ import { CtaButton } from './_shared/cta-button'
 import { Layout } from './_shared/layout'
 import { colors, styles } from './_shared/theme'
 
+export type HabilitacaoResultado = 'HABILITADA' | 'INABILITADA'
+
 export interface HabilitacaoData {
   nome: string
   numero: string
   edital: string
-  resultado: 'HABILITADA' | 'INABILITADA' | string
+  resultado: HabilitacaoResultado
   motivo?: string
   url: string
 }
 
 export const habilitacaoSubject = (d: HabilitacaoData) =>
   `Resultado da habilitação — Inscrição ${d.numero}`
+
+// Normalização defensiva: o caller passa `data: Record<string, unknown>` na fila,
+// então mesmo com o tipo estreito o runtime pode receber 'habilitada' minúsculo
+// ou outro valor inesperado. Comparar case-insensitive evita classificar errado
+// alguém como INABILITADA — o bloco amarelo só aparece quando temos certeza.
+function normalize(raw: unknown): { display: string; isHab: boolean; isInab: boolean } {
+  const value = String(raw ?? '').trim().toUpperCase()
+  return {
+    display: value || 'EM ANÁLISE',
+    isHab: value === 'HABILITADA',
+    isInab: value === 'INABILITADA',
+  }
+}
 
 export function Habilitacao({
   nome,
@@ -23,12 +38,10 @@ export function Habilitacao({
   motivo,
   url,
 }: HabilitacaoData) {
-  const isInabilitada = resultado !== 'HABILITADA'
+  const { display, isInab } = normalize(resultado)
 
   return (
-    <Layout
-      preview={`Inscrição ${numero}: ${isInabilitada ? 'INABILITADA' : 'HABILITADA'}`}
-    >
+    <Layout preview={`Inscrição ${numero}: ${display}`}>
       <Heading style={styles.h1}>Resultado da habilitação</Heading>
       <Text style={styles.paragraph}>
         Olá, <strong>{nome}</strong>!
@@ -38,10 +51,10 @@ export function Habilitacao({
         analisada na fase de habilitação.
       </Text>
       <Text style={styles.paragraph}>
-        Resultado: <strong>{isInabilitada ? 'INABILITADA' : 'HABILITADA'}</strong>
+        Resultado: <strong>{display}</strong>
       </Text>
 
-      {isInabilitada && motivo && (
+      {isInab && motivo && (
         <Section
           style={{
             backgroundColor: colors.warning,
