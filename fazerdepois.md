@@ -1,24 +1,5 @@
 # Fazer Depois
 
-## Admin UI para tabela `Banner`
-
-**Contexto:** Hoje o banner que aparece no topo do layout público (componente `ActiveBanners` em `src/components/layout/active-banners.tsx`, montado em `src/app/(public)/layout.tsx:25`) é renderizado a partir da tabela `Banner` (`prisma/schema.prisma:199`).
-
-Essa tabela **não tem CRUD admin**. O item "Banner Destaque" da sidebar (`src/app/admin/sidebar.tsx:117`) aponta pra `/admin/slides`, que gerencia outra tabela (`SlideDestaque`, usada no carrossel da home). São coisas diferentes.
-
-Resultado: hoje só dá pra editar a linha da `Banner` direto no banco (foi o que tivemos que fazer pra corrigir o link do edital de Patrimônio Cultural em 08/05/2026 — link estava errado e nem dava pra editar pelo painel).
-
-**O que fazer:**
-1. Criar página `/admin/banners` com listagem + edição (espelhar o padrão de `/admin/slides`).
-2. Criar API routes `src/app/api/admin/banners/route.ts` (GET/POST) e `src/app/api/admin/banners/[id]/route.ts` (GET/PATCH/DELETE) — seguir o mesmo formato dos slides (`src/app/api/admin/slides/route.ts`).
-3. Validar com Zod, gerar `requestId`, registrar em `AuditLog` (entity: `'Banner'`).
-4. Adicionar item na sidebar admin apontando pra `/admin/banners` (manter "Banner Destaque" → `/admin/slides`, ou renomear pra ficar mais claro a diferença entre os dois — talvez "Banner Topo" vs "Slide Carrossel").
-5. Restringir acesso à role `ADMIN`.
-
-**Por que isso importa:** sem CRUD, qualquer ajuste no banner do topo precisa de acesso ao DB de produção (VPS / Prisma Studio), o que não é fluxo aceitável pra a Secretaria operar sozinha.
-
----
-
 ## Email — Configurar VPS com novas envs do Resend
 
 **Contexto:** o domínio `culturaeturismo.irece.ba.gov.br` foi verificado no Resend em 2026-05-18 (DKIM/SPF/DMARC publicados) e o código agora usa o SDK oficial Resend + templates React Email. As envs antigas `SMTP_*` foram removidas.
@@ -48,23 +29,17 @@ Resultado: hoje só dá pra editar a linha da `Banner` direto no banco (foi o qu
 
 ---
 
-## Editor de templates de e-mail no admin
+## Editor de templates de e-mail no admin — fase 2 (WYSIWYG + extras)
 
-**Contexto:** hoje os 10 templates transacionais vivem em `src/lib/mail/templates/*.tsx` como componentes React Email. Mudar qualquer texto exige PR (abrir editor, commit, review, merge, redeploy). Para o time da Secretaria isso é proibitivo — quem opera a plataforma não programa.
+**Contexto:** Fase 1 já entregue (commit do PR de templates editáveis). A tabela `EmailTemplateOverride`, a tela `/admin/email-templates` e o renderer com fallback estão ativos. Admin já edita assunto + body HTML via textarea, com preview em iframe, sanitização DOMPurify e aviso vermelho em transacionais sensíveis (`recuperacao_senha`).
 
-A tela `/admin/notificacoes` (https://culturaeturismo.irece.ba.gov.br/admin/notificacoes) já permite criar campanhas com `corpo` HTML livre (via `notificacao_generica`), mas os templates "do sistema" (comprovante, habilitação, recuperação de senha, etc.) seguem fixos no código.
-
-**Direção:**
-1. Tabela nova `EmailTemplate { id, name, subject, body, placeholders, version, updatedBy, updatedAt }`.
-2. Reescrever `templateRegistry` (`src/lib/mail/templates/index.ts`) pra hidratar do banco quando houver override, com fallback pro componente React Email caso o template não exista na tabela.
-3. Rework da tela `/admin/notificacoes` (ou criar `/admin/templates-email`): editor WYSIWYG (Tiptap/MDX) com preview lado a lado renderizando React Email, lista de placeholders disponíveis por template (`{{numero}}`, `{{edital}}`, etc.), validação de campos obrigatórios, e modo "envio de teste".
-4. Sanitização forte do HTML salvo (DOMPurify server-side) — o admin é confiável mas spoofing/erro humano não.
-5. Versionamento: cada save vira nova versão; histórico de quem mudou o quê (AuditLog).
-6. **Cuidado especial** com transacionais sensíveis (recuperação de senha): considerar travar edição do `resetUrl` ou exigir placeholder obrigatório, senão o admin pode publicar template sem o link e ninguém consegue recuperar senha.
-
-**Por que isso importa:** reduzir dependência do dev pra ajustes de copy. Está alinhado com a operação da Secretaria.
-
-**Risco:** se mal feito, pode quebrar emails críticos (recuperação, comprovante). Migração precisa começar pelos templates de baixo risco (notificação genérica, prazo) antes dos transacionais críticos.
+**O que falta (próximos PRs incrementais):**
+1. **Editor WYSIWYG** (Tiptap ou Lexical) substituindo o textarea HTML. Bullets/headings/links/imagens via toolbar; output ainda HTML pra preservar o pipeline atual.
+2. **Histórico/versionamento** — cada save vira uma versão (tabela `EmailTemplateOverrideVersion` ou JSON em campo). UI mostra "Reverter para versão X".
+3. **Modo "Enviar teste"** — botão "Enviar para meu e-mail" dispara o template renderizado pra `session.user.email` (sem precisar criar campanha/inscrição real).
+4. **Validação de placeholders obrigatórios** — bloquear save quando algum `required: true` do `TEMPLATE_META` não aparecer no body. Hoje só falha em runtime (placeholder fica vazio).
+5. **Trava extra em `recuperacao_senha`** — exigir presença literal de `{{resetUrl}}` no body antes de permitir `enabled=true`. Senão admin habilita override e ninguém consegue recuperar senha.
+6. **Diff view** vs default — comparar override com o template do código pra ver o que mudou.
 
 ---
 

@@ -19,6 +19,7 @@ import {
   IconChatBubble,
   IconSlides,
   IconSettings,
+  IconMail,
 } from '@/components/ui'
 
 interface AdminSidebarProps {
@@ -135,6 +136,12 @@ const navSections: NavSection[] = [
         href: '/admin/notificacoes',
         roles: ['ADMIN'],
         icon: <IconChatBubble className="h-5 w-5" />,
+      },
+      {
+        label: 'Templates de E-mail',
+        href: '/admin/email-templates',
+        roles: ['ADMIN'],
+        icon: <IconMail className="h-5 w-5" />,
       },
     ],
   },

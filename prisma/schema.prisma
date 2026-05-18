@@ -126,6 +126,7 @@ model User {
   notifications         Notification[]
   notificationCampaigns NotificationCampaign[] @relation("CampaignCreatedBy")
   notificationRules     NotificationRule[]     @relation("RuleCreatedBy")
+  emailTemplateEdits    EmailTemplateOverride[] @relation("EmailTemplateUpdatedBy")
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -652,4 +653,31 @@ model Notification {
   @@index([userId, lidaEm])
   @@index([userId, createdAt])
   @@index([createdAt])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Templates de e-mail — overrides editáveis pelo admin
+// ─────────────────────────────────────────────────────────────────────────────
+// O fallback continua sendo o componente React Email em src/lib/mail/templates/.
+// Esta tabela só guarda overrides — quando enabled=true para um `key`, o
+// renderTemplate usa subject/body daqui (com substituição de {{placeholder}})
+// envolto no Layout compartilhado. Senão, renderiza o componente React.
+//
+// `key` é a string da união EmailTemplate (ex: "recuperacao_senha"). Mantido
+// como String em vez de enum porque o tipo TS é a fonte da verdade e enums
+// Prisma são mais rígidos pra evoluir.
+
+model EmailTemplateOverride {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  subject     String
+  body        String   @db.Text
+  enabled     Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  updatedById String?
+
+  updatedBy User? @relation("EmailTemplateUpdatedBy", fields: [updatedById], references: [id])
+
+  @@index([enabled])
 }
