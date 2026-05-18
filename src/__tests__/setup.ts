@@ -283,14 +283,15 @@ vi.mock('@/lib/redis', () => ({
   },
 }))
 
-// Mock nodemailer
-vi.mock('nodemailer', () => ({
-  default: {
-    createTransport: vi.fn().mockReturnValue({
-      sendMail: vi.fn().mockResolvedValue({ messageId: 'test' }),
-    }),
-  },
-}))
+// Mock Resend SDK — sendEmail() pode ser chamado sem hit em rede.
+vi.mock('resend', () => {
+  class MockResend {
+    emails = {
+      send: vi.fn().mockResolvedValue({ data: { id: 'test-email-id' }, error: null }),
+    }
+  }
+  return { Resend: MockResend }
+})
 
 // Mock BullMQ — Worker precisa ser construtor válido
 vi.mock('bullmq', () => {
