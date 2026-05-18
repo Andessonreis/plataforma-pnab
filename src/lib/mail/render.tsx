@@ -1,19 +1,27 @@
 import { render } from '@react-email/render'
 import { createElement, type ComponentType } from 'react'
+import { findActiveOverride, renderOverride } from './db-template'
 import { templateRegistry, type EmailTemplate } from './templates'
 
 export interface RenderedEmail {
+  /** Assunto resolvido (override > subject explícito > default do template). */
+  subject: string
   html: string
   text: string
 }
 
-// Aceita dados como `Record<string, unknown>` no boundary (compatível com a fila),
-// mas internamente cada componente recebe o shape tipado — cast via `unknown`
-// porque o registro é um union de templates com props distintas.
+// Renderiza um template aplicando override do banco quando habilitado.
+// Aceita dados como `Record<string, unknown>` no boundary (compatível com a
+// fila); o cast pro shape tipado acontece dentro.
 export async function renderTemplate(
   template: EmailTemplate,
   data: Record<string, unknown>,
 ): Promise<RenderedEmail> {
+  const override = await findActiveOverride(template)
+  if (override) {
+    return renderOverride(override, data)
+  }
+
   const entry = templateRegistry[template]
   if (!entry) {
     throw new Error(`[mail] Template desconhecido: ${template}`)
@@ -27,9 +35,13 @@ export async function renderTemplate(
     render(element, { plainText: true }),
   ])
 
-  return { html, text }
+  const subject = defaultSubjectFor(template, data)
+  return { subject, html, text }
 }
 
+// Mantido como helper síncrono: retorna sempre o assunto padrão do código
+// (ignora overrides). Útil quando você quer o assunto "canônico" sem hit no
+// banco. Para enviar e-mails, prefira o `subject` retornado por `renderTemplate`.
 export function defaultSubjectFor(
   template: EmailTemplate,
   data: Record<string, unknown>,

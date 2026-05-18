@@ -6,7 +6,7 @@
 
 import { checkAllowlist } from './allowlist'
 import { sendViaResend } from './client'
-import { defaultSubjectFor, renderTemplate } from './render'
+import { renderTemplate } from './render'
 import type { EmailTemplate } from './templates'
 
 export type { EmailTemplate, TemplateDataMap } from './templates'
@@ -43,8 +43,13 @@ export async function sendEmail(options: SendEmailOptions): Promise<SendEmailRes
     return { id: SKIPPED_EMAIL_ID, skipped: true }
   }
 
-  const { html, text } = await renderTemplate(options.template, options.data)
-  const subject = options.subject ?? defaultSubjectFor(options.template, options.data)
+  const { subject: rendered, html, text } = await renderTemplate(
+    options.template,
+    options.data,
+  )
+  // Subject explícito do caller tem prioridade; senão usa o do render
+  // (que já considera override do banco quando habilitado).
+  const subject = options.subject ?? rendered
   const result = await sendViaResend({
     to: options.to,
     subject,
