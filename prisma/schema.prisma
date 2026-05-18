@@ -112,6 +112,7 @@ model User {
   bairro         String?
   cidade         String?
   uf             String?         @db.Char(2)
+  avatarUrl      String?
   ativo          Boolean         @default(true)
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt

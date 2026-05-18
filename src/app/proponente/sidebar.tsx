@@ -9,10 +9,12 @@ import {
   IconUser,
   IconClose,
   IconChatBubble,
+  UserAvatar,
 } from '@/components/ui'
 
 interface ProponenteSidebarProps {
   userName: string
+  userAvatarUrl?: string | null
 }
 
 const navItems = [
@@ -38,7 +40,7 @@ const navItems = [
   },
 ]
 
-export function ProponenteSidebar({ userName }: ProponenteSidebarProps) {
+export function ProponenteSidebar({ userName, userAvatarUrl }: ProponenteSidebarProps) {
   const pathname = usePathname()
 
   function isActive(href: string) {
@@ -100,11 +102,23 @@ export function ProponenteSidebar({ userName }: ProponenteSidebarProps) {
           ))}
         </nav>
 
-        {/* Rodapé */}
-        <div className="px-3 py-4 border-t border-slate-800">
-          <LogoutButton
-            className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-all duration-150 min-h-[44px]"
-          />
+        {/* Rodapé — usuário + sair */}
+        <div className="border-t border-slate-800">
+          <Link
+            href="/proponente/perfil"
+            className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors"
+          >
+            <UserAvatar nome={userName} src={userAvatarUrl} size={36} />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-slate-100 truncate">{userName}</p>
+              <p className="text-xs text-slate-400">Editar perfil</p>
+            </div>
+          </Link>
+          <div className="px-3 pb-4">
+            <LogoutButton
+              className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-all duration-150 min-h-[44px]"
+            />
+          </div>
         </div>
       </aside>
     </>

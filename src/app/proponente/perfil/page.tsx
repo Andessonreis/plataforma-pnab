@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { Card, Badge, FadeIn } from '@/components/ui'
+import { Card, Badge, FadeIn, UserAvatar } from '@/components/ui'
 import { ProfileForm } from './profile-form'
 
 export const metadata: Metadata = {
@@ -30,6 +30,7 @@ export default async function ProfilePage() {
       uf: true,
       tipoProponente: true,
       role: true,
+      avatarUrl: true,
       createdAt: true,
     },
   })
@@ -57,8 +58,8 @@ export default async function ProfilePage() {
         <FadeIn delay={0.1}>
           <Card>
             <div className="text-center">
-              <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-gradient-to-br from-brand-100 to-brand-200 text-brand-700 flex items-center justify-center text-xl sm:text-2xl font-bold mx-auto">
-                {user.nome.charAt(0).toUpperCase()}
+              <div className="mx-auto inline-block">
+                <UserAvatar nome={user.nome} src={user.avatarUrl} size={80} />
               </div>
               <h2 className="text-lg font-semibold text-slate-900 mt-3">{user.nome}</h2>
               <p className="text-sm text-slate-500">{user.email}</p>
@@ -121,6 +122,7 @@ export default async function ProfilePage() {
               bairro: user.bairro ?? '',
               cidade: user.cidade ?? '',
               uf: user.uf ?? '',
+              avatarUrl: user.avatarUrl,
             }}
           />
         </FadeIn>

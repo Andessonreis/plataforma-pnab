@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, type FormEvent } from 'react'
-import { Input, Button, Card } from '@/components/ui'
+import { Input, Button, Card, UserAvatar } from '@/components/ui'
 import { formatTelefoneBR, unmaskTelefone } from '@/lib/utils/format'
 
 interface ProfileFormProps {
@@ -16,6 +16,7 @@ interface ProfileFormProps {
     bairro: string
     cidade: string
     uf: string
+    avatarUrl: string | null
   }
 }
 
@@ -48,6 +49,63 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
+
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(initialData.avatarUrl)
+  const [avatarMessage, setAvatarMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [avatarBusy, setAvatarBusy] = useState(false)
+
+  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = '' // reseta o input
+    if (!file) return
+    setAvatarBusy(true)
+    setAvatarMessage(null)
+    try {
+      const form = new FormData()
+      form.append('file', file)
+      const res = await fetch('/api/proponente/avatar', { method: 'POST', body: form })
+      const json = await res.json()
+      if (!res.ok) {
+        setAvatarMessage({ type: 'error', text: json.message ?? 'Falha ao enviar foto' })
+        return
+      }
+      setAvatarUrl(json.data.avatarUrl)
+      setAvatarMessage({ type: 'success', text: 'Foto atualizada.' })
+      setTimeout(() => setAvatarMessage(null), 4000)
+    } catch (err) {
+      setAvatarMessage({
+        type: 'error',
+        text: err instanceof Error ? err.message : 'Erro de rede',
+      })
+    } finally {
+      setAvatarBusy(false)
+    }
+  }
+
+  async function handleAvatarRemove() {
+    if (!avatarUrl) return
+    if (!confirm('Remover sua foto de perfil?')) return
+    setAvatarBusy(true)
+    setAvatarMessage(null)
+    try {
+      const res = await fetch('/api/proponente/avatar', { method: 'DELETE' })
+      const json = await res.json()
+      if (!res.ok) {
+        setAvatarMessage({ type: 'error', text: json.message ?? 'Falha ao remover' })
+        return
+      }
+      setAvatarUrl(null)
+      setAvatarMessage({ type: 'success', text: 'Foto removida.' })
+      setTimeout(() => setAvatarMessage(null), 4000)
+    } catch (err) {
+      setAvatarMessage({
+        type: 'error',
+        text: err instanceof Error ? err.message : 'Erro de rede',
+      })
+    } finally {
+      setAvatarBusy(false)
+    }
+  }
 
   async function handleCepBlur() {
     const cepLimpo = cep.replace(/\D/g, '')
@@ -145,6 +203,58 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
 
   return (
     <div className="space-y-6">
+      {/* Foto de perfil */}
+      <Card>
+        <h2 className="text-lg font-semibold text-slate-900 mb-3">Foto de perfil</h2>
+        <div className="flex items-center gap-4">
+          <UserAvatar nome={nome || 'Usuário'} src={avatarUrl} size={72} />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm text-slate-600 mb-2">
+              JPG, PNG ou WEBP, até 2 MB. A foto aparece na sua área e em comunicações.
+            </p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <label className="inline-flex">
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleAvatarUpload}
+                  disabled={avatarBusy}
+                  className="sr-only"
+                />
+                <span
+                  className={`inline-flex items-center justify-center rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 cursor-pointer ${
+                    avatarBusy ? 'opacity-60 pointer-events-none' : ''
+                  }`}
+                >
+                  {avatarBusy ? 'Enviando...' : avatarUrl ? 'Trocar foto' : 'Enviar foto'}
+                </span>
+              </label>
+              {avatarUrl && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleAvatarRemove}
+                  disabled={avatarBusy}
+                >
+                  Remover
+                </Button>
+              )}
+            </div>
+            {avatarMessage && (
+              <p
+                className={`mt-2 text-xs ${
+                  avatarMessage.type === 'success' ? 'text-emerald-700' : 'text-red-700'
+                }`}
+                role="status"
+              >
+                {avatarMessage.text}
+              </p>
+            )}
+          </div>
+        </div>
+      </Card>
+
       {/* Dados pessoais */}
       <Card>
         <h2 className="text-lg font-semibold text-slate-900 mb-4">Dados Pessoais</h2>

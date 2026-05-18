@@ -20,12 +20,14 @@ import {
   IconSlides,
   IconSettings,
   IconMail,
+  UserAvatar,
 } from '@/components/ui'
 
 interface AdminSidebarProps {
   userName: string
   userRole: UserRole
   roleLabel: string
+  userAvatarUrl?: string | null
 }
 
 interface NavItem {
@@ -170,7 +172,7 @@ const navSections: NavSection[] = [
   },
 ]
 
-export function AdminSidebar({ userName, userRole, roleLabel }: AdminSidebarProps) {
+export function AdminSidebar({ userName, userRole, roleLabel, userAvatarUrl }: AdminSidebarProps) {
   const pathname = usePathname()
 
   function isActive(href: string) {
@@ -246,11 +248,20 @@ export function AdminSidebar({ userName, userRole, roleLabel }: AdminSidebarProp
           })}
         </nav>
 
-        {/* Rodapé */}
-        <div className="px-3 py-4 border-t border-slate-800">
-          <LogoutButton
-            className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-all duration-150 min-h-[44px]"
-          />
+        {/* Rodapé — usuário + sair */}
+        <div className="border-t border-slate-800">
+          <div className="flex items-center gap-3 px-4 py-3">
+            <UserAvatar nome={userName} src={userAvatarUrl} size={36} />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-slate-100 truncate">{userName}</p>
+              <p className="text-xs text-slate-400 truncate">{roleLabel}</p>
+            </div>
+          </div>
+          <div className="px-3 pb-4">
+            <LogoutButton
+              className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-all duration-150 min-h-[44px]"
+            />
+          </div>
         </div>
       </aside>
     </>
