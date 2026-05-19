@@ -1,5 +1,5 @@
 import { render } from '@react-email/render'
-import DOMPurify from 'isomorphic-dompurify'
+import sanitizeHtml from 'sanitize-html'
 import { prisma } from '@/lib/db'
 import { Layout } from './templates/_shared/layout'
 import type { EmailTemplate } from './templates'
@@ -43,9 +43,13 @@ export function substitutePlaceholders(
 // Sanitização defensiva pra impedir XSS via body editado pelo admin.
 // Permite tags básicas de formatação + links + inline styles (necessários
 // pra customização visual em e-mail). Bloqueia script/iframe/form/etc.
+//
+// Usa `sanitize-html` (mesmo já adotado em `src/lib/sanitize`) em vez de
+// `isomorphic-dompurify` — DOMPurify exigia ambiente browser e quebrava
+// o `npm run build` do Next.js (tentava carregar /app/browser/default-stylesheet.css).
 export function sanitizeBody(html: string): string {
-  return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: [
+  return sanitizeHtml(html, {
+    allowedTags: [
       'p', 'br', 'hr',
       'strong', 'em', 'b', 'i', 'u', 'span',
       'a', 'img',
@@ -54,11 +58,18 @@ export function sanitizeBody(html: string): string {
       'blockquote', 'div',
       'table', 'thead', 'tbody', 'tr', 'td', 'th',
     ],
-    ALLOWED_ATTR: ['href', 'target', 'rel', 'style', 'src', 'alt', 'width', 'height', 'class'],
-    ALLOWED_URI_REGEXP: /^(?:https?:|mailto:|\/)/i,
-    ADD_ATTR: ['target'],
-    FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'form', 'input', 'textarea', 'select', 'button', 'meta', 'link', 'style'],
-    FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onfocus', 'onblur', 'onsubmit'],
+    allowedAttributes: {
+      a: ['href', 'target', 'rel'],
+      img: ['src', 'alt', 'width', 'height'],
+      // Inline styles + class em qualquer tag — essenciais em e-mail.
+      '*': ['style', 'class'],
+    },
+    allowedSchemes: ['http', 'https', 'mailto'],
+    allowedSchemesByTag: { img: ['http', 'https', 'data'] },
+    disallowedTagsMode: 'discard',
+    // Defensivo extra: tags perigosas explicitamente removidas mesmo que
+    // alguém burle `allowedTags`.
+    nonTextTags: ['script', 'style', 'textarea', 'option', 'noscript'],
   })
 }
 
