@@ -34,9 +34,9 @@ export default async function AdminEmailTemplatesPage() {
       <FadeIn>
         <div className="flex items-center justify-between gap-3 mb-4 sm:mb-6">
           <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Templates de E-mail</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Textos dos e-mails</h1>
             <p className="text-xs sm:text-sm text-slate-600 mt-0.5 sm:mt-1">
-              {items.length} templates · {totalEditados} com override · {totalAtivos} ativos
+              {items.length} e-mails do sistema · {totalAtivos} {totalAtivos === 1 ? 'com texto personalizado' : 'com textos personalizados'}
             </p>
           </div>
         </div>
@@ -48,10 +48,11 @@ export default async function AdminEmailTemplatesPage() {
           <div className="text-sm text-blue-900">
             <p className="font-medium mb-1">Como funciona</p>
             <p className="text-blue-800 leading-relaxed">
-              Cada template tem uma versão padrão definida no código. Você pode criar um <strong>override</strong> com
-              assunto e corpo personalizados. Quando o override está <strong>ativo</strong>, ele substitui o template padrão
-              em todos os disparos. Use os <code className="bg-blue-100 px-1 rounded">{'{{placeholders}}'}</code> listados em cada template
-              para inserir dados dinâmicos (nome do proponente, número da inscrição, link, etc.).
+              Cada e-mail do sistema (boas-vindas, comprovante, recuperação de senha, etc.) tem um texto padrão.
+              Você pode <strong>personalizar</strong> assunto e corpo de qualquer um, e quando ativar a personalização
+              ela passa a ser usada em todos os envios. Os <code className="bg-blue-100 px-1 rounded">{'{{atalhos}}'}</code>
+              listados em cada e-mail são preenchidos <strong>automaticamente pelo sistema</strong> com os dados de
+              cada destinatário — você só precisa colocá-los no texto onde quiser que apareçam.
             </p>
           </div>
         </div>
@@ -88,13 +89,13 @@ export default async function AdminEmailTemplatesPage() {
 
                 <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
                   {status === 'default' && (
-                    <Badge variant="neutral">Padrão (código)</Badge>
+                    <Badge variant="neutral">Texto padrão</Badge>
                   )}
                   {status === 'override-on' && (
-                    <Badge variant="success">Override ativo</Badge>
+                    <Badge variant="success">Personalização ativa</Badge>
                   )}
                   {status === 'override-off' && (
-                    <Badge variant="neutral">Override desativado</Badge>
+                    <Badge variant="neutral">Personalização inativa</Badge>
                   )}
                   {override && (
                     <span className="text-[11px] text-slate-500 ml-auto">

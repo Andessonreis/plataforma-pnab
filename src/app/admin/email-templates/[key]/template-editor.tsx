@@ -44,7 +44,8 @@ export function TemplateEditor({ templateKey, meta, initial }: Props) {
     (initial?.body ?? '') !== body ||
     (initial?.enabled ?? false) !== enabled
 
-  // Renderiza preview ao montar e quando o usuário clica em "Atualizar preview".
+  // Renderiza preview ao montar e atualiza em tempo real (debounced 400ms)
+  // conforme admin digita — igual ao notification-preview das campanhas.
   const refreshPreview = useCallback(async () => {
     setPreviewLoading(true)
     setPreviewError(null)
@@ -67,10 +68,13 @@ export function TemplateEditor({ templateKey, meta, initial }: Props) {
     }
   }, [templateKey, subject, body])
 
+  // Debounce — espera o admin parar de digitar 400ms antes de fazer fetch.
   useEffect(() => {
-    refreshPreview()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    const timer = setTimeout(() => {
+      refreshPreview()
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [refreshPreview])
 
   function insertPlaceholder(key: string) {
     const textarea = bodyRef.current
@@ -152,13 +156,13 @@ export function TemplateEditor({ templateKey, meta, initial }: Props) {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
             {enabled ? (
-              <Badge variant="success">Override ativo</Badge>
+              <Badge variant="success">Personalização ativa</Badge>
             ) : initial ? (
-              <Badge variant="neutral">Override desativado</Badge>
+              <Badge variant="neutral">Personalização inativa</Badge>
             ) : (
-              <Badge variant="neutral">Sem override (usa padrão)</Badge>
+              <Badge variant="neutral">Usando texto padrão</Badge>
             )}
-            {meta.sensitive && <Badge variant="warning">Template sensível</Badge>}
+            {meta.sensitive && <Badge variant="warning">E-mail sensível</Badge>}
             {dirty && <Badge variant="warning">Alterações não salvas</Badge>}
             {savedAt && !dirty && (
               <span className="text-xs text-slate-500">
@@ -175,14 +179,14 @@ export function TemplateEditor({ templateKey, meta, initial }: Props) {
                 onChange={(e) => setEnabled(e.target.checked)}
                 className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
               />
-              Ativar override
+              Usar este texto personalizado
             </label>
             <Button
               onClick={handleTestSend}
               disabled={testSending}
               size="sm"
               variant="secondary"
-              title="Envia o template (com as alterações atuais) pro seu e-mail"
+              title="Envia este e-mail (com as alterações atuais) pro seu endereço logado"
             >
               {testSending ? 'Enviando...' : 'Enviar pra mim'}
             </Button>
@@ -209,18 +213,18 @@ export function TemplateEditor({ templateKey, meta, initial }: Props) {
         )}
       </Card>
 
-      {/* Aviso de template sensível */}
+      {/* Aviso de e-mail sensível */}
       {meta.sensitive && (
         <Card className="bg-red-50 border-red-200">
           <div className="flex gap-3 items-start">
             <span aria-hidden className="text-red-600 text-xl leading-none">⚠</span>
             <div className="text-sm text-red-900">
-              <p className="font-semibold mb-1">Template sensível — cuidado ao habilitar override</p>
+              <p className="font-semibold mb-1">Cuidado: e-mail crítico do sistema</p>
               <p className="text-red-800 leading-relaxed">
-                Este e-mail é parte de um fluxo crítico (autenticação / recuperação). Se o override
-                quebrar (ex: link <code className="bg-red-100 px-1 rounded">{'{{resetUrl}}'}</code> esquecido),
-                usuários ficam sem conseguir recuperar a senha. Use override só se houver real necessidade
-                de mudança de copy. Em caso de dúvida, deixe desativado para usar o template padrão.
+                Este e-mail faz parte de um fluxo crítico (autenticação / recuperação de senha). Se a
+                personalização esquecer o atalho <code className="bg-red-100 px-1 rounded">{'{{resetUrl}}'}</code>,
+                os usuários ficam sem conseguir recuperar a senha. Personalize apenas se for muito
+                necessário — na dúvida, deixe a personalização desativada e o sistema usa o texto padrão.
               </p>
             </div>
           </div>
@@ -262,11 +266,14 @@ export function TemplateEditor({ templateKey, meta, initial }: Props) {
           </Card>
         </div>
 
-        {/* Sidebar de placeholders + Preview (2/5) */}
+        {/* Sidebar de atalhos + Preview (2/5) */}
         <div className="lg:col-span-2 space-y-3">
           <Card>
-            <h3 className="text-sm font-semibold text-slate-900 mb-2">Placeholders disponíveis</h3>
-            <p className="text-[11px] text-slate-500 mb-2">Clique pra inserir no cursor</p>
+            <h3 className="text-sm font-semibold text-slate-900 mb-1">Atalhos disponíveis</h3>
+            <p className="text-[11px] text-slate-500 mb-3 leading-relaxed">
+              Clique pra inserir no texto. O <strong>sistema preenche cada um automaticamente</strong> com os
+              dados do destinatário no momento do envio — você não precisa adivinhar o valor.
+            </p>
             <ul className="space-y-1.5">
               {meta.placeholders.map((p) => (
                 <li key={p.key}>
@@ -277,9 +284,9 @@ export function TemplateEditor({ templateKey, meta, initial }: Props) {
                   >
                     <div className="flex items-center justify-between gap-2">
                       <code className="text-xs font-mono text-brand-700 font-medium">{'{{' + p.key + '}}'}</code>
-                      {p.required && <Badge variant="neutral" className="shrink-0">obrig.</Badge>}
+                      {p.required && <Badge variant="warning" className="shrink-0">obrigatório</Badge>}
                     </div>
-                    <p className="text-[11px] text-slate-600 mt-0.5 line-clamp-2 leading-tight">
+                    <p className="text-[11px] text-slate-600 mt-0.5 leading-tight">
                       {p.description}
                     </p>
                   </button>
@@ -290,15 +297,10 @@ export function TemplateEditor({ templateKey, meta, initial }: Props) {
 
           <Card>
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold text-slate-900">Preview</h3>
-              <Button
-                onClick={refreshPreview}
-                disabled={previewLoading}
-                size="sm"
-                variant="secondary"
-              >
-                {previewLoading ? 'Renderizando...' : 'Atualizar'}
-              </Button>
+              <h3 className="text-sm font-semibold text-slate-900">Pré-visualização</h3>
+              {previewLoading && (
+                <span className="text-[11px] text-slate-500">Atualizando...</span>
+              )}
             </div>
             {previewError ? (
               <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
@@ -316,8 +318,9 @@ export function TemplateEditor({ templateKey, meta, initial }: Props) {
                 {previewLoading ? 'Gerando preview...' : 'Sem preview'}
               </div>
             )}
-            <p className="mt-2 text-[11px] text-slate-500">
-              Preview usa dados de exemplo dos placeholders. O envio real substitui pelos valores do destinatário.
+            <p className="mt-2 text-[11px] text-slate-500 leading-relaxed">
+              A pré-visualização usa <strong>valores de exemplo</strong> nos atalhos (ex: &ldquo;Edital PNAB Música 2026&rdquo;).
+              No envio real, cada destinatário recebe o e-mail com os dados específicos da inscrição/recurso/etc dele.
             </p>
           </Card>
         </div>
