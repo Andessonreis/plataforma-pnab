@@ -1,5 +1,21 @@
 # Fazer Depois
 
+## Reverter email do admin seedado em produção
+
+**Contexto:** Em 2026-05-19 alteramos o email do user admin seedado (`admin@pnab.irece.ba.gov.br` — Administrador PNAB, id `cmmf98md30000s56r4bvelt1p`) para `andessonreis777.65@gmail.com` temporariamente, pra Andesson conseguir testar o botão "Enviar pra mim" do editor de templates (que dispara pra `session.user.email`).
+
+`admin@pnab.irece.ba.gov.br` não existe como caixa real — é só placeholder do seed. Quando a Secretaria configurar uma caixa real (ex: `admin@culturaeturismo.irece.ba.gov.br` no Resend ou similar), reverter:
+
+```sql
+UPDATE "User"
+SET email = 'admin@pnab.irece.ba.gov.br', "updatedAt" = NOW()
+WHERE id = 'cmmf98md30000s56r4bvelt1p';
+```
+
+Também considerar atualizar `prisma/seed.ts:18` pra usar o email real da Secretaria em vez do placeholder, e revisar o impacto em ambientes de UAT/dev (que ainda usam o seed antigo).
+
+---
+
 ## Email — Configurar VPS com novas envs do Resend
 
 **Contexto:** o domínio `culturaeturismo.irece.ba.gov.br` foi verificado no Resend em 2026-05-18 (DKIM/SPF/DMARC publicados) e o código agora usa o SDK oficial Resend + templates React Email. As envs antigas `SMTP_*` foram removidas.
