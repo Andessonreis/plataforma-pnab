@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Button, Input } from '@client/components/ui'
 import { formatCpfCnpj } from '@/lib/utils/format'
+import { autenticacaoClient } from '@client/api/autenticacao.client'
 
 export function ForgotPasswordForm() {
   const [cpfCnpj, setCpfCnpj] = useState('')
@@ -31,21 +32,10 @@ export function ForgotPasswordForm() {
     setLoading(true)
 
     try {
-      const res = await fetch('/api/auth/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cpfCnpj: docLimpo }),
-      })
-
-      if (!res.ok) {
-        const data = await res.json()
-        setError(data.message || 'Erro ao processar solicitação.')
-        return
-      }
-
+      await autenticacaoClient.solicitarRecuperacaoSenha({ cpfCnpj: docLimpo })
       setSuccess(true)
-    } catch {
-      setError('Erro de conexão. Tente novamente.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao processar solicitação.')
     } finally {
       setLoading(false)
     }

@@ -11,6 +11,7 @@ import {
   formatCep,
   unmaskCep,
 } from '@/lib/utils/format'
+import { autenticacaoClient } from '@client/api/autenticacao.client'
 
 type TipoProponente = 'PF' | 'PJ' | 'MEI' | 'COLETIVO'
 
@@ -95,10 +96,9 @@ export function CadastroForm() {
     setLoading(true)
 
     try {
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      let registerData
+      try {
+        registerData = await autenticacaoClient.cadastrar({
           nome: formData.nome,
           cpfCnpj: docLimpo,
           email: formData.email,
@@ -112,19 +112,15 @@ export function CadastroForm() {
           uf: formData.uf,
           password: formData.password,
           tipoProponente: tipo,
-        }),
-      })
-
-      const registerData = await res.json()
-
-      if (!res.ok) {
-        setError(registerData.message || 'Erro ao criar conta.')
+        })
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erro ao criar conta.')
         return
       }
 
       // Upload da declaração do coletivo (etapa separada após criação do usuário)
       if (tipo === 'COLETIVO' && declaracaoFile) {
-        const userId = registerData.userId
+        const userId = registerData.usuario.id
 
         try {
           const uploadForm = new FormData()

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button, Input } from '@client/components/ui'
+import { autenticacaoClient } from '@client/api/autenticacao.client'
 
 interface ResetPasswordFormProps {
   token: string
@@ -58,23 +59,10 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
     setLoading(true)
 
     try {
-      const res = await fetch('/api/auth/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, password }),
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        setError(data.message || 'Erro ao redefinir senha.')
-        return
-      }
-
-      // Redireciona para login com mensagem de sucesso
+      await autenticacaoClient.redefinirSenha({ token, password })
       router.push('/login?senha=redefinida')
-    } catch {
-      setError('Erro de conexão. Tente novamente.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao redefinir senha.')
     } finally {
       setLoading(false)
     }

@@ -1,5 +1,14 @@
 import type { SessaoDTO } from '@shared/dtos/autenticacao.dto'
 import type { LoginInput } from '@shared/schemas/autenticacao.schema'
+import type {
+  CadastroResultDTO,
+  GenericMessageDTO,
+} from '@shared/dtos/usuarios.dto'
+import type {
+  CadastroInput,
+  RecuperacaoSenhaInput,
+  RedefinicaoSenhaInput,
+} from '@shared/schemas/usuarios.schema'
 
 type ApiSuccess<T> = { data: T; requestId: string }
 type ApiError = { error: string; message: string; requestId: string }
@@ -47,5 +56,35 @@ export const autenticacaoClient = {
     })
     if (!res.ok) return null
     return unwrap<SessaoDTO>(res)
+  },
+
+  async cadastrar(input: CadastroInput): Promise<CadastroResultDTO> {
+    const res = await fetch('/api/v1/autenticacao/usuarios/usuario', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(input),
+      credentials: 'same-origin',
+    })
+    return unwrap<CadastroResultDTO>(res)
+  },
+
+  async solicitarRecuperacaoSenha(input: RecuperacaoSenhaInput): Promise<GenericMessageDTO> {
+    const res = await fetch('/api/v1/autenticacao/senhas/recuperacao', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(input),
+      credentials: 'same-origin',
+    })
+    return unwrap<GenericMessageDTO>(res)
+  },
+
+  async redefinirSenha(input: RedefinicaoSenhaInput): Promise<GenericMessageDTO> {
+    const res = await fetch('/api/v1/autenticacao/senhas/redefinicao', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(input),
+      credentials: 'same-origin',
+    })
+    return unwrap<GenericMessageDTO>(res)
   },
 }
