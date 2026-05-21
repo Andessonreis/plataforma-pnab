@@ -1,7 +1,9 @@
 import type { EditalDetalheDTO, EditalResumoDTO } from '@shared/dtos/editais.dto'
 import type { ArquivoEditalDTO } from '@shared/dtos/arquivos-edital.dto'
+import type { EquipeEditalDTO } from '@shared/dtos/equipe-edital.dto'
 import type { PaginationMeta } from '@shared/dtos/common.dto'
 import type { TipoArquivoEdital } from '@shared/schemas/arquivos-edital.schema'
+import type { FuncaoEdital } from '@shared/schemas/equipe-edital.schema'
 
 type ApiSuccess<T> = { data: T; meta?: PaginationMeta; requestId: string }
 type ApiError = { error: string; message: string; requestId: string }
@@ -133,6 +135,34 @@ export const editaisClient = {
   async removeArquivo(editalId: string, arquivoId: string): Promise<void> {
     const res = await fetch(`/api/v1/editais/edital/${editalId}/arquivos/arquivo/${arquivoId}`, {
       method: 'DELETE',
+      credentials: 'same-origin',
+    })
+    if (!res.ok) {
+      const err = (await res.json().catch(() => null)) as ApiError | null
+      throw new Error(err?.message ?? `Erro ${res.status}`)
+    }
+  },
+
+  async getEquipe(editalId: string): Promise<EquipeEditalDTO> {
+    const res = await fetch(`/api/v1/editais/edital/${editalId}/equipe`, { credentials: 'same-origin' })
+    return unwrap<EquipeEditalDTO>(res)
+  },
+
+  async addEquipe(editalId: string, userIds: string[], funcao: FuncaoEdital): Promise<{ adicionados: number }> {
+    const res = await fetch(`/api/v1/editais/edital/${editalId}/equipe`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ userIds, funcao }),
+      credentials: 'same-origin',
+    })
+    return unwrap<{ adicionados: number }>(res)
+  },
+
+  async removeEquipe(editalId: string, userId: string, funcao: FuncaoEdital): Promise<void> {
+    const res = await fetch(`/api/v1/editais/edital/${editalId}/equipe`, {
+      method: 'DELETE',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ userId, funcao }),
       credentials: 'same-origin',
     })
     if (!res.ok) {
