@@ -4,7 +4,7 @@ import {
   editalQuerySchema,
   editalAcessivelSchema,
   cronogramaItemSchema,
-} from '@/lib/schemas/edital'
+} from '@shared/schemas/editais.schema'
 
 describe('cronogramaItemSchema', () => {
   it('aceita item de fase válido', () => {

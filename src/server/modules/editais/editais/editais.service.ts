@@ -2,8 +2,8 @@ import { prisma } from '@server/lib/db'
 import { logAudit } from '@/lib/audit'
 import { sanitizeContent } from '@/lib/sanitize'
 import { generateEditalSlug } from '@/lib/utils/slug'
-import { ServiceError } from './errors'
-import type { EditalInput, EditalAcessivelInput } from '@/lib/schemas/edital'
+import { ServiceError } from '@/lib/services/errors'
+import type { EditalInput, EditalAcessivelInput } from '@shared/schemas/editais.schema'
 
 export async function createEdital(data: EditalInput, userId: string, ip?: string) {
   let slug = generateEditalSlug(data.titulo, data.ano)

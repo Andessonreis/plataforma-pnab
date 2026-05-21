@@ -1,0 +1,14 @@
+export const EDITAL_STATUSES = [
+  'RASCUNHO',
+  'PUBLICADO',
+  'INSCRICOES_ABERTAS',
+  'INSCRICOES_ENCERRADAS',
+  'HABILITACAO',
+  'AVALIACAO',
+  'RESULTADO_PRELIMINAR',
+  'RECURSO',
+  'RESULTADO_FINAL',
+  'ENCERRADO',
+] as const
+
+export type EditalStatus = (typeof EDITAL_STATUSES)[number]

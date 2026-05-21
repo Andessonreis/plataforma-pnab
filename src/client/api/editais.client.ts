@@ -1,0 +1,107 @@
+import type { EditalDetalheDTO, EditalResumoDTO } from '@shared/dtos/editais.dto'
+import type { PaginationMeta } from '@shared/dtos/common.dto'
+
+type ApiSuccess<T> = { data: T; meta?: PaginationMeta; requestId: string }
+type ApiError = { error: string; message: string; requestId: string }
+
+async function unwrap<T>(res: Response): Promise<T> {
+  if (!res.ok) {
+    const err = (await res.json().catch(() => null)) as ApiError | null
+    throw new Error(err?.message ?? `Erro ${res.status}`)
+  }
+  const body = (await res.json()) as ApiSuccess<T>
+  return body.data
+}
+
+async function unwrapWithMeta<T>(res: Response): Promise<{ data: T; meta?: PaginationMeta }> {
+  if (!res.ok) {
+    const err = (await res.json().catch(() => null)) as ApiError | null
+    throw new Error(err?.message ?? `Erro ${res.status}`)
+  }
+  const body = (await res.json()) as ApiSuccess<T>
+  return { data: body.data, meta: body.meta }
+}
+
+export type ListEditaisParams = {
+  page?: number
+  pageSize?: number
+  status?: string
+}
+
+export type EditalInput = {
+  titulo: string
+  resumo?: string | null
+  ano: number
+  valorTotal?: number | null
+  categorias: string[]
+  acoesAfirmativas?: string | null
+  regrasElegibilidade?: string | null
+  status:
+    | 'RASCUNHO'
+    | 'PUBLICADO'
+    | 'INSCRICOES_ABERTAS'
+    | 'INSCRICOES_ENCERRADAS'
+    | 'HABILITACAO'
+    | 'AVALIACAO'
+    | 'RESULTADO_PRELIMINAR'
+    | 'RECURSO'
+    | 'RESULTADO_FINAL'
+    | 'ENCERRADO'
+  cronograma: unknown[]
+  camposFormulario: unknown[]
+  etapasCustomizadas: unknown[]
+  vagasContemplados?: number | null
+  vagasSuplentes?: number | null
+}
+
+function buildQueryString(params: ListEditaisParams): string {
+  const qs = new URLSearchParams()
+  if (params.page !== undefined) qs.set('page', String(params.page))
+  if (params.pageSize !== undefined) qs.set('pageSize', String(params.pageSize))
+  if (params.status) qs.set('status', params.status)
+  const s = qs.toString()
+  return s ? `?${s}` : ''
+}
+
+export const editaisClient = {
+  async list(params: ListEditaisParams = {}): Promise<{ data: EditalResumoDTO[]; meta?: PaginationMeta }> {
+    const res = await fetch(`/api/v1/editais${buildQueryString(params)}`, { credentials: 'same-origin' })
+    return unwrapWithMeta<EditalResumoDTO[]>(res)
+  },
+
+  async detail(id: string): Promise<EditalDetalheDTO> {
+    const res = await fetch(`/api/v1/editais/edital/${id}`, { credentials: 'same-origin' })
+    return unwrap<EditalDetalheDTO>(res)
+  },
+
+  async create(input: EditalInput): Promise<EditalDetalheDTO> {
+    const res = await fetch('/api/v1/editais/edital', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(input),
+      credentials: 'same-origin',
+    })
+    return unwrap<EditalDetalheDTO>(res)
+  },
+
+  async update(id: string, input: EditalInput): Promise<EditalDetalheDTO> {
+    const res = await fetch(`/api/v1/editais/edital/${id}`, {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(input),
+      credentials: 'same-origin',
+    })
+    return unwrap<EditalDetalheDTO>(res)
+  },
+
+  async remove(id: string): Promise<void> {
+    const res = await fetch(`/api/v1/editais/edital/${id}`, {
+      method: 'DELETE',
+      credentials: 'same-origin',
+    })
+    if (!res.ok) {
+      const err = (await res.json().catch(() => null)) as ApiError | null
+      throw new Error(err?.message ?? `Erro ${res.status}`)
+    }
+  },
+}

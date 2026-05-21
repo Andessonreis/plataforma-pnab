@@ -1,8 +1,8 @@
 import { NextRequest } from 'next/server'
 import { createContext, ok, handleError, forbidden, logRequest } from '@/lib/api/response'
 import { resolveAuth, requireRole, getIp } from '@/lib/api/auth-resolver'
-import { editalAcessivelSchema } from '@/lib/schemas/edital'
-import * as editalService from '@/lib/services/edital.service'
+import { editalAcessivelSchema } from '@shared/schemas/editais.schema'
+import * as editalService from '@server/modules/editais/editais/editais.service'
 
 export const runtime = 'nodejs'
 
