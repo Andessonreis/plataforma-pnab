@@ -4,12 +4,14 @@ import {
   editalSchema,
   editalQuerySchema,
   editalAcessivelSchema,
+  avancarFaseInputSchema,
 } from '@shared/schemas/editais.schema'
 import { buildPaginationMeta } from '@server/lib/http/pagination'
 import { editaisRepository } from './editais.repository'
 import { EditalNaoEncontradoError } from './editais.errors'
 import { toEditalDetalhe, toEditalResumo } from './editais.mapper'
 import {
+  avancarFase as avancarFaseService,
   createEdital as createEditalService,
   updateEdital as updateEditalService,
   updateAcessivel as updateAcessivelService,
@@ -74,5 +76,13 @@ export const editaisController = {
     const input = editalAcessivelSchema.parse(ctx.body)
     await updateAcessivelService(id, input, user.id, ipFromHeaders(ctx.headers) ?? undefined)
     return { data: { mensagem: 'Conteúdo acessível salvo' } }
+  },
+
+  async avancarFase(ctx: RequestContext) {
+    const user = await requireAdmin(ctx.headers)
+    const id = ctx.params.id
+    const input = avancarFaseInputSchema.parse(ctx.body)
+    const result = await avancarFaseService(id, input, user.id, ipFromHeaders(ctx.headers) ?? undefined)
+    return { data: result }
   },
 }

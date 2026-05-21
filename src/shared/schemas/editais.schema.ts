@@ -85,3 +85,18 @@ export const editalAcessivelSchema = z.object({
 })
 
 export type EditalAcessivelInput = z.infer<typeof editalAcessivelSchema>
+
+export const avancarFaseInputSchema = z.object({
+  proximoStatus: z.enum([
+    'RASCUNHO', 'PUBLICADO', 'INSCRICOES_ABERTAS', 'INSCRICOES_ENCERRADAS',
+    'HABILITACAO', 'AVALIACAO', 'RESULTADO_PRELIMINAR', 'RECURSO',
+    'RESULTADO_FINAL', 'ENCERRADO',
+  ]),
+  justificativa: z
+    .string()
+    .trim()
+    .min(10, 'Justificativa precisa de ao menos 10 caracteres')
+    .max(1000),
+})
+
+export type AvancarFaseInput = z.infer<typeof avancarFaseInputSchema>

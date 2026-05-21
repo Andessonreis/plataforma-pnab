@@ -4,6 +4,7 @@ import type { EquipeEditalDTO } from '@shared/dtos/equipe-edital.dto'
 import type { PaginationMeta } from '@shared/dtos/common.dto'
 import type { TipoArquivoEdital } from '@shared/schemas/arquivos-edital.schema'
 import type { FuncaoEdital } from '@shared/schemas/equipe-edital.schema'
+import type { EditalStatus } from '@shared/enums/edital-status'
 
 type ApiSuccess<T> = { data: T; meta?: PaginationMeta; requestId: string }
 type ApiError = { error: string; message: string; requestId: string }
@@ -169,6 +170,20 @@ export const editaisClient = {
       const err = (await res.json().catch(() => null)) as ApiError | null
       throw new Error(err?.message ?? `Erro ${res.status}`)
     }
+  },
+
+  async avancarFase(
+    id: string,
+    proximoStatus: EditalStatus,
+    justificativa: string,
+  ): Promise<{ statusAnterior: EditalStatus; novoStatus: EditalStatus; retrocesso: boolean }> {
+    const res = await fetch(`/api/v1/editais/edital/${id}/avancar-fase`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ proximoStatus, justificativa }),
+      credentials: 'same-origin',
+    })
+    return unwrap<{ statusAnterior: EditalStatus; novoStatus: EditalStatus; retrocesso: boolean }>(res)
   },
 
   async updateAcessivel(id: string, conteudoAcessivel: string): Promise<void> {

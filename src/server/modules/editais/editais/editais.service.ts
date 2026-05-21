@@ -1,9 +1,27 @@
+import type { EditalStatus } from '@prisma/client'
 import { prisma } from '@server/lib/db'
 import { logAudit } from '@/lib/audit'
 import { sanitizeContent } from '@/lib/sanitize'
 import { generateEditalSlug } from '@/lib/utils/slug'
 import { ServiceError } from '@/lib/services/errors'
-import type { EditalInput, EditalAcessivelInput } from '@shared/schemas/editais.schema'
+import type {
+  AvancarFaseInput,
+  EditalAcessivelInput,
+  EditalInput,
+} from '@shared/schemas/editais.schema'
+
+const SEQUENCIA_FASES: EditalStatus[] = [
+  'RASCUNHO',
+  'PUBLICADO',
+  'INSCRICOES_ABERTAS',
+  'INSCRICOES_ENCERRADAS',
+  'HABILITACAO',
+  'AVALIACAO',
+  'RESULTADO_PRELIMINAR',
+  'RECURSO',
+  'RESULTADO_FINAL',
+  'ENCERRADO',
+]
 
 export async function createEdital(data: EditalInput, userId: string, ip?: string) {
   let slug = generateEditalSlug(data.titulo, data.ano)
@@ -122,6 +140,53 @@ export async function listEditais(page: number, pageSize: number, status?: strin
   ])
 
   return { data, meta: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } }
+}
+
+export async function avancarFase(id: string, data: AvancarFaseInput, userId: string, ip?: string) {
+  const edital = await prisma.edital.findUnique({
+    where: { id },
+    select: { id: true, status: true, titulo: true, publishedAt: true },
+  })
+  if (!edital) throw new ServiceError('NOT_FOUND', 'Edital não encontrado.')
+
+  const statusAtual = edital.status as EditalStatus
+  if (statusAtual === data.proximoStatus) {
+    throw new ServiceError('BAD_REQUEST', 'O edital já está nesse status.')
+  }
+
+  const idxAtual = SEQUENCIA_FASES.indexOf(statusAtual)
+  const idxNovo = SEQUENCIA_FASES.indexOf(data.proximoStatus as EditalStatus)
+  const retrocesso = idxNovo < idxAtual
+
+  const updateData: { status: EditalStatus; publishedAt?: Date } = {
+    status: data.proximoStatus as EditalStatus,
+  }
+  if (statusAtual === 'RASCUNHO' && data.proximoStatus !== 'RASCUNHO' && !edital.publishedAt) {
+    updateData.publishedAt = new Date()
+  }
+
+  await prisma.edital.update({ where: { id }, data: updateData })
+
+  await logAudit({
+    userId,
+    action: 'EDITAL_FASE_AVANCADA_MANUAL',
+    entity: 'Edital',
+    entityId: id,
+    details: {
+      statusAnterior: statusAtual,
+      novoStatus: data.proximoStatus,
+      justificativa: data.justificativa,
+      retrocesso,
+      editalTitulo: edital.titulo,
+    },
+    ip,
+  })
+
+  return {
+    statusAnterior: statusAtual,
+    novoStatus: data.proximoStatus,
+    retrocesso,
+  }
 }
 
 export async function updateAcessivel(id: string, data: EditalAcessivelInput, userId: string, ip?: string) {
