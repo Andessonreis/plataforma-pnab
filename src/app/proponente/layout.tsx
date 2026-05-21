@@ -1,7 +1,7 @@
-import { auth } from '@/lib/auth'
+import { auth } from '@server/lib/auth'
 import { redirect } from 'next/navigation'
 import { ProponenteSidebar } from './sidebar'
-import { prisma } from '@/lib/db'
+import { prisma } from '@server/lib/db'
 import { IconMenu, UserAvatar } from '@client/components/ui'
 import { NotificationBell } from '@client/components/layout'
 

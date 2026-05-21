@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { GET, POST } from '../route'
 import { NextRequest } from 'next/server'
-import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/db'
+import { auth } from '@server/lib/auth'
+import { prisma } from '@server/lib/db'
 import * as calcModule from '@/lib/results/calculate'
 
 const mockAuth = vi.mocked(auth)

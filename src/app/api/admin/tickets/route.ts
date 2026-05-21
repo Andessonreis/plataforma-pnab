@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { randomUUID } from 'crypto'
-import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/db'
+import { auth } from '@server/lib/auth'
+import { prisma } from '@server/lib/db'
 import type { UserRole, AtendimentoStatus } from '@prisma/client'
 
 export const runtime = 'nodejs'

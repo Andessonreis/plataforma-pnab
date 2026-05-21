@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { createHmac } from 'crypto'
-import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/db'
+import { auth } from '@server/lib/auth'
+import { prisma } from '@server/lib/db'
 import type { UserRole } from '@prisma/client'
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { auth } from '@/lib/auth'
+import { auth } from '@server/lib/auth'
 import { redirect } from 'next/navigation'
-import { prisma } from '@/lib/db'
+import { prisma } from '@server/lib/db'
 import { Card, Badge, Button, EmptyState, FadeIn, IconPlus, IconSettings } from '@client/components/ui'
 import { TRIGGER_REGISTRY } from '@/lib/notifications/triggers'
 

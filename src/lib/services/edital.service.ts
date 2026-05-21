@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/db'
+import { prisma } from '@server/lib/db'
 import { logAudit } from '@/lib/audit'
 import { sanitizeContent } from '@/lib/sanitize'
 import { generateEditalSlug } from '@/lib/utils/slug'

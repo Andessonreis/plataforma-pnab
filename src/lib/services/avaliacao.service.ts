@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/db'
+import { prisma } from '@server/lib/db'
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
 import { CRITERIOS_AVALIACAO_PADRAO } from '@/lib/avaliacao-criterios'
 import { gateAcaoFase } from '@/lib/edital/gate'

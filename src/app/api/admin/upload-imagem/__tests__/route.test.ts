@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { POST } from '../route'
 import { NextRequest } from 'next/server'
-import { auth } from '@/lib/auth'
+import { auth } from '@server/lib/auth'
 import { uploadFile } from '@/lib/storage'
 import { validateMagicBytes } from '@/lib/upload/validate'
 

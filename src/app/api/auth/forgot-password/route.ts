@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { randomUUID, randomBytes, createHash } from 'crypto'
-import { prisma } from '@/lib/db'
+import { prisma } from '@server/lib/db'
 import { sendEmail } from '@/lib/mail'
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
 import { rateLimit } from '@/lib/rate-limit'

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { auth } from '@/lib/auth'
+import { auth } from '@server/lib/auth'
 import { redirect } from 'next/navigation'
 import { BannerForm } from '../banner-form'
 

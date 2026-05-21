@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { prisma } from '@/lib/db'
+import { prisma } from '@server/lib/db'
 import { Badge, Button, PageHeader, EmptyState } from '@client/components/ui'
 import { IconPdf, IconDocument, IconDownload, IconBook } from '@client/components/ui/icons'
 

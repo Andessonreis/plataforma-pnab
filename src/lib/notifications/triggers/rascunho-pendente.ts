@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/db'
+import { prisma } from '@server/lib/db'
 import type { TriggerContext, TriggerResult, RascunhoPendenteConfig } from '../types'
 
 /**

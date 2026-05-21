@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import { z } from 'zod'
-import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/db'
+import { auth } from '@server/lib/auth'
+import { prisma } from '@server/lib/db'
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
 
 export const runtime = 'nodejs'

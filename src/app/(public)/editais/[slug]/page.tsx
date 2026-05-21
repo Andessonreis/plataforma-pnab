@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { prisma } from '@/lib/db'
-import { auth } from '@/lib/auth'
+import { prisma } from '@server/lib/db'
+import { auth } from '@server/lib/auth'
 import { Badge, Button, PageHeader } from '@client/components/ui'
 import {
   IconDownload,

@@ -13,7 +13,7 @@ export const pdfWorker = new Worker<PdfJobData>(
       case 'comprovante': {
         if (!inscricaoId) throw new Error('inscricaoId obrigatório para comprovante')
         const { generateComprovante } = await import('@/lib/pdf/comprovante')
-        const { prisma } = await import('@/lib/db')
+        const { prisma } = await import('@server/lib/db')
 
         const inscricao = await prisma.inscricao.findUnique({
           where: { id: inscricaoId },

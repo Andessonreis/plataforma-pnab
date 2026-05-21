@@ -1,7 +1,7 @@
 'use server'
 
-import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/db'
+import { auth } from '@server/lib/auth'
+import { prisma } from '@server/lib/db'
 import { cumulativeStatuses } from '@/lib/status-maps'
 import type { InscricaoStatus } from '@prisma/client'
 

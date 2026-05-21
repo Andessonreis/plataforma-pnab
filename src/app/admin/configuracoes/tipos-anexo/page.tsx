@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
-import { auth } from '@/lib/auth'
+import { auth } from '@server/lib/auth'
 import { redirect } from 'next/navigation'
-import { prisma } from '@/lib/db'
+import { prisma } from '@server/lib/db'
 import { PageHeader } from '@client/components/ui'
 import { TiposAnexoManager } from './tipos-anexo-manager'
 

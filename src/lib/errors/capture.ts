@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/db'
+import { prisma } from '@server/lib/db'
 
 /**
  * FNV-1a 64-bit — hash não-criptográfico, determinístico e compatível

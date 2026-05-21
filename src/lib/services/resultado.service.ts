@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/db'
+import { prisma } from '@server/lib/db'
 import { logAudit } from '@/lib/audit'
 import { calculateResults, saveResults } from '@/lib/results/calculate'
 import { enqueueEmail } from '@/lib/queue'

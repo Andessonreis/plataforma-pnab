@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest, NextResponse } from 'next/server'
 import { withErrorLogging } from '../wrapper'
-import { prisma } from '@/lib/db'
+import { prisma } from '@server/lib/db'
 
 const mockPrisma = vi.mocked(prisma)
 

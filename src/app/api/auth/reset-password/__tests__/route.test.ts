@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { POST } from '../route'
 import { NextRequest } from 'next/server'
-import { prisma } from '@/lib/db'
+import { prisma } from '@server/lib/db'
 import { logAudit } from '@/lib/audit'
 import bcrypt from 'bcryptjs'
 

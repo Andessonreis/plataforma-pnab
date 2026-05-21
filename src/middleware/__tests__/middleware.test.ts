@@ -13,7 +13,7 @@ vi.mock('next/server', async () => {
 })
 
 // Mock auth como wrapper que chama o callback
-vi.mock('@/lib/auth', () => ({
+vi.mock('@server/lib/auth', () => ({
   auth: vi.fn((handler: (req: unknown) => unknown) => handler),
 }))
 

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { PATCH } from '../route'
 import { NextRequest } from 'next/server'
-import { auth } from '@/lib/auth'
+import { auth } from '@server/lib/auth'
 import * as calcModule from '@/lib/results/calculate'
 import { logAudit } from '@/lib/audit'
 

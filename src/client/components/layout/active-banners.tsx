@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/db'
+import { prisma } from '@server/lib/db'
 import { BannerStrip } from './banner-strip'
 
 async function ActiveBanners() {

@@ -8,7 +8,7 @@ import {
   ENCERRAMENTO_INSCRICOES_PATTERNS,
   processSchedulerJob,
 } from '../scheduler.worker'
-import { prisma } from '@/lib/db'
+import { prisma } from '@server/lib/db'
 import { logAudit } from '@/lib/audit'
 
 const mockPrisma = vi.mocked(prisma)

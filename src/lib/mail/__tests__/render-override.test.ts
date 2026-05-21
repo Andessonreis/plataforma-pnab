@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { prisma } from '@/lib/db'
+import { prisma } from '@server/lib/db'
 import { renderTemplate } from '../render'
 
 const mockPrisma = vi.mocked(prisma)

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { prisma } from '@/lib/db'
+import { prisma } from '@server/lib/db'
 import { IconArrowLeft } from '@client/components/ui/icons'
 
 interface Props {

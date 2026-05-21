@@ -1,6 +1,6 @@
 import { Worker } from 'bullmq'
 import { redis } from '@/lib/redis'
-import { prisma } from '@/lib/db'
+import { prisma } from '@server/lib/db'
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
 import type { EditalStatus } from '@prisma/client'
 import {

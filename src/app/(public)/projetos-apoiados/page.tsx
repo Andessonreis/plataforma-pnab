@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { prisma } from '@/lib/db'
+import { prisma } from '@server/lib/db'
 import { Badge, PageHeader, EmptyState, FilterTabs } from '@client/components/ui'
 import { IconChart, IconCurrency, IconUsers, IconEye, IconCheckSimple } from '@client/components/ui/icons'
 import { formatCurrency } from '@/lib/utils/format'

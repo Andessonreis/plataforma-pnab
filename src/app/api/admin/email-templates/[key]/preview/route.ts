@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import { z } from 'zod'
-import { auth } from '@/lib/auth'
+import { auth } from '@server/lib/auth'
 import { renderOverride, sanitizeBody } from '@/lib/mail/db-template'
 import { renderTemplate } from '@/lib/mail/render'
 import { getSampleData, TEMPLATE_META } from '@/lib/mail/placeholders'

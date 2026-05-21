@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { prisma } from '@/lib/db'
+import { prisma } from '@server/lib/db'
 import { createContext, ok, handleError, unauthorized, logRequest } from '@/lib/api/response'
 import { resolveAuth, requireAnyAuth, getIp } from '@/lib/api/auth-resolver'
 import { updateProfileSchema } from '@/lib/schemas/user'

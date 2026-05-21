@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { handlers } from '@/lib/auth'
+import { handlers } from '@server/lib/auth'
 import { rateLimit } from '@/lib/rate-limit'
 import { RATE_LIMITS } from '@/lib/rate-limit/config'
 

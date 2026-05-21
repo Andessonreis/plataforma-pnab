@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/db'
+import { prisma } from '@server/lib/db'
 
 /**
  * Verifica se o usuário tem acesso a um edital específico.

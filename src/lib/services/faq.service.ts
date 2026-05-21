@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/db'
+import { prisma } from '@server/lib/db'
 import { logAudit } from '@/lib/audit'
 import { ServiceError } from './errors'
 import type { FaqInput } from '@/lib/schemas/faq'

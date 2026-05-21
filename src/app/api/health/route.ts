@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
-import { prisma } from '@/lib/db'
+import { prisma } from '@server/lib/db'
 import { redis } from '@/lib/redis'
 
 export const runtime = 'nodejs'

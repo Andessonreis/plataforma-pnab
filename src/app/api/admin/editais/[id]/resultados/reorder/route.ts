@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { randomUUID } from 'crypto'
-import { auth } from '@/lib/auth'
+import { auth } from '@server/lib/auth'
 import { logAudit } from '@/lib/audit'
 import { saveManualOrder } from '@/lib/results/calculate'
 

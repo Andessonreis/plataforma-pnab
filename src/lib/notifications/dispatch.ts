@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/db'
+import { prisma } from '@server/lib/db'
 import { enqueueCampaignDispatch } from '@/lib/queue'
 import { getTriggerDefinition } from './triggers'
 import type { AudienceFilter, TriggerConfig } from './types'

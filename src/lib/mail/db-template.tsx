@@ -1,6 +1,6 @@
 import { render } from '@react-email/render'
 import sanitizeHtml from 'sanitize-html'
-import { prisma } from '@/lib/db'
+import { prisma } from '@server/lib/db'
 import { Layout } from './templates/_shared/layout'
 import type { EmailTemplate } from './templates'
 

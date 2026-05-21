@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import type { UserRole } from '@prisma/client'
-import { auth } from '@/lib/auth'
+import { auth } from '@server/lib/auth'
 import { Header, Footer, CookieBanner } from '@client/components/layout'
 import { ActiveBanners } from '@client/components/layout'
 

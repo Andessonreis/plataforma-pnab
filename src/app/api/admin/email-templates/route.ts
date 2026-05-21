@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
-import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/db'
+import { auth } from '@server/lib/auth'
+import { prisma } from '@server/lib/db'
 import { TEMPLATE_META } from '@/lib/mail/placeholders'
 import type { EmailTemplate } from '@/lib/mail/templates'
 

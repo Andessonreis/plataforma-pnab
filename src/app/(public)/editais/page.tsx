@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import type { EditalStatus } from '@prisma/client'
-import { prisma } from '@/lib/db'
+import { prisma } from '@server/lib/db'
 import { Badge, Button, Card, PageHeader, FilterTabs, EmptyState, Pagination } from '@client/components/ui'
 import { IconCalendar, IconCurrency, IconDocument } from '@client/components/ui/icons'
 import { getStatusDisplay, OPEN_STATUSES, CLOSED_STATUSES } from '@/lib/utils/edital-status'

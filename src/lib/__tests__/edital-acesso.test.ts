@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { temAcessoEdital, getEditaisVisiveis } from '../edital-acesso'
-import { prisma } from '@/lib/db'
+import { prisma } from '@server/lib/db'
 
 const mockPrisma = vi.mocked(prisma)
 

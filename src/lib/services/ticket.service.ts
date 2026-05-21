@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/db'
+import { prisma } from '@server/lib/db'
 import { ServiceError } from './errors'
 import type { AtendimentoStatus, Prisma } from '@prisma/client'
 

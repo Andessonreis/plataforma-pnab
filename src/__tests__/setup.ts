@@ -1,7 +1,7 @@
 import { vi } from 'vitest'
 
 // Mock Prisma
-vi.mock('@/lib/db', () => ({
+vi.mock('@server/lib/db', () => ({
   prisma: {
     edital: {
       findMany: vi.fn(),
@@ -165,7 +165,7 @@ vi.mock('@/lib/db', () => ({
 }))
 
 // Mock auth
-vi.mock('@/lib/auth', () => ({
+vi.mock('@server/lib/auth', () => ({
   auth: vi.fn(),
 }))
 

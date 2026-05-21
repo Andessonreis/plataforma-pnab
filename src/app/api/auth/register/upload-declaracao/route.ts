@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
-import { auth } from '@/lib/auth'
+import { auth } from '@server/lib/auth'
 import { uploadFile } from '@/lib/storage'
 import { validateMagicBytes } from '@/lib/upload/validate'
 

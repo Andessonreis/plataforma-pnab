@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs'
 import { randomBytes } from 'crypto'
-import { prisma } from '@/lib/db'
+import { prisma } from '@server/lib/db'
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
 import { sendEmail } from '@/lib/mail'
 import { ServiceError } from './errors'

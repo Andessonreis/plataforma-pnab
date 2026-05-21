@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
-import { auth } from '@/lib/auth'
+import { auth } from '@server/lib/auth'
 import { purgeOldAuditLogs, getRetentionDays } from '@/lib/audit'
-import { prisma } from '@/lib/db'
+import { prisma } from '@server/lib/db'
 
 export const runtime = 'nodejs'
 

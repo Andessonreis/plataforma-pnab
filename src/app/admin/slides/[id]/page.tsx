@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { auth } from '@/lib/auth'
+import { auth } from '@server/lib/auth'
 import { redirect, notFound } from 'next/navigation'
-import { prisma } from '@/lib/db'
+import { prisma } from '@server/lib/db'
 import { SlideForm } from '../slide-form'
 import { DeleteSlideButton } from './delete-button'
 

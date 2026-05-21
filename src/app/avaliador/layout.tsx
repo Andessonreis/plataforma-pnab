@@ -1,4 +1,4 @@
-import { auth } from '@/lib/auth'
+import { auth } from '@server/lib/auth'
 import { redirect } from 'next/navigation'
 import { AvaliadorSidebar } from './sidebar'
 import { IconMenu } from '@client/components/ui'

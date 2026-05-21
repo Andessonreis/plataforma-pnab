@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 vi.unmock('@/lib/audit')
 
 import { logAudit, actionBadgeVariant, getRetentionDays } from '../index'
-import { prisma } from '@/lib/db'
+import { prisma } from '@server/lib/db'
 
 const mockPrisma = vi.mocked(prisma)
 
