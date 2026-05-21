@@ -1,5 +1,7 @@
 import type { EditalDetalheDTO, EditalResumoDTO } from '@shared/dtos/editais.dto'
+import type { ArquivoEditalDTO } from '@shared/dtos/arquivos-edital.dto'
 import type { PaginationMeta } from '@shared/dtos/common.dto'
+import type { TipoArquivoEdital } from '@shared/schemas/arquivos-edital.schema'
 
 type ApiSuccess<T> = { data: T; meta?: PaginationMeta; requestId: string }
 type ApiError = { error: string; message: string; requestId: string }
@@ -96,6 +98,40 @@ export const editaisClient = {
 
   async remove(id: string): Promise<void> {
     const res = await fetch(`/api/v1/editais/edital/${id}`, {
+      method: 'DELETE',
+      credentials: 'same-origin',
+    })
+    if (!res.ok) {
+      const err = (await res.json().catch(() => null)) as ApiError | null
+      throw new Error(err?.message ?? `Erro ${res.status}`)
+    }
+  },
+
+  async listArquivos(editalId: string): Promise<ArquivoEditalDTO[]> {
+    const res = await fetch(`/api/v1/editais/edital/${editalId}/arquivos`, { credentials: 'same-origin' })
+    return unwrap<ArquivoEditalDTO[]>(res)
+  },
+
+  async uploadArquivo(
+    editalId: string,
+    file: File,
+    meta: { tipo: TipoArquivoEdital; titulo: string; acessivel?: boolean },
+  ): Promise<ArquivoEditalDTO> {
+    const form = new FormData()
+    form.set('file', file)
+    form.set('tipo', meta.tipo)
+    form.set('titulo', meta.titulo)
+    if (meta.acessivel) form.set('acessivel', 'true')
+    const res = await fetch(`/api/v1/editais/edital/${editalId}/arquivos/arquivo`, {
+      method: 'POST',
+      body: form,
+      credentials: 'same-origin',
+    })
+    return unwrap<ArquivoEditalDTO>(res)
+  },
+
+  async removeArquivo(editalId: string, arquivoId: string): Promise<void> {
+    const res = await fetch(`/api/v1/editais/edital/${editalId}/arquivos/arquivo/${arquivoId}`, {
       method: 'DELETE',
       credentials: 'same-origin',
     })
