@@ -104,4 +104,17 @@ export const editaisClient = {
       throw new Error(err?.message ?? `Erro ${res.status}`)
     }
   },
+
+  async updateAcessivel(id: string, conteudoAcessivel: string): Promise<void> {
+    const res = await fetch(`/api/v1/editais/edital/${id}/acessivel`, {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ conteudoAcessivel }),
+      credentials: 'same-origin',
+    })
+    if (!res.ok) {
+      const err = (await res.json().catch(() => null)) as ApiError | null
+      throw new Error(err?.message ?? `Erro ${res.status}`)
+    }
+  },
 }

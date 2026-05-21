@@ -1,6 +1,10 @@
 import type { RequestContext } from '@server/adapters/next-route'
 import { requireAdmin } from '@server/lib/auth/guards'
-import { editalSchema, editalQuerySchema } from '@shared/schemas/editais.schema'
+import {
+  editalSchema,
+  editalQuerySchema,
+  editalAcessivelSchema,
+} from '@shared/schemas/editais.schema'
 import { buildPaginationMeta } from '@server/lib/http/pagination'
 import { editaisRepository } from './editais.repository'
 import { EditalNaoEncontradoError } from './editais.errors'
@@ -8,6 +12,7 @@ import { toEditalDetalhe, toEditalResumo } from './editais.mapper'
 import {
   createEdital as createEditalService,
   updateEdital as updateEditalService,
+  updateAcessivel as updateAcessivelService,
 } from './editais.service'
 
 function ipFromHeaders(headers: Headers): string | null {
@@ -61,5 +66,13 @@ export const editaisController = {
     if (!existing) throw new EditalNaoEncontradoError()
     await editaisRepository.delete(id)
     return { data: { ok: true } }
+  },
+
+  async updateAcessivel(ctx: RequestContext) {
+    const user = await requireAdmin(ctx.headers)
+    const id = ctx.params.id
+    const input = editalAcessivelSchema.parse(ctx.body)
+    await updateAcessivelService(id, input, user.id, ipFromHeaders(ctx.headers) ?? undefined)
+    return { data: { mensagem: 'Conteúdo acessível salvo' } }
   },
 }
