@@ -1,8 +1,17 @@
 'use client'
 
-import { signOut } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import { autenticacaoClient } from '@client/api/autenticacao.client'
 
 export default function SignOutPage() {
+  const router = useRouter()
+
+  async function handleLogout() {
+    await autenticacaoClient.logout()
+    router.push('/login')
+    router.refresh()
+  }
+
   return (
     <div>
       <div className="mb-8">
@@ -17,7 +26,7 @@ export default function SignOutPage() {
       <div className="flex flex-col gap-3">
         <button
           type="button"
-          onClick={() => signOut({ callbackUrl: '/login' })}
+          onClick={handleLogout}
           className="w-full rounded-lg bg-red-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-red-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 transition-colors min-h-[44px]"
         >
           Sim, sair

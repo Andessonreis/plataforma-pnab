@@ -1,11 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { signIn, getSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button, Input } from '@client/components/ui'
 import { formatCpfCnpj } from '@/lib/utils/format'
+import { autenticacaoClient } from '@client/api/autenticacao.client'
 
 export function LoginForm() {
   const router = useRouter()
@@ -23,25 +23,18 @@ export function LoginForm() {
     setLoading(true)
 
     try {
-      const result = await signIn('credentials', {
+      const sessao = await autenticacaoClient.login({
         cpfCnpj: cpfCnpj.replace(/\D/g, ''),
         password,
-        redirect: false,
       })
-
-      if (result?.error) {
-        setError('CPF/CNPJ ou senha incorretos.')
-      } else {
-        const session = await getSession()
-        const role = session?.user?.role
-        let dest = '/proponente'
-        if (role === 'AVALIADOR') dest = '/avaliador'
-        else if (['ADMIN', 'ATENDIMENTO', 'HABILITADOR'].includes(role ?? '')) dest = '/admin'
-        router.push(dest)
-        router.refresh()
-      }
-    } catch {
-      setError('Erro ao tentar entrar. Tente novamente.')
+      const role = sessao.usuario.role
+      let dest = '/proponente'
+      if (role === 'AVALIADOR') dest = '/avaliador'
+      else if (['ADMIN', 'ATENDIMENTO', 'HABILITADOR'].includes(role)) dest = '/admin'
+      router.push(dest)
+      router.refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'CPF/CNPJ ou senha incorretos.')
     } finally {
       setLoading(false)
     }
