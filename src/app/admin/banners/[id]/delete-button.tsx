@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui'
+import { Button } from '@client/components/ui'
 
 interface DeleteBannerButtonProps {
   bannerId: string

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Button } from '@/components/ui'
+import { Button } from '@client/components/ui'
 import { useRouter } from 'next/navigation'
 
 interface PurgeButtonProps {

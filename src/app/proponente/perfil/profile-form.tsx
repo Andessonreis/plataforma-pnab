@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, type FormEvent } from 'react'
-import { Input, Button, Card, UserAvatar } from '@/components/ui'
+import { Input, Button, Card, UserAvatar } from '@client/components/ui'
 import { formatTelefoneBR, unmaskTelefone } from '@/lib/utils/format'
 
 interface ProfileFormProps {

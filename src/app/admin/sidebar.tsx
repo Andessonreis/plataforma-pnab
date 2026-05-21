@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import type { UserRole } from '@prisma/client'
-import { LogoutButton } from '@/components/logout-button'
+import { LogoutButton } from '@client/components/logout-button'
 import {
   IconHome,
   IconNews,
@@ -21,7 +21,7 @@ import {
   IconSettings,
   IconMail,
   UserAvatar,
-} from '@/components/ui'
+} from '@client/components/ui'
 
 interface AdminSidebarProps {
   userName: string

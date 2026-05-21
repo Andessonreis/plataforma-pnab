@@ -2,8 +2,8 @@ import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { ProponenteSidebar } from './sidebar'
 import { prisma } from '@/lib/db'
-import { IconMenu, UserAvatar } from '@/components/ui'
-import { NotificationBell } from '@/components/layout'
+import { IconMenu, UserAvatar } from '@client/components/ui'
+import { NotificationBell } from '@client/components/layout'
 
 export default async function ProponenteLayout({ children }: { children: React.ReactNode }) {
   const session = await auth()

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Button, Card } from '@/components/ui'
+import { Button, Card } from '@client/components/ui'
 import Link from 'next/link'
 
 interface AcessivelEditorProps {

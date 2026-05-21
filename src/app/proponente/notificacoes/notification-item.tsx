@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Card, Button } from '@/components/ui'
+import { Card, Button } from '@client/components/ui'
 
 interface NotificationItemProps {
   id: string

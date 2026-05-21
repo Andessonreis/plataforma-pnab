@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from '@/components/ui/dialog'
+} from '@client/components/ui/dialog'
 import { inscricaoStatusLabel } from '@/lib/status-maps'
 import { getInscricaoCountsByEdital } from './actions'
 import type { EditalInscricaoCounts } from './actions'

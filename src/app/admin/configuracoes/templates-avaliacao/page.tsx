@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { PageHeader } from '@/components/ui'
+import { PageHeader } from '@client/components/ui'
 import { TemplatesManager } from './templates-manager'
 
 export const metadata: Metadata = {

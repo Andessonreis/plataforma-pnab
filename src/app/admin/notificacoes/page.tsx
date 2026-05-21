@@ -10,7 +10,7 @@ import {
   IconChatBubble,
   IconClock,
   IconMail,
-} from '@/components/ui'
+} from '@client/components/ui'
 
 export const metadata: Metadata = {
   title: 'Notificações — Portal PNAB Irecê',

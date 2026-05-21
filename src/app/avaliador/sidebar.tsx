@@ -2,8 +2,8 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LogoutButton } from '@/components/logout-button'
-import { IconHome, IconStar, IconClose } from '@/components/ui'
+import { LogoutButton } from '@client/components/logout-button'
+import { IconHome, IconStar, IconClose } from '@client/components/ui'
 
 interface AvaliadorSidebarProps {
   userName: string

@@ -24,6 +24,15 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@server/*": [
+        "./src/server/*"
+      ],
+      "@client/*": [
+        "./src/client/*"
+      ],
+      "@shared/*": [
+        "./src/shared/*"
       ]
     },
     "target": "ES2017"

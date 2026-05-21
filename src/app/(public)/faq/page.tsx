@@ -1,18 +1,18 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { prisma } from '@/lib/db'
-import { Button, PageHeader, EmptyState } from '@/components/ui'
+import { Button, PageHeader, EmptyState } from '@client/components/ui'
 import {
   IconQuestion,
   IconDocument,
   IconMail,
   IconArrowRight,
-} from '@/components/ui/icons'
+} from '@client/components/ui/icons'
 import {
   FadeIn,
   StaggerContainer,
   StaggerItem,
-} from '@/components/ui/animated'
+} from '@client/components/ui/animated'
 import { FaqAccordion } from './faq-accordion'
 
 export const metadata: Metadata = {

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback, useMemo, type FormEvent, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
-import { Input, Button, Card, Textarea, Select } from '@/components/ui'
+import { Input, Button, Card, Textarea, Select } from '@client/components/ui'
 import type { EditalStatus } from '@prisma/client'
 import { EditalArquivos, type EditalArquivosHandle } from './edital-arquivos'
 import { PdfOficialField } from './pdf-oficial-field'

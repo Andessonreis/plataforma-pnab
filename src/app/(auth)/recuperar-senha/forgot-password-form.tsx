@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Button, Input } from '@/components/ui'
+import { Button, Input } from '@client/components/ui'
 import { formatCpfCnpj } from '@/lib/utils/format'
 
 export function ForgotPasswordForm() {

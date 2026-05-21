@@ -1,13 +1,13 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { prisma } from '@/lib/db'
-import { Badge, PageHeader, EmptyState, Pagination } from '@/components/ui'
+import { Badge, PageHeader, EmptyState, Pagination } from '@client/components/ui'
 import {
   FadeIn,
   StaggerContainer,
   StaggerItem,
-} from '@/components/ui/animated'
-import { IconNews, IconCalendar, IconArrowRight } from '@/components/ui/icons'
+} from '@client/components/ui/animated'
+import { IconNews, IconCalendar, IconArrowRight } from '@client/components/ui/icons'
 import { formatDate } from '@/lib/utils/format'
 
 export const metadata: Metadata = {

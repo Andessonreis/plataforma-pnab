@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect, useRef, useImperativeHandle, forwardRef } from 'react'
-import { Card, Button, Badge, Select, Input, EmptyState } from '@/components/ui'
-import { IconDocument, IconPlus, IconPdf } from '@/components/ui'
+import { Card, Button, Badge, Select, Input, EmptyState } from '@client/components/ui'
+import { IconDocument, IconPlus, IconPdf } from '@client/components/ui'
 import { EDITAL_DOCUMENT_DEFAULT_TYPES } from '@/lib/constants/attachment-types'
 import { getBadgeVariantForTipo } from '@/lib/utils/badge-variant'
 

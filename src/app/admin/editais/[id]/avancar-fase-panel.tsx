@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { EditalStatus } from '@prisma/client'
-import { Button } from '@/components/ui'
+import { Button } from '@client/components/ui'
 import { editalStatusLabel } from '@/lib/status-maps'
 
 interface Props {

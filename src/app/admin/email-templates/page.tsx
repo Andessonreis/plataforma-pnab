@@ -5,7 +5,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { TEMPLATE_META } from '@/lib/mail/placeholders'
 import type { EmailTemplate } from '@/lib/mail/templates'
-import { Badge, Card, FadeIn, IconMail } from '@/components/ui'
+import { Badge, Card, FadeIn, IconMail } from '@client/components/ui'
 
 export const metadata: Metadata = {
   title: 'Templates de E-mail — Portal PNAB Irecê',

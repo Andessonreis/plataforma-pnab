@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
-import { Card, PageHeader, IconDocument, IconTag, IconClipboard } from '@/components/ui'
+import { Card, PageHeader, IconDocument, IconTag, IconClipboard } from '@client/components/ui'
 
 export const metadata: Metadata = {
   title: 'Configurações — Portal PNAB Irecê',

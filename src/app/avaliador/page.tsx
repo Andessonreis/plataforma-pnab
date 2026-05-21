@@ -8,7 +8,7 @@ import {
   Card, Badge, Button, StatCard, EmptyState,
   FadeIn, StaggerContainer, StaggerItem,
   IconClipboard, IconCheck, IconStar, IconChart, IconClock,
-} from '@/components/ui'
+} from '@client/components/ui'
 
 export const metadata: Metadata = {
   title: 'Painel do Avaliador — Portal PNAB Irecê',

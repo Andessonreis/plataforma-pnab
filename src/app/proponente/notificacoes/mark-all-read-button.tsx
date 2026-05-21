@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui'
-import { toast } from '@/hooks/use-toast'
+import { Button } from '@client/components/ui'
+import { toast } from '@client/hooks/use-toast'
 
 export function MarkAllReadButton() {
   const router = useRouter()

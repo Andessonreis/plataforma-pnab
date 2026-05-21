@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LogoutButton } from '@/components/logout-button'
+import { LogoutButton } from '@client/components/logout-button'
 import {
   IconHome,
   IconClipboard,
@@ -10,7 +10,7 @@ import {
   IconClose,
   IconChatBubble,
   UserAvatar,
-} from '@/components/ui'
+} from '@client/components/ui'
 
 interface ProponenteSidebarProps {
   userName: string

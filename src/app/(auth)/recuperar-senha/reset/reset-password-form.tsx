@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Button, Input } from '@/components/ui'
+import { Button, Input } from '@client/components/ui'
 
 interface ResetPasswordFormProps {
   token: string

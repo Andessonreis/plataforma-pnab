@@ -1,13 +1,13 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { prisma } from '@/lib/db'
-import { Badge, Button, Card } from '@/components/ui'
+import { Badge, Button, Card } from '@client/components/ui'
 import {
   FadeIn,
   StaggerContainer,
   StaggerItem,
   CountUp,
-} from '@/components/ui/animated'
+} from '@client/components/ui/animated'
 import {
   IconSearch,
   IconClipboard,
@@ -18,11 +18,11 @@ import {
   IconArrowRight,
   IconEye,
   IconMail,
-} from '@/components/ui/icons'
+} from '@client/components/ui/icons'
 import { getStatusDisplay } from '@/lib/utils/edital-status'
 import { formatCurrency, formatDate } from '@/lib/utils/format'
 import { getNextDeadline } from '@/lib/utils/cronograma'
-import { HeroCarousel, type SlideData } from '@/components/home/hero-carousel'
+import { HeroCarousel, type SlideData } from '@client/components/home/hero-carousel'
 
 export const metadata: Metadata = {
   title: 'Início',

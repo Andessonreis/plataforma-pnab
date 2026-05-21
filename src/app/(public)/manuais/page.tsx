@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { prisma } from '@/lib/db'
-import { Badge, Button, PageHeader, EmptyState } from '@/components/ui'
-import { IconPdf, IconDocument, IconDownload, IconBook } from '@/components/ui/icons'
+import { Badge, Button, PageHeader, EmptyState } from '@client/components/ui'
+import { IconPdf, IconDocument, IconDownload, IconBook } from '@client/components/ui/icons'
 
 export const metadata: Metadata = {
   title: 'Manuais e Documentos — Portal PNAB Irecê',

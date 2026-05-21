@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button, Card, Input, Badge } from '@/components/ui'
+import { Button, Card, Input, Badge } from '@client/components/ui'
 import type { Category } from '@/lib/constants/categories'
 
 interface Props {

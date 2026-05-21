@@ -16,6 +16,8 @@ node_modules/
 .env.development.local
 .env.test.local
 .env.production.local
+.env.*.bak
+.env.bak
 
 # Debug
 npm-debug.log*
@@ -40,9 +42,15 @@ next-env.d.ts
 .claude/
 .claudeignore
 .mcp.json
+.omc
 
 # Documentação interna (não versionar)
 docs/
+CLAUDE.md
+PROGRESS.md
+fazerdepois.md
+teste.txt
+
 
 # Playwright
 /test-results/
@@ -66,3 +74,8 @@ docs/
 
 # Prisma (migrations SÃO commitadas, shadow DB não)
 prisma/*.db
+
+
+# Testes
+uat/
+e2e/

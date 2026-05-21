@@ -2,18 +2,18 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { Badge, PageHeader } from '@/components/ui'
+import { Badge, PageHeader } from '@client/components/ui'
 import {
   FadeIn,
   StaggerContainer,
   StaggerItem,
-} from '@/components/ui/animated'
+} from '@client/components/ui/animated'
 import {
   IconArrowLeft,
   IconArrowRight,
   IconCalendar,
   IconNews,
-} from '@/components/ui/icons'
+} from '@client/components/ui/icons'
 import { formatDate } from '@/lib/utils/format'
 
 // ── Tipos ────────────────────────────────────────────────────────────────────

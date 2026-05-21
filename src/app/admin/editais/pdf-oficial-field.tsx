@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { IconDownload, IconDocument } from '@/components/ui/icons'
+import { IconDownload, IconDocument } from '@client/components/ui/icons'
 
 interface ArquivoBasico {
   id: string

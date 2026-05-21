@@ -1,4 +1,4 @@
-import type { BadgeVariant } from '@/components/ui/badge'
+import type { BadgeVariant } from '@client/components/ui/badge'
 import type { InscricaoStatus, EditalStatus } from '@prisma/client'
 
 // ── Inscricao Status ────────────────────────────────────────────────────────

@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Badge, Button, Card } from '@/components/ui'
+import { Badge, Button, Card } from '@client/components/ui'
 import type { PlaceholderSpec } from '@/lib/mail/placeholders'
 import type { EmailTemplate } from '@/lib/mail/templates'
 

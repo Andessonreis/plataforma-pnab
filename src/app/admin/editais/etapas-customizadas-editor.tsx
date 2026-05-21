@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback } from 'react'
-import { Input, Textarea, Button, Select } from '@/components/ui'
+import { Input, Textarea, Button, Select } from '@client/components/ui'
 import type { CampoFormulario, CampoTipo } from '@/types/campo-formulario'
 import type { EtapaCustomizada } from '@/types/etapa-customizada'
 

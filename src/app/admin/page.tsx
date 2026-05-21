@@ -27,7 +27,7 @@ import {
   IconClock,
   IconStar,
   IconChart,
-} from '@/components/ui'
+} from '@client/components/ui'
 
 export const metadata: Metadata = {
   title: 'Painel Administrativo — Portal PNAB Irecê',

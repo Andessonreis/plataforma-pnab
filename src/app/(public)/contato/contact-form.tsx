@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Button, Input } from '@/components/ui'
+import { Button, Input } from '@client/components/ui'
 
 interface ContactFormProps {
   editais: { id: string; titulo: string }[]

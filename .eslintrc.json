@@ -2,5 +2,72 @@
   "extends": [
     "next/core-web-vitals",
     "next/typescript"
+  ],
+  "overrides": [
+    {
+      "files": ["src/client/**/*.{ts,tsx}"],
+      "rules": {
+        "no-restricted-imports": [
+          "warn",
+          {
+            "patterns": [
+              {
+                "group": ["@server/*", "@/server/*", "**/server/*", "@prisma/*", "prisma", "@/lib/db/*", "@/lib/queue/*", "@/lib/storage/*"],
+                "message": "client/ não pode importar de server/ nem acessar DB/queue/storage. Use SDK em client/api/ ou shared/."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/server/**/*.{ts,tsx}"],
+      "rules": {
+        "no-restricted-imports": [
+          "warn",
+          {
+            "patterns": [
+              {
+                "group": ["@client/*", "@/client/*", "**/client/*", "react", "react-dom"],
+                "message": "server/ não pode importar de client/ nem de React. Mantenha o backend framework-agnostic."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/shared/**/*.{ts,tsx}"],
+      "rules": {
+        "no-restricted-imports": [
+          "warn",
+          {
+            "patterns": [
+              {
+                "group": ["@server/*", "@client/*", "@/server/*", "@/client/*", "@/app/*", "next", "next/*", "react", "react-dom", "@prisma/*", "prisma"],
+                "message": "shared/ é framework-agnostic. Não importe de server/, client/, app/, Next, React ou Prisma."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/app/**/*.{ts,tsx}"],
+      "excludedFiles": ["src/app/api/**/*.{ts,tsx}"],
+      "rules": {
+        "no-restricted-imports": [
+          "warn",
+          {
+            "patterns": [
+              {
+                "group": ["@server/*", "@/server/*", "**/server/modules/*"],
+                "message": "Páginas não importam de server/. Para dados, use server components com client/api/ ou fetch."
+              }
+            ]
+          }
+        ]
+      }
+    }
   ]
 }

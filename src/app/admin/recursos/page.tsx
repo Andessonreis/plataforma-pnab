@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { prisma } from '@/lib/db'
 import { auth } from '@/lib/auth'
 import { notFound } from 'next/navigation'
-import { Card, Badge, Pagination, Button, EmptyState, FadeIn, IconClipboard } from '@/components/ui'
+import { Card, Badge, Pagination, Button, EmptyState, FadeIn, IconClipboard } from '@client/components/ui'
 import { formatDate } from '@/lib/utils/format'
 
 export const metadata: Metadata = {

@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { Card, Badge, Pagination, Button, EmptyState, FadeIn, IconUsers } from '@/components/ui'
+import { Card, Badge, Pagination, Button, EmptyState, FadeIn, IconUsers } from '@client/components/ui'
 import type { UserRole } from '@prisma/client'
 
 export const metadata: Metadata = {

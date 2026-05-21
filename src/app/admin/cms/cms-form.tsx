@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { Input, Button, Card, Textarea } from '@/components/ui'
+import { Input, Button, Card, Textarea } from '@client/components/ui'
 
 interface CmsFormProps {
   initialData?: {

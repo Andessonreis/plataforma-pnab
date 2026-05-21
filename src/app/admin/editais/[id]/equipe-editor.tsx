@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Card } from '@/components/ui'
+import { Card } from '@client/components/ui'
 
 interface Membro {
   id: string

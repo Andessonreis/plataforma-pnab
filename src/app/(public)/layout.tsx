@@ -1,8 +1,8 @@
 import { Suspense } from 'react'
 import type { UserRole } from '@prisma/client'
 import { auth } from '@/lib/auth'
-import { Header, Footer, CookieBanner } from '@/components/layout'
-import { ActiveBanners } from '@/components/layout'
+import { Header, Footer, CookieBanner } from '@client/components/layout'
+import { ActiveBanners } from '@client/components/layout'
 
 const ROLES_ADMIN: UserRole[] = ['ADMIN', 'ATENDIMENTO', 'HABILITADOR']
 

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import type { AudienceFilterInput } from '@/lib/notifications/schemas'
-import { Card } from '@/components/ui'
+import { Card } from '@client/components/ui'
 import { UserPicker } from './user-picker'
 
 export interface EditalOption {

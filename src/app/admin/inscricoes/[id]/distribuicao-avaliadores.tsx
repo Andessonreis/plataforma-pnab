@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Card } from '@/components/ui'
+import { Card } from '@client/components/ui'
 
 interface Avaliador {
   id: string

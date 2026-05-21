@@ -2,9 +2,9 @@
 
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button, Input, Select, Textarea, Card, Badge, CurrencyInput, formatCurrencyBRL } from '@/components/ui'
-import type { SelectOption } from '@/components/ui'
-import { IconArrowLeft, IconArrowRight, IconCheck, IconDocument, IconDownload, IconAccessible } from '@/components/ui/icons'
+import { Button, Input, Select, Textarea, Card, Badge, CurrencyInput, formatCurrencyBRL } from '@client/components/ui'
+import type { SelectOption } from '@client/components/ui'
+import { IconArrowLeft, IconArrowRight, IconCheck, IconDocument, IconDownload, IconAccessible } from '@client/components/ui/icons'
 import { getBadgeVariantForTipo } from '@/lib/utils/badge-variant'
 import { resolveCharLimits } from '@/lib/campo-limits'
 import { filterCamposByTipo, type CampoFormulario } from '@/types/campo-formulario'

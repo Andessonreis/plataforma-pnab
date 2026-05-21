@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { auth } from '@/lib/auth'
-import { Badge, Button, PageHeader } from '@/components/ui'
+import { Badge, Button, PageHeader } from '@client/components/ui'
 import {
   IconDownload,
   IconCheckSimple,
@@ -18,7 +18,7 @@ import {
   IconCurrency,
   IconDocument,
   IconQuestion,
-} from '@/components/ui/icons'
+} from '@client/components/ui/icons'
 import { getStatusDisplay } from '@/lib/utils/edital-status'
 import { formatCurrency, formatDate, formatDateTime, parseBrazilDateTime } from '@/lib/utils/format'
 import { parseCronogramaPublico, getNextDeadline, isFaseCompleted, isFaseCurrent } from '@/lib/utils/cronograma'

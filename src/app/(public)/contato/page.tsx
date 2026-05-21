@@ -1,15 +1,15 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { prisma } from '@/lib/db'
-import { PageHeader } from '@/components/ui'
+import { PageHeader } from '@client/components/ui'
 import {
   IconMail,
   IconMapPin,
   IconClock,
   IconArrowRight,
   IconQuestion,
-} from '@/components/ui/icons'
-import { FadeIn } from '@/components/ui/animated'
+} from '@client/components/ui/icons'
+import { FadeIn } from '@client/components/ui/animated'
 import { ContactForm } from './contact-form'
 
 export const metadata: Metadata = {

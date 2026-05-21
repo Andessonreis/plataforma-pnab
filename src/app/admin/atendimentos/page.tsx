@@ -14,7 +14,7 @@ import {
   IconClock,
   IconCheck,
   IconChatBubble,
-} from '@/components/ui'
+} from '@client/components/ui'
 
 export const metadata: Metadata = {
   title: 'Atendimentos — Portal PNAB Irecê',

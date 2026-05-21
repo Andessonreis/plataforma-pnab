@@ -2,8 +2,8 @@
 
 import { useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { Input, Button, Card, Textarea, ImageUpload } from '@/components/ui'
-import { toast } from '@/hooks/use-toast'
+import { Input, Button, Card, Textarea, ImageUpload } from '@client/components/ui'
+import { toast } from '@client/hooks/use-toast'
 
 interface NoticiaFormProps {
   initialData?: {

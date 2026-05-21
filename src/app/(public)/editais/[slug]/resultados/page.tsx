@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { PageHeader, Badge } from '@/components/ui'
-import { IconArrowLeft } from '@/components/ui/icons'
+import { PageHeader, Badge } from '@client/components/ui'
+import { IconArrowLeft } from '@client/components/ui/icons'
 
 interface Props {
   params: Promise<{ slug: string }>

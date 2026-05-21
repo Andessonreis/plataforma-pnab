@@ -5,7 +5,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { TEMPLATE_META } from '@/lib/mail/placeholders'
 import type { EmailTemplate } from '@/lib/mail/templates'
-import { FadeIn } from '@/components/ui'
+import { FadeIn } from '@client/components/ui'
 import { TemplateEditor } from './template-editor'
 
 interface Props {

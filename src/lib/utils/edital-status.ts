@@ -1,5 +1,5 @@
 import type { EditalStatus } from '@prisma/client'
-import type { BadgeVariant } from '@/components/ui'
+import type { BadgeVariant } from '@client/components/ui'
 
 interface StatusDisplay {
   label: string

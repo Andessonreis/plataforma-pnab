@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { Card, Badge, FadeIn, UserAvatar } from '@/components/ui'
+import { Card, Badge, FadeIn, UserAvatar } from '@client/components/ui'
 import { ProfileForm } from './profile-form'
 
 export const metadata: Metadata = {

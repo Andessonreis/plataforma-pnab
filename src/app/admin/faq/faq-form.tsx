@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { Input, Button, Card, Textarea, Select } from '@/components/ui'
+import { Input, Button, Card, Textarea, Select } from '@client/components/ui'
 
 interface FaqFormProps {
   initialData?: {

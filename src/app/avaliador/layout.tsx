@@ -1,7 +1,7 @@
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { AvaliadorSidebar } from './sidebar'
-import { IconMenu } from '@/components/ui'
+import { IconMenu } from '@client/components/ui'
 
 export default async function AvaliadorLayout({ children }: { children: React.ReactNode }) {
   const session = await auth()

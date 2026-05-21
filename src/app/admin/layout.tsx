@@ -3,8 +3,8 @@ import { redirect } from 'next/navigation'
 import type { UserRole } from '@prisma/client'
 import { AdminSidebar } from './sidebar'
 import { prisma } from '@/lib/db'
-import { IconMenu, UserAvatar } from '@/components/ui'
-import { NotificationBell } from '@/components/layout'
+import { IconMenu, UserAvatar } from '@client/components/ui'
+import { NotificationBell } from '@client/components/layout'
 
 const ROLES_PERMITIDOS: UserRole[] = ['ADMIN', 'ATENDIMENTO', 'HABILITADOR', 'AVALIADOR']
 

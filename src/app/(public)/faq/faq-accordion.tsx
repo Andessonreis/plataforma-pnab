@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Input, Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui'
+import { Input, Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@client/components/ui'
 
 interface FaqItemData {
   id: string

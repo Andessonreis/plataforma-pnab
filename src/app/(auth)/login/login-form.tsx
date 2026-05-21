@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { signIn, getSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Button, Input } from '@/components/ui'
+import { Button, Input } from '@client/components/ui'
 import { formatCpfCnpj } from '@/lib/utils/format'
 
 export function LoginForm() {

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { Button, Card, Badge, Select } from '@/components/ui'
+import { Button, Card, Badge, Select } from '@client/components/ui'
 
 interface ImportFormProps {
   editais: Array<{ id: string; titulo: string }>

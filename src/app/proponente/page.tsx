@@ -18,7 +18,7 @@ import {
   IconNews,
   IconPlus,
   IconArrowRight,
-} from '@/components/ui'
+} from '@client/components/ui'
 import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
 import type { InscricaoStatus } from '@prisma/client'
 

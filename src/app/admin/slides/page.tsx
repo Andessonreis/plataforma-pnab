@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { Card, Badge, Pagination, Button, EmptyState, FadeIn, IconPlus, IconSlides } from '@/components/ui'
+import { Card, Badge, Pagination, Button, EmptyState, FadeIn, IconPlus, IconSlides } from '@client/components/ui'
 
 export const metadata: Metadata = {
   title: 'Slides da Home — Portal PNAB Irecê',

@@ -2,8 +2,8 @@
 
 import { useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { Card, Input, Textarea, Button, Badge } from '@/components/ui'
-import { toast } from '@/hooks/use-toast'
+import { Card, Input, Textarea, Button, Badge } from '@client/components/ui'
+import { toast } from '@client/hooks/use-toast'
 import { AudienceBuilder, type EditalOption } from '../audience-builder'
 import { LinkPicker } from '../link-picker'
 import { NotificationPreview } from '../notification-preview'

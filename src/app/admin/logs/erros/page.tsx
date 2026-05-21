@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { Card, Badge, Pagination, Button, EmptyState, FadeIn } from '@/components/ui'
+import { Card, Badge, Pagination, Button, EmptyState, FadeIn } from '@client/components/ui'
 import { PurgeButton } from './purge-button'
 
 export const metadata: Metadata = {

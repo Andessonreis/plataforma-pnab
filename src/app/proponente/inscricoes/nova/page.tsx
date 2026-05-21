@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { IconArrowLeft } from '@/components/ui/icons'
+import { IconArrowLeft } from '@client/components/ui/icons'
 import InscricaoForm from './inscricao-form'
 import type { CampoFormulario } from '@/types/campo-formulario'
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Badge, Card } from '@/components/ui'
+import { Badge, Card } from '@client/components/ui'
 
 interface Props {
   titulo: string
