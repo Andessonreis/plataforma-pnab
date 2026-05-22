@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { editaisClient } from '@client/api/editais.client'
 
 interface DownloadButtonProps {
   editalId: string
@@ -22,7 +23,7 @@ export function DownloadButton({ editalId, status, format, label, count }: Downl
     try {
       const url =
         format === 'pdf'
-          ? `/api/admin/editais/${editalId}/listas?status=${status}`
+          ? editaisClient.listaPdfUrl(editalId, status)
           : `/api/admin/inscricoes/export?editalId=${editalId}&status=${status}`
 
       const res = await fetch(url)

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Button, Card } from '@client/components/ui'
 import Link from 'next/link'
+import { editaisClient } from '@client/api/editais.client'
 
 interface AcessivelEditorProps {
   editalId: string
@@ -20,22 +21,10 @@ export function AcessivelEditor({ editalId, initialContent, editalSlug }: Acessi
     setMessage(null)
 
     try {
-      const res = await fetch(`/api/admin/editais/${editalId}/acessivel`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ conteudoAcessivel: content }),
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        setMessage({ type: 'error', text: data.message ?? 'Erro ao salvar.' })
-        return
-      }
-
+      await editaisClient.updateAcessivel(editalId, content)
       setMessage({ type: 'success', text: 'Conteúdo acessível salvo com sucesso.' })
-    } catch {
-      setMessage({ type: 'error', text: 'Erro de conexão.' })
+    } catch (err) {
+      setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Erro ao salvar.' })
     } finally {
       setLoading(false)
     }

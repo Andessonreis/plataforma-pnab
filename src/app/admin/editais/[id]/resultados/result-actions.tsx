@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@client/components/ui'
+import { editaisClient } from '@client/api/editais.client'
 
 interface ResultActionsProps {
   editalId: string
@@ -18,25 +19,12 @@ export function ResultActions({ editalId, editalStatus }: ResultActionsProps) {
     setMessage(null)
 
     try {
-      const res = await fetch(`/api/admin/editais/${editalId}/resultados`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fase }),
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        setMessage({ type: 'error', text: data.message ?? 'Erro ao publicar.' })
-        return
-      }
-
-      setMessage({ type: 'success', text: data.message })
+      const result = await editaisClient.publicarResultados(editalId, fase)
+      setMessage({ type: 'success', text: result.mensagem })
       setConfirmAction(null)
-      // Recarrega a página para refletir mudanças
       setTimeout(() => window.location.reload(), 1500)
-    } catch {
-      setMessage({ type: 'error', text: 'Erro de conexão.' })
+    } catch (err) {
+      setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Erro ao publicar.' })
     } finally {
       setLoading(null)
     }

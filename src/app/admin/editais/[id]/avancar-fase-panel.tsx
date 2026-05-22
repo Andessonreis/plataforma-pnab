@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import type { EditalStatus } from '@prisma/client'
 import { Button } from '@client/components/ui'
 import { editalStatusLabel } from '@/lib/status-maps'
+import { editaisClient } from '@client/api/editais.client'
 
 interface Props {
   editalId: string
@@ -69,25 +70,19 @@ export function AvancarFasePanel({ editalId, statusAtual }: Props) {
     setFeedback(null)
 
     try {
-      const res = await fetch(`/api/admin/editais/${editalId}/avancar-fase`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          proximoStatus,
-          justificativa: justificativa.trim(),
-        }),
+      const result = await editaisClient.avancarFase(editalId, proximoStatus, justificativa.trim())
+      setFeedback({
+        type: 'success',
+        text: `Edital atualizado para ${result.novoStatus}.`,
       })
-      const data = await res.json()
-      if (!res.ok) {
-        setFeedback({ type: 'error', text: data.message ?? 'Erro ao avançar fase.' })
-        return
-      }
-      setFeedback({ type: 'success', text: data.message ?? 'Fase avançada.' })
       setConfirmando(false)
       setJustificativa('')
       router.refresh()
-    } catch {
-      setFeedback({ type: 'error', text: 'Falha de conexão. Tente novamente.' })
+    } catch (err) {
+      setFeedback({
+        type: 'error',
+        text: err instanceof Error ? err.message : 'Falha de conexão. Tente novamente.',
+      })
     } finally {
       setLoading(false)
     }

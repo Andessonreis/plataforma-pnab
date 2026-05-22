@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { editaisClient } from '@client/api/editais.client'
 
 interface RelatorioFinalButtonProps {
   editalId: string
@@ -14,7 +15,7 @@ export function RelatorioFinalButton({ editalId }: RelatorioFinalButtonProps) {
     setLoading(true)
 
     try {
-      const res = await fetch(`/api/admin/editais/${editalId}/relatorio-final`)
+      const res = await fetch(editaisClient.relatorioFinalUrl(editalId))
       if (!res.ok) {
         const body = await res.json().catch(() => null)
         throw new Error(body?.message ?? `Erro ${res.status}`)

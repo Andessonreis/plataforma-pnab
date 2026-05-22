@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { IconDownload, IconDocument } from '@client/components/ui/icons'
+import { editaisClient } from '@client/api/editais.client'
 
 interface ArquivoBasico {
   id: string
@@ -28,11 +29,10 @@ export function PdfOficialField({ editalId }: Props) {
   useEffect(() => {
     if (!editalId) return
     let canceled = false
-    fetch(`/api/admin/editais/arquivos?editalId=${editalId}`)
-      .then((r) => r.json())
-      .then((data) => {
+    editaisClient
+      .listArquivos(editalId)
+      .then((arr) => {
         if (canceled) return
-        const arr = (data.data ?? data.arquivos ?? []) as ArquivoBasico[]
         const pdf = arr.find((a) => a.tipo === 'PDF_EDITAL')
         setAtual(pdf ?? null)
       })
@@ -51,22 +51,15 @@ export function PdfOficialField({ editalId }: Props) {
     try {
       // Remove o PDF oficial anterior (se houver) pra garantir "só 1 PDF oficial"
       if (atual) {
-        await fetch(`/api/admin/editais/arquivos?id=${atual.id}`, { method: 'DELETE' })
+        await editaisClient.removeArquivo(editalId, atual.id)
       }
-      const form = new FormData()
-      form.append('file', file)
-      form.append('editalId', editalId)
-      form.append('tipo', 'PDF_EDITAL')
-      form.append('titulo', 'Edital Completo (PDF)')
-      const res = await fetch('/api/admin/editais/arquivos', { method: 'POST', body: form })
-      const data = await res.json()
-      if (!res.ok) {
-        setErro(data.message ?? 'Falha no upload.')
-        return
-      }
-      setAtual(data.arquivo ?? data)
-    } catch {
-      setErro('Erro de conexão.')
+      const novo = await editaisClient.uploadArquivo(editalId, file, {
+        tipo: 'PDF_EDITAL',
+        titulo: 'Edital Completo (PDF)',
+      })
+      setAtual(novo)
+    } catch (err) {
+      setErro(err instanceof Error ? err.message : 'Erro de conexão.')
     } finally {
       setUploading(false)
     }

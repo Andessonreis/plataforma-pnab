@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { editaisClient } from '@client/api/editais.client'
 import {
   DndContext,
   closestCenter,
@@ -150,17 +151,7 @@ function TieGroupPanel({ group, editalId }: { group: TieGroup; editalId: string 
     setSaving(true)
     setError(null)
     try {
-      const res = await fetch(`/api/admin/editais/${editalId}/resultados/reorder`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderedIds: items.map(i => i.inscricaoId) }),
-      })
-
-      if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.message ?? 'Erro ao salvar ordem')
-      }
-
+      await editaisClient.reordenarResultados(editalId, items.map((i) => i.inscricaoId))
       setSaved(true)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao salvar ordem')

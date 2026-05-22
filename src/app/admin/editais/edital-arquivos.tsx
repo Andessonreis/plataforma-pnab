@@ -5,6 +5,8 @@ import { Card, Button, Badge, Select, Input, EmptyState } from '@client/componen
 import { IconDocument, IconPlus, IconPdf } from '@client/components/ui'
 import { EDITAL_DOCUMENT_DEFAULT_TYPES } from '@/lib/constants/attachment-types'
 import { getBadgeVariantForTipo } from '@/lib/utils/badge-variant'
+import { editaisClient } from '@client/api/editais.client'
+import type { TipoArquivoEdital } from '@shared/schemas/arquivos-edital.schema'
 
 interface Arquivo {
   id: string
@@ -78,11 +80,8 @@ export const EditalArquivos = forwardRef<EditalArquivosHandle, EditalArquivosPro
       if (!editalId) return
       async function load() {
         try {
-          const res = await fetch(`/api/admin/editais/arquivos?editalId=${editalId}`)
-          if (res.ok) {
-            const json = await res.json()
-            setArquivos(json.data)
-          }
+          const items = await editaisClient.listArquivos(editalId!)
+          setArquivos(items)
         } catch {
           // silencioso no carregamento inicial
         } finally {
@@ -98,18 +97,11 @@ export const EditalArquivos = forwardRef<EditalArquivosHandle, EditalArquivosPro
       uploadPending: async (targetEditalId: string) => {
         let errors = 0
         for (const item of pending) {
-          const formData = new FormData()
-          formData.append('file', item.file)
-          formData.append('editalId', targetEditalId)
-          formData.append('tipo', item.tipo)
-          formData.append('titulo', item.titulo)
-
           try {
-            const res = await fetch('/api/admin/editais/arquivos', {
-              method: 'POST',
-              body: formData,
+            await editaisClient.uploadArquivo(targetEditalId, item.file, {
+              tipo: item.tipo as TipoArquivoEdital,
+              titulo: item.titulo,
             })
-            if (!res.ok) errors++
           } catch {
             errors++
           }
@@ -165,29 +157,15 @@ export const EditalArquivos = forwardRef<EditalArquivosHandle, EditalArquivosPro
       // Modo edição — envia direto
       setUploading(true)
       try {
-        const formData = new FormData()
-        formData.append('file', file)
-        formData.append('editalId', editalId)
-        formData.append('tipo', tipo)
-        formData.append('titulo', tituloFinal)
-
-        const res = await fetch('/api/admin/editais/arquivos', {
-          method: 'POST',
-          body: formData,
+        const novo = await editaisClient.uploadArquivo(editalId, file, {
+          tipo: tipo as TipoArquivoEdital,
+          titulo: tituloFinal,
         })
-
-        const data = await res.json()
-
-        if (!res.ok) {
-          setError(data.message || 'Erro ao fazer upload.')
-          return
-        }
-
-        setArquivos((prev) => [data, ...prev])
+        setArquivos((prev) => [novo, ...prev])
         setTitulo('')
         if (fileInputRef.current) fileInputRef.current.value = ''
-      } catch {
-        setError('Erro de conexão. Tente novamente.')
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erro ao fazer upload.')
       } finally {
         setUploading(false)
       }
@@ -196,16 +174,12 @@ export const EditalArquivos = forwardRef<EditalArquivosHandle, EditalArquivosPro
     async function handleDelete(id: string) {
       if (!window.confirm('Tem certeza que deseja remover este arquivo?')) return
 
+      if (!editalId) return
       try {
-        const res = await fetch(`/api/admin/editais/arquivos?id=${id}`, { method: 'DELETE' })
-        if (res.ok) {
-          setArquivos((prev) => prev.filter((a) => a.id !== id))
-        } else {
-          const data = await res.json()
-          setError(data.message || 'Erro ao remover arquivo.')
-        }
-      } catch {
-        setError('Erro de conexão. Tente novamente.')
+        await editaisClient.removeArquivo(editalId, id)
+        setArquivos((prev) => prev.filter((a) => a.id !== id))
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erro ao remover arquivo.')
       }
     }
 

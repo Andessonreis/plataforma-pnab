@@ -1,11 +1,11 @@
 import { z } from 'zod'
 
-export const TIPOS_ARQUIVO_EDITAL = ['PDF', 'ANEXO', 'MODELO', 'PLANILHA', 'DECLARACAO'] as const
-
-export type TipoArquivoEdital = (typeof TIPOS_ARQUIVO_EDITAL)[number]
+// Tipos de arquivo são livres (cadastráveis via /admin/configuracoes/tipos-anexo) —
+// não usamos enum aqui porque um fork pode adicionar novos tipos sem alterar código.
+export type TipoArquivoEdital = string
 
 export const arquivoEditalUploadMetaSchema = z.object({
-  tipo: z.enum(TIPOS_ARQUIVO_EDITAL),
+  tipo: z.string().min(1, 'Tipo obrigatório').max(60),
   titulo: z.string().min(1, 'Título obrigatório').max(200),
   acessivel: z.coerce.boolean().optional().default(false),
 })

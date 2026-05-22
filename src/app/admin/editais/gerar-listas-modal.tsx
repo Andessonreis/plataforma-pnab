@@ -12,6 +12,7 @@ import {
   DialogFooter,
 } from '@client/components/ui/dialog'
 import { inscricaoStatusLabel } from '@/lib/status-maps'
+import { editaisClient } from '@client/api/editais.client'
 import { getInscricaoCountsByEdital } from './actions'
 import type { EditalInscricaoCounts } from './actions'
 import type { InscricaoStatus, EditalStatus } from '@prisma/client'
@@ -93,7 +94,7 @@ export function GerarListasModal({ editalId, editalTitulo, editalStatus }: Gerar
 
     try {
       const url = format === 'pdf'
-        ? `/api/admin/editais/${editalId}/listas?status=${selected}`
+        ? editaisClient.listaPdfUrl(editalId, selected)
         : `/api/admin/inscricoes/export?editalId=${editalId}&status=${selected}`
 
       const res = await fetch(url)

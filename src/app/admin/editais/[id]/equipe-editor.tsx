@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Card } from '@client/components/ui'
+import { editaisClient } from '@client/api/editais.client'
 
 interface Membro {
   id: string
@@ -56,24 +57,14 @@ function EquipeBloco({
     setFeedback(null)
 
     try {
-      const res = await fetch(`/api/admin/editais/${editalId}/equipe`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userIds: [selectedId], funcao }),
-      })
-
-      if (res.ok) {
-        const added = elegíveis.find((e) => e.id === selectedId)
-        if (added) setMembros((prev) => [...prev, added])
-        setSelectedId('')
-        setFeedback({ type: 'success', message: `${label} adicionado(a)` })
-        onMemberChange()
-      } else {
-        const data = await res.json()
-        setFeedback({ type: 'error', message: data.message || 'Erro ao adicionar' })
-      }
-    } catch {
-      setFeedback({ type: 'error', message: 'Erro de conexão' })
+      await editaisClient.addEquipe(editalId, [selectedId], funcao)
+      const added = elegíveis.find((e) => e.id === selectedId)
+      if (added) setMembros((prev) => [...prev, added])
+      setSelectedId('')
+      setFeedback({ type: 'success', message: `${label} adicionado(a)` })
+      onMemberChange()
+    } catch (err) {
+      setFeedback({ type: 'error', message: err instanceof Error ? err.message : 'Erro ao adicionar' })
     } finally {
       setSubmitting(false)
     }
@@ -85,22 +76,12 @@ function EquipeBloco({
     setConfirmRemove(null)
 
     try {
-      const res = await fetch(`/api/admin/editais/${editalId}/equipe`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, funcao }),
-      })
-
-      if (res.ok) {
-        setMembros((prev) => prev.filter((m) => m.id !== userId))
-        setFeedback({ type: 'success', message: `${label} removido(a)` })
-        onMemberChange()
-      } else {
-        const data = await res.json()
-        setFeedback({ type: 'error', message: data.message || 'Erro ao remover' })
-      }
-    } catch {
-      setFeedback({ type: 'error', message: 'Erro de conexão' })
+      await editaisClient.removeEquipe(editalId, userId, funcao)
+      setMembros((prev) => prev.filter((m) => m.id !== userId))
+      setFeedback({ type: 'success', message: `${label} removido(a)` })
+      onMemberChange()
+    } catch (err) {
+      setFeedback({ type: 'error', message: err instanceof Error ? err.message : 'Erro ao remover' })
     } finally {
       setSubmitting(false)
     }
