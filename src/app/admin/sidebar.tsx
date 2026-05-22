@@ -20,6 +20,7 @@ import {
   IconSlides,
   IconSettings,
   IconMail,
+  IconShield,
   UserAvatar,
 } from '@/components/ui'
 
@@ -63,6 +64,12 @@ const navSections: NavSection[] = [
         href: '/admin/inscricoes',
         roles: ['ADMIN', 'HABILITADOR', 'ATENDIMENTO'],
         icon: <IconClipboard className="h-5 w-5" />,
+      },
+      {
+        label: 'Habilitação',
+        href: '/admin/habilitacao',
+        roles: ['ADMIN'],
+        icon: <IconShield className="h-5 w-5" />,
       },
       {
         label: 'Minhas Avaliações',
