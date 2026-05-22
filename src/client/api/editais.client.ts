@@ -5,6 +5,10 @@ import type { PaginationMeta } from '@shared/dtos/common.dto'
 import type { TipoArquivoEdital } from '@shared/schemas/arquivos-edital.schema'
 import type { FuncaoEdital } from '@shared/schemas/equipe-edital.schema'
 import type { EditalStatus } from '@shared/enums/edital-status'
+import type {
+  PublicacaoResultadoDTO,
+  ResultadosListagemDTO,
+} from '@shared/dtos/resultados-edital.dto'
 
 type ApiSuccess<T> = { data: T; meta?: PaginationMeta; requestId: string }
 type ApiError = { error: string; message: string; requestId: string }
@@ -170,6 +174,45 @@ export const editaisClient = {
       const err = (await res.json().catch(() => null)) as ApiError | null
       throw new Error(err?.message ?? `Erro ${res.status}`)
     }
+  },
+
+  async listResultados(editalId: string): Promise<ResultadosListagemDTO> {
+    const res = await fetch(`/api/v1/editais/edital/${editalId}/resultados`, { credentials: 'same-origin' })
+    return unwrap<ResultadosListagemDTO>(res)
+  },
+
+  async publicarResultados(
+    editalId: string,
+    fase: 'RESULTADO_PRELIMINAR' | 'RESULTADO_FINAL',
+  ): Promise<PublicacaoResultadoDTO> {
+    const res = await fetch(`/api/v1/editais/edital/${editalId}/resultados`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ fase }),
+      credentials: 'same-origin',
+    })
+    return unwrap<PublicacaoResultadoDTO>(res)
+  },
+
+  async reordenarResultados(editalId: string, orderedIds: string[]): Promise<void> {
+    const res = await fetch(`/api/v1/editais/edital/${editalId}/resultados/reorder`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ orderedIds }),
+      credentials: 'same-origin',
+    })
+    if (!res.ok) {
+      const err = (await res.json().catch(() => null)) as ApiError | null
+      throw new Error(err?.message ?? `Erro ${res.status}`)
+    }
+  },
+
+  relatorioFinalUrl(editalId: string): string {
+    return `/api/v1/editais/edital/${editalId}/relatorio-final`
+  },
+
+  listaPdfUrl(editalId: string, status: string): string {
+    return `/api/v1/editais/edital/${editalId}/listas?status=${encodeURIComponent(status)}`
   },
 
   async avancarFase(
