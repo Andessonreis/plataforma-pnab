@@ -116,9 +116,9 @@ export default async function AdminHabilitacaoDetailPage({ params }: Props) {
         </div>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-12 gap-4 sm:gap-6">
         {/* Coluna principal — dados + anexos */}
-        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+        <div className="lg:col-span-2 xl:col-span-8 2xl:col-span-9 space-y-4 sm:space-y-6">
           <DadosInscricaoView
             proponente={inscricao.proponente}
             categoria={inscricao.categoria}
@@ -192,7 +192,7 @@ export default async function AdminHabilitacaoDetailPage({ params }: Props) {
         </div>
 
         {/* Coluna lateral */}
-        <aside className="space-y-4 sm:space-y-6">
+        <aside className="xl:col-span-4 2xl:col-span-3 space-y-4 sm:space-y-6">
           {/* Resumo */}
           <Card padding="sm" className="sm:p-6">
             <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-3">
