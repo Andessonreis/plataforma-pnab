@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { prisma } from '@server/lib/db'
+import { editaisRepository } from '@server/modules/editais/editais/editais.repository'
 import { IconArrowLeft } from '@client/components/ui/icons'
 
 interface Props {
@@ -10,10 +10,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
-  const edital = await prisma.edital.findUnique({
-    where: { slug },
-    select: { titulo: true },
-  })
+  const edital = await editaisRepository.findTituloBySlug(slug)
 
   return {
     title: edital ? `${edital.titulo} — Versão Acessível` : 'Edital — Versão Acessível',
@@ -23,20 +20,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function EditalAcessivelPage({ params }: Props) {
   const { slug } = await params
 
-  const edital = await prisma.edital.findUnique({
-    where: { slug },
-    select: {
-      id: true,
-      titulo: true,
-      ano: true,
-      status: true,
-      resumo: true,
-      conteudoAcessivel: true,
-      regrasElegibilidade: true,
-      acoesAfirmativas: true,
-      cronograma: true,
-    },
-  })
+  const edital = await editaisRepository.findAcessivelBySlug(slug)
 
   if (!edital || edital.status === 'RASCUNHO') notFound()
 

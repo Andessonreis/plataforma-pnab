@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@server/lib/db'
+import { editaisRepository } from '@server/modules/editais/editais/editais.repository'
 import { auth } from '@server/lib/auth'
 import { Badge, Button, PageHeader } from '@client/components/ui'
 import {
@@ -42,10 +43,7 @@ interface FaqItemData {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
 
-  const edital = await prisma.edital.findUnique({
-    where: { slug },
-    select: { titulo: true, resumo: true, status: true },
-  })
+  const edital = await editaisRepository.findMetadataBySlug(slug)
 
   if (!edital || edital.status === 'RASCUNHO') {
     return { title: 'Edital não encontrado' }
@@ -64,18 +62,7 @@ export default async function EditalPage({ params }: Props) {
   const session = await auth()
   const isAdmin = session?.user?.role === 'ADMIN'
 
-  const edital = await prisma.edital.findUnique({
-    where: { slug },
-    include: {
-      arquivos: {
-        orderBy: { createdAt: 'asc' },
-      },
-      faqItems: {
-        where: { publicado: true },
-        orderBy: { ordem: 'asc' },
-      },
-    },
-  })
+  const edital = await editaisRepository.findBySlugWithRelations(slug)
 
   if (!edital || (!isAdmin && edital.status === 'RASCUNHO')) {
     notFound()

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@server/lib/db'
+import { editaisRepository } from '@server/modules/editais/editais/editais.repository'
 import { PageHeader, Badge } from '@client/components/ui'
 import { IconArrowLeft } from '@client/components/ui/icons'
 
@@ -11,10 +12,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
-  const edital = await prisma.edital.findUnique({
-    where: { slug },
-    select: { titulo: true },
-  })
+  const edital = await editaisRepository.findTituloBySlug(slug)
 
   return {
     title: edital ? `Resultados — ${edital.titulo}` : 'Resultados',
@@ -24,16 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function PublicResultadosPage({ params }: Props) {
   const { slug } = await params
 
-  const edital = await prisma.edital.findUnique({
-    where: { slug },
-    select: {
-      id: true,
-      titulo: true,
-      ano: true,
-      status: true,
-      formulaAvaliacao: true,
-    },
-  })
+  const edital = await editaisRepository.findResultadosHeaderBySlug(slug)
 
   if (!edital) notFound()
 

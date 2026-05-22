@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import type { EditalStatus } from '@prisma/client'
-import { prisma } from '@server/lib/db'
+import { editaisRepository } from '@server/modules/editais/editais/editais.repository'
 import { Badge, Button, Card, PageHeader, FilterTabs, EmptyState, Pagination } from '@client/components/ui'
 import { IconCalendar, IconCurrency, IconDocument } from '@client/components/ui/icons'
 import { getStatusDisplay, OPEN_STATUSES, CLOSED_STATUSES } from '@/lib/utils/edital-status'
@@ -72,21 +72,11 @@ export default async function EditaisPage({
   const currentPage = Math.max(1, Number(params.page) || 1)
 
   const statusFilter = getStatusFilter(activeTab)
-  const where = {
-    status: statusFilter
-      ? { in: statusFilter }
-      : { not: 'RASCUNHO' as EditalStatus },
-  }
-
-  const [editais, total] = await Promise.all([
-    prisma.edital.findMany({
-      where,
-      orderBy: [{ createdAt: 'desc' }],
-      skip: (currentPage - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
-    }),
-    prisma.edital.count({ where }),
-  ])
+  const { items: editais, total } = await editaisRepository.listPublic({
+    page: currentPage,
+    pageSize: PAGE_SIZE,
+    statusFilter,
+  })
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
