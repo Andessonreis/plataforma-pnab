@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { isFaseCompleted, isFaseCurrent } from '../cronograma'
+import { isFaseCompleted, isFaseCurrent, parseCronograma } from '../cronograma'
 
 describe('isFaseCompleted', () => {
   it('fase anterior ao status atual → true', () => {
@@ -48,5 +48,67 @@ describe('isFaseCurrent', () => {
 
   it('status desconhecido → false', () => {
     expect(isFaseCurrent('INVALIDO' as never, 'PUBLICADO')).toBe(false)
+  })
+})
+
+describe('parseCronograma', () => {
+  it('item com tipo "fase" recebe a fase declarada', () => {
+    const result = parseCronograma([
+      { tipo: 'fase', fase: 'HABILITACAO', dataHora: '23/05/2026 00:00' },
+    ])
+    expect(result).toHaveLength(1)
+    expect(result[0]?.fase).toBe('HABILITACAO')
+  })
+
+  it('item custom NÃO recebe fase por fuzzy match no label — bug do "Prazo para recurso da habilitação"', () => {
+    // O label contém a palavra "habilitação", mas o admin marcou como custom.
+    // Antes do fix, isso casava com o pattern 'habilitacao' e o item era tratado
+    // como a fase HABILITACAO, ficando "Em andamento" junto com a fase real.
+    const result = parseCronograma([
+      { tipo: 'fase', fase: 'HABILITACAO', dataHora: '23/05/2026 00:00' },
+      {
+        tipo: 'custom',
+        label: 'Prazo para recurso da habilitação',
+        dataHora: '27/05/2026 00:00',
+        fimEm: '29/05/2026 23:59',
+      },
+    ])
+    expect(result).toHaveLength(2)
+    expect(result[0]?.fase).toBe('HABILITACAO')
+    expect(result[1]?.fase).toBeUndefined()
+    expect(result[1]?.label).toBe('Prazo para recurso da habilitação')
+    expect(result[1]?.fimEm).toBe('29/05/2026 23:59')
+  })
+
+  it('item custom com label sem keyword de fase também não recebe fase', () => {
+    const result = parseCronograma([
+      { tipo: 'custom', label: 'Convocação de suplente (SH)', dataHora: '30/06/2026 09:00' },
+    ])
+    expect(result[0]?.fase).toBeUndefined()
+  })
+
+  it('outros labels custom com keywords ambíguas — sem fase inferida', () => {
+    const result = parseCronograma([
+      { tipo: 'custom', label: 'Prazo para recurso da avaliação', dataHora: '09/06/2026 00:00' },
+      { tipo: 'custom', label: 'Publicação dos habilitados após recursos', dataHora: '01/06/2026 09:00' },
+    ])
+    expect(result[0]?.fase).toBeUndefined()
+    expect(result[1]?.fase).toBeUndefined()
+  })
+
+  it('formato legado (sem campo tipo) — fuzzy match preserva comportamento', () => {
+    const result = parseCronograma([
+      { label: 'Início da Habilitação', dataHora: '23/05/2026 00:00' },
+    ])
+    expect(result[0]?.fase).toBe('HABILITACAO')
+  })
+
+  it('filtra item PUBLICADO do banco — a data real vem de publishedAt', () => {
+    const result = parseCronograma([
+      { tipo: 'fase', fase: 'PUBLICADO', dataHora: '10/04/2026 07:56' },
+      { tipo: 'fase', fase: 'HABILITACAO', dataHora: '23/05/2026 00:00' },
+    ])
+    expect(result).toHaveLength(1)
+    expect(result[0]?.fase).toBe('HABILITACAO')
   })
 })

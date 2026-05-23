@@ -140,7 +140,18 @@ export function parseCronograma(raw: unknown): CronogramaDisplayItem[] {
           fase: item.fase as EditalStatus,
         }
       }
-      // Formato novo com tipo 'custom' ou formato legado (tem label)
+      // Formato novo com tipo 'custom' — admin marcou explicitamente como item
+      // custom; NUNCA inferir fase por fuzzy match no label (causaria falso
+      // "Em andamento", ex.: "Prazo para recurso da habilitação" casando com
+      // o pattern 'habilitacao' e sendo tratado como a fase HABILITACAO).
+      if (item.tipo === 'custom') {
+        return {
+          label: typeof item.label === 'string' ? item.label : '—',
+          dataHora: String(item.dataHora),
+          ...(typeof item.fimEm === 'string' && item.fimEm ? { fimEm: item.fimEm } : {}),
+        }
+      }
+      // Formato legado (sem campo `tipo`) — fuzzy match preserva comportamento antigo
       const legacyFase = typeof item.label === 'string' ? matchLabelToFase(item.label) : null
       return {
         label: typeof item.label === 'string' ? item.label : '—',
