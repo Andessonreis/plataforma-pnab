@@ -108,6 +108,17 @@ export const TEMPLATE_META: Record<EmailTemplate, TemplateMeta> = {
       { key: 'url', description: 'Link da área do proponente.', sample: 'https://culturaeturismo.irece.ba.gov.br/proponente', required: true },
     ],
   },
+  equipe_habilitacao_pendente: {
+    label: 'Habilitação pendente (equipe)',
+    description: 'Lembrete interno disparado quando um edital entra na fase de habilitação — vai pros admins ativos.',
+    placeholders: [
+      { key: 'nomeAdmin', description: 'Nome do administrador destinatário.', sample: 'Maria Silva', required: true },
+      { key: 'editalTitulo', description: 'Título do edital cuja habilitação foi aberta.', sample: 'Chamamento Público — Pontos de Cultura de Irecê', required: true },
+      { key: 'editalAno', description: 'Ano do edital.', sample: '2026', required: true },
+      { key: 'inscricoesPendentes', description: 'Quantas inscrições estão aguardando análise no momento do disparo.', sample: '3', required: true },
+      { key: 'url', description: 'Link direto pro painel de habilitação no admin.', sample: 'https://culturaeturismo.irece.ba.gov.br/admin/habilitacao', required: true },
+    ],
+  },
   notificacao_generica: {
     label: 'Notificação genérica (campanhas)',
     description: 'Usado pelas campanhas em /admin/notificacoes — corpo HTML autoral.',
