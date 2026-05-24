@@ -2,38 +2,41 @@ import { describe, expect, it } from 'vitest'
 import { defaultSubjectFor, renderTemplate } from '../index'
 
 describe('Layout compartilhado', () => {
-  it('todos os templates incluem o logo da Prefeitura (URL absoluta)', async () => {
+  it('todos os templates incluem a marca institucional e o brasão (URL absoluta)', async () => {
     const { html } = await renderTemplate('boas_vindas', {
       nome: 'Teste',
       url: 'http://x',
     })
-    expect(html).toContain('/images/logo-irece-color.png')
-    expect(html).toMatch(/https?:\/\/[^"]+\/images\/logo-irece-color\.png/)
-    expect(html).toContain('Prefeitura de Irecê')
+    expect(html).toContain('/images/marca-100-anos-cultura.jpeg')
+    expect(html).toContain('/images/brasao-irece.png')
+    expect(html).toMatch(/https?:\/\/[^"]+\/images\/marca-100-anos-cultura\.jpeg/)
+    expect(html).toContain('Prefeitura')
   })
 
-  it('logo usa NEXT_PUBLIC_SITE_URL quando setada', async () => {
+  it('assets usam NEXT_PUBLIC_SITE_URL quando setada', async () => {
     const prev = process.env.NEXT_PUBLIC_SITE_URL
     process.env.NEXT_PUBLIC_SITE_URL = 'https://example.test'
     try {
       const { html } = await renderTemplate('protocolo_atendimento', {
         protocolo: 'X',
       })
-      expect(html).toContain('https://example.test/images/logo-irece-color.png')
+      expect(html).toContain('https://example.test/images/marca-100-anos-cultura.jpeg')
+      expect(html).toContain('https://example.test/images/brasao-irece.png')
     } finally {
       if (prev === undefined) delete process.env.NEXT_PUBLIC_SITE_URL
       else process.env.NEXT_PUBLIC_SITE_URL = prev
     }
   })
 
-  it('logo cai no fallback culturaeturismo quando NEXT_PUBLIC_SITE_URL ausente', async () => {
+  it('assets caem no fallback culturaeturismo quando NEXT_PUBLIC_SITE_URL ausente', async () => {
     const prev = process.env.NEXT_PUBLIC_SITE_URL
     delete process.env.NEXT_PUBLIC_SITE_URL
     try {
       const { html } = await renderTemplate('protocolo_atendimento', {
         protocolo: 'X',
       })
-      expect(html).toContain('https://culturaeturismo.irece.ba.gov.br/images/logo-irece-color.png')
+      expect(html).toContain('https://culturaeturismo.irece.ba.gov.br/images/marca-100-anos-cultura.jpeg')
+      expect(html).toContain('https://culturaeturismo.irece.ba.gov.br/images/brasao-irece.png')
     } finally {
       if (prev !== undefined) process.env.NEXT_PUBLIC_SITE_URL = prev
     }

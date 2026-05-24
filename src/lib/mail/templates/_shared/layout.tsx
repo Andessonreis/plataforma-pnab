@@ -17,25 +17,26 @@ function getBaseUrl(): string {
   return (process.env.NEXT_PUBLIC_SITE_URL || SITE_URL_FALLBACK).replace(/\/$/, '')
 }
 
-// Em produção esses assets são servidos via URL pública. No script de
-// piloto a gente passa cid: (Resend inline attachment) pra contornar
-// arquivos ainda não publicados em prod.
-const ASSET_BASE = process.env.PNAB_EMAIL_ASSET_BASE || `${getBaseUrl()}/images`
+// Resolvido em runtime (não em tempo de import) — testes setam
+// NEXT_PUBLIC_SITE_URL depois do módulo já ter sido carregado, e o
+// script de piloto pode setar PNAB_EMAIL_ASSET_BASE='cid:inline' pra
+// usar inline attachments em vez de URLs públicas.
+function getAssetBase(): string {
+  return process.env.PNAB_EMAIL_ASSET_BASE || `${getBaseUrl()}/images`
+}
 
 function getMarcaUrl(): string {
   // Marca "100 anos régua cultura" — banner institucional oficial com
   // fundo preto embutido nos pixels. Imune à inversão de cores dos
   // clients de email porque o fundo é parte da imagem.
-  return ASSET_BASE.startsWith('cid:')
-    ? 'cid:marca-100-anos'
-    : `${ASSET_BASE}/marca-100-anos-cultura.jpeg`
+  const base = getAssetBase()
+  return base.startsWith('cid:') ? 'cid:marca-100-anos' : `${base}/marca-100-anos-cultura.jpeg`
 }
 
 function getBrasaoUrl(): string {
   // Brasão oficial de Irecê — selo minimalista (32px) na faixa verde.
-  return ASSET_BASE.startsWith('cid:')
-    ? 'cid:brasao-irece'
-    : `${ASSET_BASE}/brasao-irece.png`
+  const base = getAssetBase()
+  return base.startsWith('cid:') ? 'cid:brasao-irece' : `${base}/brasao-irece.png`
 }
 
 export function Layout({ preview, children }: LayoutProps) {
