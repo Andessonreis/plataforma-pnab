@@ -131,7 +131,7 @@ export function parseCronograma(raw: unknown): CronogramaDisplayItem[] {
       (item): item is Record<string, unknown> =>
         typeof item === 'object' && item !== null && typeof item.dataHora === 'string',
     )
-    .map((item) => {
+    .map((item): CronogramaDisplayItem => {
       // Formato novo com tipo 'fase'
       if (item.tipo === 'fase' && typeof item.fase === 'string') {
         return {
@@ -149,6 +149,7 @@ export function parseCronograma(raw: unknown): CronogramaDisplayItem[] {
           label: typeof item.label === 'string' ? item.label : '—',
           dataHora: String(item.dataHora),
           ...(typeof item.fimEm === 'string' && item.fimEm ? { fimEm: item.fimEm } : {}),
+          ...(typeof item.acao === 'string' ? { acao: item.acao as CronogramaDisplayItem['acao'] } : {}),
         }
       }
       // Formato legado (sem campo `tipo`) — fuzzy match preserva comportamento antigo

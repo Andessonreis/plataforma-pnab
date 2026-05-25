@@ -22,6 +22,7 @@ import {
 import { getStatusDisplay } from '@/lib/utils/edital-status'
 import { formatCurrency, formatDate, formatDateTime, parseBrazilDateTime } from '@/lib/utils/format'
 import { parseCronogramaPublico, getNextDeadline, getCronogramaItemStatus } from '@/lib/utils/cronograma'
+import { isAcaoPublicacao } from '@/types/cronograma'
 import { getBadgeVariantForTipo } from '@/lib/utils/badge-variant'
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
@@ -311,6 +312,38 @@ export default async function EditalPage({ params }: Props) {
                                   <IconClock className="h-3 w-3" />
                                   Em andamento
                                 </span>
+                              )}
+
+                              {/* Links de ação quando publicação ou resultado disponível */}
+                              {(isPast || isCurrent) && isAcaoPublicacao(item.acao) && (
+                                <div className="mt-2 flex flex-wrap items-center gap-3 text-xs">
+                                  <Link
+                                    href={`/editais/${slug}/publicacoes/${item.acao}`}
+                                    className="inline-flex items-center gap-1 font-medium text-brand-600 hover:text-brand-700 hover:underline"
+                                  >
+                                    Ver lista
+                                    <IconArrowRight className="h-3 w-3" aria-hidden="true" />
+                                  </Link>
+                                  <a
+                                    href={`/api/editais/${slug}/publicacoes/${item.acao}?format=csv`}
+                                    className="inline-flex items-center gap-1 font-medium text-brand-600 hover:text-brand-700 hover:underline"
+                                  >
+                                    <IconDownload className="h-3 w-3" aria-hidden="true" />
+                                    Baixar CSV
+                                  </a>
+                                </div>
+                              )}
+                              {(isPast || isCurrent)
+                                && (item.fase === 'RESULTADO_PRELIMINAR' || item.fase === 'RESULTADO_FINAL') && (
+                                <div className="mt-2 text-xs">
+                                  <Link
+                                    href={`/editais/${slug}/resultados`}
+                                    className="inline-flex items-center gap-1 font-medium text-brand-600 hover:text-brand-700 hover:underline"
+                                  >
+                                    Ver resultados
+                                    <IconArrowRight className="h-3 w-3" aria-hidden="true" />
+                                  </Link>
+                                </div>
                               )}
                             </div>
                           </li>
