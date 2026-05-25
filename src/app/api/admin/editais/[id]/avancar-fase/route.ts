@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { logAudit } from '@/lib/audit'
+import { notifyEquipeHabilitacaoAberta } from '@/lib/edital/notify-habilitacao-aberta'
 import type { EditalStatus } from '@prisma/client'
 
 export const runtime = 'nodejs'
@@ -94,6 +95,17 @@ export async function POST(
       where: { id },
       data: updateData,
     })
+
+    // Lembrete operacional pra equipe quando habilitação abre por ação manual.
+    if (data.proximoStatus === 'HABILITACAO') {
+      try {
+        await notifyEquipeHabilitacaoAberta(id)
+      } catch (err) {
+        console.error(
+          { requestId, msg: 'Falha ao notificar equipe sobre habilitação', err: err instanceof Error ? err.message : err },
+        )
+      }
+    }
 
     // Audit log marcando origem manual (diferenciar do scheduler automático)
     await logAudit({

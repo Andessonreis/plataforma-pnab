@@ -13,6 +13,11 @@ import {
   type ComprovanteInscricaoData,
 } from './comprovante-inscricao'
 import {
+  EquipeHabilitacaoPendente,
+  equipeHabilitacaoPendenteSubject,
+  type EquipeHabilitacaoPendenteData,
+} from './equipe-habilitacao-pendente'
+import {
   Habilitacao,
   habilitacaoSubject,
   type HabilitacaoData,
@@ -69,6 +74,7 @@ export type EmailTemplate =
   | 'recurso_submetido'
   | 'recurso_decidido'
   | 'habilitacao'
+  | 'equipe_habilitacao_pendente'
   | 'notificacao_generica'
 
 export interface TemplateDataMap {
@@ -82,6 +88,7 @@ export interface TemplateDataMap {
   recurso_submetido: RecursoSubmetidoData
   recurso_decidido: RecursoDecididoData
   habilitacao: HabilitacaoData
+  equipe_habilitacao_pendente: EquipeHabilitacaoPendenteData
   notificacao_generica: NotificacaoGenericaData
 }
 
@@ -132,6 +139,10 @@ export const templateRegistry: Registry = {
   habilitacao: {
     Component: Habilitacao,
     defaultSubject: habilitacaoSubject,
+  },
+  equipe_habilitacao_pendente: {
+    Component: EquipeHabilitacaoPendente,
+    defaultSubject: equipeHabilitacaoPendenteSubject,
   },
   notificacao_generica: {
     Component: NotificacaoGenerica,
