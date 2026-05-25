@@ -9,13 +9,42 @@ export interface CronogramaFaseItem {
 }
 
 // Ações que items custom podem disparar/janelar.
-// Usadas pra gating de funcionalidades por janela temporal:
+// Dois grupos:
+//
+// Janelas temporais (gating de funcionalidade entre dataHora e fimEm):
 //   - RECURSO_HABILITACAO_JANELA: libera form de recurso fase HABILITACAO
 //   - RECURSO_RESULTADO_JANELA:   libera form de recurso fase RESULTADO_PRELIMINAR
+//
+// Marcos de publicação (disponibilizam lista pública a partir de dataHora):
+//   - PUBLICACAO_INSCRITOS:                 lista de inscrições com status >= ENVIADA
+//   - PUBLICACAO_HABILITADOS:               lista de inscrições com status HABILITADA
+//   - PUBLICACAO_HABILITADOS_POS_RECURSOS:  idem após decisão dos recursos
+//
 // Outras ações futuras podem ser adicionadas sem mudar schema.
 export type AcaoJanela =
   | 'RECURSO_HABILITACAO_JANELA'
   | 'RECURSO_RESULTADO_JANELA'
+  | 'PUBLICACAO_INSCRITOS'
+  | 'PUBLICACAO_HABILITADOS'
+  | 'PUBLICACAO_HABILITADOS_POS_RECURSOS'
+
+/** Subset de ações que disponibilizam lista pública. */
+export type AcaoPublicacao = Extract<
+  AcaoJanela,
+  'PUBLICACAO_INSCRITOS' | 'PUBLICACAO_HABILITADOS' | 'PUBLICACAO_HABILITADOS_POS_RECURSOS'
+>
+
+export const ACOES_PUBLICACAO: AcaoPublicacao[] = [
+  'PUBLICACAO_INSCRITOS',
+  'PUBLICACAO_HABILITADOS',
+  'PUBLICACAO_HABILITADOS_POS_RECURSOS',
+]
+
+export function isAcaoPublicacao(acao: string | undefined): acao is AcaoPublicacao {
+  return acao === 'PUBLICACAO_INSCRITOS'
+    || acao === 'PUBLICACAO_HABILITADOS'
+    || acao === 'PUBLICACAO_HABILITADOS_POS_RECURSOS'
+}
 
 export interface CronogramaCustomItem {
   tipo: 'custom'
@@ -55,6 +84,8 @@ export interface CronogramaDisplayItem {
   fase?: EditalStatus
   /** Fim da janela (apenas custom items com range temporal) */
   fimEm?: string
+  /** Ação associada (preservada de items custom — usada pra render de links de publicação) */
+  acao?: AcaoJanela
 }
 
 // ── Fases do ciclo de vida do edital (sem RASCUNHO) ─────────────────────────
