@@ -260,10 +260,10 @@ export default async function EditalPage({ params }: Props) {
                                     : 'hover:bg-slate-50',
                               ].join(' ')}
                             >
-                              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-4">
                                 <span
                                   className={[
-                                    'font-medium',
+                                    'font-medium min-w-0 flex-1',
                                     isPast ? 'text-slate-500' : 'text-slate-900',
                                     isCurrent ? 'font-semibold' : '',
                                   ].join(' ')}
@@ -273,7 +273,7 @@ export default async function EditalPage({ params }: Props) {
                                 {item.fimEm ? (
                                   <span
                                     className={[
-                                      'text-sm font-medium tabular-nums',
+                                      'text-sm font-medium tabular-nums shrink-0 whitespace-nowrap sm:text-right',
                                       isPast
                                         ? 'text-slate-400'
                                         : isCurrent
@@ -289,7 +289,7 @@ export default async function EditalPage({ params }: Props) {
                                   <time
                                     dateTime={item.dataHora}
                                     className={[
-                                      'text-sm font-medium tabular-nums',
+                                      'text-sm font-medium tabular-nums shrink-0 whitespace-nowrap sm:text-right',
                                       isPast
                                         ? 'text-slate-400'
                                         : isCurrent
