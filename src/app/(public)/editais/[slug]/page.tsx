@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/icons'
 import { getStatusDisplay } from '@/lib/utils/edital-status'
 import { formatCurrency, formatDate, formatDateTime, parseBrazilDateTime } from '@/lib/utils/format'
-import { parseCronogramaPublico, getNextDeadline, isFaseCompleted, isFaseCurrent } from '@/lib/utils/cronograma'
+import { parseCronogramaPublico, getNextDeadline, getCronogramaItemStatus } from '@/lib/utils/cronograma'
 import { getBadgeVariantForTipo } from '@/lib/utils/badge-variant'
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
@@ -231,19 +231,9 @@ export default async function EditalPage({ params }: Props) {
 
                     <ol className="space-y-1">
                       {cronograma.map((item, index) => {
-                        const itemDate = parseBrazilDateTime(item.dataHora)
-                        const itemFim = item.fimEm ? parseBrazilDateTime(item.fimEm) : null
-                        // Para items com janela (fimEm), "passou" só quando o fim passou.
-                        // Para marcos pontuais (sem fimEm), passou quando a data passou.
-                        const datePast = itemFim ? itemFim < now : itemDate < now
-                        const dateActive = itemFim ? itemDate <= now && now <= itemFim : false
-                        // 3 estados: concluído (já passou), em andamento (fase atual ou janela ativa), futuro
-                        const isPast = item.fase
-                          ? isFaseCompleted(item.fase, edital.status)
-                          : datePast
-                        const isCurrent = item.fase
-                          ? isFaseCurrent(item.fase, edital.status)
-                          : dateActive
+                        const status = getCronogramaItemStatus(cronograma, index, now)
+                        const isPast = status === 'past'
+                        const isCurrent = status === 'current'
 
                         return (
                           <li key={index} className="relative pl-10">

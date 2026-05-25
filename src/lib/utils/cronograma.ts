@@ -203,6 +203,57 @@ export function getNextDeadline(cronograma: unknown): CronogramaDisplayItem | nu
   return future[0] ?? null
 }
 
+// ── getCronogramaItemStatus — status visual por ordem do cronograma ─────────
+
+export type CronogramaItemStatus = 'past' | 'current' | 'future'
+
+/**
+ * Calcula o status visual de um item do cronograma baseado **na ordem do array
+ * e nas datas**, não no status do edital. Regra:
+ *
+ *   - Se o item tem `fimEm` (janela): usa a janela explícita.
+ *   - Caso contrário: o "fim" implícito é o início do próximo item com data.
+ *   - Se for o último item (sem próximo): vira `past` assim que a data passa
+ *     (marco pontual, ex.: ENCERRADO — nunca fica "em andamento" indefinido).
+ *
+ * Permite que items custom intercalados (ex.: "Publicação no Diário Oficial")
+ * façam um item de fase anterior ficar `past`, mesmo que o status do edital
+ * no banco ainda esteja na fase. Isso é proposital: o cronograma público
+ * descreve marcos para o cidadão; o status do edital é uma máquina de estados
+ * separada gerida pelo scheduler/admin.
+ */
+export function getCronogramaItemStatus(
+  items: CronogramaDisplayItem[],
+  index: number,
+  now: Date = new Date(),
+): CronogramaItemStatus {
+  const item = items[index]
+  if (!item) return 'future'
+
+  const start = parseBrazilDateTime(item.dataHora)
+  if (isNaN(start.getTime())) return 'future'
+
+  if (item.fimEm) {
+    const end = parseBrazilDateTime(item.fimEm)
+    if (!isNaN(end.getTime())) {
+      if (now < start) return 'future'
+      if (now > end) return 'past'
+      return 'current'
+    }
+  }
+
+  if (now < start) return 'future'
+
+  for (let i = index + 1; i < items.length; i++) {
+    const nextStart = parseBrazilDateTime(items[i].dataHora)
+    if (!isNaN(nextStart.getTime())) {
+      return now >= nextStart ? 'past' : 'current'
+    }
+  }
+
+  return 'past'
+}
+
 // ── isFaseCompleted — verifica se o edital já passou por uma fase ────────────
 
 /**
