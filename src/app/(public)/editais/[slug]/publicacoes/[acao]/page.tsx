@@ -81,6 +81,11 @@ export default async function PublicacaoPage({ params }: Props) {
 
   const csvUrl = `/api/editais/${slug}/publicacoes/${acao}?format=csv`
 
+  // Lista de inscritos não expõe o status processual posterior (HABILITADA,
+  // INABILITADA, etc.) — divulga apenas que a inscrição foi recebida. Status
+  // só aparece nas listas de habilitados (que filtram exatamente por status).
+  const exibirStatus = acao !== 'PUBLICACAO_INSCRITOS'
+
   return (
     <>
       <PageHeader title={`${publicacao.label} — ${edital.titulo}`} breadcrumbs={breadcrumbs}>
@@ -118,7 +123,9 @@ export default async function PublicacaoPage({ params }: Props) {
                       <th className="text-left py-3 px-4 font-semibold text-slate-600">Proponente</th>
                       <th className="text-left py-3 px-4 font-semibold text-slate-600">CPF/CNPJ</th>
                       <th className="text-left py-3 px-4 font-semibold text-slate-600">Categoria</th>
-                      <th className="text-left py-3 px-4 font-semibold text-slate-600">Status</th>
+                      {exibirStatus && (
+                        <th className="text-left py-3 px-4 font-semibold text-slate-600">Status</th>
+                      )}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -128,11 +135,13 @@ export default async function PublicacaoPage({ params }: Props) {
                         <td className="py-3 px-4 text-slate-900">{maskName(item.nome)}</td>
                         <td className="py-3 px-4 text-slate-700 tabular-nums">{maskCpfCnpj(item.cpfCnpj)}</td>
                         <td className="py-3 px-4 text-slate-700">{item.categoria ?? '—'}</td>
-                        <td className="py-3 px-4">
-                          <Badge variant={inscricaoStatusVariant[item.status]}>
-                            {inscricaoStatusLabel[item.status] ?? item.status}
-                          </Badge>
-                        </td>
+                        {exibirStatus && (
+                          <td className="py-3 px-4">
+                            <Badge variant={inscricaoStatusVariant[item.status]}>
+                              {inscricaoStatusLabel[item.status] ?? item.status}
+                            </Badge>
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>

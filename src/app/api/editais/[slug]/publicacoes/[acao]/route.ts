@@ -81,15 +81,16 @@ export async function GET(req: NextRequest, context: RouteContext) {
     }))
 
     if (parsedQuery.data.format === 'csv') {
+      // Lista de inscritos não expõe status processual (HABILITADA/INABILITADA/etc.)
+      const incluirStatus = acao !== 'PUBLICACAO_INSCRITOS'
+      const header = incluirStatus
+        ? ['Numero', 'Nome', 'CPF/CNPJ', 'Categoria', 'Status']
+        : ['Numero', 'Nome', 'CPF/CNPJ', 'Categoria']
       const rows: Array<Array<string | number>> = [
-        ['Numero', 'Nome', 'CPF/CNPJ', 'Categoria', 'Status'],
-        ...itemsPublicos.map((i) => [
-          i.numero,
-          i.nome,
-          i.cpfCnpj,
-          i.categoria ?? '',
-          i.statusLabel,
-        ]),
+        header,
+        ...itemsPublicos.map((i) => incluirStatus
+          ? [i.numero, i.nome, i.cpfCnpj, i.categoria ?? '', i.statusLabel]
+          : [i.numero, i.nome, i.cpfCnpj, i.categoria ?? '']),
       ]
       const csv = toCsv(rows)
       const datePart = new Date().toISOString().slice(0, 10)
