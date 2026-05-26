@@ -19,7 +19,7 @@ import {
   IconDocument,
   IconQuestion,
 } from '@/components/ui/icons'
-import { getStatusDisplay } from '@/lib/utils/edital-status'
+import { getPublicStatusDisplay } from '@/lib/utils/edital-status'
 import { formatCurrency, formatDate, formatDateTime, parseBrazilDateTime } from '@/lib/utils/format'
 import { parseCronogramaPublico, getNextDeadline, getCronogramaItemStatus } from '@/lib/utils/cronograma'
 import { isAcaoPublicacao } from '@/types/cronograma'
@@ -95,9 +95,9 @@ export default async function EditalPage({ params }: Props) {
     }
   }
 
-  const statusDisplay = getStatusDisplay(edital.status)
   const cronograma = parseCronogramaPublico(edital.cronograma, edital.status, edital.publishedAt)
   const now = new Date()
+  const statusDisplay = getPublicStatusDisplay(cronograma, edital.status, now)
   const isOpen = edital.status === 'INSCRICOES_ABERTAS'
 
   const nextDeadline = getNextDeadline(edital.cronograma)
