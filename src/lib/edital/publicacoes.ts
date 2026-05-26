@@ -8,9 +8,13 @@ import { isAcaoPublicacao } from '@/types/cronograma'
 // Status que cada tipo de publicação enumera.
 //
 // INSCRITOS: tudo que saiu de RASCUNHO (foi efetivamente submetido).
-// HABILITADOS: cumulativo de HABILITADA (inclui quem avançou pra avaliação,
-// resultado, contemplada, etc.) — espelha cumulativeStatuses.HABILITADA.
-// POS_RECURSOS: mesma fonte; a diferença é o momento (snapshot pós-decisão).
+// HABILITADOS: cumulativo de HABILITADA + INABILITADA — a publicação do
+// resultado da habilitação no Diário Oficial precisa listar AMBOS os lados
+// pra que o inabilitado possa abrir recurso. A coluna Status na UI/CSV
+// diferencia visualmente.
+// POS_RECURSOS: mesma fonte; a diferença é o momento (snapshot pós-decisão
+// dos recursos — quem foi inabilitado mas teve recurso provido aparece
+// como HABILITADA aqui).
 const PUBLICACAO_STATUS_FILTER: Record<AcaoPublicacao, InscricaoStatus[]> = {
   PUBLICACAO_INSCRITOS: [
     'ENVIADA',
@@ -24,14 +28,14 @@ const PUBLICACAO_STATUS_FILTER: Record<AcaoPublicacao, InscricaoStatus[]> = {
     'NAO_CONTEMPLADA',
     'SUPLENTE',
   ],
-  PUBLICACAO_HABILITADOS: cumulativeStatuses.HABILITADA,
-  PUBLICACAO_HABILITADOS_POS_RECURSOS: cumulativeStatuses.HABILITADA,
+  PUBLICACAO_HABILITADOS: [...cumulativeStatuses.HABILITADA, 'INABILITADA'],
+  PUBLICACAO_HABILITADOS_POS_RECURSOS: [...cumulativeStatuses.HABILITADA, 'INABILITADA'],
 }
 
 export const PUBLICACAO_LABELS: Record<AcaoPublicacao, string> = {
   PUBLICACAO_INSCRITOS: 'Lista de inscritos',
-  PUBLICACAO_HABILITADOS: 'Lista de habilitados',
-  PUBLICACAO_HABILITADOS_POS_RECURSOS: 'Lista de habilitados após recursos',
+  PUBLICACAO_HABILITADOS: 'Resultado da habilitação',
+  PUBLICACAO_HABILITADOS_POS_RECURSOS: 'Resultado da habilitação após recursos',
 }
 
 export interface PublicacaoItem {

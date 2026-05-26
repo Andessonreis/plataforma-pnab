@@ -104,7 +104,7 @@ describe('getPublicacao', () => {
     })
   })
 
-  it('PUBLICACAO_HABILITADOS filtra por status cumulativo de HABILITADA', async () => {
+  it('PUBLICACAO_HABILITADOS filtra por status cumulativo de HABILITADA + INABILITADA', async () => {
     vi.mocked(prisma.edital.findUnique).mockResolvedValueOnce(EDITAL_BASE as never)
     vi.mocked(prisma.inscricao.findMany).mockResolvedValueOnce([] as never)
 
@@ -114,8 +114,9 @@ describe('getPublicacao', () => {
     const call = vi.mocked(prisma.inscricao.findMany).mock.calls[0]?.[0]
     expect(call?.where?.status?.in).toContain('HABILITADA')
     expect(call?.where?.status?.in).toContain('CONTEMPLADA')
-    // Não inclui INABILITADA
-    expect(call?.where?.status?.in).not.toContain('INABILITADA')
+    // Inclui INABILITADA — a publicação do resultado da habilitação
+    // precisa listar os dois lados (habilitados + inabilitados)
+    expect(call?.where?.status?.in).toContain('INABILITADA')
     // Não inclui ENVIADA puro (não passou na habilitação)
     expect(call?.where?.status?.in).not.toContain('ENVIADA')
   })
