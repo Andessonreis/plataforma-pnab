@@ -49,6 +49,25 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         })
       : 0
 
+  // Avaliação em andamento — destaca o menu enquanto houver edital na fase de
+  // avaliação; o badge mostra as inscrições ainda não avaliadas por completo.
+  const [editaisEmAvaliacao, avaliacaoPendentes] =
+    role === 'ADMIN'
+      ? await Promise.all([
+          prisma.edital.count({ where: { status: 'AVALIACAO' } }),
+          prisma.inscricao.count({
+            where: {
+              edital: { status: 'AVALIACAO' },
+              status: { in: ['HABILITADA', 'EM_AVALIACAO'] },
+              OR: [
+                { avaliacoes: { none: {} } },
+                { avaliacoes: { some: { finalizada: false } } },
+              ],
+            },
+          }),
+        ])
+      : [0, 0]
+
   return (
     <div className="flex min-h-screen bg-slate-50">
       <AdminSidebar
@@ -57,6 +76,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         roleLabel={roleLabels[role] ?? role}
         userAvatarUrl={avatarUrl}
         habilitacaoPendentes={habilitacaoPendentes}
+        avaliacaoPendentes={avaliacaoPendentes}
+        avaliacaoEmAndamento={editaisEmAvaliacao > 0}
       />
 
       <div className="flex-1 min-w-0 lg:ml-64">

@@ -6,9 +6,11 @@ import { Button } from '@/components/ui'
 interface ResultActionsProps {
   editalId: string
   editalStatus: string
+  /** Há avaliação finalizada para consolidar? Sem isso não há o que publicar. */
+  temAvaliacoes?: boolean
 }
 
-export function ResultActions({ editalId, editalStatus }: ResultActionsProps) {
+export function ResultActions({ editalId, editalStatus, temAvaliacoes = true }: ResultActionsProps) {
   const [loading, setLoading] = useState<string | null>(null)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [confirmAction, setConfirmAction] = useState<string | null>(null)
@@ -44,9 +46,16 @@ export function ResultActions({ editalId, editalStatus }: ResultActionsProps) {
 
   const canPublishPreliminar = ['INSCRICOES_ENCERRADAS', 'HABILITACAO', 'AVALIACAO', 'RESULTADO_PRELIMINAR'].includes(editalStatus)
   const canPublishFinal = ['RESULTADO_PRELIMINAR', 'RECURSO', 'RESULTADO_FINAL'].includes(editalStatus)
+  const bloqueado = !temAvaliacoes
 
   return (
     <div className="space-y-4">
+      {bloqueado && (canPublishPreliminar || canPublishFinal) && (
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
+          Nenhuma avaliação finalizada para consolidar. A publicação fica disponível quando os avaliadores concluírem as notas.
+        </div>
+      )}
+
       {/* Mensagem de feedback */}
       {message && (
         <div
@@ -91,7 +100,7 @@ export function ResultActions({ editalId, editalStatus }: ResultActionsProps) {
               <Button
                 variant="primary"
                 onClick={() => setConfirmAction('RESULTADO_PRELIMINAR')}
-                disabled={!!loading}
+                disabled={!!loading || bloqueado}
               >
                 Publicar Resultado Preliminar
               </Button>
@@ -128,7 +137,7 @@ export function ResultActions({ editalId, editalStatus }: ResultActionsProps) {
               <Button
                 className="bg-brand-700 hover:bg-brand-800 text-white"
                 onClick={() => setConfirmAction('RESULTADO_FINAL')}
-                disabled={!!loading}
+                disabled={!!loading || bloqueado}
               >
                 Publicar Resultado Final
               </Button>

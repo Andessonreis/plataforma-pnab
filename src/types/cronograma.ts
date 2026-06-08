@@ -27,23 +27,43 @@ export type AcaoJanela =
   | 'PUBLICACAO_INSCRITOS'
   | 'PUBLICACAO_HABILITADOS'
   | 'PUBLICACAO_HABILITADOS_POS_RECURSOS'
+  | 'PUBLICACAO_RESULTADO_PRELIMINAR'
+  | 'PUBLICACAO_RESULTADO_FINAL'
 
 /** Subset de ações que disponibilizam lista pública. */
 export type AcaoPublicacao = Extract<
   AcaoJanela,
-  'PUBLICACAO_INSCRITOS' | 'PUBLICACAO_HABILITADOS' | 'PUBLICACAO_HABILITADOS_POS_RECURSOS'
+  | 'PUBLICACAO_INSCRITOS'
+  | 'PUBLICACAO_HABILITADOS'
+  | 'PUBLICACAO_HABILITADOS_POS_RECURSOS'
+  | 'PUBLICACAO_RESULTADO_PRELIMINAR'
+  | 'PUBLICACAO_RESULTADO_FINAL'
 >
 
 export const ACOES_PUBLICACAO: AcaoPublicacao[] = [
   'PUBLICACAO_INSCRITOS',
   'PUBLICACAO_HABILITADOS',
   'PUBLICACAO_HABILITADOS_POS_RECURSOS',
+  'PUBLICACAO_RESULTADO_PRELIMINAR',
+  'PUBLICACAO_RESULTADO_FINAL',
 ]
 
 export function isAcaoPublicacao(acao: string | undefined): acao is AcaoPublicacao {
   return acao === 'PUBLICACAO_INSCRITOS'
     || acao === 'PUBLICACAO_HABILITADOS'
     || acao === 'PUBLICACAO_HABILITADOS_POS_RECURSOS'
+    || acao === 'PUBLICACAO_RESULTADO_PRELIMINAR'
+    || acao === 'PUBLICACAO_RESULTADO_FINAL'
+}
+
+/** Publicações de resultado — listas que expõem posição e nota (classificação). */
+export const ACOES_RESULTADO: AcaoPublicacao[] = [
+  'PUBLICACAO_RESULTADO_PRELIMINAR',
+  'PUBLICACAO_RESULTADO_FINAL',
+]
+
+export function isAcaoResultado(acao: string | undefined): acao is AcaoPublicacao {
+  return acao === 'PUBLICACAO_RESULTADO_PRELIMINAR' || acao === 'PUBLICACAO_RESULTADO_FINAL'
 }
 
 export interface CronogramaCustomItem {

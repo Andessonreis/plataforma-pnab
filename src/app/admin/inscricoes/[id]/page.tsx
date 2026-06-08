@@ -14,14 +14,16 @@ import { AvaliacaoForm } from './avaliacao-form'
 import { RecursoDecision } from './recurso-decision'
 import { AnexoViewer } from './anexo-viewer'
 import { DistribuicaoAvaliadores } from './distribuicao-avaliadores'
+import { AvaliacoesComparativo } from './avaliacoes-comparativo'
 import { DadosInscricaoView } from '@/components/inscricao/dados-inscricao-view'
 import { HistoricoProcesso } from '@/components/inscricao/historico-processo'
-import { formatNotaTotal, viewNotaTotal } from '@/lib/services/avaliacao-view'
-import { podeAvaliar, podeHabilitar, podeAtribuirAvaliador, mensagemForaDaFase } from '@/lib/edital/fase'
+import { viewNotaTotal } from '@/lib/services/avaliacao-view'
+import { podeAvaliar, podeHabilitar, mensagemForaDaFase } from '@/lib/edital/fase'
 import { ForaDaFaseAlert } from '@/components/edital/fora-da-fase-alert'
 
 interface Props {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ from?: string; editalId?: string; aba?: string }>
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -29,11 +31,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: `Inscrição ${id} — Admin PNAB` }
 }
 
-export default async function AdminInscricaoDetailPage({ params }: Props) {
+export default async function AdminInscricaoDetailPage({ params, searchParams }: Props) {
   const session = await auth()
   if (!session) redirect('/login')
 
   const { id } = await params
+  const sp = await searchParams
+  const voltouDaAvaliacao = sp.from === 'avaliacao' && !!sp.editalId
+  const backHref = voltouDaAvaliacao
+    ? `/admin/avaliacao?editalId=${sp.editalId}${sp.aba ? `&aba=${sp.aba}` : ''}`
+    : '/admin/inscricoes'
+  const backLabel = voltouDaAvaliacao ? 'Voltar para avaliação' : 'Voltar'
   const userRole = session.user.role
   const isAvaliador = userRole === 'AVALIADOR'
   const isAdmin = userRole === 'ADMIN'
@@ -74,8 +82,8 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
     }
   }
 
-  // Buscar avaliação do usuário atual (AVALIADOR ou ADMIN avaliando)
-  const meuAvaliacao = (isAvaliador || isAdmin)
+  // Avaliação do próprio AVALIADOR (admin não avalia — quem avalia são os avaliadores)
+  const meuAvaliacao = isAvaliador
     ? await prisma.avaliacao.findUnique({
       where: { inscricaoId_avaliadorId: { inscricaoId: id, avaliadorId: session.user.id } },
       select: {
@@ -113,7 +121,6 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
   const editalStatus = inscricao.edital.status
   const podeAvaliarAgora = podeAvaliar(editalStatus)
   const podeHabilitarAgora = podeHabilitar(editalStatus)
-  const podeAtribuirAgora = podeAtribuirAvaliador(editalStatus)
 
   const camposFormulario = (Array.isArray(inscricao.edital.camposFormulario)
     ? inscricao.edital.camposFormulario : []) as unknown as CampoFormulario[]
@@ -126,13 +133,13 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
       <div className="mb-4 sm:mb-6">
         <div className="flex items-start justify-between gap-3 mb-1">
           <Link
-            href="/admin/inscricoes"
+            href={backHref}
             className="text-sm text-brand-600 hover:text-brand-700 font-medium flex items-center gap-1"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
-            Voltar
+            {backLabel}
           </Link>
           <Badge variant={inscricaoStatusVariant[inscricao.status as InscricaoStatus]}>
             {inscricaoStatusLabel[inscricao.status as InscricaoStatus]}
@@ -174,41 +181,29 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
             }
           />
 
-          {/* Avaliacoes — visível apenas para ADMIN (avaliação cega entre avaliadores) */}
+          {/* Avaliacoes — comparativo critério × avaliador (somente ADMIN; avaliação cega entre avaliadores) */}
           {inscricao.avaliacoes.length > 0 && !isAvaliador && (
-            <Card padding="sm" className="sm:p-6">
-              <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">
-                Avaliações ({inscricao.avaliacoes.length})
-              </h2>
-              <div className="space-y-3 sm:space-y-4">
-                {inscricao.avaliacoes.map((avaliacao) => (
-                  <div key={avaliacao.id} className="p-3 sm:p-4 bg-slate-50 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-slate-700">
-                        {avaliacao.avaliador.nome}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        {(avaliacao as unknown as { finalizada: boolean }).finalizada && (
-                          <span className="text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-                            Finalizada
-                          </span>
-                        )}
-                        <span className="text-xl font-bold text-brand-700 tabular-nums">
-                          {formatNotaTotal(avaliacao, hasFormula ? 2 : 1)}
-                          {viewNotaTotal(avaliacao) !== null && hasFormula ? ' pts' : ''}
-                        </span>
-                      </div>
-                    </div>
-                    {avaliacao.parecer && (
-                      <p className="text-sm text-slate-600 mt-2 leading-relaxed break-words">{avaliacao.parecer}</p>
-                    )}
-                    <p className="text-xs text-slate-400 mt-2">
-                      {new Date(avaliacao.createdAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </Card>
+            <AvaliacoesComparativo
+              criterios={criterios.map((c) => ({
+                criterio: c.criterio,
+                peso: c.peso,
+                notaMax: c.notaMax ?? 10,
+                descricao: c.descricao,
+                bloco: c.bloco,
+              }))}
+              hasFormula={hasFormula}
+              avaliacoes={inscricao.avaliacoes.map((a) => ({
+                id: a.id,
+                nome: a.avaliador.nome,
+                finalizada: a.finalizada,
+                notaTotal: viewNotaTotal(a),
+                notas: Array.isArray(a.notas)
+                  ? (a.notas as unknown as { criterio: string; nota: number; peso: number }[])
+                  : [],
+                parecer: a.parecer,
+                data: new Date(a.createdAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+              }))}
+            />
           )}
 
           {/* Recursos */}
@@ -291,38 +286,20 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
             </dl>
           </Card>
 
-          {/* Distribuição de avaliadores — ADMIN, gateado por fase */}
-          {isAdmin && (inscricao.status === 'HABILITADA' || inscricao.status === 'EM_AVALIACAO') && (
-            podeAtribuirAgora ? (
-              <DistribuicaoAvaliadores
-                inscricaoId={inscricao.id}
-                editalId={inscricao.editalId}
-                avaliacoes={inscricao.avaliacoes.map((a) => ({
-                  avaliador: { id: a.avaliadorId, nome: a.avaliador.nome },
-                  finalizada: a.finalizada,
-                  notaTotal: viewNotaTotal(a),
-                }))}
-              />
-            ) : (
-              <ForaDaFaseAlert
-                mensagem={mensagemForaDaFase(editalStatus, 'atribuir_avaliador')}
-                isAdmin={isAdmin}
-              >
-                <DistribuicaoAvaliadores
-                  inscricaoId={inscricao.id}
-                  editalId={inscricao.editalId}
-                  avaliacoes={inscricao.avaliacoes.map((a) => ({
-                    avaliador: { id: a.avaliadorId, nome: a.avaliador.nome },
-                    finalizada: a.finalizada,
-                    notaTotal: viewNotaTotal(a),
-                  }))}
-                />
-              </ForaDaFaseAlert>
-            )
+          {/* Distribuição de avaliadores — ADMIN, somente leitura (atribuição não ocorre nesta tela) */}
+          {isAdmin && inscricao.avaliacoes.length > 0 && (
+            <DistribuicaoAvaliadores
+              readOnly
+              avaliacoes={inscricao.avaliacoes.map((a) => ({
+                avaliador: { id: a.avaliadorId, nome: a.avaliador.nome },
+                finalizada: a.finalizada,
+                notaTotal: viewNotaTotal(a),
+              }))}
+            />
           )}
 
-          {/* Formulário de avaliação — AVALIADOR e ADMIN, gateado por fase */}
-          {(isAvaliador || isAdmin) && (() => {
+          {/* Formulário de avaliação — somente AVALIADOR (admin não avalia), gateado por fase */}
+          {isAvaliador && (() => {
             const formProps = {
               inscricaoId: inscricao.id,
               inscricaoNumero: inscricao.numero,
@@ -354,27 +331,13 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
             )
           })()}
 
-          {/* Habilitação — gateado por fase */}
-          {canHabilitar && isHabilitacaoStatus && (
-            podeHabilitarAgora ? (
-              <HabilitacaoActions
-                inscricaoId={inscricao.id}
-                currentStatus={inscricao.status as InscricaoStatus}
-                motivoAtual={inscricao.motivoInabilitacao ?? ''}
-              />
-            ) : (
-              <ForaDaFaseAlert
-                mensagem={mensagemForaDaFase(editalStatus, 'habilitar')}
-                isAdmin={isAdmin}
-              >
-                <HabilitacaoActions
-                  inscricaoId={inscricao.id}
-                  currentStatus={inscricao.status as InscricaoStatus}
-                  motivoAtual={inscricao.motivoInabilitacao ?? ''}
-                  overrideMode
-                />
-              </ForaDaFaseAlert>
-            )
+          {/* Habilitação — somente durante a fase de habilitação (sem override fora do prazo) */}
+          {canHabilitar && isHabilitacaoStatus && podeHabilitarAgora && (
+            <HabilitacaoActions
+              inscricaoId={inscricao.id}
+              currentStatus={inscricao.status as InscricaoStatus}
+              motivoAtual={inscricao.motivoInabilitacao ?? ''}
+            />
           )}
 
           {/* Motivo inabilitação */}

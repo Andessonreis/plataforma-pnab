@@ -7,7 +7,7 @@ import { IconArrowLeft, IconDownload, IconClock } from '@/components/ui/icons'
 import { formatDateTime } from '@/lib/utils/format'
 import { maskCpfCnpj, maskName } from '@/lib/utils/mask'
 import { getPublicacao } from '@/lib/edital/publicacoes'
-import { isAcaoPublicacao } from '@/types/cronograma'
+import { isAcaoPublicacao, isAcaoResultado } from '@/types/cronograma'
 import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
 
 interface Props {
@@ -85,6 +85,7 @@ export default async function PublicacaoPage({ params }: Props) {
   // INABILITADA, etc.) — divulga apenas que a inscrição foi recebida. Status
   // só aparece nas listas de habilitados (que filtram exatamente por status).
   const exibirStatus = acao !== 'PUBLICACAO_INSCRITOS'
+  const ehResultado = isAcaoResultado(acao)
 
   return (
     <>
@@ -119,22 +120,36 @@ export default async function PublicacaoPage({ params }: Props) {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200">
+                      {ehResultado && (
+                        <th className="text-left py-3 px-4 font-semibold text-slate-600">Pos.</th>
+                      )}
                       <th className="text-left py-3 px-4 font-semibold text-slate-600">Nº Inscrição</th>
                       <th className="text-left py-3 px-4 font-semibold text-slate-600">Proponente</th>
                       <th className="text-left py-3 px-4 font-semibold text-slate-600">CPF/CNPJ</th>
                       <th className="text-left py-3 px-4 font-semibold text-slate-600">Categoria</th>
+                      {ehResultado && (
+                        <th className="text-left py-3 px-4 font-semibold text-slate-600">Nota</th>
+                      )}
                       {exibirStatus && (
                         <th className="text-left py-3 px-4 font-semibold text-slate-600">Status</th>
                       )}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {publicacao.items.map((item) => (
+                    {publicacao.items.map((item, index) => (
                       <tr key={item.numero} className="hover:bg-slate-50 transition-colors">
+                        {ehResultado && (
+                          <td className="py-3 px-4 font-medium text-slate-900 tabular-nums">{item.posicao ?? index + 1}</td>
+                        )}
                         <td className="py-3 px-4 font-medium text-slate-900 tabular-nums">{item.numero}</td>
                         <td className="py-3 px-4 text-slate-900">{maskName(item.nome)}</td>
                         <td className="py-3 px-4 text-slate-700 tabular-nums">{maskCpfCnpj(item.cpfCnpj)}</td>
                         <td className="py-3 px-4 text-slate-700">{item.categoria ?? '—'}</td>
+                        {ehResultado && (
+                          <td className="py-3 px-4 font-semibold text-slate-900 tabular-nums">
+                            {item.notaFinal != null ? item.notaFinal.toFixed(2) : '—'}
+                          </td>
+                        )}
                         {exibirStatus && (
                           <td className="py-3 px-4">
                             <Badge variant={inscricaoStatusVariant[item.status]}>
@@ -153,7 +168,7 @@ export default async function PublicacaoPage({ params }: Props) {
           <div className="mt-6 bg-amber-50 rounded-xl border border-amber-200 p-5">
             <h2 className="text-sm font-semibold text-amber-900 mb-2">Sobre esta publicação</h2>
             <ul className="text-sm text-amber-800 space-y-1">
-              <li>Lista oficial referente ao marco do cronograma "{publicacao.label}".</li>
+              <li>Lista oficial referente ao marco do cronograma &ldquo;{publicacao.label}&rdquo;.</li>
               <li>Nomes e CPF/CNPJ parcialmente mascarados para proteção de dados pessoais (LGPD).</li>
               <li>Os dados refletem o estado das inscrições no momento desta requisição.</li>
             </ul>

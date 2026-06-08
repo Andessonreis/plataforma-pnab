@@ -31,6 +31,10 @@ interface AdminSidebarProps {
   userAvatarUrl?: string | null
   /** Inscrições aguardando habilitação em editais ativos — destaca o item no menu */
   habilitacaoPendentes?: number
+  /** Inscrições ainda não avaliadas por completo na fase de avaliação — alimenta o badge */
+  avaliacaoPendentes?: number
+  /** Há edital na fase de avaliação — destaca o item mesmo sem pendências */
+  avaliacaoEmAndamento?: boolean
 }
 
 interface NavItem {
@@ -39,7 +43,7 @@ interface NavItem {
   icon: React.ReactNode
   roles: UserRole[]
   /** Identificador opcional para tratamento visual especial (destaque, badge) */
-  highlightKey?: 'habilitacao'
+  highlightKey?: 'habilitacao' | 'avaliacao'
 }
 
 interface NavSection {
@@ -81,6 +85,7 @@ const navSections: NavSection[] = [
         href: '/admin/avaliacao',
         roles: ['ADMIN'],
         icon: <IconStar className="h-5 w-5" />,
+        highlightKey: 'avaliacao',
       },
       {
         label: 'Minhas Avaliações',
@@ -196,6 +201,8 @@ export function AdminSidebar({
   roleLabel,
   userAvatarUrl,
   habilitacaoPendentes = 0,
+  avaliacaoPendentes = 0,
+  avaliacaoEmAndamento = false,
 }: AdminSidebarProps) {
   const pathname = usePathname()
 
@@ -204,10 +211,17 @@ export function AdminSidebar({
     return pathname.startsWith(href)
   }
 
-  function badgeFor(item: NavItem): { count: number; tone: 'amber' } | null {
-    if (item.highlightKey === 'habilitacao' && habilitacaoPendentes > 0) {
-      return { count: habilitacaoPendentes, tone: 'amber' }
-    }
+  /** Destaque visual do item (sem depender de badge numérico). */
+  function isHighlighted(item: NavItem): boolean {
+    if (item.highlightKey === 'habilitacao') return habilitacaoPendentes > 0
+    if (item.highlightKey === 'avaliacao') return avaliacaoEmAndamento
+    return false
+  }
+
+  /** Contador opcional exibido no item. */
+  function badgeCount(item: NavItem): number | null {
+    if (item.highlightKey === 'habilitacao' && habilitacaoPendentes > 0) return habilitacaoPendentes
+    if (item.highlightKey === 'avaliacao' && avaliacaoPendentes > 0) return avaliacaoPendentes
     return null
   }
 
@@ -259,8 +273,8 @@ export function AdminSidebar({
                 <div className="space-y-1">
                   {visibleItems.map((item) => {
                     const active = isActive(item.href)
-                    const badge = badgeFor(item)
-                    const hasHighlight = badge !== null && !active
+                    const count = badgeCount(item)
+                    const hasHighlight = isHighlighted(item) && !active
 
                     return (
                       <Link
@@ -278,7 +292,7 @@ export function AdminSidebar({
                       >
                         <span className={hasHighlight ? 'text-amber-300' : undefined}>{item.icon}</span>
                         <span className="flex-1">{item.label}</span>
-                        {badge && (
+                        {count !== null && (
                           <span
                             className={[
                               'inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full text-[11px] font-semibold tabular-nums',
@@ -286,9 +300,9 @@ export function AdminSidebar({
                                 ? 'bg-white text-slate-900'
                                 : 'bg-amber-400 text-amber-950',
                             ].join(' ')}
-                            aria-label={`${badge.count} ${badge.count === 1 ? 'pendência' : 'pendências'}`}
+                            aria-label={`${count} ${count === 1 ? 'pendência' : 'pendências'}`}
                           >
-                            {badge.count > 99 ? '99+' : badge.count}
+                            {count > 99 ? '99+' : count}
                           </span>
                         )}
                       </Link>
