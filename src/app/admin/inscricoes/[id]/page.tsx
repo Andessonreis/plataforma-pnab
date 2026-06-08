@@ -15,6 +15,7 @@ import { RecursoDecision } from './recurso-decision'
 import { AnexoViewer } from './anexo-viewer'
 import { DistribuicaoAvaliadores } from './distribuicao-avaliadores'
 import { DadosInscricaoView } from '@/components/inscricao/dados-inscricao-view'
+import { HistoricoProcesso } from '@/components/inscricao/historico-processo'
 import { formatNotaTotal, viewNotaTotal } from '@/lib/services/avaliacao-view'
 import { podeAvaliar, podeHabilitar, podeAtribuirAvaliador, mensagemForaDaFase } from '@/lib/edital/fase'
 import { ForaDaFaseAlert } from '@/components/edital/fora-da-fase-alert'
@@ -250,6 +251,9 @@ export default async function AdminInscricaoDetailPage({ params }: Props) {
               </div>
             </Card>
           )}
+
+          {/* Histórico do processo — somente ADMIN (avaliação é cega entre avaliadores) */}
+          {isAdmin && <HistoricoProcesso inscricaoId={inscricao.id} />}
         </div>
 
         {/* Coluna lateral — Ações */}

@@ -120,6 +120,11 @@ export const ACTION_LABELS: Record<string, string> = {
   STATUS_ALTERADO: 'Status alterado',
   AVALIADOR_ATRIBUIDO: 'Avaliador atribuído',
   AVALIADOR_REMOVIDO: 'Avaliador removido',
+  AVALIACAO_FINALIZADA: 'Avaliação finalizada',
+  AVALIACAO_RASCUNHO_SALVO: 'Rascunho de avaliação salvo',
+  HABILITACAO_FORA_DA_FASE_BLOQUEADA: 'Habilitação bloqueada (fora da fase)',
+  AVALIACAO_FORA_DA_FASE_BLOQUEADA: 'Avaliação bloqueada (fora da fase)',
+  AVALIADOR_ATRIBUIDO_FORA_DA_FASE_BLOQUEADO: 'Atribuição bloqueada (fora da fase)',
   MEMBRO_EDITAL_ADICIONADO: 'Membro adicionado ao edital',
   MEMBRO_EDITAL_REMOVIDO: 'Membro removido do edital',
   NOTICIA_CRIADA: 'Notícia criada',
@@ -205,9 +210,10 @@ export async function logAudit(params: LogAuditParams): Promise<void> {
 export function actionBadgeVariant(action: string): 'success' | 'error' | 'warning' | 'info' | 'neutral' {
   if (action === 'LOGIN') return 'success'
   if (action === 'LOGIN_FALHA') return 'error'
-  if (action.includes('EXCLU') || action.includes('INABILITADA')) return 'error'
-  if (action.includes('CRIA') || action.includes('CADASTRO') || action.includes('HABILITADA')) return 'success'
-  if (action.includes('ATUALIZ') || action.includes('PUBLICAD')) return 'info'
+  if (action.includes('BLOQUEAD')) return 'warning'
+  if (action.includes('EXCLU') || action.includes('INABILITADA') || action.includes('REMOVIDO')) return 'error'
+  if (action.includes('CRIA') || action.includes('CADASTRO') || action.includes('HABILITADA') || action.includes('FINALIZADA') || action.includes('ATRIBUIDO')) return 'success'
+  if (action.includes('ATUALIZ') || action.includes('PUBLICAD') || action.includes('RASCUNHO')) return 'info'
   if (action.includes('RESET') || action.includes('RECURSO')) return 'warning'
   return 'neutral'
 }
