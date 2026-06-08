@@ -77,6 +77,12 @@ const navSections: NavSection[] = [
         highlightKey: 'habilitacao',
       },
       {
+        label: 'Avaliação',
+        href: '/admin/avaliacao',
+        roles: ['ADMIN'],
+        icon: <IconStar className="h-5 w-5" />,
+      },
+      {
         label: 'Minhas Avaliações',
         href: '/admin/inscricoes',
         roles: ['AVALIADOR'],
