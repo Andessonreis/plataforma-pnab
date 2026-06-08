@@ -101,7 +101,10 @@ export default async function PublicResultadosPage({ params }: Props) {
     include: {
       proponente: { select: { nome: true } },
     },
-    orderBy: { notaFinal: 'desc' },
+    orderBy: [
+      { posicao: { sort: 'asc', nulls: 'last' } },
+      { notaFinal: { sort: 'desc', nulls: 'last' } },
+    ],
   })
 
   return (
@@ -143,7 +146,7 @@ export default async function PublicResultadosPage({ params }: Props) {
                     {inscricoes.map((inscricao, index) => (
                       <tr key={inscricao.id} className="hover:bg-slate-50 transition-colors">
                         <td className="py-3 px-4 font-medium text-slate-900">
-                          {index + 1}
+                          {inscricao.posicao ?? index + 1}
                         </td>
                         <td className="py-3 px-4 text-slate-900">
                           {maskName(inscricao.proponente.nome)}
