@@ -12,6 +12,8 @@ const ACOES_JANELA: { value: AcaoJanela; label: string; grupo: 'janela' | 'publi
   { value: 'PUBLICACAO_INSCRITOS', label: 'Publicação da lista de inscritos', grupo: 'publicacao' },
   { value: 'PUBLICACAO_HABILITADOS', label: 'Publicação dos habilitados', grupo: 'publicacao' },
   { value: 'PUBLICACAO_HABILITADOS_POS_RECURSOS', label: 'Publicação dos habilitados após recursos', grupo: 'publicacao' },
+  { value: 'PUBLICACAO_RESULTADO_PRELIMINAR', label: 'Publicação do resultado preliminar', grupo: 'publicacao' },
+  { value: 'PUBLICACAO_RESULTADO_FINAL', label: 'Publicação do resultado final', grupo: 'publicacao' },
 ]
 
 interface CronogramaSortableItemProps {

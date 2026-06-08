@@ -3,7 +3,7 @@ import { prisma } from '@/lib/db'
 import { cumulativeStatuses } from '@/lib/status-maps'
 import { parseBrazilDateTime } from '@/lib/utils/format'
 import type { AcaoPublicacao, CronogramaItem } from '@/types/cronograma'
-import { isAcaoPublicacao } from '@/types/cronograma'
+import { isAcaoPublicacao, isAcaoResultado } from '@/types/cronograma'
 
 // Status que cada tipo de publicação enumera.
 //
@@ -30,12 +30,25 @@ const PUBLICACAO_STATUS_FILTER: Record<AcaoPublicacao, InscricaoStatus[]> = {
   ],
   PUBLICACAO_HABILITADOS: [...cumulativeStatuses.HABILITADA, 'INABILITADA'],
   PUBLICACAO_HABILITADOS_POS_RECURSOS: [...cumulativeStatuses.HABILITADA, 'INABILITADA'],
+  // Resultado preliminar: todos que entraram na classificação (preliminar em diante).
+  PUBLICACAO_RESULTADO_PRELIMINAR: [
+    'RESULTADO_PRELIMINAR',
+    'RECURSO_ABERTO',
+    'RESULTADO_FINAL',
+    'CONTEMPLADA',
+    'NAO_CONTEMPLADA',
+    'SUPLENTE',
+  ],
+  // Resultado final: somente o estado final da classificação.
+  PUBLICACAO_RESULTADO_FINAL: ['RESULTADO_FINAL', 'CONTEMPLADA', 'NAO_CONTEMPLADA', 'SUPLENTE'],
 }
 
 export const PUBLICACAO_LABELS: Record<AcaoPublicacao, string> = {
   PUBLICACAO_INSCRITOS: 'Lista de inscritos',
   PUBLICACAO_HABILITADOS: 'Resultado da habilitação',
   PUBLICACAO_HABILITADOS_POS_RECURSOS: 'Resultado da habilitação após recursos',
+  PUBLICACAO_RESULTADO_PRELIMINAR: 'Resultado preliminar da avaliação',
+  PUBLICACAO_RESULTADO_FINAL: 'Resultado final',
 }
 
 export interface PublicacaoItem {
@@ -44,6 +57,10 @@ export interface PublicacaoItem {
   cpfCnpj: string | null
   categoria: string | null
   status: InscricaoStatus
+  /** Posição na classificação — presente apenas nas publicações de resultado. */
+  posicao: number | null
+  /** Nota final — presente apenas nas publicações de resultado. */
+  notaFinal: number | null
 }
 
 export interface PublicacaoResult {
@@ -131,12 +148,17 @@ export async function getPublicacao(
     return { exists: true, visivel: false, dataPublicacao: marco.dataHora, label, items: [] }
   }
 
+  const ehResultado = isAcaoResultado(acao)
+
   const inscricoes = await prisma.inscricao.findMany({
     where: {
       editalId: edital.id,
       status: { in: PUBLICACAO_STATUS_FILTER[acao] },
     },
-    orderBy: { numero: 'asc' },
+    // Resultado: ordena pela classificação (posição/nota). Demais: por número.
+    orderBy: ehResultado
+      ? [{ posicao: { sort: 'asc', nulls: 'last' } }, { notaFinal: { sort: 'desc', nulls: 'last' } }]
+      : { numero: 'asc' },
     include: {
       proponente: { select: { nome: true, cpfCnpj: true } },
     },
@@ -148,6 +170,8 @@ export async function getPublicacao(
     cpfCnpj: i.proponente.cpfCnpj,
     categoria: i.categoria,
     status: i.status,
+    posicao: ehResultado ? i.posicao : null,
+    notaFinal: ehResultado && i.notaFinal != null ? Number(i.notaFinal) : null,
   }))
 
   return { exists: true, visivel: true, dataPublicacao: marco.dataHora, label, items }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import { z } from 'zod'
 import { getPublicacao, PUBLICACAO_LABELS } from '@/lib/edital/publicacoes'
-import { isAcaoPublicacao, ACOES_PUBLICACAO } from '@/types/cronograma'
+import { isAcaoPublicacao, isAcaoResultado, ACOES_PUBLICACAO } from '@/types/cronograma'
 import { maskCpfCnpj, maskName } from '@/lib/utils/mask'
 import { toCsv } from '@/lib/export/csv'
 import { inscricaoStatusLabel } from '@/lib/status-maps'
@@ -70,6 +70,8 @@ export async function GET(req: NextRequest, context: RouteContext) {
       return res
     }
 
+    const ehResultado = isAcaoResultado(acao)
+
     // Mascarar dados sensíveis antes de devolver
     const itemsPublicos = publicacao.items.map((i) => ({
       numero: i.numero,
@@ -78,20 +80,42 @@ export async function GET(req: NextRequest, context: RouteContext) {
       categoria: i.categoria ?? null,
       status: i.status,
       statusLabel: inscricaoStatusLabel[i.status] ?? i.status,
+      posicao: i.posicao,
+      notaFinal: i.notaFinal,
     }))
 
     if (parsedQuery.data.format === 'csv') {
-      // Lista de inscritos não expõe status processual (HABILITADA/INABILITADA/etc.)
-      const incluirStatus = acao !== 'PUBLICACAO_INSCRITOS'
-      const header = incluirStatus
-        ? ['Numero', 'Nome', 'CPF/CNPJ', 'Categoria', 'Status']
-        : ['Numero', 'Nome', 'CPF/CNPJ', 'Categoria']
-      const rows: Array<Array<string | number>> = [
-        header,
-        ...itemsPublicos.map((i) => incluirStatus
-          ? [i.numero, i.nome, i.cpfCnpj, i.categoria ?? '', i.statusLabel]
-          : [i.numero, i.nome, i.cpfCnpj, i.categoria ?? '']),
-      ]
+      let header: string[]
+      let rows: Array<Array<string | number>>
+
+      if (ehResultado) {
+        // Lista de classificação: posição e nota além do status.
+        header = ['Posicao', 'Numero', 'Nome', 'CPF/CNPJ', 'Categoria', 'Nota', 'Status']
+        rows = [
+          header,
+          ...itemsPublicos.map((i, idx) => [
+            i.posicao ?? idx + 1,
+            i.numero,
+            i.nome,
+            i.cpfCnpj,
+            i.categoria ?? '',
+            i.notaFinal != null ? i.notaFinal.toFixed(2) : '',
+            i.statusLabel,
+          ]),
+        ]
+      } else {
+        // Lista de inscritos não expõe status processual (HABILITADA/INABILITADA/etc.)
+        const incluirStatus = acao !== 'PUBLICACAO_INSCRITOS'
+        header = incluirStatus
+          ? ['Numero', 'Nome', 'CPF/CNPJ', 'Categoria', 'Status']
+          : ['Numero', 'Nome', 'CPF/CNPJ', 'Categoria']
+        rows = [
+          header,
+          ...itemsPublicos.map((i) => incluirStatus
+            ? [i.numero, i.nome, i.cpfCnpj, i.categoria ?? '', i.statusLabel]
+            : [i.numero, i.nome, i.cpfCnpj, i.categoria ?? '']),
+        ]
+      }
       const csv = toCsv(rows)
       const datePart = new Date().toISOString().slice(0, 10)
       const filename = `${acao.toLowerCase()}_${slug}_${datePart}.csv`
