@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto'
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { ZodError } from 'zod'
 import { ApiError, InternalError } from '@/server/lib/http/errors'
 import { jsonError, jsonSuccess } from '@/server/lib/http/response'
@@ -15,12 +15,24 @@ export type RequestContext = {
   headers: Headers
 }
 
-export type ControllerResult<T> = {
-  data: T
-  status?: number
-  meta?: PaginationMeta
-  cacheControl?: string
+export type ControllerFile = {
+  body: Buffer | Uint8Array | string
+  contentType: string
+  filename?: string
+  disposition?: 'inline' | 'attachment'
 }
+
+export type ControllerResult<T> =
+  | {
+      data: T
+      status?: number
+      meta?: PaginationMeta
+      cacheControl?: string
+    }
+  | {
+      file: ControllerFile
+      status?: number
+    }
 
 export type Controller<T> = (ctx: RequestContext) => Promise<ControllerResult<T>>
 
@@ -49,6 +61,20 @@ export function adaptNextRoute<T>(controller: Controller<T>) {
       })
 
       logRequest({ requestId, method: req.method, path, status: result.status ?? 200, durationMs: Date.now() - start })
+
+      if ('file' in result) {
+        const f = result.file
+        const headers: Record<string, string> = {
+          'Content-Type': f.contentType,
+          'X-Request-Id': requestId,
+          'Cache-Control': 'no-store',
+        }
+        if (f.filename) {
+          headers['Content-Disposition'] = `${f.disposition ?? 'attachment'}; filename="${f.filename}"`
+        }
+        const body = typeof f.body === 'string' ? f.body : new Uint8Array(f.body)
+        return new NextResponse(body, { status: result.status ?? 200, headers })
+      }
 
       return jsonSuccess(result.data, {
         requestId,
