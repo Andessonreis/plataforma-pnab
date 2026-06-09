@@ -9,13 +9,11 @@ import { ResultActions } from './result-actions'
 import { TiebreakerPanel } from './tiebreaker-panel'
 import { ResultadosPreview, type PreviewRow } from './resultados-preview'
 import { calculateResults } from '@/lib/results/calculate'
-import type { EditalStatus, InscricaoStatus } from '@prisma/client'
+import type { InscricaoStatus } from '@prisma/client'
 
 interface Props {
   params: Promise<{ id: string }>
 }
-
-const STATUS_PUBLICADO: EditalStatus[] = ['RESULTADO_PRELIMINAR', 'RECURSO', 'RESULTADO_FINAL', 'ENCERRADO']
 
 export default async function AdminResultadosPage({ params }: Props) {
   const session = await auth()
@@ -39,7 +37,11 @@ export default async function AdminResultadosPage({ params }: Props) {
 
   if (!edital) notFound()
 
-  const jaPublicado = STATUS_PUBLICADO.includes(edital.status)
+  // "Consolidado" = as notas já foram gravadas (notaFinal preenchida). O status do
+  // edital pode estar em RESULTADO_PRELIMINAR sem consolidação (avanço automático de
+  // fase); nesse caso ainda mostramos a prévia para o admin consolidar e publicar.
+  const consolidado =
+    (await prisma.inscricao.count({ where: { editalId: id, notaFinal: { not: null } } })) > 0
   const temAvaliacoes =
     (await prisma.avaliacao.count({ where: { inscricao: { editalId: id }, finalizada: true } })) > 0
 
@@ -63,7 +65,7 @@ export default async function AdminResultadosPage({ params }: Props) {
       {/* Ações de publicação */}
       <ResultActions editalId={edital.id} editalStatus={edital.status} temAvaliacoes={temAvaliacoes} />
 
-      {jaPublicado ? (
+      {consolidado ? (
         <PublishedTable editalId={id} />
       ) : (
         <PreviewSection
@@ -114,7 +116,8 @@ async function PreviewSection({
 /** Tabela oficial pós-publicação (valores gravados no banco). */
 async function PublishedTable({ editalId }: { editalId: string }) {
   const inscricoes = await prisma.inscricao.findMany({
-    where: { editalId, status: { notIn: ['RASCUNHO', 'ENVIADA'] } },
+    // Inabilitada não chega à avaliação — não entra na classificação do resultado.
+    where: { editalId, status: { notIn: ['RASCUNHO', 'ENVIADA', 'INABILITADA'] } },
     include: {
       proponente: { select: { nome: true, cpfCnpj: true } },
       avaliacoes: { where: { finalizada: true }, select: { notaTotal: true } },
