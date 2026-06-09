@@ -3,4 +3,5 @@ import { inscricoesController } from '@server/modules/inscricoes/inscricoes/insc
 
 export const runtime = 'nodejs'
 
-export const GET = adaptNextRoute(inscricoesController.listMinhas)
+export const GET = adaptNextRoute(inscricoesController.detail)
+export const PUT = adaptNextRoute(inscricoesController.update)

@@ -1,0 +1,15 @@
+export const INSCRICAO_STATUSES = [
+  'RASCUNHO',
+  'ENVIADA',
+  'HABILITADA',
+  'INABILITADA',
+  'EM_AVALIACAO',
+  'RESULTADO_PRELIMINAR',
+  'RECURSO_ABERTO',
+  'RESULTADO_FINAL',
+  'CONTEMPLADA',
+  'NAO_CONTEMPLADA',
+  'SUPLENTE',
+] as const
+
+export type InscricaoStatus = (typeof INSCRICAO_STATUSES)[number]
