@@ -3,4 +3,4 @@ import { avaliadoresController } from '@server/modules/avaliacao/avaliadores/ava
 
 export const runtime = 'nodejs'
 
-export const GET = adaptNextRoute(avaliadoresController.list)
+export const DELETE = adaptNextRoute(avaliadoresController.remove)
