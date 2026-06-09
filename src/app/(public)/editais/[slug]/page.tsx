@@ -20,9 +20,10 @@ import {
   IconDocument,
   IconQuestion,
 } from '@client/components/ui/icons'
-import { getStatusDisplay } from '@/lib/utils/edital-status'
+import { getPublicStatusDisplay } from '@/lib/utils/edital-status'
 import { formatCurrency, formatDate, formatDateTime, parseBrazilDateTime } from '@/lib/utils/format'
-import { parseCronogramaPublico, getNextDeadline, isFaseCompleted, isFaseCurrent } from '@/lib/utils/cronograma'
+import { parseCronogramaPublico, getNextDeadline, getCronogramaItemStatus } from '@/lib/utils/cronograma'
+import { isAcaoPublicacao } from '@/types/cronograma'
 import { getBadgeVariantForTipo } from '@/lib/utils/badge-variant'
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
@@ -81,9 +82,9 @@ export default async function EditalPage({ params }: Props) {
     }
   }
 
-  const statusDisplay = getStatusDisplay(edital.status)
   const cronograma = parseCronogramaPublico(edital.cronograma, edital.status, edital.publishedAt)
   const now = new Date()
+  const statusDisplay = getPublicStatusDisplay(cronograma, edital.status, now)
   const isOpen = edital.status === 'INSCRICOES_ABERTAS'
 
   const nextDeadline = getNextDeadline(edital.cronograma)
@@ -218,19 +219,9 @@ export default async function EditalPage({ params }: Props) {
 
                     <ol className="space-y-1">
                       {cronograma.map((item, index) => {
-                        const itemDate = parseBrazilDateTime(item.dataHora)
-                        const itemFim = item.fimEm ? parseBrazilDateTime(item.fimEm) : null
-                        // Para items com janela (fimEm), "passou" só quando o fim passou.
-                        // Para marcos pontuais (sem fimEm), passou quando a data passou.
-                        const datePast = itemFim ? itemFim < now : itemDate < now
-                        const dateActive = itemFim ? itemDate <= now && now <= itemFim : false
-                        // 3 estados: concluído (já passou), em andamento (fase atual ou janela ativa), futuro
-                        const isPast = item.fase
-                          ? isFaseCompleted(item.fase, edital.status)
-                          : datePast
-                        const isCurrent = item.fase
-                          ? isFaseCurrent(item.fase, edital.status)
-                          : dateActive
+                        const status = getCronogramaItemStatus(cronograma, index, now)
+                        const isPast = status === 'past'
+                        const isCurrent = status === 'current'
 
                         return (
                           <li key={index} className="relative pl-10">
@@ -256,10 +247,10 @@ export default async function EditalPage({ params }: Props) {
                                     : 'hover:bg-slate-50',
                               ].join(' ')}
                             >
-                              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-4">
                                 <span
                                   className={[
-                                    'font-medium',
+                                    'font-medium min-w-0 flex-1',
                                     isPast ? 'text-slate-500' : 'text-slate-900',
                                     isCurrent ? 'font-semibold' : '',
                                   ].join(' ')}
@@ -269,7 +260,7 @@ export default async function EditalPage({ params }: Props) {
                                 {item.fimEm ? (
                                   <span
                                     className={[
-                                      'text-sm font-medium tabular-nums',
+                                      'text-sm font-medium tabular-nums shrink-0 whitespace-nowrap sm:text-right',
                                       isPast
                                         ? 'text-slate-400'
                                         : isCurrent
@@ -285,7 +276,7 @@ export default async function EditalPage({ params }: Props) {
                                   <time
                                     dateTime={item.dataHora}
                                     className={[
-                                      'text-sm font-medium tabular-nums',
+                                      'text-sm font-medium tabular-nums shrink-0 whitespace-nowrap sm:text-right',
                                       isPast
                                         ? 'text-slate-400'
                                         : isCurrent
@@ -308,6 +299,38 @@ export default async function EditalPage({ params }: Props) {
                                   <IconClock className="h-3 w-3" />
                                   Em andamento
                                 </span>
+                              )}
+
+                              {/* Links de ação quando publicação ou resultado disponível */}
+                              {(isPast || isCurrent) && isAcaoPublicacao(item.acao) && (
+                                <div className="mt-2 flex flex-wrap items-center gap-3 text-xs">
+                                  <Link
+                                    href={`/editais/${slug}/publicacoes/${item.acao}`}
+                                    className="inline-flex items-center gap-1 font-medium text-brand-600 hover:text-brand-700 hover:underline"
+                                  >
+                                    Ver lista
+                                    <IconArrowRight className="h-3 w-3" aria-hidden="true" />
+                                  </Link>
+                                  <a
+                                    href={`/api/editais/${slug}/publicacoes/${item.acao}?format=csv`}
+                                    className="inline-flex items-center gap-1 font-medium text-brand-600 hover:text-brand-700 hover:underline"
+                                  >
+                                    <IconDownload className="h-3 w-3" aria-hidden="true" />
+                                    Baixar CSV
+                                  </a>
+                                </div>
+                              )}
+                              {(isPast || isCurrent)
+                                && (item.fase === 'RESULTADO_PRELIMINAR' || item.fase === 'RESULTADO_FINAL') && (
+                                <div className="mt-2 text-xs">
+                                  <Link
+                                    href={`/editais/${slug}/resultados`}
+                                    className="inline-flex items-center gap-1 font-medium text-brand-600 hover:text-brand-700 hover:underline"
+                                  >
+                                    Ver resultados
+                                    <IconArrowRight className="h-3 w-3" aria-hidden="true" />
+                                  </Link>
+                                </div>
                               )}
                             </div>
                           </li>

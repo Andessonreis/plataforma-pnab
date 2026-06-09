@@ -44,22 +44,36 @@ export function validateMagicBytes(buffer: Buffer, declaredMime: string): boolea
 }
 
 /**
- * Sanitiza o nome do arquivo para prevenir path traversal e caracteres perigosos.
- * Remove ../, caracteres especiais, e normaliza para ASCII seguro.
+ * Sanitiza o nome do arquivo para prevenir path traversal e caracteres perigosos,
+ * e converte para o conjunto ASCII seguro aceito pelo Supabase Storage como key.
+ *
+ * Regras aplicadas:
+ * - Remove path separators e traversal (.., /, \)
+ * - Remove caracteres de controle e perigosos
+ * - Decompõe acentos (NFD) e remove os diacríticos: "Associação" → "Associacao"
+ * - Substitui qualquer caractere fora de [a-zA-Z0-9._-] por _ (parênteses, vírgulas, etc)
+ * - Colapsa múltiplos _ e remove _ nas bordas
+ * - Limita a 200 caracteres
  */
 export function sanitizeFilename(filename: string): string {
-  return filename
+  const sanitized = filename
     // Remove path separators e traversal
     .replace(/[/\\]/g, '')
     .replace(/\.\./g, '')
-    // Remove caracteres perigosos
+    // Remove caracteres de controle
     .replace(/[<>:"|?*\x00-\x1f]/g, '')
-    // Normaliza espaços
-    .replace(/\s+/g, '_')
-    // Remove pontos iniciais (hidden files)
-    .replace(/^\.+/, '')
+    // Decompõe acentos e remove os diacríticos (Á → A + ́ → A)
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    // Substitui qualquer não-ASCII-seguro por _
+    .replace(/[^a-zA-Z0-9._-]/g, '_')
+    // Colapsa _ repetidos
+    .replace(/_+/g, '_')
+    // Remove _ nas bordas e ponto inicial
+    .replace(/^[._]+/, '')
+    .replace(/_+$/, '')
     // Limita tamanho
     .slice(0, 200)
-    // Se ficou vazio, retorna nome genérico
-    || 'arquivo'
+
+  return sanitized || 'arquivo'
 }

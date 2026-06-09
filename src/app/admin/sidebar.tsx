@@ -20,6 +20,7 @@ import {
   IconSlides,
   IconSettings,
   IconMail,
+  IconShield,
   UserAvatar,
 } from '@client/components/ui'
 
@@ -28,6 +29,12 @@ interface AdminSidebarProps {
   userRole: UserRole
   roleLabel: string
   userAvatarUrl?: string | null
+  /** Inscrições aguardando habilitação em editais ativos — destaca o item no menu */
+  habilitacaoPendentes?: number
+  /** Inscrições ainda não avaliadas por completo na fase de avaliação — alimenta o badge */
+  avaliacaoPendentes?: number
+  /** Há edital na fase de avaliação — destaca o item mesmo sem pendências */
+  avaliacaoEmAndamento?: boolean
 }
 
 interface NavItem {
@@ -35,6 +42,8 @@ interface NavItem {
   href: string
   icon: React.ReactNode
   roles: UserRole[]
+  /** Identificador opcional para tratamento visual especial (destaque, badge) */
+  highlightKey?: 'habilitacao' | 'avaliacao'
 }
 
 interface NavSection {
@@ -63,6 +72,20 @@ const navSections: NavSection[] = [
         href: '/admin/inscricoes',
         roles: ['ADMIN', 'HABILITADOR', 'ATENDIMENTO'],
         icon: <IconClipboard className="h-5 w-5" />,
+      },
+      {
+        label: 'Habilitação',
+        href: '/admin/habilitacao',
+        roles: ['ADMIN'],
+        icon: <IconShield className="h-5 w-5" />,
+        highlightKey: 'habilitacao',
+      },
+      {
+        label: 'Avaliação',
+        href: '/admin/avaliacao',
+        roles: ['ADMIN'],
+        icon: <IconStar className="h-5 w-5" />,
+        highlightKey: 'avaliacao',
       },
       {
         label: 'Minhas Avaliações',
@@ -172,12 +195,34 @@ const navSections: NavSection[] = [
   },
 ]
 
-export function AdminSidebar({ userName, userRole, roleLabel, userAvatarUrl }: AdminSidebarProps) {
+export function AdminSidebar({
+  userName,
+  userRole,
+  roleLabel,
+  userAvatarUrl,
+  habilitacaoPendentes = 0,
+  avaliacaoPendentes = 0,
+  avaliacaoEmAndamento = false,
+}: AdminSidebarProps) {
   const pathname = usePathname()
 
   function isActive(href: string) {
     if (href === '/admin') return pathname === '/admin'
     return pathname.startsWith(href)
+  }
+
+  /** Destaque visual do item (sem depender de badge numérico). */
+  function isHighlighted(item: NavItem): boolean {
+    if (item.highlightKey === 'habilitacao') return habilitacaoPendentes > 0
+    if (item.highlightKey === 'avaliacao') return avaliacaoEmAndamento
+    return false
+  }
+
+  /** Contador opcional exibido no item. */
+  function badgeCount(item: NavItem): number | null {
+    if (item.highlightKey === 'habilitacao' && habilitacaoPendentes > 0) return habilitacaoPendentes
+    if (item.highlightKey === 'avaliacao' && avaliacaoPendentes > 0) return avaliacaoPendentes
+    return null
   }
 
   return (
@@ -226,22 +271,43 @@ export function AdminSidebar({ userName, userRole, roleLabel, userAvatarUrl }: A
                   {section.title}
                 </p>
                 <div className="space-y-1">
-                  {visibleItems.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={[
-                        'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 min-h-[44px]',
-                        isActive(item.href)
-                          ? 'bg-white/10 text-white border-l-2 border-brand-400'
-                          : 'text-slate-400 hover:bg-white/5 hover:text-slate-200',
-                      ].join(' ')}
-                      aria-current={isActive(item.href) ? 'page' : undefined}
-                    >
-                      {item.icon}
-                      {item.label}
-                    </Link>
-                  ))}
+                  {visibleItems.map((item) => {
+                    const active = isActive(item.href)
+                    const count = badgeCount(item)
+                    const hasHighlight = isHighlighted(item) && !active
+
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={[
+                          'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 min-h-[44px]',
+                          active
+                            ? 'bg-white/10 text-white border-l-2 border-brand-400'
+                            : hasHighlight
+                            ? 'text-amber-100 bg-amber-500/10 hover:bg-amber-500/15 ring-1 ring-inset ring-amber-500/30'
+                            : 'text-slate-400 hover:bg-white/5 hover:text-slate-200',
+                        ].join(' ')}
+                        aria-current={active ? 'page' : undefined}
+                      >
+                        <span className={hasHighlight ? 'text-amber-300' : undefined}>{item.icon}</span>
+                        <span className="flex-1">{item.label}</span>
+                        {count !== null && (
+                          <span
+                            className={[
+                              'inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full text-[11px] font-semibold tabular-nums',
+                              active
+                                ? 'bg-white text-slate-900'
+                                : 'bg-amber-400 text-amber-950',
+                            ].join(' ')}
+                            aria-label={`${count} ${count === 1 ? 'pendência' : 'pendências'}`}
+                          >
+                            {count > 99 ? '99+' : count}
+                          </span>
+                        )}
+                      </Link>
+                    )
+                  })}
                 </div>
               </div>
             )

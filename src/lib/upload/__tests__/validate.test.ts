@@ -125,4 +125,27 @@ describe('sanitizeFilename', () => {
   it('preserva hifens', () => {
     expect(sanitizeFilename('edital-pnab-2025.pdf')).toBe('edital-pnab-2025.pdf')
   })
+
+  // Casos que quebravam upload no Supabase Storage (key inválido)
+  it('remove acentos comuns do português', () => {
+    expect(sanitizeFilename('Portifólio.pdf')).toBe('Portifolio.pdf')
+    expect(sanitizeFilename('Associação.pdf')).toBe('Associacao.pdf')
+    expect(sanitizeFilename('Iêda.pdf')).toBe('Ieda.pdf')
+    expect(sanitizeFilename('São_João.pdf')).toBe('Sao_Joao.pdf')
+  })
+
+  it('substitui parênteses, vírgulas e outros símbolos por _', () => {
+    expect(sanitizeFilename('arquivo(1).pdf')).toBe('arquivo_1_.pdf')
+    expect(sanitizeFilename('plano,versão,final.pdf')).toBe('plano_versao_final.pdf')
+  })
+
+  it('lida com o nome real que falhou em produção', () => {
+    const original = 'Portifólio_Cultural_da_Associação_de_Moradores_do_Bairro_Iêda_Dourado-compactado.pdf'
+    const result = sanitizeFilename(original)
+    // Não deve conter caracteres não-ASCII-seguros
+    expect(result).toMatch(/^[a-zA-Z0-9._-]+$/)
+    expect(result).toContain('Portifolio')
+    expect(result).toContain('Associacao')
+    expect(result).toContain('Ieda')
+  })
 })

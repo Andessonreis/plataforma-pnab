@@ -6,9 +6,14 @@ import type { CronogramaFormItem, CronogramaValidationWarning, AcaoJanela } from
 import { editalCronogramaLabel } from '@/lib/status-maps'
 import { getItemValidationWarnings } from '@/lib/utils/cronograma'
 
-const ACOES_JANELA: { value: AcaoJanela; label: string }[] = [
-  { value: 'RECURSO_HABILITACAO_JANELA', label: 'Janela de recurso de habilitação' },
-  { value: 'RECURSO_RESULTADO_JANELA', label: 'Janela de recurso do resultado preliminar' },
+const ACOES_JANELA: { value: AcaoJanela; label: string; grupo: 'janela' | 'publicacao' }[] = [
+  { value: 'RECURSO_HABILITACAO_JANELA', label: 'Janela de recurso de habilitação', grupo: 'janela' },
+  { value: 'RECURSO_RESULTADO_JANELA', label: 'Janela de recurso do resultado preliminar', grupo: 'janela' },
+  { value: 'PUBLICACAO_INSCRITOS', label: 'Publicação da lista de inscritos', grupo: 'publicacao' },
+  { value: 'PUBLICACAO_HABILITADOS', label: 'Publicação dos habilitados', grupo: 'publicacao' },
+  { value: 'PUBLICACAO_HABILITADOS_POS_RECURSOS', label: 'Publicação dos habilitados após recursos', grupo: 'publicacao' },
+  { value: 'PUBLICACAO_RESULTADO_PRELIMINAR', label: 'Publicação do resultado preliminar', grupo: 'publicacao' },
+  { value: 'PUBLICACAO_RESULTADO_FINAL', label: 'Publicação do resultado final', grupo: 'publicacao' },
 ]
 
 interface CronogramaSortableItemProps {
@@ -148,17 +153,26 @@ export function CronogramaSortableItem({
             <select
               value={item.acao ?? ''}
               onChange={(e) => onUpdate(item.id, 'acao', e.target.value)}
-              aria-label="Ação da janela"
+              aria-label="Ação do item"
               className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-500"
             >
               <option value="">— Nenhuma (apenas informativo) —</option>
-              {ACOES_JANELA.map((a) => (
-                <option key={a.value} value={a.value}>{a.label}</option>
-              ))}
+              <optgroup label="Janelas de recurso">
+                {ACOES_JANELA.filter((a) => a.grupo === 'janela').map((a) => (
+                  <option key={a.value} value={a.value}>{a.label}</option>
+                ))}
+              </optgroup>
+              <optgroup label="Publicações">
+                {ACOES_JANELA.filter((a) => a.grupo === 'publicacao').map((a) => (
+                  <option key={a.value} value={a.value}>{a.label}</option>
+                ))}
+              </optgroup>
             </select>
             {item.acao && (
               <p className="mt-1 text-[11px] text-slate-500">
-                Durante a janela, a funcionalidade fica liberada para o proponente.
+                {item.acao.startsWith('PUBLICACAO_')
+                  ? 'A partir da data, a lista correspondente fica disponível publicamente.'
+                  : 'Durante a janela, a funcionalidade fica liberada para o proponente.'}
               </p>
             )}
           </div>

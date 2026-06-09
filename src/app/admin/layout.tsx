@@ -38,6 +38,36 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const nome = session.user.name ?? 'Usuário'
   const avatarUrl = user?.avatarUrl ?? null
 
+  // Pendências da fase de habilitação — alimenta o destaque do menu pra ADMIN
+  const habilitacaoPendentes =
+    role === 'ADMIN'
+      ? await prisma.inscricao.count({
+          where: {
+            status: 'ENVIADA',
+            edital: { status: 'HABILITACAO' },
+          },
+        })
+      : 0
+
+  // Avaliação em andamento — destaca o menu enquanto houver edital na fase de
+  // avaliação; o badge mostra as inscrições ainda não avaliadas por completo.
+  const [editaisEmAvaliacao, avaliacaoPendentes] =
+    role === 'ADMIN'
+      ? await Promise.all([
+          prisma.edital.count({ where: { status: 'AVALIACAO' } }),
+          prisma.inscricao.count({
+            where: {
+              edital: { status: 'AVALIACAO' },
+              status: { in: ['HABILITADA', 'EM_AVALIACAO'] },
+              OR: [
+                { avaliacoes: { none: {} } },
+                { avaliacoes: { some: { finalizada: false } } },
+              ],
+            },
+          }),
+        ])
+      : [0, 0]
+
   return (
     <div className="flex min-h-screen bg-slate-50">
       <AdminSidebar
@@ -45,6 +75,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         userRole={role}
         roleLabel={roleLabels[role] ?? role}
         userAvatarUrl={avatarUrl}
+        habilitacaoPendentes={habilitacaoPendentes}
+        avaliacaoPendentes={avaliacaoPendentes}
+        avaliacaoEmAndamento={editaisEmAvaliacao > 0}
       />
 
       <div className="flex-1 min-w-0 lg:ml-64">
@@ -71,7 +104,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-7xl p-4 pb-24 lg:p-6 lg:pb-8">
+        <main className="w-full p-4 pb-24 lg:p-8 lg:pb-10 xl:px-10 2xl:px-14">
           {children}
         </main>
       </div>

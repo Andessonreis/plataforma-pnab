@@ -131,7 +131,7 @@ export function parseCronograma(raw: unknown): CronogramaDisplayItem[] {
       (item): item is Record<string, unknown> =>
         typeof item === 'object' && item !== null && typeof item.dataHora === 'string',
     )
-    .map((item) => {
+    .map((item): CronogramaDisplayItem => {
       // Formato novo com tipo 'fase'
       if (item.tipo === 'fase' && typeof item.fase === 'string') {
         return {
@@ -140,7 +140,19 @@ export function parseCronograma(raw: unknown): CronogramaDisplayItem[] {
           fase: item.fase as EditalStatus,
         }
       }
-      // Formato novo com tipo 'custom' ou formato legado (tem label)
+      // Formato novo com tipo 'custom' — admin marcou explicitamente como item
+      // custom; NUNCA inferir fase por fuzzy match no label (causaria falso
+      // "Em andamento", ex.: "Prazo para recurso da habilitação" casando com
+      // o pattern 'habilitacao' e sendo tratado como a fase HABILITACAO).
+      if (item.tipo === 'custom') {
+        return {
+          label: typeof item.label === 'string' ? item.label : '—',
+          dataHora: String(item.dataHora),
+          ...(typeof item.fimEm === 'string' && item.fimEm ? { fimEm: item.fimEm } : {}),
+          ...(typeof item.acao === 'string' ? { acao: item.acao as CronogramaDisplayItem['acao'] } : {}),
+        }
+      }
+      // Formato legado (sem campo `tipo`) — fuzzy match preserva comportamento antigo
       const legacyFase = typeof item.label === 'string' ? matchLabelToFase(item.label) : null
       return {
         label: typeof item.label === 'string' ? item.label : '—',
@@ -190,6 +202,57 @@ export function getNextDeadline(cronograma: unknown): CronogramaDisplayItem | nu
     .sort((a, b) => parseBrazilDateTime(a.dataHora).getTime() - parseBrazilDateTime(b.dataHora).getTime())
 
   return future[0] ?? null
+}
+
+// ── getCronogramaItemStatus — status visual por ordem do cronograma ─────────
+
+export type CronogramaItemStatus = 'past' | 'current' | 'future'
+
+/**
+ * Calcula o status visual de um item do cronograma baseado **na ordem do array
+ * e nas datas**, não no status do edital. Regra:
+ *
+ *   - Se o item tem `fimEm` (janela): usa a janela explícita.
+ *   - Caso contrário: o "fim" implícito é o início do próximo item com data.
+ *   - Se for o último item (sem próximo): vira `past` assim que a data passa
+ *     (marco pontual, ex.: ENCERRADO — nunca fica "em andamento" indefinido).
+ *
+ * Permite que items custom intercalados (ex.: "Publicação no Diário Oficial")
+ * façam um item de fase anterior ficar `past`, mesmo que o status do edital
+ * no banco ainda esteja na fase. Isso é proposital: o cronograma público
+ * descreve marcos para o cidadão; o status do edital é uma máquina de estados
+ * separada gerida pelo scheduler/admin.
+ */
+export function getCronogramaItemStatus(
+  items: CronogramaDisplayItem[],
+  index: number,
+  now: Date = new Date(),
+): CronogramaItemStatus {
+  const item = items[index]
+  if (!item) return 'future'
+
+  const start = parseBrazilDateTime(item.dataHora)
+  if (isNaN(start.getTime())) return 'future'
+
+  if (item.fimEm) {
+    const end = parseBrazilDateTime(item.fimEm)
+    if (!isNaN(end.getTime())) {
+      if (now < start) return 'future'
+      if (now > end) return 'past'
+      return 'current'
+    }
+  }
+
+  if (now < start) return 'future'
+
+  for (let i = index + 1; i < items.length; i++) {
+    const nextStart = parseBrazilDateTime(items[i].dataHora)
+    if (!isNaN(nextStart.getTime())) {
+      return now >= nextStart ? 'past' : 'current'
+    }
+  }
+
+  return 'past'
 }
 
 // ── isFaseCompleted — verifica se o edital já passou por uma fase ────────────

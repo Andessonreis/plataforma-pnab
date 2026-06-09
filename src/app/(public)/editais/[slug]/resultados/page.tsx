@@ -90,7 +90,10 @@ export default async function PublicResultadosPage({ params }: Props) {
     include: {
       proponente: { select: { nome: true } },
     },
-    orderBy: { notaFinal: 'desc' },
+    orderBy: [
+      { posicao: { sort: 'asc', nulls: 'last' } },
+      { notaFinal: { sort: 'desc', nulls: 'last' } },
+    ],
   })
 
   return (
@@ -125,14 +128,16 @@ export default async function PublicResultadosPage({ params }: Props) {
                       <th className="text-left py-3 px-4 font-semibold text-slate-600">Proponente</th>
                       <th className="text-left py-3 px-4 font-semibold text-slate-600">Categoria</th>
                       <th className="text-left py-3 px-4 font-semibold text-slate-600">{edital.formulaAvaliacao ? 'Pontuação' : 'Nota'}</th>
-                      <th className="text-left py-3 px-4 font-semibold text-slate-600">Status</th>
+                      {isFinal && (
+                        <th className="text-left py-3 px-4 font-semibold text-slate-600">Status</th>
+                      )}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {inscricoes.map((inscricao, index) => (
                       <tr key={inscricao.id} className="hover:bg-slate-50 transition-colors">
                         <td className="py-3 px-4 font-medium text-slate-900">
-                          {index + 1}
+                          {inscricao.posicao ?? index + 1}
                         </td>
                         <td className="py-3 px-4 text-slate-900">
                           {maskName(inscricao.proponente.nome)}
@@ -145,11 +150,13 @@ export default async function PublicResultadosPage({ params }: Props) {
                             ? `${Number(inscricao.notaFinal).toFixed(2)}${edital.formulaAvaliacao ? ' pts' : ''}`
                             : '—'}
                         </td>
-                        <td className="py-3 px-4">
-                          <Badge variant={getPublicStatusVariant(inscricao.status)}>
-                            {getPublicStatusLabel(inscricao.status)}
-                          </Badge>
-                        </td>
+                        {isFinal && (
+                          <td className="py-3 px-4">
+                            <Badge variant={getPublicStatusVariant(inscricao.status)}>
+                              {getPublicStatusLabel(inscricao.status)}
+                            </Badge>
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>

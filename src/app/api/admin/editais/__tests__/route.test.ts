@@ -231,6 +231,43 @@ describe('PUT /api/admin/editais', () => {
     })
   })
 
+  it('preserva fimEm e acao em items custom do cronograma (regressão: bug do strip)', async () => {
+    // Antes do fix, o schema local não declarava fimEm/acao e o Zod fazia strip
+    // silenciosamente, apagando esses campos a cada save. Quebrava janelas de
+    // recurso existentes e impedia configurar publicações novas.
+    const cronograma = [
+      { tipo: 'fase', fase: 'HABILITACAO', dataHora: '2026-05-23T00:00' },
+      {
+        tipo: 'custom',
+        label: 'Publicação da lista de inscritos',
+        dataHora: '2026-05-25T09:00',
+        acao: 'PUBLICACAO_INSCRITOS',
+      },
+      {
+        tipo: 'custom',
+        label: 'Prazo para recurso da habilitação',
+        dataHora: '2026-05-27T00:00',
+        fimEm: '2026-05-29T23:59',
+        acao: 'RECURSO_HABILITACAO_JANELA',
+      },
+    ]
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockPrisma.edital.findUnique.mockResolvedValue({
+      id: 'ed-1', titulo: validEditalBody.titulo, slug: 'edital-2025',
+    } as never)
+    mockPrisma.edital.update.mockResolvedValue({
+      id: 'ed-1', titulo: validEditalBody.titulo, slug: 'edital-2025',
+    } as never)
+
+    const res = await PUT(makePutRequest({ ...validEditalBody, cronograma }, 'ed-1'))
+    expect(res.status).toBe(200)
+
+    expect(mockPrisma.edital.update).toHaveBeenCalledWith({
+      where: { id: 'ed-1' },
+      data: expect.objectContaining({ cronograma }),
+    })
+  })
+
   it('com criteriosAvaliacao customizados salva corretamente', async () => {
     const criteriosCustom = [
       { criterio: 'Critério A', peso: 10, notaMax: 10, bloco: 'Bloco 1' },

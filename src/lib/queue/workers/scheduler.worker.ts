@@ -2,6 +2,7 @@ import { Worker } from 'bullmq'
 import { redis } from '@/lib/redis'
 import { prisma } from '@server/lib/db'
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
+import { notifyEquipeHabilitacaoAberta } from '@/lib/edital/notify-habilitacao-aberta'
 import type { EditalStatus } from '@prisma/client'
 import {
   FASE_TRANSICOES,
@@ -226,6 +227,23 @@ export async function processSchedulerJob(): Promise<number> {
       })
 
       console.log(`[Scheduler] Edital "${edital.titulo}": ${statusAnterior} → ${match.fase}`)
+
+      // Lembrete operacional para a equipe quando habilitação abre.
+      // Engolimos erros pra não bloquear a transição em si.
+      if (match.fase === 'HABILITACAO') {
+        try {
+          const { admins, inscricoesPendentes } = await notifyEquipeHabilitacaoAberta(edital.id)
+          console.log(
+            `[Scheduler] Notificação habilitação: ${admins} admin(s), ${inscricoesPendentes} pendente(s)`,
+          )
+        } catch (err) {
+          console.error(
+            '[Scheduler] Falha ao notificar equipe sobre habilitação:',
+            err instanceof Error ? err.message : err,
+          )
+        }
+      }
+
       currentStatus = match.fase
       transicoes++
       advancing = true

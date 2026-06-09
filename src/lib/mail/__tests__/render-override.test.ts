@@ -63,8 +63,8 @@ describe('renderTemplate — override do banco', () => {
     expect(html).toContain('PROT-42')
     expect(html).toContain('Seu protocolo')
     expect(html).not.toContain('Atendimento registrado') // texto do componente padrão
-    // Layout compartilhado (logo, footer) deve continuar aplicado
-    expect(html).toContain('logo-irece-color.png')
+    // Layout compartilhado (marca/brasão, footer) deve continuar aplicado
+    expect(html).toContain('marca-100-anos-cultura.jpeg')
   })
 
   it('override ativo com script → sanitização remove', async () => {
