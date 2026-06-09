@@ -63,7 +63,12 @@ export default async function AdminResultadosPage({ params }: Props) {
       </div>
 
       {/* Ações de publicação */}
-      <ResultActions editalId={edital.id} editalStatus={edital.status} temAvaliacoes={temAvaliacoes} />
+      <ResultActions
+        editalId={edital.id}
+        editalStatus={edital.status}
+        temAvaliacoes={temAvaliacoes}
+        consolidado={consolidado}
+      />
 
       {consolidado ? (
         <PublishedTable editalId={id} />

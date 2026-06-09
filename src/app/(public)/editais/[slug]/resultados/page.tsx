@@ -139,7 +139,9 @@ export default async function PublicResultadosPage({ params }: Props) {
                       <th className="text-left py-3 px-4 font-semibold text-slate-600">Proponente</th>
                       <th className="text-left py-3 px-4 font-semibold text-slate-600">Categoria</th>
                       <th className="text-left py-3 px-4 font-semibold text-slate-600">{edital.formulaAvaliacao ? 'Pontuação' : 'Nota'}</th>
-                      <th className="text-left py-3 px-4 font-semibold text-slate-600">Status</th>
+                      {isFinal && (
+                        <th className="text-left py-3 px-4 font-semibold text-slate-600">Status</th>
+                      )}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -159,11 +161,13 @@ export default async function PublicResultadosPage({ params }: Props) {
                             ? `${Number(inscricao.notaFinal).toFixed(2)}${edital.formulaAvaliacao ? ' pts' : ''}`
                             : '—'}
                         </td>
-                        <td className="py-3 px-4">
-                          <Badge variant={getPublicStatusVariant(inscricao.status)}>
-                            {getPublicStatusLabel(inscricao.status)}
-                          </Badge>
-                        </td>
+                        {isFinal && (
+                          <td className="py-3 px-4">
+                            <Badge variant={getPublicStatusVariant(inscricao.status)}>
+                              {getPublicStatusLabel(inscricao.status)}
+                            </Badge>
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>

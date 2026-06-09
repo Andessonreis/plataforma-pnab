@@ -8,9 +8,16 @@ interface ResultActionsProps {
   editalStatus: string
   /** Há avaliação finalizada para consolidar? Sem isso não há o que publicar. */
   temAvaliacoes?: boolean
+  /** Notas já gravadas (resultado já consolidado/publicado nesta fase). */
+  consolidado?: boolean
 }
 
-export function ResultActions({ editalId, editalStatus, temAvaliacoes = true }: ResultActionsProps) {
+export function ResultActions({
+  editalId,
+  editalStatus,
+  temAvaliacoes = true,
+  consolidado = false,
+}: ResultActionsProps) {
   const [loading, setLoading] = useState<string | null>(null)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [confirmAction, setConfirmAction] = useState<string | null>(null)
@@ -44,8 +51,13 @@ export function ResultActions({ editalId, editalStatus, temAvaliacoes = true }: 
     }
   }
 
-  const canPublishPreliminar = ['INSCRICOES_ENCERRADAS', 'HABILITACAO', 'AVALIACAO', 'RESULTADO_PRELIMINAR'].includes(editalStatus)
-  const canPublishFinal = ['RESULTADO_PRELIMINAR', 'RECURSO', 'RESULTADO_FINAL'].includes(editalStatus)
+  const preliminarPublicado = consolidado && ['RESULTADO_PRELIMINAR', 'RECURSO'].includes(editalStatus)
+  const finalPublicado = consolidado && editalStatus === 'RESULTADO_FINAL'
+  const canPublishPreliminar =
+    !preliminarPublicado &&
+    !finalPublicado &&
+    ['INSCRICOES_ENCERRADAS', 'HABILITACAO', 'AVALIACAO', 'RESULTADO_PRELIMINAR'].includes(editalStatus)
+  const canPublishFinal = !finalPublicado && ['RESULTADO_PRELIMINAR', 'RECURSO', 'RESULTADO_FINAL'].includes(editalStatus)
   const bloqueado = !temAvaliacoes
 
   return (
@@ -70,7 +82,25 @@ export function ResultActions({ editalId, editalStatus, temAvaliacoes = true }: 
         </div>
       )}
 
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap items-center gap-3">
+        {/* Estado: resultado já publicado nesta fase */}
+        {preliminarPublicado && (
+          <span className="inline-flex items-center gap-1.5 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm font-medium text-green-800">
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            Resultado preliminar publicado
+          </span>
+        )}
+        {finalPublicado && (
+          <span className="inline-flex items-center gap-1.5 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm font-medium text-green-800">
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            Resultado final publicado
+          </span>
+        )}
+
         {/* Publicar Resultado Preliminar */}
         {canPublishPreliminar && (
           <>
