@@ -30,6 +30,33 @@ function formatFase(fase: string): string {
   return FASES.find((f) => f.value === fase)?.label ?? fase
 }
 
+type StatusInfo = { label: string; variant: 'success' | 'error' | 'warning' | 'info' | 'neutral' }
+
+function statusInfo(
+  decisao: string | null,
+  decididoPor: string | null,
+  respostas: { decisao: string }[],
+  totalAvaliadores: number,
+): StatusInfo {
+  if (decisao) {
+    const por = decididoPor === 'ADMIN' ? ' · Secretaria' : decididoPor === 'CONSENSO' ? ' · consenso' : ''
+    return decisao === 'DEFERIDO'
+      ? { label: `Deferido${por}`, variant: 'success' }
+      : { label: `Indeferido${por}`, variant: 'error' }
+  }
+  if (totalAvaliadores > 0 && respostas.length >= totalAvaliadores) {
+    const todasIguais = respostas.every((r) => r.decisao === respostas[0].decisao)
+    if (!todasIguais) return { label: 'Divergente — decisão da Secretaria', variant: 'warning' }
+    return { label: 'Consenso — a efetivar', variant: 'info' }
+  }
+  return {
+    label: totalAvaliadores > 0
+      ? `Aguardando avaliadores (${respostas.length}/${totalAvaliadores})`
+      : 'Sem avaliadores atribuídos',
+    variant: 'neutral',
+  }
+}
+
 export default async function AdminRecursosPage({ searchParams }: Props) {
   const session = await auth()
   if (!session || !['ADMIN', 'HABILITADOR'].includes(session.user.role)) notFound()
@@ -38,13 +65,13 @@ export default async function AdminRecursosPage({ searchParams }: Props) {
   const page = Math.max(1, Number(params.page) || 1)
   const pageSize = 15
   const faseFilter = params.fase || undefined
-  const statusFilter = params.status || undefined // 'pendente' | 'deferido' | 'indeferido'
+  const statusFilter = params.status || undefined
   const editalIdFilter = params.editalId || undefined
   const searchQuery = params.search || undefined
 
   const where: Record<string, unknown> = {}
   if (faseFilter) where.fase = faseFilter
-  if (statusFilter === 'pendente') where.decisao = null
+  if (statusFilter === 'em_analise') where.decisao = null
   if (statusFilter === 'deferido') where.decisao = 'DEFERIDO'
   if (statusFilter === 'indeferido') where.decisao = 'INDEFERIDO'
 
@@ -58,7 +85,7 @@ export default async function AdminRecursosPage({ searchParams }: Props) {
   }
   if (Object.keys(inscricaoWhere).length > 0) where.inscricao = inscricaoWhere
 
-  const [recursos, total, pendentesTotal, deferidosTotal, indeferidosTotal, editais] =
+  const [recursos, total, emAnaliseTotal, deferidosTotal, indeferidosTotal, editais] =
     await Promise.all([
       prisma.recurso.findMany({
         where,
@@ -67,7 +94,12 @@ export default async function AdminRecursosPage({ searchParams }: Props) {
             include: {
               proponente: { select: { nome: true } },
               edital: { select: { titulo: true } },
+              _count: { select: { avaliacoes: true } },
             },
+          },
+          respostas: {
+            include: { avaliador: { select: { nome: true } } },
+            orderBy: { createdAt: 'asc' },
           },
         },
         orderBy: { createdAt: 'desc' },
@@ -99,7 +131,7 @@ export default async function AdminRecursosPage({ searchParams }: Props) {
         <div className="mb-4 sm:mb-6">
           <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Recursos</h1>
           <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
-            {pendentesTotal} pendente(s) · {deferidosTotal} deferido(s) · {indeferidosTotal} indeferido(s)
+            Acompanhe as considerações dos avaliadores. {emAnaliseTotal} em análise · {deferidosTotal} deferido(s) · {indeferidosTotal} indeferido(s)
           </p>
         </div>
       </FadeIn>
@@ -147,7 +179,7 @@ export default async function AdminRecursosPage({ searchParams }: Props) {
                 className="block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-500 min-h-[44px]"
               >
                 <option value="">Todos</option>
-                <option value="pendente">Pendente</option>
+                <option value="em_analise">Em análise</option>
                 <option value="deferido">Deferido</option>
                 <option value="indeferido">Indeferido</option>
               </select>
@@ -170,80 +202,64 @@ export default async function AdminRecursosPage({ searchParams }: Props) {
         </Card>
       ) : (
         <>
-          {/* Mobile */}
-          <div className="sm:hidden space-y-3">
-            {recursos.map((r) => (
-              <Link
-                key={r.id}
-                href={`/admin/inscricoes/${r.inscricaoId}`}
-                className="block rounded-lg border border-slate-200 bg-white p-3.5 hover:bg-slate-50 transition-colors shadow-sm"
-              >
-                <div className="flex items-start justify-between gap-2 mb-1.5">
-                  <p className="text-sm font-medium text-slate-900 truncate">{r.inscricao.proponente.nome}</p>
-                  {r.decisao ? (
-                    <Badge variant={r.decisao === 'DEFERIDO' ? 'success' : 'error'}>
-                      {r.decisao === 'DEFERIDO' ? 'Deferido' : 'Indeferido'}
-                    </Badge>
-                  ) : (
-                    <Badge variant="warning">Pendente</Badge>
-                  )}
-                </div>
-                <p className="text-xs text-slate-500 mb-1 line-clamp-1">{r.inscricao.edital.titulo}</p>
-                <div className="flex items-center gap-2 text-[11px] text-slate-400">
-                  <span>{formatFase(r.fase)}</span>
-                  <span>·</span>
-                  <span>{formatDate(r.createdAt)}</span>
-                </div>
-              </Link>
-            ))}
-          </div>
-
-          {/* Desktop */}
-          <Card padding="sm" className="overflow-hidden hidden sm:block">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-slate-50">
-                    <th className="text-left py-3 px-4 font-medium text-slate-600">Proponente</th>
-                    <th className="text-left py-3 px-4 font-medium text-slate-600">Edital</th>
-                    <th className="text-left py-3 px-4 font-medium text-slate-600">Fase</th>
-                    <th className="text-left py-3 px-4 font-medium text-slate-600">Data</th>
-                    <th className="text-left py-3 px-4 font-medium text-slate-600">Status</th>
-                    <th className="text-right py-3 px-4 font-medium text-slate-600">Ação</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recursos.map((r) => (
-                    <tr key={r.id} className="border-t border-slate-100 hover:bg-slate-50 transition-colors">
-                      <td className="py-3 px-4 font-medium text-slate-900">{r.inscricao.proponente.nome}</td>
-                      <td className="py-3 px-4 text-slate-600">{r.inscricao.edital.titulo}</td>
-                      <td className="py-3 px-4">
+          <div className="space-y-3 sm:space-y-4">
+            {recursos.map((r) => {
+              const st = statusInfo(r.decisao, r.decididoPor, r.respostas, r.inscricao._count.avaliacoes)
+              return (
+                <Card key={r.id} padding="sm" className="sm:p-6">
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="min-w-0">
+                      <p className="text-sm sm:text-base font-semibold text-slate-900">{r.inscricao.proponente.nome}</p>
+                      <p className="text-xs text-slate-500">{r.inscricao.edital.titulo}</p>
+                      <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-400">
+                        <span className="font-mono">{r.inscricao.numero}</span>
+                        <span>·</span>
                         <Badge variant="neutral">{formatFase(r.fase)}</Badge>
-                      </td>
-                      <td className="py-3 px-4 text-slate-500 text-xs">{formatDate(r.createdAt)}</td>
-                      <td className="py-3 px-4">
-                        {r.decisao ? (
-                          <Badge variant={r.decisao === 'DEFERIDO' ? 'success' : 'error'}>
-                            {r.decisao === 'DEFERIDO' ? 'Deferido' : 'Indeferido'}
-                          </Badge>
-                        ) : (
-                          <Badge variant="warning">Pendente</Badge>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        <Link
-                          href={`/admin/inscricoes/${r.inscricaoId}`}
-                          className="text-brand-600 hover:text-brand-700 font-medium text-xs"
-                        >
-                          {r.decisao ? 'Ver' : 'Decidir'}
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Card>
+                        <span>·</span>
+                        <span>{formatDate(r.createdAt)}</span>
+                      </div>
+                    </div>
+                    <Badge variant={st.variant}>{st.label}</Badge>
+                  </div>
+
+                  {/* O que o proponente alegou */}
+                  <div className="rounded-lg bg-slate-50 p-3 mb-3">
+                    <p className="text-[11px] uppercase font-semibold text-slate-500 tracking-wide mb-1">Recurso do proponente</p>
+                    <p className="text-sm text-slate-700 whitespace-pre-wrap break-words line-clamp-4">{r.texto}</p>
+                  </div>
+
+                  {/* Considerações dos avaliadores */}
+                  {r.respostas.length > 0 ? (
+                    <div className="space-y-2">
+                      <p className="text-[11px] uppercase font-semibold text-slate-500 tracking-wide">Considerações dos avaliadores</p>
+                      {r.respostas.map((resp) => (
+                        <div key={resp.id} className="rounded-lg border border-slate-200 p-3">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-sm font-medium text-slate-900">{resp.avaliador.nome}</span>
+                            <Badge variant={resp.decisao === 'DEFERIDO' ? 'success' : 'error'}>
+                              {resp.decisao === 'DEFERIDO' ? 'Deferido' : 'Indeferido'}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-slate-700 whitespace-pre-wrap break-words">{resp.justificativa}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-400">Os avaliadores ainda não enviaram suas considerações.</p>
+                  )}
+
+                  <div className="mt-3 flex justify-end">
+                    <Link
+                      href={`/admin/inscricoes/${r.inscricaoId}`}
+                      className="text-brand-600 hover:text-brand-700 font-medium text-sm"
+                    >
+                      Ver inscrição →
+                    </Link>
+                  </div>
+                </Card>
+              )
+            })}
+          </div>
 
           <Pagination currentPage={page} totalPages={totalPages} baseUrl={baseUrl} className="mt-4 sm:mt-6" />
         </>
