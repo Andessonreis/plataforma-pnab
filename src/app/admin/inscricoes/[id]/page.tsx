@@ -13,6 +13,7 @@ import { HabilitacaoActions } from './habilitacao-actions'
 import { AvaliacaoForm } from './avaliacao-form'
 import { RecursoDecision } from './recurso-decision'
 import { RecursoRespostaAvaliador } from './recurso-resposta-avaliador'
+import { RecursoAnexos } from '@/components/recurso/recurso-anexos'
 import { AnexoViewer } from './anexo-viewer'
 import { DistribuicaoAvaliadores } from './distribuicao-avaliadores'
 import { AvaliacoesComparativo } from './avaliacoes-comparativo'
@@ -234,23 +235,12 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
                     {recurso.urlAnexos.length > 0 && (
                       <div className="mt-3">
                         <p className="text-xs font-medium text-slate-500 mb-1">Anexos do recurso</p>
-                        <ul className="space-y-1">
-                          {recurso.urlAnexos.map((url, idx) => (
-                            <li key={idx}>
-                              <a
-                                href={url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:text-brand-700 break-all"
-                              >
-                                <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                                </svg>
-                                Anexo {idx + 1}
-                              </a>
-                            </li>
-                          ))}
-                        </ul>
+                        <RecursoAnexos
+                          urls={recurso.urlAnexos}
+                          inscricaoId={inscricao.id}
+                          recursoId={recurso.id}
+                          scope="admin"
+                        />
                       </div>
                     )}
                     <p className="text-xs text-slate-400 mt-2">

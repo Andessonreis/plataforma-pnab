@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { uploadFile } from '@/lib/storage'
+import { uploadFile, getSignedUrl } from '@/lib/storage'
 import { validateMagicBytes, sanitizeFilename } from '@/lib/upload/validate'
 import { logAudit } from '@/lib/audit'
 
@@ -18,6 +18,74 @@ const ALLOWED_MIMES = [
 
 interface RouteParams {
   params: Promise<{ id: string }>
+}
+
+// GET — Signed URL para um anexo do recurso do próprio proponente.
+export async function GET(req: NextRequest, { params }: RouteParams) {
+  const requestId = randomUUID()
+  const { id } = await params
+
+  try {
+    const session = await auth()
+    if (!session || session.user.role !== 'PROPONENTE') {
+      return NextResponse.json(
+        { error: 'UNAUTHORIZED', message: 'Acesso negado.', requestId },
+        { status: 401 },
+      )
+    }
+
+    const sp = new URL(req.url).searchParams
+    const recursoId = sp.get('recursoId')
+    const url = sp.get('url')
+    if (!recursoId || !url) {
+      return NextResponse.json(
+        { error: 'BAD_REQUEST', message: 'Parâmetros recursoId e url são obrigatórios.', requestId },
+        { status: 400 },
+      )
+    }
+
+    const inscricao = await prisma.inscricao.findUnique({
+      where: { id },
+      select: { proponenteId: true },
+    })
+    if (!inscricao || inscricao.proponenteId !== session.user.id) {
+      return NextResponse.json(
+        { error: 'FORBIDDEN', message: 'Acesso negado.', requestId },
+        { status: 403 },
+      )
+    }
+
+    const recurso = await prisma.recurso.findUnique({
+      where: { id: recursoId },
+      select: { inscricaoId: true, urlAnexos: true },
+    })
+    if (!recurso || recurso.inscricaoId !== id || !recurso.urlAnexos.includes(url)) {
+      return NextResponse.json(
+        { error: 'NOT_FOUND', message: 'Anexo não encontrado.', requestId },
+        { status: 404 },
+      )
+    }
+
+    const storagePath = new URL(url).pathname.split('/propostas/').pop()
+    if (!storagePath) {
+      return NextResponse.json(
+        { error: 'INTERNAL_ERROR', message: 'Caminho do arquivo inválido.', requestId },
+        { status: 500 },
+      )
+    }
+
+    const signedUrl = await getSignedUrl('propostas', storagePath, 3600)
+
+    const res = NextResponse.json({ url: signedUrl, requestId })
+    res.headers.set('Cache-Control', 'no-store')
+    return res
+  } catch (err) {
+    console.error({ requestId, error: err instanceof Error ? err.message : 'Unknown' })
+    return NextResponse.json(
+      { error: 'INTERNAL_ERROR', message: 'Erro ao gerar URL do anexo.', requestId },
+      { status: 500 },
+    )
+  }
 }
 
 /**

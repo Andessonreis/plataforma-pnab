@@ -6,6 +6,7 @@ import { prisma } from '@/lib/db'
 import { Card, Badge } from '@/components/ui'
 import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
 import { respostaRecursoLiberada } from '@/lib/edital/fase'
+import { RecursoAnexos } from '@/components/recurso/recurso-anexos'
 import type { InscricaoStatus } from '@prisma/client'
 import { DadosInscricaoView } from '@/components/inscricao/dados-inscricao-view'
 import type { CampoFormulario } from '@/types/campo-formulario'
@@ -67,7 +68,7 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
         select: { notaTotal: true, parecer: true, finalizada: true, createdAt: true },
       },
       recursos: {
-        select: { fase: true, texto: true, urlAnexos: true, decisao: true, justificativa: true, createdAt: true },
+        select: { id: true, fase: true, texto: true, urlAnexos: true, decisao: true, justificativa: true, createdAt: true },
         orderBy: { createdAt: 'desc' },
       },
     },
@@ -357,20 +358,12 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
                     {recurso.urlAnexos && recurso.urlAnexos.length > 0 && (
                       <div className="mt-2">
                         <p className="text-[11px] uppercase font-semibold text-slate-500 tracking-wide mb-1">Evidências</p>
-                        <ul className="space-y-0.5">
-                          {recurso.urlAnexos.map((url, idx) => (
-                            <li key={idx}>
-                              <a
-                                href={url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-xs text-brand-700 hover:underline break-all"
-                              >
-                                Anexo {idx + 1}
-                              </a>
-                            </li>
-                          ))}
-                        </ul>
+                        <RecursoAnexos
+                          urls={recurso.urlAnexos}
+                          inscricaoId={inscricao.id}
+                          recursoId={recurso.id}
+                          scope="proponente"
+                        />
                       </div>
                     )}
                     {recurso.justificativa && liberada && (
