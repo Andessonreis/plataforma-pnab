@@ -12,6 +12,7 @@ import { temAcessoEdital } from '@/lib/edital-acesso'
 import { HabilitacaoActions } from './habilitacao-actions'
 import { AvaliacaoForm } from './avaliacao-form'
 import { RecursoDecision } from './recurso-decision'
+import { RecursoRespostaAvaliador } from './recurso-resposta-avaliador'
 import { AnexoViewer } from './anexo-viewer'
 import { DistribuicaoAvaliadores } from './distribuicao-avaliadores'
 import { AvaliacoesComparativo } from './avaliacoes-comparativo'
@@ -59,6 +60,12 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
         orderBy: { createdAt: 'asc' },
       },
       recursos: {
+        include: {
+          respostas: {
+            include: { avaliador: { select: { nome: true } } },
+            orderBy: { createdAt: 'asc' },
+          },
+        },
         orderBy: { createdAt: 'desc' },
       },
     },
@@ -114,6 +121,8 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
       : (rawCampos && typeof rawCampos === 'object' && !Array.isArray(rawCampos))
         ? (rawCampos as Record<string, unknown>)
         : {}
+  const isStaff = isAdmin || userRole === 'HABILITADOR'
+  const totalAvaliadores = inscricao.avaliacoes.length
   const canHabilitar = session.user.role === 'ADMIN' || session.user.role === 'HABILITADOR'
   const isHabilitacaoStatus = inscricao.status === 'ENVIADA' || inscricao.status === 'HABILITADA' || inscricao.status === 'INABILITADA'
 
@@ -222,24 +231,119 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
                       )}
                     </div>
                     <p className="text-sm text-slate-700 mt-2 break-words">{recurso.texto}</p>
-                    {recurso.justificativa && (
-                      <div className="mt-3 p-3 bg-slate-50 rounded-lg">
-                        <p className="text-xs font-medium text-slate-500 mb-1">Justificativa:</p>
-                        <p className="text-sm text-slate-700 break-words">{recurso.justificativa}</p>
+                    {recurso.urlAnexos.length > 0 && (
+                      <div className="mt-3">
+                        <p className="text-xs font-medium text-slate-500 mb-1">Anexos do recurso</p>
+                        <ul className="space-y-1">
+                          {recurso.urlAnexos.map((url, idx) => (
+                            <li key={idx}>
+                              <a
+                                href={url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:text-brand-700 break-all"
+                              >
+                                <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                                </svg>
+                                Anexo {idx + 1}
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
                     )}
                     <p className="text-xs text-slate-400 mt-2">
                       {new Date(recurso.createdAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
                     </p>
-                    {/* Formulário de decisão para recursos pendentes */}
-                    {!recurso.decisao && (isAdmin || userRole === 'HABILITADOR') && (
-                      <div className="mt-3">
-                        <RecursoDecision
-                          inscricaoId={inscricao.id}
-                          recursoId={recurso.id}
-                          fase={recurso.fase}
-                        />
-                      </div>
+
+                    {isAvaliador ? (
+                      recurso.decisao ? (
+                        <p className="text-xs text-slate-500 mt-3">
+                          Recurso já decidido. Sua resposta foi registrada.
+                        </p>
+                      ) : (() => {
+                        const minha = recurso.respostas.find((r) => r.avaliadorId === session.user.id)
+                        return (
+                          <div className="mt-3">
+                            {minha && (
+                              <div className="mb-3 p-3 bg-slate-50 rounded-lg">
+                                <div className="flex items-center justify-between mb-1">
+                                  <p className="text-xs font-medium text-slate-500">Sua resposta</p>
+                                  <Badge variant={minha.decisao === 'DEFERIDO' ? 'success' : 'error'}>
+                                    {minha.decisao}
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-slate-700 break-words whitespace-pre-wrap">{minha.justificativa}</p>
+                                <p className="text-xs text-slate-400 mt-2">
+                                  Você pode revisar enquanto o recurso não for decidido.
+                                </p>
+                              </div>
+                            )}
+                            <RecursoRespostaAvaliador
+                              inscricaoId={inscricao.id}
+                              recursoId={recurso.id}
+                              fase={recurso.fase}
+                              initialDecisao={(minha?.decisao as 'DEFERIDO' | 'INDEFERIDO' | undefined) ?? null}
+                              initialJustificativa={minha?.justificativa ?? ''}
+                            />
+                          </div>
+                        )
+                      })()
+                    ) : (
+                      <>
+                        {recurso.justificativa && (
+                          <div className="mt-3 p-3 bg-slate-50 rounded-lg">
+                            <p className="text-xs font-medium text-slate-500 mb-1">
+                              Decisão consolidada{recurso.decididoPor === 'ADMIN' ? ' (Secretaria)' : ''}
+                            </p>
+                            <p className="text-sm text-slate-700 break-words whitespace-pre-wrap">{recurso.justificativa}</p>
+                          </div>
+                        )}
+                        {recurso.respostas.length > 0 && (
+                          <div className="mt-3 space-y-2">
+                            <p className="text-xs font-medium text-slate-500">
+                              Pareceres dos avaliadores ({recurso.respostas.length}/{totalAvaliadores})
+                            </p>
+                            {recurso.respostas.map((resp) => (
+                              <div key={resp.id} className="p-3 border border-slate-200 rounded-lg">
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="text-sm font-medium text-slate-900">{resp.avaliador.nome}</span>
+                                  <Badge variant={resp.decisao === 'DEFERIDO' ? 'success' : 'error'}>{resp.decisao}</Badge>
+                                </div>
+                                <p className="text-sm text-slate-700 break-words whitespace-pre-wrap">{resp.justificativa}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {!recurso.decisao && (() => {
+                          const respondidas = recurso.respostas.length
+                          const todasResponderam = totalAvaliadores > 0 && respondidas >= totalAvaliadores
+                          const divergem = todasResponderam &&
+                            !recurso.respostas.every((r) => r.decisao === recurso.respostas[0].decisao)
+                          if (divergem && isStaff) {
+                            return (
+                              <div className="mt-3">
+                                <p className="text-xs font-medium text-amber-700 mb-2">
+                                  Os avaliadores divergiram. A decisão final é da Secretaria.
+                                </p>
+                                <RecursoDecision
+                                  inscricaoId={inscricao.id}
+                                  recursoId={recurso.id}
+                                  fase={recurso.fase}
+                                />
+                              </div>
+                            )
+                          }
+                          return (
+                            <p className="text-xs text-slate-500 mt-3">
+                              {totalAvaliadores === 0
+                                ? 'Nenhum avaliador atribuído a esta inscrição.'
+                                : `Aguardando resposta dos avaliadores (${respondidas}/${totalAvaliadores}).`}
+                            </p>
+                          )
+                        })()}
+                      </>
                     )}
                   </div>
                 ))}

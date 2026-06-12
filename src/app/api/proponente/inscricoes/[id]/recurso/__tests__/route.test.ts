@@ -290,7 +290,7 @@ describe('GET /api/proponente/inscricoes/[id]/recurso', () => {
 
   it('dono lista seus recursos → 200', async () => {
     mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'PROPONENTE' } } as never)
-    mockPrisma.inscricao.findUnique.mockResolvedValue({ proponenteId: 'u1' } as never)
+    mockPrisma.inscricao.findUnique.mockResolvedValue({ proponenteId: 'u1', edital: { status: 'AVALIACAO' } } as never)
     mockPrisma.recurso.findMany.mockResolvedValue([
       { id: 'r1', fase: 'HABILITACAO', texto: 't', urlAnexos: [] },
     ] as never)

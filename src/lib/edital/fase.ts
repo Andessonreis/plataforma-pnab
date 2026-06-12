@@ -29,6 +29,22 @@ function faseEsperada(acao: FaseAcao): EditalStatus {
   return acao === 'habilitar' ? 'HABILITACAO' : 'AVALIACAO'
 }
 
+/**
+ * A decisão de um recurso só fica visível ao proponente quando o edital
+ * avança para a fase seguinte à do recurso (resposta divulgada "no fim da fase").
+ */
+const FASE_LIBERACAO_RECURSO: Record<string, EditalStatus> = {
+  HABILITACAO: 'AVALIACAO',
+  RESULTADO_PRELIMINAR: 'RESULTADO_FINAL',
+  RESULTADO_FINAL: 'ENCERRADO',
+}
+
+export function respostaRecursoLiberada(faseRecurso: string, editalStatus: EditalStatus): boolean {
+  const liberaEm = FASE_LIBERACAO_RECURSO[faseRecurso]
+  if (!liberaEm) return false
+  return ORDEM_FASES.indexOf(editalStatus) >= ORDEM_FASES.indexOf(liberaEm)
+}
+
 export function podeHabilitar(status: EditalStatus): boolean {
   return status === 'HABILITACAO'
 }
