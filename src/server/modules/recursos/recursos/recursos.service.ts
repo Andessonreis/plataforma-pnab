@@ -4,6 +4,8 @@ import { enqueueEmail } from '@/lib/queue'
 import { respostaRecursoLiberada } from '@/lib/edital/fase'
 import { uploadFile, getSignedUrl } from '@/lib/storage'
 import { validateMagicBytes, sanitizeFilename } from '@/lib/upload/validate'
+import { janelaParaAcao, mensagemJanela } from '@/lib/utils/cronograma-janela'
+import type { AcaoJanela } from '@/types/cronograma'
 import { BadRequestError, ForbiddenError, NotFoundError } from '@server/lib/http/errors'
 import { InscricaoNaoEncontradaError } from '@server/modules/inscricoes/inscricoes/inscricoes.errors'
 import type { ConsolidacaoEstado } from '@shared/dtos/recursos.dto'
@@ -16,6 +18,7 @@ import { recursosRepository } from './recursos.repository'
 import {
   FaseRecursoInvalidaError,
   RecursoDuplicadoError,
+  RecursoForaDaJanelaError,
   RecursoJaDecididoError,
   RecursoNaoEncontradoError,
 } from './recursos.errors'
@@ -30,6 +33,11 @@ const STATUS_ALLOWS_RECURSO: Record<string, string[]> = {
   RESULTADO_PRELIMINAR: ['RESULTADO_PRELIMINAR'],
   NAO_CONTEMPLADA: ['RESULTADO_FINAL'],
   SUPLENTE: ['RESULTADO_FINAL'],
+}
+
+const RECURSO_FASE_TO_JANELA: Partial<Record<string, AcaoJanela>> = {
+  HABILITACAO: 'RECURSO_HABILITACAO_JANELA',
+  RESULTADO_PRELIMINAR: 'RECURSO_RESULTADO_JANELA',
 }
 
 function storagePathFromUrl(url: string): string | undefined {
@@ -50,6 +58,14 @@ export async function submitRecurso(
 
   const fasesPermitidas = STATUS_ALLOWS_RECURSO[inscricao.status] ?? []
   if (!fasesPermitidas.includes(data.fase)) throw new FaseRecursoInvalidaError()
+
+  const acaoJanela = RECURSO_FASE_TO_JANELA[data.fase]
+  if (acaoJanela) {
+    const info = janelaParaAcao(inscricao.edital.cronograma, acaoJanela)
+    if (info && !info.ativa) {
+      throw new RecursoForaDaJanelaError(`Recurso fora da janela. ${mensagemJanela(info)}.`)
+    }
+  }
 
   const existente = await recursosRepository.findRecursoExistente(inscricaoId, data.fase)
   if (existente) throw new RecursoDuplicadoError()

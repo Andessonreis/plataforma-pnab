@@ -1,4 +1,10 @@
-import { BadRequestError, ConflictError, NotFoundError } from '@server/lib/http/errors'
+import { ApiError, BadRequestError, ConflictError, NotFoundError } from '@server/lib/http/errors'
+
+export class RecursoForaDaJanelaError extends ApiError {
+  constructor(message: string) {
+    super('FORA_DA_JANELA', message, 422)
+  }
+}
 
 export class RecursoNaoEncontradoError extends NotFoundError {
   constructor() {

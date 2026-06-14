@@ -17,7 +17,12 @@ export const recursosRepository = {
   findInscricaoParaRecurso(inscricaoId: string) {
     return prisma.inscricao.findUnique({
       where: { id: inscricaoId },
-      select: { proponenteId: true, status: true, editalId: true },
+      select: {
+        proponenteId: true,
+        status: true,
+        editalId: true,
+        edital: { select: { cronograma: true } },
+      },
     })
   },
 
