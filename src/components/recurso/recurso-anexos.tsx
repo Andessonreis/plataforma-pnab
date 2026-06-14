@@ -1,36 +1,26 @@
 'use client'
 
 import { useState } from 'react'
+import { recursosClient } from '@client/api/recursos.client'
 
 interface RecursoAnexosProps {
   urls: string[]
   inscricaoId: string
   recursoId: string
-  scope: 'admin' | 'proponente'
+  /** Mantido por compatibilidade; o endpoint v1 autoriza por papel/posse. */
+  scope?: 'admin' | 'proponente'
 }
 
-export function RecursoAnexos({ urls, inscricaoId, recursoId, scope }: RecursoAnexosProps) {
+export function RecursoAnexos({ urls, inscricaoId, recursoId }: RecursoAnexosProps) {
   const [loading, setLoading] = useState<number | null>(null)
 
   async function abrir(index: number) {
     setLoading(index)
     try {
-      const endpoint =
-        scope === 'admin'
-          ? `/api/admin/inscricoes/${inscricaoId}/recurso/${recursoId}/anexo?url=${encodeURIComponent(urls[index])}`
-          : `/api/proponente/inscricoes/${inscricaoId}/recurso/anexos?recursoId=${recursoId}&url=${encodeURIComponent(urls[index])}`
-
-      const res = await fetch(endpoint)
-      const data = await res.json()
-
-      if (!res.ok) {
-        alert(data.message ?? 'Erro ao abrir anexo.')
-        return
-      }
-
-      window.open(data.url, '_blank', 'noopener,noreferrer')
-    } catch {
-      alert('Erro ao abrir anexo.')
+      const { url } = await recursosClient.anexoSignedUrl(inscricaoId, recursoId, urls[index])
+      window.open(url, '_blank', 'noopener,noreferrer')
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Erro ao abrir anexo.')
     } finally {
       setLoading(null)
     }
