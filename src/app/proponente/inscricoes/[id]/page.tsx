@@ -138,7 +138,7 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
               </div>
               <div className="flex flex-wrap gap-3 mt-4">
                 <a
-                  href={`/api/proponente/inscricoes/${inscricao.id}/comprovante`}
+                  href={`/api/v1/inscricoes/inscricao/${inscricao.id}/comprovante`}
                   download
                   className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition-colors min-h-[44px]"
                 >
@@ -442,7 +442,7 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
               <h2 className="text-lg font-semibold text-slate-900 mb-3">Documentos</h2>
               <div className="space-y-2">
                 <a
-                  href={`/api/proponente/inscricoes/${inscricao.id}/comprovante`}
+                  href={`/api/v1/inscricoes/inscricao/${inscricao.id}/comprovante`}
                   className="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-lg border border-brand-300 text-brand-700 text-sm font-medium hover:bg-brand-50 transition-colors min-h-[44px]"
                   download
                 >
@@ -452,7 +452,7 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
                   Baixar Comprovante (PDF)
                 </a>
                 <a
-                  href={`/api/proponente/inscricoes/${inscricao.id}/projeto-pdf`}
+                  href={`/api/v1/inscricoes/inscricao/${inscricao.id}/projeto-pdf`}
                   className="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-lg border border-slate-300 text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors min-h-[44px]"
                   download
                 >
