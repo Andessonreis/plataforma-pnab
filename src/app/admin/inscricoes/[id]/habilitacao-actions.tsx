@@ -3,6 +3,8 @@
 import { useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import type { InscricaoStatus } from '@prisma/client'
+import { habilitacaoClient } from '@client/api/habilitacao.client'
+import type { HabilitacaoInput } from '@shared/schemas/habilitacao.schema'
 
 // Motivos padronizados conforme diretrizes PNAB
 const MOTIVOS_PADRONIZADOS = [
@@ -48,21 +50,10 @@ export function HabilitacaoActions({ inscricaoId, currentStatus, motivoAtual: _m
     setFeedback(null)
 
     try {
-      const body = overrideMode
+      const input: HabilitacaoInput = overrideMode
         ? { ...payload, adminOverride: true, adminOverrideJustificativa: overrideJustificativa.trim() }
         : payload
-      const res = await fetch(`/api/admin/inscricoes/${inscricaoId}/habilitacao`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        setFeedback({ type: 'error', text: data.message ?? 'Erro ao processar solicitação.' })
-        return
-      }
+      await habilitacaoClient.decide(inscricaoId, input)
 
       setFeedback({
         type: 'success',
@@ -73,8 +64,8 @@ export function HabilitacaoActions({ inscricaoId, currentStatus, motivoAtual: _m
       })
       setStep('idle')
       router.refresh()
-    } catch {
-      setFeedback({ type: 'error', text: 'Falha na conexão. Tente novamente.' })
+    } catch (err) {
+      setFeedback({ type: 'error', text: err instanceof Error ? err.message : 'Falha na conexão. Tente novamente.' })
     } finally {
       setLoading(false)
     }

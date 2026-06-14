@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { calculateTotal, type NotaAvaliacao } from '@/lib/results/formula'
 import type { CriterioAvaliacao } from '@/lib/avaliacao-criterios'
 import { viewNotaTotal } from '@/lib/services/avaliacao-view'
+import { avaliacaoClient } from '@client/api/avaliacao.client'
+import type { AvaliacaoInput } from '@shared/schemas/avaliacao.schema'
 
 interface CriterioConfig {
   criterio: string
@@ -145,29 +147,19 @@ export function AvaliacaoForm({
     setShowConfirm(false)
 
     try {
-      const body: Record<string, unknown> = { notas, parecer: parecer.trim() || undefined, finalizar }
+      const input: AvaliacaoInput = { notas, parecer: parecer.trim() || undefined, finalizar }
       if (overrideMode) {
-        body.adminOverride = true
-        body.adminOverrideJustificativa = overrideJustificativa.trim()
+        input.adminOverride = true
+        input.adminOverrideJustificativa = overrideJustificativa.trim()
       }
-      const res = await fetch(`/api/admin/inscricoes/${inscricaoId}/avaliacao`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      })
-      const data = await res.json()
-
-      if (!res.ok) {
-        setFeedback({ type: 'error', text: data.message ?? 'Erro ao salvar. Tente novamente.' })
-        return
-      }
+      await avaliacaoClient.save(inscricaoId, input)
 
       if (finalizar) setFinalizada(true)
       setSavedAt(new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short', timeZone: 'America/Sao_Paulo' }))
-      setFeedback({ type: 'success', text: data.message })
+      setFeedback({ type: 'success', text: finalizar ? 'Avaliação finalizada com sucesso.' : 'Rascunho salvo.' })
       router.refresh()
-    } catch {
-      setFeedback({ type: 'error', text: 'Falha na conexão. Verifique sua internet e tente novamente.' })
+    } catch (err) {
+      setFeedback({ type: 'error', text: err instanceof Error ? err.message : 'Falha na conexão. Verifique sua internet e tente novamente.' })
     } finally {
       setLoading(null)
     }

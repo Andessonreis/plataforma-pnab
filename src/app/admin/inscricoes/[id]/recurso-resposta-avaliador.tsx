@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@client/components/ui'
+import { recursosClient } from '@client/api/recursos.client'
 
 interface RecursoRespostaAvaliadorProps {
   inscricaoId: string
@@ -33,22 +34,10 @@ export function RecursoRespostaAvaliador({
     setError(null)
 
     try {
-      const res = await fetch(`/api/admin/inscricoes/${inscricaoId}/recurso/${recursoId}/resposta`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ decisao, justificativa }),
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        setError(data.message ?? 'Erro ao responder recurso.')
-        return
-      }
-
+      await recursosClient.respond(inscricaoId, recursoId, { decisao, justificativa })
       router.refresh()
-    } catch {
-      setError('Erro de conexão.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro de conexão.')
     } finally {
       setLoading(false)
     }

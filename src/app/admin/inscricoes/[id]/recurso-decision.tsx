@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@client/components/ui'
+import { recursosClient } from '@client/api/recursos.client'
 
 interface RecursoDecisionProps {
   inscricaoId: string
@@ -25,23 +26,11 @@ export function RecursoDecision({ inscricaoId, recursoId, fase, onSuccess }: Rec
     setError(null)
 
     try {
-      const res = await fetch(`/api/admin/inscricoes/${inscricaoId}/recurso/${recursoId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ decisao, justificativa }),
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        setError(data.message ?? 'Erro ao decidir recurso.')
-        return
-      }
-
+      await recursosClient.decide(inscricaoId, recursoId, { decisao, justificativa })
       setSuccess(true)
       onSuccess?.()
-    } catch {
-      setError('Erro de conexão.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro de conexão.')
     } finally {
       setLoading(false)
     }

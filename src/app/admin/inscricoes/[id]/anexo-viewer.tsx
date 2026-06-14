@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { inscricoesClient } from '@client/api/inscricoes.client'
 
 interface Anexo {
   id: string
@@ -21,17 +22,10 @@ export function AnexoViewer({ inscricaoId, anexos }: AnexoViewerProps) {
   const handleView = async (anexoId: string) => {
     setLoading(anexoId)
     try {
-      const res = await fetch(`/api/admin/inscricoes/${inscricaoId}/anexos?anexoId=${anexoId}`)
-      const data = await res.json()
-
-      if (!res.ok) {
-        alert(data.message || 'Erro ao abrir anexo.')
-        return
-      }
-
-      window.open(data.url, '_blank', 'noopener,noreferrer')
-    } catch {
-      alert('Erro ao abrir anexo.')
+      const { url } = await inscricoesClient.anexoSignedUrl(inscricaoId, anexoId)
+      window.open(url, '_blank', 'noopener,noreferrer')
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Erro ao abrir anexo.')
     } finally {
       setLoading(null)
     }

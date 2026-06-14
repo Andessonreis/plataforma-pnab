@@ -1,34 +1,58 @@
+import type { InscricaoStatus } from '@prisma/client'
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
+import { cumulativeStatuses } from '@/lib/status-maps'
 import { exportInscricoesRepository } from './export-inscricoes.repository'
 
-const CSV_HEADER =
-  'Número,Edital,Proponente,CPF/CNPJ,Email,Categoria,Status,Nota Final,Avaliações,Data Envio\n'
+const HEADERS = [
+  'Numero',
+  'Nome',
+  'CPF/CNPJ',
+  'Email',
+  'Edital',
+  'Status',
+  'Categoria',
+  'Nota Final',
+  'Enviada em',
+]
 
-export async function exportInscricoesCsv(editalId: string | undefined, userId: string, ip?: string) {
-  const inscricoes = await exportInscricoesRepository.findParaExport(editalId)
+function csvSafe(value: string): string {
+  return /^[=+@\-\t\r]/.test(value) ? `'${value}` : value
+}
 
-  const rows = inscricoes.map((i) =>
-    [
-      i.numero,
-      `"${i.edital.titulo}"`,
-      `"${i.proponente.nome}"`,
-      i.proponente.cpfCnpj ?? '',
-      i.proponente.email,
-      i.categoria ?? '',
-      i.status,
-      i.notaFinal ? Number(i.notaFinal) : '',
-      i._count.avaliacoes,
-      i.submittedAt ? i.submittedAt.toISOString() : '',
-    ].join(','),
-  )
+export async function exportInscricoesCsv(
+  editalId: string | undefined,
+  status: string | undefined,
+  userId: string,
+  ip?: string,
+) {
+  const statuses = status
+    ? (cumulativeStatuses[status as InscricaoStatus] ?? [status as InscricaoStatus])
+    : undefined
+
+  const inscricoes = await exportInscricoesRepository.findParaExport(editalId, statuses)
+
+  const rows = inscricoes.map((i) => [
+    csvSafe(String(i.numero ?? '')),
+    `"${csvSafe(i.proponente.nome)}"`,
+    csvSafe(i.proponente.cpfCnpj ?? ''),
+    csvSafe(i.proponente.email),
+    `"${csvSafe(i.edital.titulo)}"`,
+    csvSafe(i.status),
+    csvSafe(i.categoria ?? ''),
+    i.notaFinal ? String(i.notaFinal) : '',
+    i.submittedAt
+      ? i.submittedAt.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+      : '',
+  ])
 
   await logAudit({
     userId,
     action: AUDIT_ACTIONS.EXPORTACAO_CSV,
     entity: 'Inscricao',
-    details: { editalId, total: inscricoes.length },
+    details: { editalId: editalId ?? 'todos', status: status ?? 'todos', total: inscricoes.length },
     ip,
   })
 
-  return CSV_HEADER + rows.join('\n')
+  const bom = '﻿'
+  return bom + [HEADERS.join(';'), ...rows.map((r) => r.join(';'))].join('\n')
 }
