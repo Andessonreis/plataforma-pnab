@@ -9,6 +9,7 @@ export function toRecurso(r: Recurso): RecursoDTO {
     urlAnexos: r.urlAnexos,
     decisao: r.decisao,
     justificativa: r.justificativa,
+    decididoPor: r.decididoPor,
     createdAt: r.createdAt.toISOString(),
     decidedAt: r.decidedAt?.toISOString() ?? null,
   }

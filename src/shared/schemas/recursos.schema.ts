@@ -14,3 +14,10 @@ export const decidirRecursoSchema = z.object({
 })
 
 export type DecidirRecursoInput = z.infer<typeof decidirRecursoSchema>
+
+export const responderRecursoSchema = z.object({
+  decisao: z.enum(['DEFERIDO', 'INDEFERIDO']),
+  justificativa: z.string().min(10, 'Justificativa deve ter no mínimo 10 caracteres'),
+})
+
+export type ResponderRecursoInput = z.infer<typeof responderRecursoSchema>

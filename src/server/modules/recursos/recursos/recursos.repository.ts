@@ -21,8 +21,11 @@ export const recursosRepository = {
     })
   },
 
-  findProponente(inscricaoId: string) {
-    return prisma.inscricao.findUnique({ where: { id: inscricaoId }, select: { proponenteId: true } })
+  findInscricaoParaList(inscricaoId: string) {
+    return prisma.inscricao.findUnique({
+      where: { id: inscricaoId },
+      select: { proponenteId: true, edital: { select: { status: true } } },
+    })
   },
 
   findRecursoExistente(inscricaoId: string, fase: string) {
@@ -45,7 +48,55 @@ export const recursosRepository = {
     return prisma.recurso.findUnique({ where: { id: recursoId }, include: recursoComInscricaoInclude })
   },
 
-  decidir(recursoId: string, data: { decisao: string; justificativa: string; decidedAt: Date }) {
+  decidir(
+    recursoId: string,
+    data: { decisao: string; justificativa: string; decididoPor: string; decidedAt: Date },
+  ) {
     return prisma.recurso.update({ where: { id: recursoId }, data, select: { id: true } })
+  },
+
+  findRecursoBasico(recursoId: string) {
+    return prisma.recurso.findUnique({
+      where: { id: recursoId },
+      select: { inscricaoId: true, fase: true, decisao: true },
+    })
+  },
+
+  findAvaliacaoAtribuida(inscricaoId: string, avaliadorId: string) {
+    return prisma.avaliacao.findUnique({
+      where: { inscricaoId_avaliadorId: { inscricaoId, avaliadorId } },
+      select: { id: true },
+    })
+  },
+
+  upsertResposta(recursoId: string, avaliadorId: string, decisao: string, justificativa: string) {
+    return prisma.recursoResposta.upsert({
+      where: { recursoId_avaliadorId: { recursoId, avaliadorId } },
+      create: { recursoId, avaliadorId, decisao, justificativa },
+      update: { decisao, justificativa },
+    })
+  },
+
+  findRecursoParaConsolidacao(recursoId: string) {
+    return prisma.recurso.findUnique({
+      where: { id: recursoId },
+      select: {
+        inscricaoId: true,
+        fase: true,
+        decisao: true,
+        respostas: { select: { decisao: true, justificativa: true } },
+      },
+    })
+  },
+
+  countAvaliacoes(inscricaoId: string) {
+    return prisma.avaliacao.count({ where: { inscricaoId } })
+  },
+
+  findRecursoAnexos(recursoId: string) {
+    return prisma.recurso.findUnique({
+      where: { id: recursoId },
+      select: { inscricaoId: true, urlAnexos: true, inscricao: { select: { proponenteId: true } } },
+    })
   },
 }

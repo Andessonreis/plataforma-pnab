@@ -1,8 +1,20 @@
 import type { RequestContext } from '@server/adapters/next-route'
-import { requireAuth, requireRole } from '@server/lib/auth/guards'
-import { decidirRecursoSchema, submeterRecursoSchema } from '@shared/schemas/recursos.schema'
+import { requireAuth, requireProponente, requireRole } from '@server/lib/auth/guards'
+import { BadRequestError } from '@server/lib/http/errors'
+import {
+  decidirRecursoSchema,
+  responderRecursoSchema,
+  submeterRecursoSchema,
+} from '@shared/schemas/recursos.schema'
 import { toRecurso } from './recursos.mapper'
-import { decideRecurso, listRecursos, submitRecurso } from './recursos.service'
+import {
+  decideRecurso,
+  getAnexoRecursoSignedUrl,
+  listRecursos,
+  responderRecurso,
+  submitRecurso,
+  uploadAnexoRecurso,
+} from './recursos.service'
 
 function ipFromHeaders(headers: Headers): string | undefined {
   return headers.get('x-forwarded-for')?.split(',')[0].trim() ?? headers.get('x-real-ip') ?? undefined
@@ -27,5 +39,35 @@ export const recursosController = {
     const input = decidirRecursoSchema.parse(ctx.body)
     const result = await decideRecurso(ctx.params.id, ctx.params.rid, input, user.id, ipFromHeaders(ctx.headers))
     return { data: result }
+  },
+
+  async respond(ctx: RequestContext) {
+    const user = await requireRole(ctx.headers, 'AVALIADOR')
+    const input = responderRecursoSchema.parse(ctx.body)
+    const estado = await responderRecurso(
+      ctx.params.id,
+      ctx.params.rid,
+      input,
+      user.id,
+      ipFromHeaders(ctx.headers),
+    )
+    return { data: { estado } }
+  },
+
+  async signedUrl(ctx: RequestContext) {
+    const user = await requireAuth(ctx.headers)
+    const url = ctx.query.url
+    if (!url) throw new BadRequestError('Parâmetro url é obrigatório.')
+    const result = await getAnexoRecursoSignedUrl(ctx.params.id, ctx.params.rid, url, user)
+    return { data: result, cacheControl: 'no-store' }
+  },
+
+  async uploadAnexo(ctx: RequestContext) {
+    const user = await requireProponente(ctx.headers)
+    if (!(ctx.body instanceof FormData)) throw new BadRequestError('Use multipart/form-data')
+    const file = ctx.body.get('file')
+    if (!(file instanceof File)) throw new BadRequestError('Campo "file" obrigatório')
+    const result = await uploadAnexoRecurso(ctx.params.id, file, user.id, ipFromHeaders(ctx.headers))
+    return { data: result, status: 201 }
   },
 }
