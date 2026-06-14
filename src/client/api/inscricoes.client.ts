@@ -8,7 +8,17 @@ import type { CreateInscricaoInput, UpdateInscricaoInput } from '@shared/schemas
 import type { AnexoUploadMeta } from '@shared/schemas/anexos-inscricao.schema'
 
 type ApiSuccess<T> = { data: T; requestId: string }
-type ApiError = { error: string; message: string; requestId: string }
+type ApiError = { error: string; message: string; requestId: string; details?: unknown }
+
+export class InscricaoDuplicadaError extends Error {
+  constructor(
+    message: string,
+    public readonly inscricaoId: string,
+  ) {
+    super(message)
+    this.name = 'InscricaoDuplicadaError'
+  }
+}
 
 async function unwrap<T>(res: Response): Promise<T> {
   if (!res.ok) {
@@ -29,7 +39,16 @@ export const inscricoesClient = {
       body: JSON.stringify(input),
       credentials: 'same-origin',
     })
-    return unwrap<InscricaoCriacaoDTO>(res)
+    if (!res.ok) {
+      const err = (await res.json().catch(() => null)) as ApiError | null
+      const dupId = (err?.details as { inscricaoId?: string } | undefined)?.inscricaoId
+      if (res.status === 409 && dupId) {
+        throw new InscricaoDuplicadaError(err?.message ?? 'Inscrição já existe', dupId)
+      }
+      throw new Error(err?.message ?? `Erro ${res.status}`)
+    }
+    const body = (await res.json()) as ApiSuccess<InscricaoCriacaoDTO>
+    return body.data
   },
 
   async update(id: string, input: UpdateInscricaoInput): Promise<InscricaoDetalheDTO> {

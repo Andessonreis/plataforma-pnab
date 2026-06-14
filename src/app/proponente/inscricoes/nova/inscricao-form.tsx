@@ -23,6 +23,7 @@ import {
   GrupoRepetivelInput,
   CampoEstruturaRevisao,
 } from './campo-estrutura'
+import { inscricoesClient, InscricaoDuplicadaError } from '@client/api/inscricoes.client'
 
 // ─── Contador de caracteres ──────────────────────────────────────────────────
 
@@ -156,28 +157,20 @@ export default function InscricaoForm({
   const createInscricao = useCallback(async () => {
     if (inscricaoId) return inscricaoId
 
-    const res = await fetch('/api/proponente/inscricoes', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    try {
+      const data = await inscricoesClient.create({
         editalId: edital.id,
         categoria: categoria || undefined,
-      }),
-    })
-
-    const data = await res.json()
-
-    if (!res.ok) {
-      if (res.status === 409 && data.inscricaoId) {
-        // Já tem inscrição — redirecionar para edição
-        router.push(`/proponente/inscricoes/${data.inscricaoId}/editar`)
+      })
+      setInscricaoId(data.id)
+      return data.id
+    } catch (err) {
+      if (err instanceof InscricaoDuplicadaError) {
+        router.push(`/proponente/inscricoes/${err.inscricaoId}/editar`)
         return ''
       }
-      throw new Error(data.message || 'Erro ao criar inscrição')
+      throw err
     }
-
-    setInscricaoId(data.id)
-    return data.id as string
   }, [inscricaoId, edital.id, categoria, router])
 
   // ─── Salvar rascunho ──────────────────────────────────────────────────────
@@ -190,16 +183,7 @@ export default function InscricaoForm({
       const id = await createInscricao()
       if (!id) return
 
-      const res = await fetch(`/api/proponente/inscricoes/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ campos, categoria: categoria || undefined }),
-      })
-
-      if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.message || 'Erro ao salvar')
-      }
+      await inscricoesClient.update(id, { campos, categoria: categoria || undefined })
 
       setSuccess('Rascunho salvo!')
       setTimeout(() => setSuccess(''), 3000)
@@ -220,20 +204,8 @@ export default function InscricaoForm({
       const id = await createInscricao()
       if (!id) return false
 
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('tipo', tipo)
-      formData.append('titulo', titulo)
-
-      const res = await fetch(`/api/proponente/inscricoes/${id}/anexos`, {
-        method: 'POST',
-        body: formData,
-      })
-
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.message || 'Erro no upload')
-
-      setAnexos((prev) => [...prev, data.data])
+      const anexo = await inscricoesClient.uploadAnexo(id, file, { tipo, titulo })
+      setAnexos((prev) => [...prev, anexo])
       return true
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro no upload')
@@ -250,17 +222,7 @@ export default function InscricaoForm({
     setError('')
 
     try {
-      const res = await fetch(`/api/proponente/inscricoes/${inscricaoId}/anexos`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ anexoId }),
-      })
-
-      if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.message || 'Erro ao remover')
-      }
-
+      await inscricoesClient.removeAnexo(inscricaoId, anexoId)
       setAnexos((prev) => prev.filter((a) => a.id !== anexoId))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao remover anexo')
@@ -276,18 +238,8 @@ export default function InscricaoForm({
 
     try {
       // Salvar campos antes de submeter
-      await fetch(`/api/proponente/inscricoes/${inscricaoId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ campos, categoria: categoria || undefined }),
-      })
-
-      const res = await fetch(`/api/proponente/inscricoes/${inscricaoId}/submit`, {
-        method: 'POST',
-      })
-
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.message || 'Erro ao enviar inscrição')
+      await inscricoesClient.update(inscricaoId, { campos, categoria: categoria || undefined })
+      await inscricoesClient.submit(inscricaoId)
 
       router.push(`/proponente/inscricoes/${inscricaoId}?enviada=true`)
     } catch (err) {

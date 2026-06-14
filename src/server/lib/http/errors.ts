@@ -35,8 +35,8 @@ export class NotFoundError extends ApiError {
 }
 
 export class ConflictError extends ApiError {
-  constructor(message = 'Conflito de estado') {
-    super('CONFLICT', message, 409)
+  constructor(message = 'Conflito de estado', details?: unknown) {
+    super('CONFLICT', message, 409, details)
   }
 }
 

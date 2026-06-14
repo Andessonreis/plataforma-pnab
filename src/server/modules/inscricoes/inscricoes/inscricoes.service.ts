@@ -20,7 +20,9 @@ export async function createInscricao(data: CreateInscricaoInput, userId: string
   }
 
   const existente = await inscricoesRepository.findInscricaoExistente(data.editalId, userId)
-  if (existente) throw new ConflictError('Você já possui uma inscrição neste edital.')
+  if (existente) {
+    throw new ConflictError('Você já possui uma inscrição neste edital.', { inscricaoId: existente.id })
+  }
 
   if (data.categoria && edital.categorias.length > 0 && !edital.categorias.includes(data.categoria)) {
     throw new BadRequestError('Categoria inválida para este edital.')

@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { Button } from '@client/components/ui'
+import { recursosClient } from '@client/api/recursos.client'
+import type { SubmeterRecursoInput } from '@shared/schemas/recursos.schema'
 
 interface Contexto {
   entidadeNome: string
@@ -78,43 +80,32 @@ export function RecursoForm({ inscricaoId, fase, contexto, onSuccess }: RecursoF
         if (a.status === 'erro') continue
         nextAnexos[i] = { ...a, status: 'enviando' }
         setAnexos([...nextAnexos])
-        const form = new FormData()
-        form.append('file', a.file)
-        const upRes = await fetch(`/api/proponente/inscricoes/${inscricaoId}/recurso/anexos`, {
-          method: 'POST',
-          body: form,
-        })
-        const upData = await upRes.json()
-        if (!upRes.ok || !upData.url) {
-          nextAnexos[i] = { ...a, status: 'erro', error: upData.message ?? 'Falha no envio' }
+        try {
+          const { url } = await recursosClient.uploadAnexo(inscricaoId, a.file)
+          nextAnexos[i] = { ...a, status: 'ok', url }
           setAnexos([...nextAnexos])
-          setError(`Falha ao enviar "${a.file.name}": ${upData.message ?? 'erro desconhecido'}`)
+          urls.push(url)
+        } catch (upErr) {
+          const msg = upErr instanceof Error ? upErr.message : 'Falha no envio'
+          nextAnexos[i] = { ...a, status: 'erro', error: msg }
+          setAnexos([...nextAnexos])
+          setError(`Falha ao enviar "${a.file.name}": ${msg}`)
           setLoading(false)
           return
         }
-        nextAnexos[i] = { ...a, status: 'ok', url: upData.url }
-        setAnexos([...nextAnexos])
-        urls.push(upData.url)
       }
 
       // 2) Submete o recurso com as URLs das evidências
-      const res = await fetch(`/api/proponente/inscricoes/${inscricaoId}/recurso`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fase, texto, urlAnexos: urls }),
+      await recursosClient.submit(inscricaoId, {
+        fase: fase as SubmeterRecursoInput['fase'],
+        texto,
+        urlAnexos: urls,
       })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        setError(data.message ?? 'Erro ao submeter recurso.')
-        return
-      }
 
       setSuccess(true)
       onSuccess?.()
-    } catch {
-      setError('Erro de conexão. Tente novamente.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro de conexão. Tente novamente.')
     } finally {
       setLoading(false)
     }

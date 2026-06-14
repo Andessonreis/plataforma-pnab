@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@client/components/ui'
+import { inscricoesClient } from '@client/api/inscricoes.client'
 
 interface RetractAndEditButtonProps {
   inscricaoId: string
@@ -19,20 +20,10 @@ export function RetractAndEditButton({ inscricaoId }: RetractAndEditButtonProps)
     setError('')
 
     try {
-      const res = await fetch(`/api/proponente/inscricoes/${inscricaoId}/retract`, {
-        method: 'POST',
-      })
-
-      if (!res.ok) {
-        const data = await res.json()
-        setError(data.message || 'Erro ao retirar inscrição.')
-        setLoading(false)
-        return
-      }
-
+      await inscricoesClient.retract(inscricaoId)
       router.push(`/proponente/inscricoes/${inscricaoId}/editar`)
-    } catch {
-      setError('Erro de conexão. Tente novamente.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro de conexão. Tente novamente.')
       setLoading(false)
     }
   }
