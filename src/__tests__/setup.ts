@@ -40,6 +40,14 @@ vi.mock('@server/lib/db', () => ({
       update: vi.fn(),
       count: vi.fn(),
     },
+    recursoResposta: {
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      upsert: vi.fn(),
+      count: vi.fn(),
+    },
     atendimento: {
       findMany: vi.fn(),
       findUnique: vi.fn(),
@@ -207,6 +215,7 @@ vi.mock('@/lib/audit', () => ({
     RESULTADO_PRELIMINAR_PUBLICADO: 'RESULTADO_PRELIMINAR_PUBLICADO',
     RESULTADO_FINAL_PUBLICADO: 'RESULTADO_FINAL_PUBLICADO',
     RECURSO_SUBMETIDO: 'RECURSO_SUBMETIDO',
+    RECURSO_RESPONDIDO: 'RECURSO_RESPONDIDO',
     RECURSO_DECIDIDO: 'RECURSO_DECIDIDO',
     EMAIL_TEMPLATE_ATUALIZADO: 'EMAIL_TEMPLATE_ATUALIZADO',
     EMAIL_TEMPLATE_HABILITADO: 'EMAIL_TEMPLATE_HABILITADO',

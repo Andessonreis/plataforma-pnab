@@ -5,6 +5,7 @@ import { auth } from '@server/lib/auth'
 import { prisma } from '@server/lib/db'
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
 import { janelaParaAcao, mensagemJanela } from '@/lib/utils/cronograma-janela'
+import { respostaRecursoLiberada } from '@/lib/edital/fase'
 import type { AcaoJanela } from '@/types/cronograma'
 
 export const runtime = 'nodejs'
@@ -52,7 +53,7 @@ export async function GET(
 
     const inscricao = await prisma.inscricao.findUnique({
       where: { id },
-      select: { proponenteId: true },
+      select: { proponenteId: true, edital: { select: { status: true } } },
     })
 
     if (!inscricao) {
@@ -77,7 +78,16 @@ export async function GET(
       orderBy: { createdAt: 'desc' },
     })
 
-    const res = NextResponse.json({ data: recursos, requestId })
+    // Proponente só vê a decisão consolidada após o fim da fase do recurso.
+    const data = isStaff
+      ? recursos
+      : recursos.map((r) =>
+          respostaRecursoLiberada(r.fase, inscricao.edital.status)
+            ? r
+            : { ...r, decisao: null, justificativa: null, decididoPor: null, decidedAt: null },
+        )
+
+    const res = NextResponse.json({ data, requestId })
     res.headers.set('X-Request-Id', requestId)
     res.headers.set('Cache-Control', 'no-store')
     return res

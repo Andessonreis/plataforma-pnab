@@ -2,12 +2,14 @@ import type { Metadata } from 'next'
 import { auth } from '@server/lib/auth'
 import { redirect, notFound } from 'next/navigation'
 import { prisma } from '@server/lib/db'
-import { Badge } from '@client/components/ui'
+import { Card, Badge } from '@client/components/ui'
 import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
 import { CRITERIOS_AVALIACAO_PADRAO, type CriterioAvaliacao } from '@/lib/avaliacao-criterios'
 import type { InscricaoStatus } from '@prisma/client'
 import { AvaliacaoForm } from '@/app/admin/inscricoes/[id]/avaliacao-form'
 import { AnexoViewer } from '@/app/admin/inscricoes/[id]/anexo-viewer'
+import { RecursoRespostaAvaliador } from '@/app/admin/inscricoes/[id]/recurso-resposta-avaliador'
+import { RecursoAnexos } from '@/components/recurso/recurso-anexos'
 import { temAcessoEdital } from '@/lib/edital-acesso'
 import { DadosInscricaoView } from '@client/components/inscricao/dados-inscricao-view'
 import { podeAvaliar, mensagemForaDaFase } from '@/lib/edital/fase'
@@ -48,6 +50,12 @@ export default async function AvaliadorInscricaoDetailPage({ params }: Props) {
       avaliacoes: {
         include: { avaliador: { select: { nome: true } } },
         orderBy: { createdAt: 'asc' },
+      },
+      recursos: {
+        include: {
+          respostas: { where: { avaliadorId: session.user.id } },
+        },
+        orderBy: { createdAt: 'desc' },
       },
     },
   })
@@ -125,6 +133,72 @@ export default async function AvaliadorInscricaoDetailPage({ params }: Props) {
             : undefined
         }
       />
+
+      {/* Recursos — responder (apenas avaliador designado desta inscrição) */}
+      {minhaAvaliacao && inscricao.recursos.length > 0 && (
+        <Card>
+          <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Recursos</h2>
+          <div className="space-y-4">
+            {inscricao.recursos.map((recurso) => {
+              const minha = recurso.respostas[0]
+              return (
+                <div key={recurso.id} className="p-3 sm:p-4 border border-slate-200 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <Badge variant="info">{recurso.fase}</Badge>
+                    {recurso.decisao && (
+                      <Badge variant={recurso.decisao === 'DEFERIDO' ? 'success' : 'error'}>
+                        {recurso.decisao}
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-sm text-slate-700 break-words whitespace-pre-wrap">{recurso.texto}</p>
+                  {recurso.urlAnexos.length > 0 && (
+                    <div className="mt-3">
+                      <p className="text-xs font-medium text-slate-500 mb-1">Anexos do recurso</p>
+                      <RecursoAnexos
+                        urls={recurso.urlAnexos}
+                        inscricaoId={inscricao.id}
+                        recursoId={recurso.id}
+                        scope="admin"
+                      />
+                    </div>
+                  )}
+
+                  {recurso.decisao ? (
+                    <p className="text-xs text-slate-500 mt-3">
+                      Recurso já decidido. Sua resposta foi registrada.
+                    </p>
+                  ) : (
+                    <div className="mt-3">
+                      {minha && (
+                        <div className="mb-3 p-3 bg-slate-50 rounded-lg">
+                          <div className="flex items-center justify-between mb-1">
+                            <p className="text-xs font-medium text-slate-500">Sua resposta</p>
+                            <Badge variant={minha.decisao === 'DEFERIDO' ? 'success' : 'error'}>
+                              {minha.decisao}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-slate-700 break-words whitespace-pre-wrap">{minha.justificativa}</p>
+                          <p className="text-xs text-slate-400 mt-2">
+                            Você pode revisar enquanto o recurso não for decidido.
+                          </p>
+                        </div>
+                      )}
+                      <RecursoRespostaAvaliador
+                        inscricaoId={inscricao.id}
+                        recursoId={recurso.id}
+                        fase={recurso.fase}
+                        initialDecisao={(minha?.decisao as 'DEFERIDO' | 'INDEFERIDO' | undefined) ?? null}
+                        initialJustificativa={minha?.justificativa ?? ''}
+                      />
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </Card>
+      )}
 
       {/* Formulário de avaliação — gateado por fase do edital (#84) */}
       {podeAvaliar(inscricao.edital.status) ? (

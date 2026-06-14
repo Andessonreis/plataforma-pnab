@@ -119,6 +119,7 @@ model User {
 
   inscricoes            Inscricao[]
   avaliacoes            Avaliacao[]
+  recursoRespostas      RecursoResposta[]
   atendimentos          Atendimento[]
   passwordResetTokens   PasswordResetToken[]
   refreshTokens         RefreshToken[]
@@ -398,12 +399,29 @@ model Recurso {
   fase          String // HABILITACAO | RESULTADO_PRELIMINAR | RESULTADO_FINAL
   texto         String
   urlAnexos     String[]
-  decisao       String? // DEFERIDO | INDEFERIDO
+  decisao       String? // DEFERIDO | INDEFERIDO (consolidado)
   justificativa String?
+  decididoPor   String? // CONSENSO | ADMIN
   createdAt     DateTime  @default(now())
   decidedAt     DateTime?
 
-  inscricao Inscricao @relation(fields: [inscricaoId], references: [id])
+  inscricao Inscricao         @relation(fields: [inscricaoId], references: [id])
+  respostas RecursoResposta[]
+}
+
+model RecursoResposta {
+  id            String   @id @default(cuid())
+  recursoId     String
+  avaliadorId   String
+  decisao       String // DEFERIDO | INDEFERIDO
+  justificativa String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  recurso   Recurso @relation(fields: [recursoId], references: [id], onDelete: Cascade)
+  avaliador User    @relation(fields: [avaliadorId], references: [id])
+
+  @@unique([recursoId, avaliadorId])
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

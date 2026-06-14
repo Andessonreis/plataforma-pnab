@@ -5,6 +5,8 @@ import { redirect, notFound } from 'next/navigation'
 import { prisma } from '@server/lib/db'
 import { Card, Badge } from '@client/components/ui'
 import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
+import { respostaRecursoLiberada } from '@/lib/edital/fase'
+import { RecursoAnexos } from '@/components/recurso/recurso-anexos'
 import type { InscricaoStatus } from '@prisma/client'
 import { DadosInscricaoView } from '@client/components/inscricao/dados-inscricao-view'
 import type { CampoFormulario } from '@/types/campo-formulario'
@@ -66,7 +68,7 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
         select: { notaTotal: true, parecer: true, finalizada: true, createdAt: true },
       },
       recursos: {
-        select: { fase: true, texto: true, urlAnexos: true, decisao: true, justificativa: true, createdAt: true },
+        select: { id: true, fase: true, texto: true, urlAnexos: true, decisao: true, justificativa: true, createdAt: true },
         orderBy: { createdAt: 'desc' },
       },
     },
@@ -336,11 +338,13 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
             <Card>
               <h2 className="text-lg font-semibold text-slate-900 mb-4">Recursos</h2>
               <div className="space-y-3">
-                {inscricao.recursos.map((recurso, i) => (
+                {inscricao.recursos.map((recurso, i) => {
+                  const liberada = respostaRecursoLiberada(recurso.fase, inscricao.edital.status)
+                  return (
                   <div key={i} className="p-3 bg-slate-50 rounded-lg">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs font-medium text-slate-500">{recurso.fase}</span>
-                      {recurso.decisao ? (
+                      {recurso.decisao && liberada ? (
                         <Badge variant={recurso.decisao === 'DEFERIDO' ? 'success' : 'error'}>
                           {recurso.decisao}
                         </Badge>
@@ -354,23 +358,15 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
                     {recurso.urlAnexos && recurso.urlAnexos.length > 0 && (
                       <div className="mt-2">
                         <p className="text-[11px] uppercase font-semibold text-slate-500 tracking-wide mb-1">Evidências</p>
-                        <ul className="space-y-0.5">
-                          {recurso.urlAnexos.map((url, idx) => (
-                            <li key={idx}>
-                              <a
-                                href={url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-xs text-brand-700 hover:underline break-all"
-                              >
-                                Anexo {idx + 1}
-                              </a>
-                            </li>
-                          ))}
-                        </ul>
+                        <RecursoAnexos
+                          urls={recurso.urlAnexos}
+                          inscricaoId={inscricao.id}
+                          recursoId={recurso.id}
+                          scope="proponente"
+                        />
                       </div>
                     )}
-                    {recurso.justificativa && (
+                    {recurso.justificativa && liberada && (
                       <div className="mt-2 pt-2 border-t border-slate-200">
                         <p className="text-[11px] uppercase font-semibold text-slate-500 tracking-wide mb-0.5">Decisão da comissão</p>
                         <p className="text-xs text-slate-700 whitespace-pre-wrap break-words">{recurso.justificativa}</p>
@@ -380,7 +376,8 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
                       Enviado em {new Date(recurso.createdAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
                     </p>
                   </div>
-                ))}
+                  )
+                })}
               </div>
             </Card>
           )}

@@ -2,18 +2,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { randomUUID } from 'crypto'
 import { auth } from '@server/lib/auth'
-import { decideRecurso } from '@/lib/services/recurso.service'
+import { responderRecurso } from '@/lib/services/recurso.service'
 import { ServiceError } from '@/lib/services/errors'
 
 export const runtime = 'nodejs'
 
-const decisaoSchema = z.object({
+const respostaSchema = z.object({
   decisao: z.enum(['DEFERIDO', 'INDEFERIDO']),
   justificativa: z.string().min(10, 'Justificativa deve ter no mínimo 10 caracteres'),
 })
 
-// PATCH — Desempate do recurso pelo admin/habilitador (quando os avaliadores divergem)
-export async function PATCH(
+// POST — Avaliador responde o recurso (cego entre avaliadores)
+export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; recursoId: string }> },
 ) {
@@ -22,7 +22,7 @@ export async function PATCH(
 
   try {
     const session = await auth()
-    if (!session || !['ADMIN', 'HABILITADOR'].includes(session.user.role)) {
+    if (!session || session.user.role !== 'AVALIADOR') {
       return NextResponse.json(
         { error: 'FORBIDDEN', message: 'Acesso negado.', requestId },
         { status: 403 },
@@ -30,17 +30,20 @@ export async function PATCH(
     }
 
     const { id, recursoId } = await params
-    const data = decisaoSchema.parse(await req.json())
+    const data = respostaSchema.parse(await req.json())
 
-    await decideRecurso(id, recursoId, data, session.user.id, req.headers.get('x-forwarded-for') ?? undefined)
+    const estado = await responderRecurso(
+      id,
+      recursoId,
+      data,
+      session.user.id,
+      req.headers.get('x-forwarded-for') ?? undefined,
+    )
 
-    const res = NextResponse.json({
-      message: `Recurso ${data.decisao === 'DEFERIDO' ? 'deferido' : 'indeferido'}.`,
-      requestId,
-    })
+    const res = NextResponse.json({ message: 'Resposta registrada.', estado, requestId })
     res.headers.set('X-Request-Id', requestId)
     res.headers.set('Cache-Control', 'no-store')
-    console.log({ requestId, method: 'PATCH', path: `/api/admin/inscricoes/${id}/recurso/${recursoId}`, status: 200, durationMs: Date.now() - start })
+    console.log({ requestId, method: 'POST', path: `/api/admin/inscricoes/${id}/recurso/${recursoId}/resposta`, status: 200, durationMs: Date.now() - start })
     return res
   } catch (err) {
     if (err instanceof z.ZodError) {
@@ -57,7 +60,7 @@ export async function PATCH(
     }
     console.error({ requestId, error: err instanceof Error ? err.message : 'Unknown' })
     return NextResponse.json(
-      { error: 'INTERNAL_ERROR', message: 'Erro ao decidir recurso.', requestId },
+      { error: 'INTERNAL_ERROR', message: 'Erro ao responder recurso.', requestId },
       { status: 500 },
     )
   }

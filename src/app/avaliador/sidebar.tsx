@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LogoutButton } from '@client/components/logout-button'
-import { IconHome, IconStar, IconClose } from '@client/components/ui'
+import { IconHome, IconStar, IconShield, IconClose } from '@client/components/ui'
 
 interface AvaliadorSidebarProps {
   userName: string
@@ -12,6 +12,7 @@ interface AvaliadorSidebarProps {
 const navItems = [
   { label: 'Painel', href: '/avaliador', icon: <IconHome className="h-5 w-5" /> },
   { label: 'Minhas Avaliações', href: '/avaliador/inscricoes', icon: <IconStar className="h-5 w-5" /> },
+  { label: 'Recursos', href: '/avaliador/recursos', icon: <IconShield className="h-5 w-5" /> },
 ]
 
 export function AvaliadorSidebar({ userName }: AvaliadorSidebarProps) {

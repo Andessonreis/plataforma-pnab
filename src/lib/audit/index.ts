@@ -55,6 +55,7 @@ export const AUDIT_ACTIONS = {
 
   // Recursos
   RECURSO_SUBMETIDO: 'RECURSO_SUBMETIDO',
+  RECURSO_RESPONDIDO: 'RECURSO_RESPONDIDO',
   RECURSO_DECIDIDO: 'RECURSO_DECIDIDO',
 
   // Admin — tipos de anexo
@@ -140,6 +141,7 @@ export const ACTION_LABELS: Record<string, string> = {
   RESULTADO_PRELIMINAR_PUBLICADO: 'Resultado preliminar publicado',
   RESULTADO_FINAL_PUBLICADO: 'Resultado final publicado',
   RECURSO_SUBMETIDO: 'Recurso submetido',
+  RECURSO_RESPONDIDO: 'Recurso respondido por avaliador',
   RECURSO_DECIDIDO: 'Recurso decidido',
   TIPO_ANEXO_CRIADO: 'Tipo de anexo criado',
   TIPO_ANEXO_ATUALIZADO: 'Tipo de anexo atualizado',

@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM node:22-alpine AS base
 
 # ── Dependências (todas, incluindo dev — para build) ─────────────────────────
@@ -33,7 +34,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 RUN npx prisma generate
-RUN npm run build
+RUN --mount=type=cache,target=/app/.next/cache npm run build
 
 # Compila o worker BullMQ (bundla código local, mantém pacotes npm externos)
 RUN npx esbuild src/worker.ts --bundle --platform=node --format=cjs \

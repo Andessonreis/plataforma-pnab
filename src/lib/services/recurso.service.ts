@@ -1,6 +1,6 @@
 import { prisma } from '@server/lib/db'
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
-import { enqueueEmail } from '@/lib/queue'
+import { respostaRecursoLiberada } from '@/lib/edital/fase'
 import { ServiceError } from './errors'
 
 const STATUS_ALLOWS_RECURSO: Record<string, string[]> = {
@@ -8,6 +8,36 @@ const STATUS_ALLOWS_RECURSO: Record<string, string[]> = {
   RESULTADO_PRELIMINAR: ['RESULTADO_PRELIMINAR'],
   NAO_CONTEMPLADA: ['RESULTADO_FINAL'],
   SUPLENTE: ['RESULTADO_FINAL'],
+}
+
+type InscricaoStatusDecisao = 'HABILITADA' | 'INABILITADA' | 'RESULTADO_PRELIMINAR' | 'NAO_CONTEMPLADA'
+
+function statusAposDecisao(fase: string, decisao: string): InscricaoStatusDecisao {
+  if (decisao === 'DEFERIDO') {
+    return fase === 'HABILITACAO' ? 'HABILITADA' : 'RESULTADO_PRELIMINAR'
+  }
+  if (fase === 'HABILITACAO') return 'INABILITADA'
+  if (fase === 'RESULTADO_FINAL') return 'NAO_CONTEMPLADA'
+  return 'RESULTADO_PRELIMINAR'
+}
+
+async function aplicarDecisao(
+  inscricaoId: string,
+  recursoId: string,
+  fase: string,
+  decisao: string,
+  justificativa: string,
+  por: 'CONSENSO' | 'ADMIN',
+) {
+  await prisma.recurso.update({
+    where: { id: recursoId },
+    data: { decisao, justificativa, decididoPor: por, decidedAt: new Date() },
+  })
+
+  await prisma.inscricao.update({
+    where: { id: inscricaoId },
+    data: { status: statusAposDecisao(fase, decisao) },
+  })
 }
 
 export async function submitRecurso(
@@ -63,7 +93,7 @@ export async function submitRecurso(
 export async function listRecursos(inscricaoId: string, callerId: string, callerRole: string) {
   const inscricao = await prisma.inscricao.findUnique({
     where: { id: inscricaoId },
-    select: { proponenteId: true },
+    select: { proponenteId: true, edital: { select: { status: true } } },
   })
 
   if (!inscricao) throw new ServiceError('NOT_FOUND', 'Inscrição não encontrada.')
@@ -72,12 +102,107 @@ export async function listRecursos(inscricaoId: string, callerId: string, caller
   const isStaff = ['ADMIN', 'HABILITADOR'].includes(callerRole)
   if (!isOwner && !isStaff) throw new ServiceError('FORBIDDEN', 'Acesso negado.')
 
-  return prisma.recurso.findMany({
+  const recursos = await prisma.recurso.findMany({
     where: { inscricaoId },
     orderBy: { createdAt: 'desc' },
   })
+
+  if (isStaff) return recursos
+
+  // Proponente só vê a decisão consolidada após o fim da fase do recurso.
+  return recursos.map((r) =>
+    respostaRecursoLiberada(r.fase, inscricao.edital.status)
+      ? r
+      : { ...r, decisao: null, justificativa: null, decididoPor: null, decidedAt: null },
+  )
 }
 
+export type ConsolidacaoEstado = 'PENDENTE' | 'DIVERGENTE' | 'CONSOLIDADO'
+
+/**
+ * Consolida um recurso a partir das respostas dos avaliadores.
+ * - Todos os avaliadores responderam e concordaram → grava decisão automática + atualiza status.
+ * - Responderam e divergiram → fica pendente para o admin decidir.
+ * - Faltam respostas → fica pendente.
+ */
+export async function consolidarRecurso(recursoId: string): Promise<ConsolidacaoEstado> {
+  const recurso = await prisma.recurso.findUnique({
+    where: { id: recursoId },
+    select: {
+      inscricaoId: true,
+      fase: true,
+      decisao: true,
+      respostas: { select: { decisao: true, justificativa: true } },
+    },
+  })
+
+  if (!recurso) throw new ServiceError('NOT_FOUND', 'Recurso não encontrado.')
+  if (recurso.decisao) return 'CONSOLIDADO'
+
+  const atribuidos = await prisma.avaliacao.count({ where: { inscricaoId: recurso.inscricaoId } })
+  if (atribuidos === 0 || recurso.respostas.length < atribuidos) return 'PENDENTE'
+
+  const todasDeferidas = recurso.respostas.every((r) => r.decisao === 'DEFERIDO')
+  const todasIndeferidas = recurso.respostas.every((r) => r.decisao === 'INDEFERIDO')
+  if (!todasDeferidas && !todasIndeferidas) return 'DIVERGENTE'
+
+  const decisao = todasDeferidas ? 'DEFERIDO' : 'INDEFERIDO'
+  const justificativa = recurso.respostas.map((r) => r.justificativa).join('\n\n')
+
+  await aplicarDecisao(recurso.inscricaoId, recursoId, recurso.fase, decisao, justificativa, 'CONSENSO')
+  return 'CONSOLIDADO'
+}
+
+/**
+ * Resposta de um avaliador a um recurso (cega entre avaliadores).
+ * Após gravar, tenta consolidar automaticamente.
+ */
+export async function responderRecurso(
+  inscricaoId: string,
+  recursoId: string,
+  data: { decisao: string; justificativa: string },
+  avaliadorId: string,
+  ip?: string,
+): Promise<ConsolidacaoEstado> {
+  const recurso = await prisma.recurso.findUnique({
+    where: { id: recursoId },
+    select: { inscricaoId: true, fase: true, decisao: true },
+  })
+
+  if (!recurso || recurso.inscricaoId !== inscricaoId) {
+    throw new ServiceError('NOT_FOUND', 'Recurso não encontrado.')
+  }
+  if (recurso.decisao) throw new ServiceError('CONFLICT', 'Este recurso já foi decidido.')
+
+  const atribuido = await prisma.avaliacao.findUnique({
+    where: { inscricaoId_avaliadorId: { inscricaoId, avaliadorId } },
+    select: { id: true },
+  })
+  if (!atribuido) {
+    throw new ServiceError('FORBIDDEN', 'Apenas avaliadores da inscrição podem responder o recurso.')
+  }
+
+  await prisma.recursoResposta.upsert({
+    where: { recursoId_avaliadorId: { recursoId, avaliadorId } },
+    create: { recursoId, avaliadorId, decisao: data.decisao, justificativa: data.justificativa },
+    update: { decisao: data.decisao, justificativa: data.justificativa },
+  })
+
+  await logAudit({
+    userId: avaliadorId,
+    action: AUDIT_ACTIONS.RECURSO_RESPONDIDO,
+    entity: 'Recurso',
+    entityId: recursoId,
+    details: { inscricaoId, decisao: data.decisao, fase: recurso.fase },
+    ip,
+  })
+
+  return consolidarRecurso(recursoId)
+}
+
+/**
+ * Decisão de desempate pelo admin/habilitador, quando os avaliadores divergem.
+ */
 export async function decideRecurso(
   inscricaoId: string,
   recursoId: string,
@@ -87,14 +212,7 @@ export async function decideRecurso(
 ) {
   const recurso = await prisma.recurso.findUnique({
     where: { id: recursoId },
-    include: {
-      inscricao: {
-        include: {
-          proponente: { select: { email: true, nome: true } },
-          edital: { select: { titulo: true, slug: true } },
-        },
-      },
-    },
+    select: { inscricaoId: true, fase: true, decisao: true },
   })
 
   if (!recurso || recurso.inscricaoId !== inscricaoId) {
@@ -102,50 +220,14 @@ export async function decideRecurso(
   }
   if (recurso.decisao) throw new ServiceError('CONFLICT', 'Este recurso já foi decidido.')
 
-  await prisma.recurso.update({
-    where: { id: recursoId },
-    data: {
-      decisao: data.decisao,
-      justificativa: data.justificativa,
-      decidedAt: new Date(),
-    },
-  })
-
-  let newStatus: string
-  if (data.decisao === 'DEFERIDO') {
-    newStatus = recurso.fase === 'HABILITACAO' ? 'HABILITADA' : 'RESULTADO_PRELIMINAR'
-  } else {
-    if (recurso.fase === 'HABILITACAO') newStatus = 'INABILITADA'
-    else if (recurso.fase === 'RESULTADO_FINAL') newStatus = 'NAO_CONTEMPLADA'
-    else newStatus = 'RESULTADO_PRELIMINAR'
-  }
-
-  await prisma.inscricao.update({
-    where: { id: inscricaoId },
-    data: { status: newStatus as 'HABILITADA' | 'INABILITADA' | 'RESULTADO_PRELIMINAR' | 'NAO_CONTEMPLADA' },
-  })
-
-  const baseUrl = process.env.NEXTAUTH_URL ?? 'http://localhost:3000'
-  try {
-    await enqueueEmail({
-      to: recurso.inscricao.proponente.email,
-      subject: `Recurso ${data.decisao === 'DEFERIDO' ? 'Deferido' : 'Indeferido'} — ${recurso.inscricao.edital.titulo}`,
-      template: 'resultado_final',
-      data: {
-        edital: recurso.inscricao.edital.titulo,
-        url: `${baseUrl}/proponente/inscricoes/${inscricaoId}`,
-      },
-    })
-  } catch {
-    console.error('[recurso] Falha ao enfileirar e-mail de decisão')
-  }
+  await aplicarDecisao(inscricaoId, recursoId, recurso.fase, data.decisao, data.justificativa, 'ADMIN')
 
   await logAudit({
     userId,
     action: AUDIT_ACTIONS.RECURSO_DECIDIDO,
     entity: 'Recurso',
     entityId: recursoId,
-    details: { inscricaoId, decisao: data.decisao, fase: recurso.fase },
+    details: { inscricaoId, decisao: data.decisao, fase: recurso.fase, por: 'ADMIN' },
     ip,
   })
 }
