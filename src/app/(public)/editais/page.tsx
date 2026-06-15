@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import type { EditalStatus } from '@prisma/client'
-import { editaisRepository } from '@server/modules/editais/editais/editais.repository'
+import { editaisRepository } from '@server/modules/editais/repository/editais.repository'
 import { Badge, Button, Card, PageHeader, FilterTabs, EmptyState, Pagination } from '@client/components/ui'
 import { IconCalendar, IconCurrency, IconDocument } from '@client/components/ui/icons'
 import { getStatusDisplay, OPEN_STATUSES, CLOSED_STATUSES } from '@/lib/utils/edital-status'

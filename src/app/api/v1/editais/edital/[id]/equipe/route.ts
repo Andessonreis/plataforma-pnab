@@ -1,5 +1,5 @@
 import { adaptNextRoute } from '@server/adapters/next-route'
-import { equipeEditalController } from '@server/modules/editais/equipe-edital/equipe-edital.controller'
+import { equipeEditalController } from '@server/modules/editais/controller/equipe-edital.controller'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'

@@ -1,5 +1,5 @@
 import { adaptNextRoute } from '@server/adapters/next-route'
-import { avaliacaoController } from '@server/modules/avaliacao/avaliacao/avaliacao.controller'
+import { avaliacaoController } from '@server/modules/avaliacao/controller/avaliacao.controller'
 
 export const runtime = 'nodejs'
 

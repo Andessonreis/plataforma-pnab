@@ -1,5 +1,5 @@
 import { adaptNextRoute } from '@server/adapters/next-route'
-import { arquivosEditalController } from '@server/modules/editais/arquivos-edital/arquivos-edital.controller'
+import { arquivosEditalController } from '@server/modules/editais/controller/arquivos-edital.controller'
 
 export const runtime = 'nodejs'
 

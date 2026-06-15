@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { ApiError, InternalError } from '@server/lib/http/errors'
 import { requireAdmin } from '@server/lib/auth/guards'
-import { resultadosEditalService } from '@server/modules/editais/resultados-edital/resultados-edital.service'
+import { resultadosEditalService } from '@server/modules/editais/service/resultados-edital.service'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'

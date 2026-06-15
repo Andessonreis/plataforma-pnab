@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { editaisRepository } from '@server/modules/editais/editais/editais.repository'
+import { editaisRepository } from '@server/modules/editais/repository/editais.repository'
 import { IconArrowLeft } from '@client/components/ui/icons'
 
 interface Props {

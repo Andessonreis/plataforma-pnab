@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@server/lib/db'
-import { editaisRepository } from '@server/modules/editais/editais/editais.repository'
+import { editaisRepository } from '@server/modules/editais/repository/editais.repository'
 import { PageHeader, Badge } from '@client/components/ui'
 import { IconArrowLeft } from '@client/components/ui/icons'
 

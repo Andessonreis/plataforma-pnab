@@ -1,5 +1,5 @@
 import { adaptNextRoute } from '@server/adapters/next-route'
-import { habilitacaoController } from '@server/modules/habilitacao/habilitacao/habilitacao.controller'
+import { habilitacaoController } from '@server/modules/habilitacao/controller/habilitacao.controller'
 
 export const runtime = 'nodejs'
 

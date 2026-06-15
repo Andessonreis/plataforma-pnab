@@ -1,5 +1,5 @@
 import { adaptNextRoute } from '@server/adapters/next-route'
-import { anexosInscricaoController } from '@server/modules/inscricoes/anexos-inscricao/anexos-inscricao.controller'
+import { anexosInscricaoController } from '@server/modules/inscricoes/controller/anexos-inscricao.controller'
 
 export const runtime = 'nodejs'
 

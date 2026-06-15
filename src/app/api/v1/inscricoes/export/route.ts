@@ -1,5 +1,5 @@
 import { adaptNextRoute } from '@server/adapters/next-route'
-import { exportInscricoesController } from '@server/modules/inscricoes/export-inscricoes/export-inscricoes.controller'
+import { exportInscricoesController } from '@server/modules/inscricoes/controller/export-inscricoes.controller'
 
 export const runtime = 'nodejs'
 
