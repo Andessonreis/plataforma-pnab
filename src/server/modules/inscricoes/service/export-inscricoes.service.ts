@@ -1,6 +1,6 @@
 import type { InscricaoStatus } from '@prisma/client'
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
-import { cumulativeStatuses } from '@/lib/status-maps'
+import { cumulativeStatuses } from '@shared/status-maps'
 import { exportInscricoesRepository } from '../repository/export-inscricoes.repository'
 
 const HEADERS = [

@@ -3,7 +3,7 @@ import { calculateResults, saveManualOrder, saveResults } from '@/lib/results/ca
 import { enqueueEmail } from '@/lib/queue'
 import { generateRelatorioFinal } from '@/lib/pdf/relatorio-final'
 import { generateListaInscricoes } from '@/lib/pdf/lista-inscricoes'
-import { inscricaoStatusLabel, cumulativeStatuses } from '@/lib/status-maps'
+import { inscricaoStatusLabel, cumulativeStatuses } from '@shared/status-maps'
 import { BadRequestError } from '@server/lib/http/errors'
 import { EditalNaoEncontradoError } from '@server/modules/editais/errors/editais.errors'
 import type { InscricaoStatus, EditalStatus } from '@prisma/client'
