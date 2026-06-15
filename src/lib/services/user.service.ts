@@ -4,7 +4,7 @@ import { prisma } from '@server/lib/db'
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
 import { sendEmail } from '@/lib/mail'
 import { ServiceError } from '@shared/service-error'
-import type { RegisterInput, UpdateProfileInput } from '@/lib/schemas/user'
+import type { RegisterInput } from '@/lib/schemas/user'
 
 export async function register(data: RegisterInput, ip?: string) {
   const existing = await prisma.user.findFirst({
@@ -47,48 +47,6 @@ export async function register(data: RegisterInput, ip?: string) {
   })
 
   return { userId: user.id }
-}
-
-export async function updateProfile(userId: string, data: UpdateProfileInput, ip?: string) {
-  const updateData: Record<string, unknown> = {}
-
-  if (data.nome) updateData.nome = data.nome
-  if (data.cep !== undefined) updateData.cep = data.cep || null
-  if (data.logradouro !== undefined) updateData.logradouro = data.logradouro || null
-  if (data.numero !== undefined) updateData.numero = data.numero || null
-  if (data.complemento !== undefined) updateData.complemento = data.complemento || null
-  if (data.bairro !== undefined) updateData.bairro = data.bairro || null
-  if (data.cidade !== undefined) updateData.cidade = data.cidade || null
-  if (data.uf !== undefined) updateData.uf = data.uf || null
-  if (data.telefone !== undefined) updateData.telefone = data.telefone || null
-
-  if (data.newPassword && data.currentPassword) {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { password: true },
-    })
-    if (!user) throw new ServiceError('NOT_FOUND', 'Usuário não encontrado.')
-
-    const senhaValida = await bcrypt.compare(data.currentPassword, user.password)
-    if (!senhaValida) throw new ServiceError('BAD_REQUEST', 'Senha atual incorreta.')
-
-    updateData.password = await bcrypt.hash(data.newPassword, 12)
-  }
-
-  if (Object.keys(updateData).length === 0) {
-    throw new ServiceError('BAD_REQUEST', 'Nenhum dado para atualizar.')
-  }
-
-  await prisma.user.update({ where: { id: userId }, data: updateData })
-
-  await logAudit({
-    userId,
-    action: 'PERFIL_ATUALIZADO',
-    entity: 'User',
-    entityId: userId,
-    details: { fields: Object.keys(updateData).filter((k) => k !== 'password') },
-    ip,
-  })
 }
 
 export async function requestPasswordReset(cpfCnpj?: string, email?: string, ip?: string) {
