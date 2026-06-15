@@ -2,7 +2,7 @@
 
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import type { CronogramaFormItem, CronogramaValidationWarning, AcaoJanela } from '@/types/cronograma'
+import type { CronogramaFormItem, CronogramaValidationWarning, AcaoJanela } from '@shared/types/cronograma'
 import { editalCronogramaLabel } from '@/lib/status-maps'
 import { getItemValidationWarnings } from '@shared/utils/cronograma'
 

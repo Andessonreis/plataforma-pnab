@@ -3,7 +3,7 @@ import type {
   ErrorResponse,
   PaginationMeta,
   SuccessResponse,
-} from '@/shared/dtos/common.dto'
+} from '@shared/dtos/common.dto'
 
 type SuccessInit = {
   status?: number

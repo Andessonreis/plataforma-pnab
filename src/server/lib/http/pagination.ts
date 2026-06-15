@@ -1,5 +1,5 @@
-import type { PaginationMeta } from '@/shared/dtos/common.dto'
-import type { PaginationQuery } from '@/shared/schemas/common.schema'
+import type { PaginationMeta } from '@shared/dtos/common.dto'
+import type { PaginationQuery } from '@shared/schemas/common.schema'
 
 export function buildPaginationMeta(query: PaginationQuery, total: number): PaginationMeta {
   return {

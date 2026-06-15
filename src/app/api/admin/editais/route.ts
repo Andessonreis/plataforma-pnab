@@ -60,7 +60,7 @@ const editalSchema = z.object({
     'RESULTADO_FINAL', 'ENCERRADO',
   ]).default('RASCUNHO'),
   cronograma: z.array(cronogramaItemSchema).default([]).superRefine((items, ctx) => {
-    const errors = validateCronogramaOrderServer(items as import('@/types/cronograma').CronogramaItem[])
+    const errors = validateCronogramaOrderServer(items as import('@shared/types/cronograma').CronogramaItem[])
     for (const msg of errors) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: msg, path: [] })
     }

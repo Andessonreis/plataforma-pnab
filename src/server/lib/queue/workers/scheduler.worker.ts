@@ -7,7 +7,7 @@ import type { EditalStatus } from '@prisma/client'
 import {
   FASE_TRANSICOES,
   STATUS_ELEGIVEIS_SCHEDULER,
-} from '@/types/cronograma'
+} from '@shared/types/cronograma'
 import { parseBrazilDateTime } from '@shared/utils/format'
 
 export interface SchedulerJobData {

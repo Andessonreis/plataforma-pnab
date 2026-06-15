@@ -2,7 +2,7 @@
 
 import { Button, Input, Select, Textarea, CurrencyInput } from '@client/components/ui'
 import type { SelectOption } from '@client/components/ui'
-import type { CampoFormulario } from '@/types/campo-formulario'
+import type { CampoFormulario } from '@shared/types/campo-formulario'
 
 type LinhaValor = Record<string, unknown>
 

@@ -17,8 +17,8 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import type { EditalStatus } from '@prisma/client'
-import type { CronogramaFormItem, CronogramaValidationWarning } from '@/types/cronograma'
-import { CRONOGRAMA_FASES_FORMULARIO } from '@/types/cronograma'
+import type { CronogramaFormItem, CronogramaValidationWarning } from '@shared/types/cronograma'
+import { CRONOGRAMA_FASES_FORMULARIO } from '@shared/types/cronograma'
 import { editalCronogramaLabel } from '@/lib/status-maps'
 import { generateFormItemId, validateCronogramaOrder } from '@shared/utils/cronograma'
 import { Button } from '@client/components/ui'

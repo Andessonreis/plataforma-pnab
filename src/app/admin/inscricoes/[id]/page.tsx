@@ -7,7 +7,7 @@ import { Card, Badge } from '@client/components/ui'
 import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
 import { CRITERIOS_AVALIACAO_PADRAO, type CriterioAvaliacao } from '@shared/avaliacao-criterios'
 import type { InscricaoStatus } from '@prisma/client'
-import type { CampoFormulario } from '@/types/campo-formulario'
+import type { CampoFormulario } from '@shared/types/campo-formulario'
 import { temAcessoEdital } from '@server/lib/edital-acesso'
 import { HabilitacaoActions } from './habilitacao-actions'
 import { AvaliacaoForm } from './avaliacao-form'
@@ -135,7 +135,7 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
   const camposFormulario = (Array.isArray(inscricao.edital.camposFormulario)
     ? inscricao.edital.camposFormulario : []) as unknown as CampoFormulario[]
   const etapasCustomizadas = (Array.isArray(inscricao.edital.etapasCustomizadas)
-    ? inscricao.edital.etapasCustomizadas : []) as unknown as import('@/types/etapa-customizada').EtapaCustomizada[]
+    ? inscricao.edital.etapasCustomizadas : []) as unknown as import('@shared/types/etapa-customizada').EtapaCustomizada[]
   const etapasOrdenadas = [...etapasCustomizadas].sort((a, b) => a.ordem - b.ordem)
 
   return (

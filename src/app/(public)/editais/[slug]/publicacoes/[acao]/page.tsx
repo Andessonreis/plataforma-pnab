@@ -7,7 +7,7 @@ import { IconArrowLeft, IconDownload, IconClock } from '@client/components/ui/ic
 import { formatDateTime } from '@shared/utils/format'
 import { maskCpfCnpj, maskName } from '@shared/utils/mask'
 import { getPublicacao } from '@server/lib/edital/publicacoes'
-import { isAcaoPublicacao, isAcaoResultado } from '@/types/cronograma'
+import { isAcaoPublicacao, isAcaoResultado } from '@shared/types/cronograma'
 import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
 
 interface Props {

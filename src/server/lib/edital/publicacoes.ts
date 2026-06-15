@@ -2,8 +2,8 @@ import type { InscricaoStatus } from '@prisma/client'
 import { prisma } from '@server/lib/db'
 import { cumulativeStatuses } from '@shared/status-maps'
 import { parseBrazilDateTime } from '@shared/utils/format'
-import type { AcaoPublicacao, CronogramaItem } from '@/types/cronograma'
-import { isAcaoPublicacao, isAcaoResultado } from '@/types/cronograma'
+import type { AcaoPublicacao, CronogramaItem } from '@shared/types/cronograma'
+import { isAcaoPublicacao, isAcaoResultado } from '@shared/types/cronograma'
 
 // Status que cada tipo de publicação enumera.
 //

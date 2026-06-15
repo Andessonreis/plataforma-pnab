@@ -5,7 +5,7 @@ import {
   parseCronograma,
   getCronogramaItemStatus,
 } from '../cronograma'
-import type { CronogramaDisplayItem } from '@/types/cronograma'
+import type { CronogramaDisplayItem } from '@shared/types/cronograma'
 
 describe('isFaseCompleted', () => {
   it('fase anterior ao status atual → true', () => {

@@ -14,8 +14,8 @@ import { temAcessoEdital } from '@server/lib/edital-acesso'
 import { DadosInscricaoView } from '@client/components/inscricao/dados-inscricao-view'
 import { podeAvaliar, mensagemForaDaFase } from '@shared/edital/fase'
 import { ForaDaFaseAlert } from '@client/components/edital/fora-da-fase-alert'
-import type { CampoFormulario } from '@/types/campo-formulario'
-import type { EtapaCustomizada } from '@/types/etapa-customizada'
+import type { CampoFormulario } from '@shared/types/campo-formulario'
+import type { EtapaCustomizada } from '@shared/types/etapa-customizada'
 import Link from 'next/link'
 
 interface Props {

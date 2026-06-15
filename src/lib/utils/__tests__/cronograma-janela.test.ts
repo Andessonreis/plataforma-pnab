@@ -4,7 +4,7 @@ import {
   janelaParaAcao,
   mensagemJanela,
 } from '../cronograma-janela'
-import type { CronogramaItem } from '@/types/cronograma'
+import type { CronogramaItem } from '@shared/types/cronograma'
 
 const makeJanela = (
   acao: 'RECURSO_HABILITACAO_JANELA' | 'RECURSO_RESULTADO_JANELA',

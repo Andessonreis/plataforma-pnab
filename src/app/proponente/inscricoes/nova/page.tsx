@@ -5,7 +5,7 @@ import { auth } from '@server/lib/auth'
 import { prisma } from '@server/lib/db'
 import { IconArrowLeft } from '@client/components/ui/icons'
 import InscricaoForm from './inscricao-form'
-import type { CampoFormulario } from '@/types/campo-formulario'
+import type { CampoFormulario } from '@shared/types/campo-formulario'
 
 export const metadata: Metadata = {
   title: 'Nova Inscrição — Portal PNAB Irecê',
@@ -153,7 +153,7 @@ export default async function NovaInscricaoPage({ searchParams }: Props) {
           categorias: edital.categorias,
           camposFormulario: camposFormulario as unknown as CampoFormulario[],
           etapasCustomizadas: (Array.isArray(edital.etapasCustomizadas)
-            ? (edital.etapasCustomizadas as unknown as import('@/types/etapa-customizada').EtapaCustomizada[])
+            ? (edital.etapasCustomizadas as unknown as import('@shared/types/etapa-customizada').EtapaCustomizada[])
             : []),
           tiposAnexo: Array.isArray(edital.tiposAnexo)
             ? (edital.tiposAnexo as Array<{ tipo: string; label: string; obrigatorio: boolean }>)

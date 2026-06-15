@@ -6,12 +6,12 @@ import { prisma } from '@server/lib/db'
 import { EditalForm } from '../edital-form'
 import { AcessivelEditor } from './acessivel-editor'
 import type { EditalStatus } from '@prisma/client'
-import type { CronogramaItem } from '@/types/cronograma'
+import type { CronogramaItem } from '@shared/types/cronograma'
 import { migrateLegacyCronograma } from '@shared/utils/cronograma'
 import { RelatorioFinalButton } from './relatorio-final-button'
 import { AvancarFasePanel } from './avancar-fase-panel'
 import type { CriterioAvaliacao } from '@shared/avaliacao-criterios'
-import type { CampoFormulario } from '@/types/campo-formulario'
+import type { CampoFormulario } from '@shared/types/campo-formulario'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -56,7 +56,7 @@ export default async function EditarEditalPage({ params }: Props) {
   // Migra cronograma legado para formato novo (se necessário)
   const cronograma = migrateLegacyCronograma(edital.cronograma) as CronogramaItem[]
   const camposFormulario = (Array.isArray(edital.camposFormulario) ? edital.camposFormulario : []) as unknown as CampoFormulario[]
-  const etapasCustomizadas = (Array.isArray(edital.etapasCustomizadas) ? edital.etapasCustomizadas : []) as unknown as import('@/types/etapa-customizada').EtapaCustomizada[]
+  const etapasCustomizadas = (Array.isArray(edital.etapasCustomizadas) ? edital.etapasCustomizadas : []) as unknown as import('@shared/types/etapa-customizada').EtapaCustomizada[]
 
   return (
     <section>

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import type { TipoProponente } from '@prisma/client'
-import type { CampoFormulario } from '@/types/campo-formulario'
-import type { EtapaCustomizada } from '@/types/etapa-customizada'
+import type { CampoFormulario } from '@shared/types/campo-formulario'
+import type { EtapaCustomizada } from '@shared/types/etapa-customizada'
 import { CampoEstruturaRevisao } from '@/app/proponente/inscricoes/nova/campo-estrutura'
 import { CollapsibleSection } from './collapsible-section'
 

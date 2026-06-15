@@ -1,10 +1,10 @@
 import { randomUUID } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { ZodError } from 'zod'
-import { ApiError, InternalError } from '@/server/lib/http/errors'
+import { ApiError, InternalError } from '@server/lib/http/errors'
 import { ServiceError } from '@shared/service-error'
-import { jsonError, jsonSuccess } from '@/server/lib/http/response'
-import type { PaginationMeta } from '@/shared/dtos/common.dto'
+import { jsonError, jsonSuccess } from '@server/lib/http/response'
+import type { PaginationMeta } from '@shared/dtos/common.dto'
 
 export type RequestContext = {
   requestId: string

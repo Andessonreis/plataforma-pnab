@@ -9,7 +9,7 @@
  * no UI.
  */
 
-import type { AcaoJanela, CronogramaItem } from '@/types/cronograma'
+import type { AcaoJanela, CronogramaItem } from '@shared/types/cronograma'
 import { migrateLegacyCronograma } from './cronograma'
 import { parseBrazilDateTime } from './format'
 

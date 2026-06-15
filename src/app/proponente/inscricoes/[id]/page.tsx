@@ -9,13 +9,13 @@ import { respostaRecursoLiberada } from '@shared/edital/fase'
 import { RecursoAnexos } from '@/components/recurso/recurso-anexos'
 import type { InscricaoStatus } from '@prisma/client'
 import { DadosInscricaoView } from '@client/components/inscricao/dados-inscricao-view'
-import type { CampoFormulario } from '@/types/campo-formulario'
-import type { EtapaCustomizada } from '@/types/etapa-customizada'
+import type { CampoFormulario } from '@shared/types/campo-formulario'
+import type { EtapaCustomizada } from '@shared/types/etapa-customizada'
 import { RecursoForm } from './recurso/recurso-form'
 import { RetractAndEditButton } from './retract-and-edit-button'
 import { formatNotaTotal } from '@/lib/services/avaliacao-view'
 import { janelaParaAcao, mensagemJanela } from '@shared/utils/cronograma-janela'
-import type { AcaoJanela } from '@/types/cronograma'
+import type { AcaoJanela } from '@shared/types/cronograma'
 
 interface Props {
   params: Promise<{ id: string }>
