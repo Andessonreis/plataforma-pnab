@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from 'react'
 import { Input, Button, Card, UserAvatar } from '@client/components/ui'
-import { formatTelefoneBR, unmaskTelefone } from '@/lib/utils/format'
+import { formatTelefoneBR, unmaskTelefone } from '@shared/utils/format'
 
 interface ProfileFormProps {
   initialData: {

@@ -14,7 +14,7 @@ import {
   IconCalendar,
   IconNews,
 } from '@client/components/ui/icons'
-import { formatDate } from '@/lib/utils/format'
+import { formatDate } from '@shared/utils/format'
 
 // ── Tipos ────────────────────────────────────────────────────────────────────
 

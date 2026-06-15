@@ -14,7 +14,7 @@ import type { EtapaCustomizada } from '@/types/etapa-customizada'
 import { RecursoForm } from './recurso/recurso-form'
 import { RetractAndEditButton } from './retract-and-edit-button'
 import { formatNotaTotal } from '@/lib/services/avaliacao-view'
-import { janelaParaAcao, mensagemJanela } from '@/lib/utils/cronograma-janela'
+import { janelaParaAcao, mensagemJanela } from '@shared/utils/cronograma-janela'
 import type { AcaoJanela } from '@/types/cronograma'
 
 interface Props {

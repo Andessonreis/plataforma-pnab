@@ -7,8 +7,8 @@ import type {
   CronogramaValidationWarning,
 } from '@/types/cronograma'
 import { CRONOGRAMA_FASES_ORDENADAS, CRONOGRAMA_FASES_FORMULARIO } from '@/types/cronograma'
-import { editalCronogramaLabel } from '@/lib/status-maps'
-import { parseBrazilDateTime } from '@/lib/utils/format'
+import { editalCronogramaLabel } from '@shared/status-maps'
+import { parseBrazilDateTime } from '@shared/utils/format'
 
 // ── Normalização para fuzzy matching (reutilizada do scheduler) ─────────────
 

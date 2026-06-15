@@ -8,7 +8,7 @@ import {
   formatDateTime,
   formatTelefoneBR,
   unmaskTelefone,
-} from '@/lib/utils/format'
+} from '@shared/utils/format'
 
 describe('TZ_BR', () => {
   it('aponta para America/Sao_Paulo', () => {

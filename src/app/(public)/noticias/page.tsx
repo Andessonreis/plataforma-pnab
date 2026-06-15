@@ -8,7 +8,7 @@ import {
   StaggerItem,
 } from '@client/components/ui/animated'
 import { IconNews, IconCalendar, IconArrowRight } from '@client/components/ui/icons'
-import { formatDate } from '@/lib/utils/format'
+import { formatDate } from '@shared/utils/format'
 
 export const metadata: Metadata = {
   title: 'Notícias',

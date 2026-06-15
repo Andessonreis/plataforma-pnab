@@ -4,7 +4,7 @@ import { prisma } from '@server/lib/db'
 import { auth } from '@server/lib/auth'
 import { notFound } from 'next/navigation'
 import { Card, Badge, Pagination, Button, EmptyState, FadeIn, IconClipboard } from '@client/components/ui'
-import { formatDate } from '@/lib/utils/format'
+import { formatDate } from '@shared/utils/format'
 
 export const metadata: Metadata = {
   title: 'Recursos — Portal PNAB Irecê',

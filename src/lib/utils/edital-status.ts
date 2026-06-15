@@ -1,7 +1,7 @@
 import type { EditalStatus } from '@prisma/client'
 import type { BadgeVariant } from '@client/components/ui'
 import type { AcaoJanela, CronogramaDisplayItem } from '@/types/cronograma'
-import { getCronogramaItemStatus } from '@/lib/utils/cronograma'
+import { getCronogramaItemStatus } from '@shared/utils/cronograma'
 
 interface StatusDisplay {
   label: string

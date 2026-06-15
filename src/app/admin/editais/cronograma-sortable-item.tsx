@@ -4,7 +4,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { CronogramaFormItem, CronogramaValidationWarning, AcaoJanela } from '@/types/cronograma'
 import { editalCronogramaLabel } from '@/lib/status-maps'
-import { getItemValidationWarnings } from '@/lib/utils/cronograma'
+import { getItemValidationWarnings } from '@shared/utils/cronograma'
 
 const ACOES_JANELA: { value: AcaoJanela; label: string; grupo: 'janela' | 'publicacao' }[] = [
   { value: 'RECURSO_HABILITACAO_JANELA', label: 'Janela de recurso de habilitação', grupo: 'janela' },

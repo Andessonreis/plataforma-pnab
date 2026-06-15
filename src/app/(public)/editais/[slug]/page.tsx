@@ -21,8 +21,8 @@ import {
   IconQuestion,
 } from '@client/components/ui/icons'
 import { getPublicStatusDisplay } from '@/lib/utils/edital-status'
-import { formatCurrency, formatDate, formatDateTime, parseBrazilDateTime } from '@/lib/utils/format'
-import { parseCronogramaPublico, getNextDeadline, getCronogramaItemStatus } from '@/lib/utils/cronograma'
+import { formatCurrency, formatDate, formatDateTime, parseBrazilDateTime } from '@shared/utils/format'
+import { parseCronogramaPublico, getNextDeadline, getCronogramaItemStatus } from '@shared/utils/cronograma'
 import { isAcaoPublicacao } from '@/types/cronograma'
 import { getBadgeVariantForTipo } from '@/lib/utils/badge-variant'
 

@@ -8,7 +8,7 @@ import {
   FASE_TRANSICOES,
   STATUS_ELEGIVEIS_SCHEDULER,
 } from '@/types/cronograma'
-import { parseBrazilDateTime } from '@/lib/utils/format'
+import { parseBrazilDateTime } from '@shared/utils/format'
 
 export interface SchedulerJobData {
   trigger: 'cron'

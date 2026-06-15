@@ -4,8 +4,8 @@ import { editaisRepository } from '@server/modules/editais/repository/editais.re
 import { Badge, Button, Card, PageHeader, FilterTabs, EmptyState, Pagination } from '@client/components/ui'
 import { IconCalendar, IconCurrency, IconDocument } from '@client/components/ui/icons'
 import { getStatusDisplay, OPEN_STATUSES, CLOSED_STATUSES } from '@/lib/utils/edital-status'
-import { formatCurrency, formatDate } from '@/lib/utils/format'
-import { getNextDeadline } from '@/lib/utils/cronograma'
+import { formatCurrency, formatDate } from '@shared/utils/format'
+import { getNextDeadline } from '@shared/utils/cronograma'
 
 export const metadata: Metadata = {
   title: 'Editais',

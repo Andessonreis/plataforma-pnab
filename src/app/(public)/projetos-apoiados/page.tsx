@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { prisma } from '@server/lib/db'
 import { Badge, PageHeader, EmptyState, FilterTabs } from '@client/components/ui'
 import { IconChart, IconCurrency, IconUsers, IconEye, IconCheckSimple } from '@client/components/ui/icons'
-import { formatCurrency } from '@/lib/utils/format'
+import { formatCurrency } from '@shared/utils/format'
 
 export const metadata: Metadata = {
   title: 'Projetos Apoiados',

@@ -3,7 +3,7 @@ import { randomUUID } from 'crypto'
 import { z } from 'zod'
 import { getPublicacao, PUBLICACAO_LABELS } from '@/lib/edital/publicacoes'
 import { isAcaoPublicacao, isAcaoResultado, ACOES_PUBLICACAO } from '@/types/cronograma'
-import { maskCpfCnpj, maskName } from '@/lib/utils/mask'
+import { maskCpfCnpj, maskName } from '@shared/utils/mask'
 import { toCsv } from '@/lib/export/csv'
 import { inscricaoStatusLabel } from '@/lib/status-maps'
 

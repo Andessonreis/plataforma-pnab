@@ -10,7 +10,7 @@ import {
   formatCpfCnpj,
   formatCep,
   unmaskCep,
-} from '@/lib/utils/format'
+} from '@shared/utils/format'
 import { autenticacaoClient } from '@client/api/autenticacao.client'
 
 type TipoProponente = 'PF' | 'PJ' | 'MEI' | 'COLETIVO'
