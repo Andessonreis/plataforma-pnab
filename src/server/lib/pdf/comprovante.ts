@@ -1,5 +1,6 @@
 import { createDocument, docToBuffer } from './shared'
 import { formatTipoProponente, camelCaseToLabel } from './format'
+import { maskCpfCnpj } from '@shared/utils/mask'
 import {
   addCompactHeader,
   addProtocolBadge,
@@ -118,14 +119,6 @@ export async function generateComprovante(data: ComprovanteData): Promise<Buffer
 }
 
 // ─── Helpers privados ────────────────────────────────────────────────────────
-
-function maskCpfCnpj(value: string): string {
-  if (!value) return '—'
-  const digits = value.replace(/\D/g, '')
-  if (digits.length <= 6) return value
-  // Oculta dígitos do meio, mantém 3 primeiros e 2 últimos
-  return `${digits.slice(0, 3)}.***.***-${digits.slice(-2)}`
-}
 
 /**
  * Filtra e formata os campos do formulário para exibição resumida no comprovante.

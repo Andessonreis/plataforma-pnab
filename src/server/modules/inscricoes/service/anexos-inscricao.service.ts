@@ -23,7 +23,7 @@ export async function uploadAnexo(
 ) {
   const inscricao = await anexosInscricaoRepository.findInscricaoParaAnexo(inscricaoId)
   if (!inscricao) throw new InscricaoNaoEncontradaError()
-  if (inscricao.proponenteId !== userId) throw new ForbiddenError('Acesso negado.')
+  if (inscricao.proponenteId !== userId) throw new InscricaoNaoEncontradaError()
   if (inscricao.status !== 'RASCUNHO') throw new ForbiddenError('Apenas rascunhos podem receber anexos.')
 
   if (file.size > MAX_FILE_SIZE_BYTES) {
@@ -74,7 +74,7 @@ export async function uploadAnexo(
 export async function removeAnexo(inscricaoId: string, anexoId: string, userId: string) {
   const anexo = await anexosInscricaoRepository.findAnexoComInscricao(anexoId)
   if (!anexo || anexo.inscricaoId !== inscricaoId) throw new AnexoNaoEncontradoError()
-  if (anexo.inscricao.proponenteId !== userId) throw new ForbiddenError('Acesso negado.')
+  if (anexo.inscricao.proponenteId !== userId) throw new AnexoNaoEncontradoError()
   if (anexo.inscricao.status !== 'RASCUNHO') {
     throw new ForbiddenError('Apenas rascunhos podem ter anexos removidos.')
   }

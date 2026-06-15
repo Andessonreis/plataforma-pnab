@@ -14,6 +14,7 @@ import {
   addCompactFooter,
   addTwoColumnRow,
 } from './layout-helpers'
+import { maskCpfCnpj } from '@shared/utils/mask'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -75,14 +76,6 @@ function resolveCampoTipo(
 ): string {
   const def = camposFormulario.find((cf) => cf.nome === key)
   return def?.tipo ?? 'texto'
-}
-
-/** Mascara CPF/CNPJ para exibição. */
-function maskCpfCnpj(value: string): string {
-  if (!value) return '—'
-  const digits = value.replace(/\D/g, '')
-  if (digits.length <= 6) return value
-  return `${digits.slice(0, 3)}.***.***-${digits.slice(-2)}`
 }
 
 /** Formata data no padrão DD/MM/YYYY. */

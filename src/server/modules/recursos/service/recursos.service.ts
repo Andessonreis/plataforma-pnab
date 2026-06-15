@@ -96,7 +96,7 @@ export async function listRecursos(inscricaoId: string, callerId: string, caller
 
   const isOwner = inscricao.proponenteId === callerId
   const isStaff = callerRole === 'ADMIN' || callerRole === 'HABILITADOR'
-  if (!isOwner && !isStaff) throw new ForbiddenError('Acesso negado.')
+  if (!isOwner && !isStaff) throw new InscricaoNaoEncontradaError()
 
   const recursos = await recursosRepository.listByInscricao(inscricaoId)
   if (isStaff) return recursos
@@ -235,7 +235,7 @@ export async function getAnexoRecursoSignedUrl(
 
   const isStaff = INTERNAL_ROLES.includes(user.role)
   const isOwner = recurso.inscricao.proponenteId === user.id
-  if (!isStaff && !isOwner) throw new ForbiddenError('Acesso negado.')
+  if (!isStaff && !isOwner) throw new RecursoNaoEncontradoError()
 
   const storagePath = storagePathFromUrl(url)
   if (!storagePath) throw new BadRequestError('Caminho do arquivo inválido.')
@@ -252,7 +252,7 @@ export async function uploadAnexoRecurso(
 ) {
   const inscricao = await recursosRepository.findInscricaoParaRecurso(inscricaoId)
   if (!inscricao) throw new InscricaoNaoEncontradaError()
-  if (inscricao.proponenteId !== userId) throw new ForbiddenError('Acesso negado.')
+  if (inscricao.proponenteId !== userId) throw new InscricaoNaoEncontradaError()
   if (!(inscricao.status in STATUS_ALLOWS_RECURSO)) {
     throw new ForbiddenError('O status atual da inscrição não permite recurso.')
   }

@@ -11,6 +11,7 @@ import {
   addCompactFooter,
   addCompactSection,
 } from './layout-helpers'
+import { maskCpfCnpj } from '@shared/utils/mask'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -107,14 +108,6 @@ function checkPageBreak(doc: PDFKit.PDFDocument, requiredHeight: number, ctx: Pa
 }
 
 // ─── Helpers de tabela ───────────────────────────────────────────────────────
-
-/** Mascara CPF/CNPJ para exibição parcial. */
-function maskCpfCnpj(value: string): string {
-  if (!value) return '—'
-  const digits = value.replace(/\D/g, '')
-  if (digits.length <= 6) return value
-  return `${digits.slice(0, 3)}.***.***-${digits.slice(-2)}`
-}
 
 /** Renderiza o header da tabela (fundo cinza). */
 function addTableHeader(doc: PDFKit.PDFDocument, columns: ColumnDef[]): void {

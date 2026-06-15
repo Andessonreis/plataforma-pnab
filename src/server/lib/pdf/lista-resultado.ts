@@ -1,4 +1,5 @@
 import { createDocument, addHeader, addFooter, addSection, docToBuffer, MARGINS, COLORS, CONTENT_WIDTH } from './shared'
+import { maskName } from '@shared/utils/mask'
 
 interface ResultadoItem {
   posicao: number
@@ -107,15 +108,6 @@ export async function generateListaResultado(data: ListaResultadoData): Promise<
   addFooter(doc, pageNum)
 
   return docToBuffer(doc)
-}
-
-/**
- * Mascara parcialmente o nome (LGPD).
- */
-function maskName(name: string): string {
-  const parts = name.split(' ')
-  if (parts.length <= 1) return name
-  return `${parts[0]} ${'*'.repeat(3)} ${parts[parts.length - 1]}`
 }
 
 function formatStatus(status: string): string {

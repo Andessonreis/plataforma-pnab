@@ -1,4 +1,5 @@
 import { createDocument, addHeader, addFooter, docToBuffer, MARGINS, COLORS, CONTENT_WIDTH } from './shared'
+import { maskCpfCnpj } from '@shared/utils/mask'
 
 interface DeclaracaoData {
   proponente: {
@@ -89,10 +90,4 @@ export async function generateDeclaracao(data: DeclaracaoData): Promise<Buffer> 
   addFooter(doc, 1)
 
   return docToBuffer(doc)
-}
-
-function maskCpfCnpj(value: string): string {
-  if (!value) return '—'
-  if (value.length <= 6) return value
-  return `***${value.slice(-4)}`
 }
