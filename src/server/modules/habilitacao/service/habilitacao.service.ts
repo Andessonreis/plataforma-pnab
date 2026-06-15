@@ -4,8 +4,8 @@ import { enqueueEmail } from '@server/lib/queue'
 import { gateAcaoFase } from '@shared/edital/gate'
 import { InscricaoNaoEncontradaError } from '@server/modules/inscricoes/errors/inscricoes.errors'
 import type { HabilitacaoInput } from '@shared/schemas/habilitacao.schema'
+import { ForaDaFaseError } from '@server/lib/http/fase.errors'
 import { habilitacaoRepository } from '../repository/habilitacao.repository'
-import { ForaDaFaseError } from '../errors/habilitacao.errors'
 
 export async function updateHabilitacao(
   inscricaoId: string,

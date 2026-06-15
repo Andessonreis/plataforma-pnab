@@ -3,10 +3,11 @@ import { logAudit } from '@server/lib/audit'
 import { CRITERIOS_AVALIACAO_PADRAO } from '@shared/avaliacao-criterios'
 import { gateAcaoFase } from '@shared/edital/gate'
 import { InscricaoNaoEncontradaError } from '@server/modules/inscricoes/errors/inscricoes.errors'
+import { ForaDaFaseError } from '@server/lib/http/fase.errors'
 import type { AvaliacaoInput } from '@shared/schemas/avaliacao.schema'
 import { avaliacaoRepository } from '../repository/avaliacao.repository'
 import { calcularNotaTotal } from '../calculator/avaliacao.calculator'
-import { AvaliacaoFinalizadaError, AvaliacaoNaoAtribuidaError, ForaDaFaseError } from '../errors/avaliacao.errors'
+import { AvaliacaoFinalizadaError, AvaliacaoNaoAtribuidaError } from '../errors/avaliacao.errors'
 
 export async function getAvaliacao(inscricaoId: string, avaliadorId: string, isAdmin: boolean) {
   const inscricao = await avaliacaoRepository.findInscricaoComAvaliacao(inscricaoId, avaliadorId)

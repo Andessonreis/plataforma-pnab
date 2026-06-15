@@ -1,4 +1,5 @@
 import { UnauthorizedError } from '@server/lib/http/errors'
+import { ipFromHeaders } from '@server/lib/auth/api-caller'
 import { clearAuthCookies, setAuthCookies } from '@server/lib/auth/cookies'
 import { getCurrentUserFromHeaders } from '@server/lib/auth/current-user'
 import { ACCESS_TOKEN_TTL_SECONDS } from '@server/lib/auth/jwt'
@@ -16,14 +17,6 @@ function extractRefreshCookie(headers: Headers): string | null {
   return match ? decodeURIComponent(match[1]) : null
 }
 
-function clientIpFromHeaders(headers: Headers): string | null {
-  return (
-    headers.get('x-forwarded-for')?.split(',')[0].trim() ??
-    headers.get('x-real-ip') ??
-    null
-  )
-}
-
 function buildSessaoDTO(user: { id: string; email: string; nome: string; role: UserRole }): SessaoDTO {
   return {
     usuario: user,
@@ -39,7 +32,7 @@ export const autenticacaoController = {
       password: input.password,
       deviceLabel: input.deviceLabel,
       userAgent: ctx.headers.get('user-agent'),
-      ip: clientIpFromHeaders(ctx.headers),
+      ip: ipFromHeaders(ctx.headers),
     })
 
     await setAuthCookies(accessToken, refreshToken)
@@ -52,7 +45,7 @@ export const autenticacaoController = {
 
     const result = await autenticacaoService.refresh(refreshToken, {
       userAgent: ctx.headers.get('user-agent'),
-      ip: clientIpFromHeaders(ctx.headers),
+      ip: ipFromHeaders(ctx.headers),
     })
 
     await setAuthCookies(result.accessToken, result.refreshToken)

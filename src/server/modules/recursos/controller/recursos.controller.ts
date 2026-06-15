@@ -1,4 +1,5 @@
 import type { RequestContext } from '@server/adapters/next-route'
+import { ipFromHeaders } from '@server/lib/auth/api-caller'
 import { requireAuth, requireProponente, requireRole } from '@server/lib/auth/guards'
 import { BadRequestError } from '@server/lib/http/errors'
 import {
@@ -15,10 +16,6 @@ import {
   submitRecurso,
   uploadAnexoRecurso,
 } from '../service/recursos.service'
-
-function ipFromHeaders(headers: Headers): string | undefined {
-  return headers.get('x-forwarded-for')?.split(',')[0].trim() ?? headers.get('x-real-ip') ?? undefined
-}
 
 export const recursosController = {
   async list(ctx: RequestContext) {

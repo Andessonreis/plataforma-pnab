@@ -1,18 +1,11 @@
 import type { RequestContext } from '@server/adapters/next-route'
+import { ipFromHeaders } from '@server/lib/auth/api-caller'
 import { requireAdmin } from '@server/lib/auth/guards'
 import {
   publicarResultadoInputSchema,
   reordenarResultadosInputSchema,
 } from '@shared/schemas/resultados-edital.schema'
 import { resultadosEditalService } from '../service/resultados-edital.service'
-
-function ipFromHeaders(headers: Headers): string | null {
-  return (
-    headers.get('x-forwarded-for')?.split(',')[0].trim() ??
-    headers.get('x-real-ip') ??
-    null
-  )
-}
 
 export const resultadosEditalController = {
   async listar(ctx: RequestContext) {

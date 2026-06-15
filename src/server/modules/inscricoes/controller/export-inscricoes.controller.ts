@@ -1,13 +1,10 @@
 import { z } from 'zod'
 import type { RequestContext } from '@server/adapters/next-route'
+import { ipFromHeaders } from '@server/lib/auth/api-caller'
 import { requireRole } from '@server/lib/auth/guards'
 import { exportInscricoesCsv } from '../service/export-inscricoes.service'
 
 const querySchema = z.object({ editalId: z.string().optional(), status: z.string().optional() })
-
-function ipFromHeaders(headers: Headers): string | undefined {
-  return headers.get('x-forwarded-for')?.split(',')[0].trim() ?? headers.get('x-real-ip') ?? undefined
-}
 
 export const exportInscricoesController = {
   async export(ctx: RequestContext) {

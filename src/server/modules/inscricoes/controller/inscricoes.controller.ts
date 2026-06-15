@@ -1,4 +1,5 @@
 import type { RequestContext } from '@server/adapters/next-route'
+import { ipFromHeaders } from '@server/lib/auth/api-caller'
 import { requireAdmin, requireAuth, requireProponente } from '@server/lib/auth/guards'
 import { buildPaginationMeta } from '@server/lib/http/pagination'
 import {
@@ -21,10 +22,6 @@ import {
   submitInscricao,
   updateInscricao,
 } from '../service/inscricoes.service'
-
-function ipFromHeaders(headers: Headers): string | undefined {
-  return headers.get('x-forwarded-for')?.split(',')[0].trim() ?? headers.get('x-real-ip') ?? undefined
-}
 
 export const inscricoesController = {
   async list(ctx: RequestContext) {

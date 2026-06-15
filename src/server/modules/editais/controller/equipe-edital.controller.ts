@@ -1,18 +1,11 @@
 import type { RequestContext } from '@server/adapters/next-route'
+import { ipFromHeaders } from '@server/lib/auth/api-caller'
 import { requireAdmin } from '@server/lib/auth/guards'
 import {
   equipeAddInputSchema,
   equipeRemoveInputSchema,
 } from '@shared/schemas/equipe-edital.schema'
 import { equipeEditalService } from '../service/equipe-edital.service'
-
-function ipFromHeaders(headers: Headers): string | null {
-  return (
-    headers.get('x-forwarded-for')?.split(',')[0].trim() ??
-    headers.get('x-real-ip') ??
-    null
-  )
-}
 
 export const equipeEditalController = {
   async list(ctx: RequestContext) {

@@ -1,10 +1,4 @@
-import { ApiError, BadRequestError, NotFoundError, UnprocessableEntityError } from '@server/lib/http/errors'
-
-export class ForaDaFaseError extends ApiError {
-  constructor(mensagem: string) {
-    super('FORA_DA_FASE', mensagem, 422)
-  }
-}
+import { BadRequestError, NotFoundError, UnprocessableEntityError } from '@server/lib/http/errors'
 
 export class AvaliadoresInvalidosError extends BadRequestError {
   constructor() {

@@ -1,4 +1,5 @@
 import type { RequestContext } from '@server/adapters/next-route'
+import { ipFromHeaders } from '@server/lib/auth/api-caller'
 import {
   cadastroInputSchema,
   recuperacaoSenhaInputSchema,
@@ -6,14 +7,6 @@ import {
 } from '@shared/schemas/usuarios.schema'
 import type { CadastroResultDTO, GenericMessageDTO } from '@shared/dtos/usuarios.dto'
 import { usuariosService } from '../service/usuarios.service'
-
-function ipFromHeaders(headers: Headers): string | null {
-  return (
-    headers.get('x-forwarded-for')?.split(',')[0].trim() ??
-    headers.get('x-real-ip') ??
-    null
-  )
-}
 
 export const usuariosController = {
   async cadastrar(ctx: RequestContext) {

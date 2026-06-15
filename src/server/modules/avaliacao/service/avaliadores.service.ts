@@ -2,12 +2,12 @@ import { prisma } from '@server/lib/db'
 import { logAudit, AUDIT_ACTIONS } from '@server/lib/audit'
 import { gateAcaoFase } from '@shared/edital/gate'
 import { InscricaoNaoEncontradaError } from '@server/modules/inscricoes/errors/inscricoes.errors'
+import { ForaDaFaseError } from '@server/lib/http/fase.errors'
 import { avaliadoresRepository } from '../repository/avaliadores.repository'
 import {
   AvaliacaoFinalizadaError,
   AvaliacaoNaoEncontradaError,
   AvaliadoresInvalidosError,
-  ForaDaFaseError,
   StatusInscricaoInvalidoError,
 } from '../errors/avaliadores.errors'
 

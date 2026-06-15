@@ -1,11 +1,8 @@
 import type { RequestContext } from '@server/adapters/next-route'
+import { ipFromHeaders } from '@server/lib/auth/api-caller'
 import { requireRole } from '@server/lib/auth/guards'
 import { habilitacaoSchema } from '@shared/schemas/habilitacao.schema'
 import { updateHabilitacao } from '../service/habilitacao.service'
-
-function ipFromHeaders(headers: Headers): string | undefined {
-  return headers.get('x-forwarded-for')?.split(',')[0].trim() ?? headers.get('x-real-ip') ?? undefined
-}
 
 export const habilitacaoController = {
   async update(ctx: RequestContext) {

@@ -1,13 +1,10 @@
 import type { RequestContext } from '@server/adapters/next-route'
+import { ipFromHeaders } from '@server/lib/auth/api-caller'
 import { requireProponente, requireRole } from '@server/lib/auth/guards'
 import { BadRequestError } from '@server/lib/http/errors'
 import { anexoUploadMetaSchema } from '@shared/schemas/anexos-inscricao.schema'
 import { toAnexoInscricao } from '../mapper/anexos-inscricao.mapper'
 import { getAnexoSignedUrl, removeAnexo, uploadAnexo } from '../service/anexos-inscricao.service'
-
-function ipFromHeaders(headers: Headers): string | undefined {
-  return headers.get('x-forwarded-for')?.split(',')[0].trim() ?? headers.get('x-real-ip') ?? undefined
-}
 
 export const anexosInscricaoController = {
   async upload(ctx: RequestContext) {

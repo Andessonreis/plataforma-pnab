@@ -41,7 +41,11 @@ export function callerIsAuthenticated(caller: ApiCaller | null): caller is ApiCa
 }
 
 export function ipFromHeaders(headers: Headers): string | undefined {
-  return headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? undefined
+  return (
+    headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+    headers.get('x-real-ip') ??
+    undefined
+  )
 }
 
 function hmacKey(rawKey: string): string {
