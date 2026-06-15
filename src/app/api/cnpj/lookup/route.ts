@@ -61,7 +61,10 @@ export async function POST(req: NextRequest) {
         `${PATH} [${maskCnpj(cnpj)}] cached=${result.cached} fonte=${result.data.fonte}`,
         200,
       )
-      return ok(ctx, result.data, 'no-store')
+      // LGPD: rota pública (usada no cadastro pré-login). Devolve só dados
+      // cadastrais da empresa — omite socios/email/telefone (PII de pessoas).
+      const { socios: _s, email: _e, telefone: _t, ...empresa } = result.data
+      return ok(ctx, empresa, 'no-store')
     }
 
     // Exaustão de tipos — satisfaz TS.

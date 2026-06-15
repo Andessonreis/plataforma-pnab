@@ -36,7 +36,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<SendEmailRes
   if (!gate.allowed) {
     console.log({
       event: 'email_skipped_by_allowlist',
-      to: options.to,
+      to: options.to.replace(/(.{2}).*(@.*)/, '$1***$2'),
       template: options.template,
       allowlistSize: gate.list?.length ?? 0,
     })

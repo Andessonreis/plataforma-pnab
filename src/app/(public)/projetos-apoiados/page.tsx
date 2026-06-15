@@ -4,6 +4,7 @@ import { prisma } from '@server/lib/db'
 import { Badge, PageHeader, EmptyState, FilterTabs } from '@client/components/ui'
 import { IconChart, IconCurrency, IconUsers, IconEye, IconCheckSimple } from '@client/components/ui/icons'
 import { formatCurrency } from '@shared/utils/format'
+import { maskName } from '@shared/utils/mask'
 
 export const metadata: Metadata = {
   title: 'Projetos Apoiados',
@@ -250,7 +251,7 @@ export default async function ProjetosApoiadosPage({ searchParams }: ProjetosApo
                                       </p>
                                     )}
                                     <p className={`text-sm ${projectName ? 'text-slate-600' : 'font-medium text-slate-900'}`}>
-                                      {projeto.inscricao.proponente.nome}
+                                      {maskName(projeto.inscricao.proponente.nome)}
                                     </p>
                                     <p className="text-xs text-slate-400 mt-0.5">
                                       {projeto.inscricao.numero}
@@ -313,7 +314,7 @@ export default async function ProjetosApoiadosPage({ searchParams }: ProjetosApo
                                   </p>
                                 ) : (
                                   <p className="text-[15px] font-semibold text-slate-900 leading-snug">
-                                    {projeto.inscricao.proponente.nome}
+                                    {maskName(projeto.inscricao.proponente.nome)}
                                   </p>
                                 )}
                                 <Badge variant={status.variant} dot>
@@ -322,7 +323,7 @@ export default async function ProjetosApoiadosPage({ searchParams }: ProjetosApo
                               </div>
                               {projectName && (
                                 <p className="text-sm text-slate-500">
-                                  {projeto.inscricao.proponente.nome}
+                                  {maskName(projeto.inscricao.proponente.nome)}
                                 </p>
                               )}
                               <p className="text-[11px] text-slate-400 mt-0.5 font-mono">

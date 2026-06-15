@@ -7,7 +7,7 @@ export const emailWorker = new Worker<EmailJobData>(
   async (job) => {
     const { to, subject, template, data } = job.data
 
-    console.log(`[EmailWorker] Enviando "${template}" para ${to} (job ${job.id})`)
+    console.log(`[EmailWorker] Enviando "${template}" (job ${job.id})`)
 
     // Importação lazy para evitar ciclo de dependência circular
     const { sendEmail } = await import('@server/lib/mail')
