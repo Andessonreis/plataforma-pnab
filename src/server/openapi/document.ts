@@ -359,7 +359,7 @@ export function buildOpenApiDocument() {
     responses: { 200: { description: 'OK', ...json(paginatedEnvelope(z.unknown())) }, ...errors },
   })
   registry.registerPath({
-    method: 'post', path: '/inscricoes', tags: ['Inscrições'], summary: 'Cria inscrição (PROPONENTE)', security: sec,
+    method: 'post', path: '/inscricoes/inscricao', tags: ['Inscrições'], summary: 'Cria inscrição (PROPONENTE)', security: sec,
     request: { body: json(createInscricaoSchema) },
     responses: { 201: { description: 'Criado', ...json(envelope(z.unknown())) }, ...errors },
   })
