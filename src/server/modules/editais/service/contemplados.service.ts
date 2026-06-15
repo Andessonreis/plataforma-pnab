@@ -1,5 +1,5 @@
 import { AUDIT_ACTIONS, logAudit } from '@server/lib/audit'
-import { EditalContempladosNaoEncontradoError } from '@server/modules/editais/errors/contemplados.errors'
+import { EditalNaoEncontradoError } from '@server/modules/editais/errors/editais.errors'
 import { contempladosRepository } from '../repository/contemplados.repository'
 
 export async function importContemplados(
@@ -9,7 +9,7 @@ export async function importContemplados(
   ip?: string,
 ) {
   const edital = await contempladosRepository.findEditalById(editalId)
-  if (!edital) throw new EditalContempladosNaoEncontradoError()
+  if (!edital) throw new EditalNaoEncontradoError()
 
   const updates = contemplados.map((c) =>
     contempladosRepository.upsertProjetoApoiado(c.inscricaoId, c.valorAprovado),

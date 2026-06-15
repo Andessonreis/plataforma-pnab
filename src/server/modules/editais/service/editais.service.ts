@@ -110,39 +110,6 @@ export async function updateEdital(id: string, data: EditalInput, userId: string
   return edital
 }
 
-export async function getEditalById(id: string) {
-  const edital = await prisma.edital.findUnique({
-    where: { id },
-    include: { arquivos: true },
-  })
-  if (!edital) throw new EditalNaoEncontradoError()
-  return edital
-}
-
-export async function getEditalBySlug(slug: string) {
-  const edital = await prisma.edital.findUnique({
-    where: { slug },
-    include: { arquivos: true, faqItems: { where: { publicado: true }, orderBy: { ordem: 'asc' } } },
-  })
-  if (!edital) throw new EditalNaoEncontradoError()
-  return edital
-}
-
-export async function listEditais(page: number, pageSize: number, status?: string) {
-  const where = status ? { status: status as import('@prisma/client').EditalStatus } : {}
-  const [data, total] = await Promise.all([
-    prisma.edital.findMany({
-      where,
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-      orderBy: { createdAt: 'desc' },
-    }),
-    prisma.edital.count({ where }),
-  ])
-
-  return { data, meta: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } }
-}
-
 export async function avancarFase(id: string, data: AvancarFaseInput, userId: string, ip?: string) {
   const edital = await prisma.edital.findUnique({
     where: { id },

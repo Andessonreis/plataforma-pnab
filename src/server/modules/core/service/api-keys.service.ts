@@ -1,4 +1,5 @@
-import { randomBytes, createHmac } from 'crypto'
+import { randomBytes } from 'crypto'
+import { hmacKey } from '@server/lib/auth/api-caller'
 import { apiKeysRepository } from '../repository/api-keys.repository'
 import {
   ApiKeyNaoEncontradaError,
@@ -7,12 +8,6 @@ import {
 } from '../errors/api-keys.errors'
 
 const KEY_PREFIX = 'pnab_'
-
-function hmacKey(rawKey: string): string {
-  const secret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET
-  if (!secret) throw new Error('AUTH_SECRET não configurado')
-  return createHmac('sha256', secret).update(rawKey).digest('hex')
-}
 
 export async function createApiKey(userId: string, label: string, scopes: string[] = [], expiresAt?: Date) {
   const rawKey = `${KEY_PREFIX}${randomBytes(32).toString('base64url')}`

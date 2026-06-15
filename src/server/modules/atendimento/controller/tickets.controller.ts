@@ -1,6 +1,6 @@
 import type { RequestContext } from '@server/adapters/next-route'
 import { ForbiddenError } from '@server/lib/http/errors'
-import { resolveApiCaller, callerHasRole } from '@server/lib/auth/api-caller'
+import { resolveApiCaller, callerHasRole, ipFromHeaders } from '@server/lib/auth/api-caller'
 import {
   createAtendimentoSchema,
   atendimentoQuerySchema,
@@ -25,10 +25,10 @@ export const ticketsController = {
   async create(ctx: RequestContext) {
     const data = createAtendimentoSchema.parse(ctx.body)
     const caller = await resolveApiCaller(ctx.headers)
-    const atendimento = await createAtendimento({
-      ...data,
-      autorId: caller?.userId,
-    })
+    const atendimento = await createAtendimento(
+      { ...data, autorId: caller?.userId },
+      ipFromHeaders(ctx.headers),
+    )
     return { data: atendimento, status: 201 }
   },
 
@@ -43,7 +43,7 @@ export const ticketsController = {
     const caller = await resolveApiCaller(ctx.headers)
     if (!callerHasRole(caller, 'ADMIN', 'ATENDIMENTO')) throw new ForbiddenError()
     const data = atendimentoPatchSchema.parse(ctx.body)
-    const result = await updateAtendimento(ctx.params.id, data, caller.userId)
+    const result = await updateAtendimento(ctx.params.id, data, caller.userId, ipFromHeaders(ctx.headers))
     return { data: result }
   },
 }

@@ -48,7 +48,7 @@ export function ipFromHeaders(headers: Headers): string | undefined {
   )
 }
 
-function hmacKey(rawKey: string): string {
+export function hmacKey(rawKey: string): string {
   const secret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET
   if (!secret) throw new Error('AUTH_SECRET não configurado')
   return createHmac('sha256', secret).update(rawKey).digest('hex')

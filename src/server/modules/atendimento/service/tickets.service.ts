@@ -1,4 +1,5 @@
 import type { Prisma } from '@prisma/client'
+import { logAudit, AUDIT_ACTIONS } from '@server/lib/audit'
 import { ticketsRepository } from '../repository/tickets.repository'
 import { AtendimentoNaoEncontradoError } from '../errors/tickets.errors'
 
@@ -17,10 +18,10 @@ interface HistoricoItem {
   criadoEm: string
 }
 
-export function createAtendimento(data: CreateAtendimentoData) {
+export async function createAtendimento(data: CreateAtendimentoData, ip?: string) {
   const protocolo = `ATD-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`
 
-  return ticketsRepository.create({
+  const atendimento = await ticketsRepository.create({
     protocolo,
     nomeContato: data.nomeContato,
     emailContato: data.emailContato,
@@ -30,6 +31,17 @@ export function createAtendimento(data: CreateAtendimentoData) {
     autorId: data.autorId ?? null,
     historico: [],
   })
+
+  await logAudit({
+    userId: data.autorId,
+    action: AUDIT_ACTIONS.ATENDIMENTO_CRIADO,
+    entity: 'Atendimento',
+    entityId: atendimento.id,
+    details: { protocolo: atendimento.protocolo },
+    ip,
+  })
+
+  return atendimento
 }
 
 export async function listAtendimentos(page: number, pageSize: number, status?: string) {
@@ -47,6 +59,7 @@ export async function updateAtendimento(
   id: string,
   update: { status?: string; resposta?: { texto: string } },
   attendantName: string,
+  ip?: string,
 ) {
   const atendimento = await ticketsRepository.findById(id)
   if (!atendimento) throw new AtendimentoNaoEncontradoError()
@@ -67,5 +80,16 @@ export async function updateAtendimento(
     updateData.historico = [...historicoAtual, novaEntrada] as unknown as Prisma.InputJsonValue[]
   }
 
-  return ticketsRepository.update(id, updateData)
+  const atualizado = await ticketsRepository.update(id, updateData)
+
+  await logAudit({
+    userId: attendantName,
+    action: AUDIT_ACTIONS.ATENDIMENTO_ATUALIZADO,
+    entity: 'Atendimento',
+    entityId: id,
+    details: { status: update.status ?? null, respondido: Boolean(update.resposta) },
+    ip,
+  })
+
+  return atualizado
 }
