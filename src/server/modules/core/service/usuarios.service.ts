@@ -24,8 +24,7 @@ export const usuariosService = {
   async cadastrar(input: CadastroInput, ctx: { ip?: string | null }) {
     const existing = await usuariosRepository.findByCpfCnpjOrEmail(input.cpfCnpj, input.email)
     if (existing) {
-      const campo = existing.cpfCnpj === input.cpfCnpj ? 'CPF/CNPJ' : 'E-mail'
-      throw new UsuarioJaCadastradoError(campo)
+      throw new UsuarioJaCadastradoError()
     }
 
     const passwordHash = await hashPassword(input.password)

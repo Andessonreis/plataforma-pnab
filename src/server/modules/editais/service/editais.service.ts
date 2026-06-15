@@ -3,7 +3,8 @@ import { prisma } from '@server/lib/db'
 import { logAudit } from '@server/lib/audit'
 import { sanitizeContent } from '@shared/sanitize'
 import { generateEditalSlug } from '@shared/utils/slug'
-import { ServiceError } from '@shared/service-error'
+import { BadRequestError } from '@server/lib/http/errors'
+import { EditalNaoEncontradoError } from '../errors/editais.errors'
 import type {
   AvancarFaseInput,
   EditalAcessivelInput,
@@ -63,7 +64,7 @@ export async function createEdital(data: EditalInput, userId: string, ip?: strin
 
 export async function updateEdital(id: string, data: EditalInput, userId: string, ip?: string) {
   const existing = await prisma.edital.findUnique({ where: { id } })
-  if (!existing) throw new ServiceError('NOT_FOUND', 'Edital não encontrado.')
+  if (!existing) throw new EditalNaoEncontradoError()
 
   let slug = existing.slug
   if (data.titulo !== existing.titulo) {
@@ -114,7 +115,7 @@ export async function getEditalById(id: string) {
     where: { id },
     include: { arquivos: true },
   })
-  if (!edital) throw new ServiceError('NOT_FOUND', 'Edital não encontrado.')
+  if (!edital) throw new EditalNaoEncontradoError()
   return edital
 }
 
@@ -123,7 +124,7 @@ export async function getEditalBySlug(slug: string) {
     where: { slug },
     include: { arquivos: true, faqItems: { where: { publicado: true }, orderBy: { ordem: 'asc' } } },
   })
-  if (!edital) throw new ServiceError('NOT_FOUND', 'Edital não encontrado.')
+  if (!edital) throw new EditalNaoEncontradoError()
   return edital
 }
 
@@ -147,11 +148,11 @@ export async function avancarFase(id: string, data: AvancarFaseInput, userId: st
     where: { id },
     select: { id: true, status: true, titulo: true, publishedAt: true },
   })
-  if (!edital) throw new ServiceError('NOT_FOUND', 'Edital não encontrado.')
+  if (!edital) throw new EditalNaoEncontradoError()
 
   const statusAtual = edital.status as EditalStatus
   if (statusAtual === data.proximoStatus) {
-    throw new ServiceError('BAD_REQUEST', 'O edital já está nesse status.')
+    throw new BadRequestError('O edital já está nesse status.')
   }
 
   const idxAtual = SEQUENCIA_FASES.indexOf(statusAtual)
@@ -191,7 +192,7 @@ export async function avancarFase(id: string, data: AvancarFaseInput, userId: st
 
 export async function updateAcessivel(id: string, data: EditalAcessivelInput, userId: string, ip?: string) {
   const edital = await prisma.edital.findUnique({ where: { id }, select: { id: true } })
-  if (!edital) throw new ServiceError('NOT_FOUND', 'Edital não encontrado.')
+  if (!edital) throw new EditalNaoEncontradoError()
 
   const sanitized = sanitizeContent(data.conteudoAcessivel)
 

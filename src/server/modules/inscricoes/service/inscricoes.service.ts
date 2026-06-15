@@ -61,7 +61,7 @@ export async function createInscricao(data: CreateInscricaoInput, userId: string
 export async function updateInscricao(id: string, data: UpdateInscricaoInput, userId: string) {
   const inscricao = await inscricoesRepository.findOwnership(id)
   if (!inscricao) throw new InscricaoNaoEncontradaError()
-  if (inscricao.proponenteId !== userId) throw new ForbiddenError('Acesso negado.')
+  if (inscricao.proponenteId !== userId) throw new InscricaoNaoEncontradaError()
   if (inscricao.status !== 'RASCUNHO') throw new ForbiddenError('Apenas rascunhos podem ser editados.')
 
   if (data.categoria !== undefined && data.categoria) {
@@ -82,7 +82,7 @@ export async function updateInscricao(id: string, data: UpdateInscricaoInput, us
 export async function submitInscricao(id: string, userId: string, ip?: string) {
   const inscricao = await inscricoesRepository.findParaSubmit(id)
   if (!inscricao) throw new InscricaoNaoEncontradaError()
-  if (inscricao.proponenteId !== userId) throw new ForbiddenError('Acesso negado.')
+  if (inscricao.proponenteId !== userId) throw new InscricaoNaoEncontradaError()
   if (inscricao.status !== 'RASCUNHO') throw new ForbiddenError('Esta inscrição já foi enviada.')
   if (inscricao.edital.status !== 'INSCRICOES_ABERTAS') {
     throw new ForbiddenError('O prazo de inscrições para este edital foi encerrado.')
@@ -124,7 +124,7 @@ export async function submitInscricao(id: string, userId: string, ip?: string) {
 export async function retractInscricao(id: string, userId: string, ip?: string) {
   const inscricao = await inscricoesRepository.findParaRetract(id)
   if (!inscricao) throw new InscricaoNaoEncontradaError()
-  if (inscricao.proponenteId !== userId) throw new ForbiddenError('Acesso negado.')
+  if (inscricao.proponenteId !== userId) throw new InscricaoNaoEncontradaError()
   if (inscricao.status !== 'ENVIADA') {
     throw new ForbiddenError('Apenas inscrições enviadas podem ser retiradas para edição.')
   }
@@ -152,7 +152,7 @@ export async function getInscricaoById(id: string, callerId: string, callerRole:
 
   const isOwner = inscricao.proponenteId === callerId
   const isAdmin = callerRole === 'ADMIN'
-  if (!isOwner && !isAdmin) throw new ForbiddenError('Acesso negado.')
+  if (!isOwner && !isAdmin) throw new InscricaoNaoEncontradaError()
 
   return inscricao
 }

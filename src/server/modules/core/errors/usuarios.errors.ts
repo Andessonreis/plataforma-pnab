@@ -1,8 +1,10 @@
 import { BadRequestError, ConflictError } from '@server/lib/http/errors'
 
 export class UsuarioJaCadastradoError extends ConflictError {
-  constructor(campo: 'CPF/CNPJ' | 'E-mail') {
-    super(`${campo} já cadastrado`)
+  // Mensagem genérica de propósito: não revela qual campo (CPF/CNPJ ou e-mail)
+  // já existe, evitando enumeração de cadastros.
+  constructor() {
+    super('CPF/CNPJ ou e-mail já cadastrado')
   }
 }
 
