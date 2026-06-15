@@ -4,16 +4,12 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@server/lib/db'
 import { editaisRepository } from '@server/modules/editais/repository/editais.repository'
 import { auth } from '@server/lib/auth'
-import { Badge, Button, PageHeader } from '@client/components/ui'
+import { Badge, PageHeader } from '@client/components/ui'
 import {
   IconDownload,
   IconCheckSimple,
   IconShield,
   IconHeart,
-  IconChevronDown,
-  IconAccessible,
-  IconArrowLeft,
-  IconArrowRight,
   IconCalendar,
   IconClock,
   IconCurrency,
@@ -21,22 +17,17 @@ import {
   IconQuestion,
 } from '@client/components/ui/icons'
 import { getPublicStatusDisplay } from '@client/utils/edital-status-ui'
-import { formatCurrency, formatDate, formatDateTime, parseBrazilDateTime } from '@shared/utils/format'
-import { parseCronogramaPublico, getNextDeadline, getCronogramaItemStatus } from '@shared/utils/cronograma'
-import { isAcaoPublicacao } from '@shared/types/cronograma'
-import { getBadgeVariantForTipo } from '@/lib/utils/badge-variant'
+import { formatCurrency, formatDate } from '@shared/utils/format'
+import { parseCronogramaPublico, getNextDeadline } from '@shared/utils/cronograma'
+import { CronogramaTimeline } from './_components/CronogramaTimeline'
+import { ArquivosDownload } from './_components/ArquivosDownload'
+import { EditalSidebar } from './_components/EditalSidebar'
+import { FaqAccordion } from './_components/FaqAccordion'
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
 interface Props {
   params: Promise<{ slug: string }>
-}
-
-interface FaqItemData {
-  id: string
-  pergunta: string
-  resposta: string
-  ordem: number
 }
 
 // ── Metadata ──────────────────────────────────────────────────────────────────
@@ -211,133 +202,7 @@ export default async function EditalPage({ params }: Props) {
                       Cronograma
                     </h2>
                   </div>
-                  <div className="relative">
-                    <div
-                      className="absolute left-4 top-2 bottom-2 w-0.5 bg-slate-200"
-                      aria-hidden="true"
-                    />
-
-                    <ol className="space-y-1">
-                      {cronograma.map((item, index) => {
-                        const status = getCronogramaItemStatus(cronograma, index, now)
-                        const isPast = status === 'past'
-                        const isCurrent = status === 'current'
-
-                        return (
-                          <li key={index} className="relative pl-10">
-                            <div
-                              className={[
-                                'absolute left-2.5 top-4 h-3 w-3 rounded-full border-2 z-10',
-                                isPast
-                                  ? 'bg-brand-200 border-brand-300'
-                                  : isCurrent
-                                    ? 'bg-accent-400 border-accent-500 animate-pulse'
-                                    : 'bg-white border-brand-400',
-                              ].join(' ')}
-                              aria-hidden="true"
-                            />
-
-                            <div
-                              className={[
-                                'rounded-lg p-3 transition-colors',
-                                isPast
-                                  ? 'opacity-60'
-                                  : isCurrent
-                                    ? 'bg-accent-50 border border-accent-200'
-                                    : 'hover:bg-slate-50',
-                              ].join(' ')}
-                            >
-                              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-4">
-                                <span
-                                  className={[
-                                    'font-medium min-w-0 flex-1',
-                                    isPast ? 'text-slate-500' : 'text-slate-900',
-                                    isCurrent ? 'font-semibold' : '',
-                                  ].join(' ')}
-                                >
-                                  {item.label}
-                                </span>
-                                {item.fimEm ? (
-                                  <span
-                                    className={[
-                                      'text-sm font-medium tabular-nums shrink-0 whitespace-nowrap sm:text-right',
-                                      isPast
-                                        ? 'text-slate-400'
-                                        : isCurrent
-                                          ? 'text-accent-700'
-                                          : 'text-brand-700',
-                                    ].join(' ')}
-                                  >
-                                    <time dateTime={item.dataHora}>{formatDateTime(item.dataHora)}</time>
-                                    <span className="mx-1.5 text-slate-400">→</span>
-                                    <time dateTime={item.fimEm}>{formatDateTime(item.fimEm)}</time>
-                                  </span>
-                                ) : (
-                                  <time
-                                    dateTime={item.dataHora}
-                                    className={[
-                                      'text-sm font-medium tabular-nums shrink-0 whitespace-nowrap sm:text-right',
-                                      isPast
-                                        ? 'text-slate-400'
-                                        : isCurrent
-                                          ? 'text-accent-700'
-                                          : 'text-brand-700',
-                                    ].join(' ')}
-                                  >
-                                    {formatDateTime(item.dataHora)}
-                                  </time>
-                                )}
-                              </div>
-                              {isPast && (
-                                <span className="inline-flex items-center gap-1 text-xs text-slate-400 mt-1">
-                                  <IconCheckSimple className="h-3 w-3" />
-                                  Concluído
-                                </span>
-                              )}
-                              {isCurrent && (
-                                <span className="inline-flex items-center gap-1 text-xs text-accent-600 mt-1 font-medium">
-                                  <IconClock className="h-3 w-3" />
-                                  Em andamento
-                                </span>
-                              )}
-
-                              {/* Links de ação quando publicação ou resultado disponível */}
-                              {(isPast || isCurrent) && isAcaoPublicacao(item.acao) && (
-                                <div className="mt-2 flex flex-wrap items-center gap-3 text-xs">
-                                  <Link
-                                    href={`/editais/${slug}/publicacoes/${item.acao}`}
-                                    className="inline-flex items-center gap-1 font-medium text-brand-600 hover:text-brand-700 hover:underline"
-                                  >
-                                    Ver lista
-                                    <IconArrowRight className="h-3 w-3" aria-hidden="true" />
-                                  </Link>
-                                  <a
-                                    href={`/api/editais/${slug}/publicacoes/${item.acao}?format=csv`}
-                                    className="inline-flex items-center gap-1 font-medium text-brand-600 hover:text-brand-700 hover:underline"
-                                  >
-                                    <IconDownload className="h-3 w-3" aria-hidden="true" />
-                                    Baixar CSV
-                                  </a>
-                                </div>
-                              )}
-                              {(isPast || isCurrent)
-                                && (item.fase === 'RESULTADO_PRELIMINAR' || item.fase === 'RESULTADO_FINAL') && (
-                                <div className="mt-2 text-xs">
-                                  <Link
-                                    href={`/editais/${slug}/resultados`}
-                                    className="inline-flex items-center gap-1 font-medium text-brand-600 hover:text-brand-700 hover:underline"
-                                  >
-                                    Ver resultados
-                                    <IconArrowRight className="h-3 w-3" aria-hidden="true" />
-                                  </Link>
-                                </div>
-                              )}
-                            </div>
-                          </li>
-                        )
-                      })}
-                    </ol>
-                  </div>
+                  <CronogramaTimeline cronograma={cronograma} slug={slug} now={now} />
                 </div>
               )}
 
@@ -353,101 +218,7 @@ export default async function EditalPage({ params }: Props) {
                     </h2>
                   </div>
 
-                  {/* Layout cards para mobile */}
-                  <div className="sm:hidden space-y-3">
-                    {edital.arquivos.map((arquivo) => (
-                      <a
-                        key={arquivo.id}
-                        href={arquivo.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        download
-                        className="flex items-center gap-3 rounded-lg border border-slate-200 p-4 hover:bg-slate-50 hover:border-brand-200 transition-colors group"
-                      >
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 group-hover:bg-brand-50 shrink-0 transition-colors">
-                          <IconDownload className="h-4 w-4 text-slate-500 group-hover:text-brand-600 transition-colors" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium text-slate-900 truncate">
-                            {arquivo.titulo}
-                          </p>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <Badge variant={getBadgeVariantForTipo(arquivo.tipo)} className="text-[10px]">
-                              {tipoLabels[arquivo.tipo] ?? arquivo.tipo}
-                            </Badge>
-                            {arquivo.acessivel && (
-                              <span className="inline-flex items-center gap-0.5 text-[10px] text-brand-700 font-medium">
-                                <IconAccessible className="h-3 w-3" />
-                                Acessível
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <IconArrowRight className="h-4 w-4 text-slate-400 shrink-0 group-hover:text-brand-600 transition-colors" />
-                      </a>
-                    ))}
-                  </div>
-
-                  {/* Layout tabela para desktop */}
-                  <div className="hidden sm:block overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-slate-200">
-                          <th className="text-left py-3 pr-4 font-medium text-slate-600">
-                            Documento
-                          </th>
-                          <th className="text-left py-3 pr-4 font-medium text-slate-600">
-                            Tipo
-                          </th>
-                          <th className="text-left py-3 pr-4 font-medium text-slate-600">
-                            Acessível
-                          </th>
-                          <th className="text-right py-3 font-medium text-slate-600">
-                            Ação
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {edital.arquivos.map((arquivo) => (
-                          <tr
-                            key={arquivo.id}
-                            className="hover:bg-slate-50 transition-colors"
-                          >
-                            <td className="py-3 pr-4 font-medium text-slate-900">
-                              {arquivo.titulo}
-                            </td>
-                            <td className="py-3 pr-4">
-                              <Badge variant={getBadgeVariantForTipo(arquivo.tipo)}>
-                                {tipoLabels[arquivo.tipo] ?? arquivo.tipo}
-                              </Badge>
-                            </td>
-                            <td className="py-3 pr-4">
-                              {arquivo.acessivel ? (
-                                <span className="inline-flex items-center gap-1 text-brand-700">
-                                  <IconAccessible className="h-4 w-4" />
-                                  <span className="text-xs font-medium">Sim</span>
-                                </span>
-                              ) : (
-                                <span className="text-xs text-slate-400">—</span>
-                              )}
-                            </td>
-                            <td className="py-3 text-right">
-                              <a
-                                href={arquivo.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors"
-                                download
-                              >
-                                <IconDownload className="h-4 w-4" />
-                                Baixar
-                              </a>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  <ArquivosDownload arquivos={edital.arquivos} tipoLabels={tipoLabels} />
                 </div>
               )}
 
@@ -512,195 +283,17 @@ export default async function EditalPage({ params }: Props) {
             </div>
 
             {/* Sidebar (1/3) */}
-            <aside className="lg:col-span-1">
-              <div className="sticky top-6 space-y-5 sm:space-y-6">
-                {/* CTA de inscrição */}
-                {isOpen && (
-                  <div className="bg-gradient-to-br from-brand-600 to-brand-700 rounded-xl p-6 text-white shadow-lg">
-                    <h3 className="text-lg font-semibold mb-2">
-                      Inscrições Abertas
-                    </h3>
-                    {session?.user?.role === 'PROPONENTE' ? (
-                      <>
-                        <p className="text-brand-100 text-sm mb-5 leading-relaxed">
-                          Inscreva seu projeto cultural neste edital. Você poderá
-                          salvar como rascunho e enviar quando estiver pronto.
-                        </p>
-                        <Button
-                          href={`/proponente/inscricoes/nova?editalId=${edital.id}`}
-                          variant="ghost"
-                          size="lg"
-                          className="w-full bg-white text-brand-700 hover:bg-brand-50 hover:text-brand-800 shadow-md font-semibold"
-                        >
-                          Inscrever-se
-                        </Button>
-                      </>
-                    ) : session ? (
-                      <p className="text-brand-100 text-sm leading-relaxed">
-                        Apenas proponentes podem se inscrever em editais. Acesse
-                        sua conta de proponente para se inscrever.
-                      </p>
-                    ) : (
-                      <>
-                        <p className="text-brand-100 text-sm mb-5 leading-relaxed">
-                          Cadastre-se ou acesse sua conta para inscrever seu projeto
-                          cultural neste edital.
-                        </p>
-                        <Button
-                          href={`/login?callbackUrl=/proponente/inscricoes/nova?editalId=${edital.id}`}
-                          variant="ghost"
-                          size="lg"
-                          className="w-full bg-white text-brand-700 hover:bg-brand-50 hover:text-brand-800 shadow-md font-semibold"
-                        >
-                          Inscrever-se
-                        </Button>
-                        <p className="mt-3 text-center text-xs text-brand-200">
-                          Ainda não tem conta?{' '}
-                          <Link href="/cadastro" className="underline hover:text-white">
-                            Cadastre-se
-                          </Link>
-                        </p>
-                      </>
-                    )}
-                  </div>
-                )}
-
-                {/* Informações rápidas */}
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-                  <h3 className="text-base font-semibold text-slate-900 mb-4">
-                    Informações
-                  </h3>
-                  <dl className="space-y-3 text-sm">
-                    <div>
-                      <dt className="text-slate-500">Status</dt>
-                      <dd className="mt-0.5">
-                        <Badge variant={statusDisplay.badgeVariant} dot>
-                          {statusDisplay.label}
-                        </Badge>
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-slate-500">Ano</dt>
-                      <dd className="mt-0.5 font-medium text-slate-900">{edital.ano}</dd>
-                    </div>
-                    {edital.valorTotal && (
-                      <div>
-                        <dt className="text-slate-500">Valor Total</dt>
-                        <dd className="mt-0.5 font-semibold text-slate-900">
-                          {formatCurrency(edital.valorTotal)}
-                        </dd>
-                      </div>
-                    )}
-                    {edital.categorias.length > 0 && (
-                      <div>
-                        <dt className="text-slate-500">Categorias</dt>
-                        <dd className="mt-1 flex flex-wrap gap-1.5">
-                          {edital.categorias.map((cat) => (
-                            <Badge key={cat} variant="neutral">{cat}</Badge>
-                          ))}
-                        </dd>
-                      </div>
-                    )}
-                    {edital.arquivos.length > 0 && (
-                      <div>
-                        <dt className="text-slate-500">Documentos</dt>
-                        <dd className="mt-0.5 font-medium text-slate-900">
-                          {edital.arquivos.length} {edital.arquivos.length === 1 ? 'arquivo' : 'arquivos'} disponíveis
-                        </dd>
-                      </div>
-                    )}
-                    <div>
-                      <dt className="text-slate-500">Publicado em</dt>
-                      <dd className="mt-0.5 font-medium text-slate-900">
-                        {formatDate(edital.createdAt)}
-                      </dd>
-                    </div>
-                  </dl>
-                </div>
-
-                {/* Próxima data do cronograma */}
-                {nextDeadline && (
-                  <div className="bg-accent-50 rounded-xl border border-accent-200 p-6">
-                    <div className="flex items-center gap-2 mb-2">
-                      <IconClock className="h-4 w-4 text-accent-600" />
-                      <h3 className="text-base font-semibold text-accent-900">
-                        Próxima data
-                      </h3>
-                    </div>
-                    <p className="text-sm text-accent-800 font-medium">
-                      {nextDeadline.label}
-                    </p>
-                    <p className="text-sm text-accent-700 mt-1 tabular-nums">
-                      {formatDateTime(nextDeadline.dataHora)}
-                    </p>
-                  </div>
-                )}
-
-                {/* Link para versão acessível */}
-                {edital.conteudoAcessivel && (
-                  <Link
-                    href={`/editais/${slug}/acessivel`}
-                    className="flex items-center gap-3 rounded-xl border border-brand-200 bg-brand-50 p-4 text-sm font-medium text-brand-700 hover:bg-brand-100 transition-colors"
-                  >
-                    <IconAccessible className="h-5 w-5 shrink-0" />
-                    <span>Ver versão acessível deste edital</span>
-                  </Link>
-                )}
-
-                {/* Link para Resultados (quando publicados) */}
-                {['RESULTADO_PRELIMINAR', 'RECURSO', 'RESULTADO_FINAL', 'ENCERRADO'].includes(edital.status) && (
-                  <div className="bg-brand-50 rounded-xl border border-brand-200 p-6">
-                    <h3 className="text-base font-semibold text-brand-900 mb-2">
-                      Resultados Publicados
-                    </h3>
-                    <p className="text-sm text-brand-700 mb-3">
-                      Confira a lista de classificação deste edital.
-                    </p>
-                    <Link
-                      href={`/editais/${slug}/resultados`}
-                      className="inline-flex items-center gap-2 text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors"
-                    >
-                      Ver Resultados
-                      <IconArrowRight className="h-4 w-4" />
-                    </Link>
-                  </div>
-                )}
-
-                {/* Link de volta */}
-                <Link
-                  href="/editais"
-                  className="inline-flex items-center gap-2 text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors"
-                >
-                  <IconArrowLeft className="h-4 w-4" />
-                  Voltar para editais
-                </Link>
-              </div>
-            </aside>
+            <EditalSidebar
+              edital={edital}
+              session={session}
+              statusDisplay={statusDisplay}
+              nextDeadline={nextDeadline}
+              slug={slug}
+              isOpen={isOpen}
+            />
           </div>
         </div>
       </section>
     </>
-  )
-}
-
-// ── FAQ Accordion (details/summary — sem JS) ─────────────────────────────────
-
-function FaqAccordion({ items }: { items: FaqItemData[] }) {
-  return (
-    <div className="divide-y divide-slate-200">
-      {items.map((item) => (
-        <details key={item.id} className="group">
-          <summary className="flex items-center justify-between gap-4 py-4 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
-            <span className="text-sm font-medium text-slate-900 group-open:text-brand-700 transition-colors">
-              {item.pergunta}
-            </span>
-            <IconChevronDown className="h-5 w-5 text-slate-400 shrink-0 transition-transform group-open:rotate-180" />
-          </summary>
-          <div className="pb-4 text-sm text-slate-600 leading-relaxed pl-0">
-            {item.resposta}
-          </div>
-        </details>
-      ))}
-    </div>
   )
 }
