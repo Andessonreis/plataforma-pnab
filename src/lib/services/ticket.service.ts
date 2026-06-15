@@ -1,5 +1,5 @@
 import { prisma } from '@server/lib/db'
-import { ServiceError } from './errors'
+import { ServiceError } from '@shared/service-error'
 import type { AtendimentoStatus, Prisma } from '@prisma/client'
 
 interface CreateAtendimentoData {

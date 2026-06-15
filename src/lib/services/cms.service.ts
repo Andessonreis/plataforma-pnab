@@ -1,8 +1,8 @@
 import { prisma } from '@server/lib/db'
 import { logAudit } from '@/lib/audit'
-import { sanitizeContent } from '@/lib/sanitize'
-import { generateSimpleSlug } from '@/lib/utils/slug'
-import { ServiceError } from './errors'
+import { sanitizeContent } from '@shared/sanitize'
+import { generateSimpleSlug } from '@shared/utils/slug'
+import { ServiceError } from '@shared/service-error'
 import type { CmsPageInput } from '@/lib/schemas/cms'
 
 export async function createCmsPage(data: CmsPageInput, userId: string, ip?: string) {

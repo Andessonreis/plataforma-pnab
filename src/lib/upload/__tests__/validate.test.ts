@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 
 // Desfaz o mock global do setup.ts para testar a implementação real
-vi.unmock('@/lib/upload/validate')
+vi.unmock('@shared/upload/validate')
 
 const { validateMagicBytes, sanitizeFilename } = await import('../validate')
 

@@ -3,7 +3,7 @@
  * Podem ser importadas tanto no servidor quanto em componentes client.
  */
 
-import type { CriterioAvaliacao } from '@/lib/avaliacao-criterios'
+import type { CriterioAvaliacao } from '@shared/avaliacao-criterios'
 
 export interface NotaAvaliacao {
   criterio: string

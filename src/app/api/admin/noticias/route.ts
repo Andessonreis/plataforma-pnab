@@ -4,7 +4,7 @@ import { randomUUID } from 'crypto'
 import { auth } from '@server/lib/auth'
 import { prisma } from '@server/lib/db'
 import { logAudit } from '@/lib/audit'
-import { sanitizeContent } from '@/lib/sanitize'
+import { sanitizeContent } from '@shared/sanitize'
 
 export const runtime = 'nodejs'
 

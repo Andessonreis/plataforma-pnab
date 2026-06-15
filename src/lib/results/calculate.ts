@@ -1,7 +1,7 @@
 import { prisma } from '@server/lib/db'
 import type { InscricaoStatus } from '@prisma/client'
-import type { CriterioAvaliacao } from '@/lib/avaliacao-criterios'
-import { CRITERIOS_AVALIACAO_PADRAO } from '@/lib/avaliacao-criterios'
+import type { CriterioAvaliacao } from '@shared/avaliacao-criterios'
+import { CRITERIOS_AVALIACAO_PADRAO } from '@shared/avaliacao-criterios'
 import {
   calculateWithFormula,
   calculateWeightedAverage,

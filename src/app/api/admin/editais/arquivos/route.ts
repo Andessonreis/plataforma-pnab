@@ -3,7 +3,7 @@ import { randomUUID } from 'crypto'
 import { auth } from '@server/lib/auth'
 import { prisma } from '@server/lib/db'
 import { uploadFile, deleteFile } from '@/lib/storage'
-import { validateMagicBytes } from '@/lib/upload/validate'
+import { validateMagicBytes } from '@shared/upload/validate'
 
 export const runtime = 'nodejs'
 

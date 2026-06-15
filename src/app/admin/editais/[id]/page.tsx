@@ -10,7 +10,7 @@ import type { CronogramaItem } from '@/types/cronograma'
 import { migrateLegacyCronograma } from '@/lib/utils/cronograma'
 import { RelatorioFinalButton } from './relatorio-final-button'
 import { AvancarFasePanel } from './avancar-fase-panel'
-import type { CriterioAvaliacao } from '@/lib/avaliacao-criterios'
+import type { CriterioAvaliacao } from '@shared/avaliacao-criterios'
 import type { CampoFormulario } from '@/types/campo-formulario'
 
 interface Props {

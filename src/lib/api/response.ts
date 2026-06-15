@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import { ZodError } from 'zod'
-import { ServiceError } from '@/lib/services/errors'
+import { ServiceError } from '@shared/service-error'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Tipos do envelope padrão

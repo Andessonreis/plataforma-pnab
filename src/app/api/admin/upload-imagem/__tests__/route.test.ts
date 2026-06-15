@@ -3,7 +3,7 @@ import { POST } from '../route'
 import { NextRequest } from 'next/server'
 import { auth } from '@server/lib/auth'
 import { uploadFile } from '@/lib/storage'
-import { validateMagicBytes } from '@/lib/upload/validate'
+import { validateMagicBytes } from '@shared/upload/validate'
 
 const mockAuth = vi.mocked(auth)
 const mockUploadFile = vi.mocked(uploadFile)

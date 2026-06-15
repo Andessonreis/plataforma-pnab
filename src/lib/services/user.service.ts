@@ -3,7 +3,7 @@ import { randomBytes } from 'crypto'
 import { prisma } from '@server/lib/db'
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
 import { sendEmail } from '@/lib/mail'
-import { ServiceError } from './errors'
+import { ServiceError } from '@shared/service-error'
 import type { RegisterInput, UpdateProfileInput } from '@/lib/schemas/user'
 
 export async function register(data: RegisterInput, ip?: string) {

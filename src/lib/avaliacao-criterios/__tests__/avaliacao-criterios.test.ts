@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { CRITERIOS_AVALIACAO_PADRAO, type CriterioAvaliacao } from '@/lib/avaliacao-criterios'
+import { CRITERIOS_AVALIACAO_PADRAO, type CriterioAvaliacao } from '@shared/avaliacao-criterios'
 
 describe('CriterioAvaliacao type', () => {
   it('critérios padrão PNAB têm 5 itens', () => {

@@ -1,6 +1,6 @@
 import { prisma } from '@server/lib/db'
 import { logAudit } from '@/lib/audit'
-import { ServiceError } from './errors'
+import { ServiceError } from '@shared/service-error'
 import type { FaqInput } from '@/lib/schemas/faq'
 
 export async function createFaq(data: FaqInput, userId: string, ip?: string) {

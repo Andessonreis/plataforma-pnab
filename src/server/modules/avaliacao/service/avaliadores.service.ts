@@ -1,6 +1,6 @@
 import { prisma } from '@server/lib/db'
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
-import { gateAcaoFase } from '@/lib/edital/gate'
+import { gateAcaoFase } from '@shared/edital/gate'
 import { InscricaoNaoEncontradaError } from '@server/modules/inscricoes/errors/inscricoes.errors'
 import { avaliadoresRepository } from '../repository/avaliadores.repository'
 import {

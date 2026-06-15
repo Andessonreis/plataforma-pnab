@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { calculateTotal, type NotaAvaliacao } from '@/lib/results/formula'
-import type { CriterioAvaliacao } from '@/lib/avaliacao-criterios'
+import type { CriterioAvaliacao } from '@shared/avaliacao-criterios'
 import { viewNotaTotal } from '@/lib/services/avaliacao-view'
 import { avaliacaoClient } from '@client/api/avaliacao.client'
 import type { AvaliacaoInput } from '@shared/schemas/avaliacao.schema'

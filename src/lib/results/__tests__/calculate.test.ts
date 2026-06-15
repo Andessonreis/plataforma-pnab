@@ -11,7 +11,7 @@ import {
   saveManualOrder,
 } from '../calculate'
 import { prisma } from '@server/lib/db'
-import { CRITERIOS_AVALIACAO_PADRAO } from '@/lib/avaliacao-criterios'
+import { CRITERIOS_AVALIACAO_PADRAO } from '@shared/avaliacao-criterios'
 
 const mockPrisma = vi.mocked(prisma)
 

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import { auth } from '@server/lib/auth'
 import { uploadFile } from '@/lib/storage'
-import { validateMagicBytes } from '@/lib/upload/validate'
+import { validateMagicBytes } from '@shared/upload/validate'
 
 export const runtime = 'nodejs'
 

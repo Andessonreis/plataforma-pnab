@@ -1,6 +1,6 @@
 import { randomBytes, createHmac } from 'crypto'
 import { prisma } from '@server/lib/db'
-import { ServiceError } from './errors'
+import { ServiceError } from '@shared/service-error'
 
 const KEY_PREFIX = 'pnab_'
 

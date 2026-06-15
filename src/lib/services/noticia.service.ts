@@ -1,8 +1,8 @@
 import { prisma } from '@server/lib/db'
 import { logAudit } from '@/lib/audit'
-import { sanitizeContent } from '@/lib/sanitize'
-import { generateContentSlug } from '@/lib/utils/slug'
-import { ServiceError } from './errors'
+import { sanitizeContent } from '@shared/sanitize'
+import { generateContentSlug } from '@shared/utils/slug'
+import { ServiceError } from '@shared/service-error'
 import type { NoticiaInput } from '@/lib/schemas/noticia'
 
 export async function createNoticia(data: NoticiaInput, userId: string, ip?: string) {

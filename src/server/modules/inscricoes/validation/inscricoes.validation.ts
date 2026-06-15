@@ -1,5 +1,5 @@
 import { BadRequestError } from '@server/lib/http/errors'
-import { resolveCharLimits } from '@/lib/campo-limits'
+import { resolveCharLimits } from '@shared/campo-limits'
 import { filterCamposByTipo, type CampoFormulario } from '@/types/campo-formulario'
 import type { InscricaoParaSubmit } from '../repository/inscricoes.repository'
 

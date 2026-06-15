@@ -1,6 +1,6 @@
 import { uploadFile, deleteFile, getSignedUrl } from '@/lib/storage'
-import { validateMagicBytes, sanitizeFilename } from '@/lib/upload/validate'
-import { MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_MB, ALLOWED_MIMES, MIME_LABEL } from '@/lib/upload/anexo-config'
+import { validateMagicBytes, sanitizeFilename } from '@shared/upload/validate'
+import { MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_MB, ALLOWED_MIMES, MIME_LABEL } from '@shared/upload/anexo-config'
 import { logAudit } from '@/lib/audit'
 import { ForbiddenError } from '@server/lib/http/errors'
 import { InscricaoNaoEncontradaError } from '@server/modules/inscricoes/errors/inscricoes.errors'

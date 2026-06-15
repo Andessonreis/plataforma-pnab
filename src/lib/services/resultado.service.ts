@@ -2,7 +2,7 @@ import { prisma } from '@server/lib/db'
 import { logAudit } from '@/lib/audit'
 import { calculateResults, saveResults } from '@/lib/results/calculate'
 import { enqueueEmail } from '@/lib/queue'
-import { ServiceError } from './errors'
+import { ServiceError } from '@shared/service-error'
 
 export async function getResultados(editalId: string) {
   const edital = await prisma.edital.findUnique({

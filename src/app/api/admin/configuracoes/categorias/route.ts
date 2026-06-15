@@ -4,7 +4,7 @@ import { randomUUID } from 'crypto'
 import { auth } from '@server/lib/auth'
 import { prisma } from '@server/lib/db'
 import { logAudit } from '@/lib/audit'
-import { generateSimpleSlug } from '@/lib/utils/slug'
+import { generateSimpleSlug } from '@shared/utils/slug'
 
 export const runtime = 'nodejs'
 

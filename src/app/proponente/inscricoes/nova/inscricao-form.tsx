@@ -6,7 +6,7 @@ import { Button, Input, Select, Textarea, Card, Badge, CurrencyInput, formatCurr
 import type { SelectOption } from '@client/components/ui'
 import { IconArrowLeft, IconArrowRight, IconCheck, IconDocument, IconDownload, IconAccessible } from '@client/components/ui/icons'
 import { getBadgeVariantForTipo } from '@/lib/utils/badge-variant'
-import { resolveCharLimits } from '@/lib/campo-limits'
+import { resolveCharLimits } from '@shared/campo-limits'
 import { filterCamposByTipo, type CampoFormulario } from '@/types/campo-formulario'
 import type { EtapaCustomizada } from '@/types/etapa-customizada'
 import type { TipoProponente } from '@prisma/client'
@@ -16,7 +16,7 @@ import {
   describeValidationError,
   MAX_FILE_SIZE_MB,
   MIME_LABEL,
-} from '@/lib/upload/anexo-config'
+} from '@shared/upload/anexo-config'
 import {
   BlocoInfo,
   TabelaInput,

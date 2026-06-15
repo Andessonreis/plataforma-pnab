@@ -12,7 +12,7 @@ import { HabilitacaoActions } from '../../inscricoes/[id]/habilitacao-actions'
 import { AnexoViewer } from '../../inscricoes/[id]/anexo-viewer'
 import { RecursoDecision } from '../../inscricoes/[id]/recurso-decision'
 import { DadosInscricaoView } from '@client/components/inscricao/dados-inscricao-view'
-import { podeHabilitar } from '@/lib/edital/fase'
+import { podeHabilitar } from '@shared/edital/fase'
 
 interface Props {
   params: Promise<{ id: string }>
