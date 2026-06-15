@@ -10,6 +10,10 @@ export const editaisRepository = {
     return prisma.edital.findUnique({ where: { slug } })
   },
 
+  findFirstBySlugExcludingId(slug: string, id: string): Promise<Edital | null> {
+    return prisma.edital.findFirst({ where: { slug, id: { not: id } } })
+  },
+
   async list(args: { page: number; pageSize: number; status?: string }): Promise<{ items: Edital[]; total: number }> {
     const where: Prisma.EditalWhereInput = args.status
       ? { status: args.status as EditalStatus }
@@ -26,6 +30,17 @@ export const editaisRepository = {
     ])
 
     return { items, total }
+  },
+
+  findFaseInfoById(id: string) {
+    return prisma.edital.findUnique({
+      where: { id },
+      select: { id: true, status: true, titulo: true, publishedAt: true },
+    })
+  },
+
+  findIdById(id: string) {
+    return prisma.edital.findUnique({ where: { id }, select: { id: true } })
   },
 
   create(data: Prisma.EditalCreateInput): Promise<Edital> {

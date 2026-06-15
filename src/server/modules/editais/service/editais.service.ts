@@ -1,9 +1,9 @@
 import type { EditalStatus } from '@prisma/client'
-import { prisma } from '@server/lib/db'
 import { logAudit } from '@server/lib/audit'
 import { sanitizeContent } from '@shared/sanitize'
 import { generateEditalSlug } from '@shared/utils/slug'
 import { BadRequestError } from '@server/lib/http/errors'
+import { editaisRepository } from '../repository/editais.repository'
 import { EditalNaoEncontradoError } from '../errors/editais.errors'
 import type {
   AvancarFaseInput,
@@ -26,28 +26,26 @@ const SEQUENCIA_FASES: EditalStatus[] = [
 
 export async function createEdital(data: EditalInput, userId: string, ip?: string) {
   let slug = generateEditalSlug(data.titulo, data.ano)
-  const existingSlug = await prisma.edital.findUnique({ where: { slug } })
+  const existingSlug = await editaisRepository.findBySlug(slug)
   if (existingSlug) {
     slug = `${slug}-${Date.now().toString(36)}`
   }
 
-  const edital = await prisma.edital.create({
-    data: {
-      titulo: data.titulo,
-      slug,
-      ano: data.ano,
-      status: data.status,
-      resumo: data.resumo ?? null,
-      valorTotal: data.valorTotal ?? null,
-      categorias: data.categorias,
-      acoesAfirmativas: data.acoesAfirmativas ?? null,
-      regrasElegibilidade: data.regrasElegibilidade ?? null,
-      cronograma: data.cronograma,
-      camposFormulario: data.camposFormulario as unknown as import('@prisma/client').Prisma.InputJsonValue,
-      vagasContemplados: data.vagasContemplados ?? null,
-      vagasSuplentes: data.vagasSuplentes ?? null,
-      ...(data.status !== 'RASCUNHO' ? { publishedAt: new Date() } : {}),
-    },
+  const edital = await editaisRepository.create({
+    titulo: data.titulo,
+    slug,
+    ano: data.ano,
+    status: data.status,
+    resumo: data.resumo ?? null,
+    valorTotal: data.valorTotal ?? null,
+    categorias: data.categorias,
+    acoesAfirmativas: data.acoesAfirmativas ?? null,
+    regrasElegibilidade: data.regrasElegibilidade ?? null,
+    cronograma: data.cronograma,
+    camposFormulario: data.camposFormulario as unknown as import('@prisma/client').Prisma.InputJsonValue,
+    vagasContemplados: data.vagasContemplados ?? null,
+    vagasSuplentes: data.vagasSuplentes ?? null,
+    ...(data.status !== 'RASCUNHO' ? { publishedAt: new Date() } : {}),
   })
 
   await logAudit({
@@ -63,13 +61,13 @@ export async function createEdital(data: EditalInput, userId: string, ip?: strin
 }
 
 export async function updateEdital(id: string, data: EditalInput, userId: string, ip?: string) {
-  const existing = await prisma.edital.findUnique({ where: { id } })
+  const existing = await editaisRepository.findById(id)
   if (!existing) throw new EditalNaoEncontradoError()
 
   let slug = existing.slug
   if (data.titulo !== existing.titulo) {
     slug = generateEditalSlug(data.titulo, data.ano)
-    const slugExists = await prisma.edital.findFirst({ where: { slug, id: { not: id } } })
+    const slugExists = await editaisRepository.findFirstBySlugExcludingId(slug, id)
     if (slugExists) {
       slug = `${slug}-${Date.now().toString(36)}`
     }
@@ -78,24 +76,21 @@ export async function updateEdital(id: string, data: EditalInput, userId: string
   const isPublishing = existing.status === 'RASCUNHO' && data.status !== 'RASCUNHO'
   const publishedAt = isPublishing && !existing.publishedAt ? new Date() : undefined
 
-  const edital = await prisma.edital.update({
-    where: { id },
-    data: {
-      titulo: data.titulo,
-      slug,
-      ano: data.ano,
-      status: data.status,
-      resumo: data.resumo ?? null,
-      valorTotal: data.valorTotal ?? null,
-      categorias: data.categorias,
-      acoesAfirmativas: data.acoesAfirmativas ?? null,
-      regrasElegibilidade: data.regrasElegibilidade ?? null,
-      cronograma: data.cronograma,
-      camposFormulario: data.camposFormulario as unknown as import('@prisma/client').Prisma.InputJsonValue,
-      vagasContemplados: data.vagasContemplados ?? null,
-      vagasSuplentes: data.vagasSuplentes ?? null,
-      ...(publishedAt ? { publishedAt } : {}),
-    },
+  const edital = await editaisRepository.update(id, {
+    titulo: data.titulo,
+    slug,
+    ano: data.ano,
+    status: data.status,
+    resumo: data.resumo ?? null,
+    valorTotal: data.valorTotal ?? null,
+    categorias: data.categorias,
+    acoesAfirmativas: data.acoesAfirmativas ?? null,
+    regrasElegibilidade: data.regrasElegibilidade ?? null,
+    cronograma: data.cronograma,
+    camposFormulario: data.camposFormulario as unknown as import('@prisma/client').Prisma.InputJsonValue,
+    vagasContemplados: data.vagasContemplados ?? null,
+    vagasSuplentes: data.vagasSuplentes ?? null,
+    ...(publishedAt ? { publishedAt } : {}),
   })
 
   await logAudit({
@@ -111,10 +106,7 @@ export async function updateEdital(id: string, data: EditalInput, userId: string
 }
 
 export async function avancarFase(id: string, data: AvancarFaseInput, userId: string, ip?: string) {
-  const edital = await prisma.edital.findUnique({
-    where: { id },
-    select: { id: true, status: true, titulo: true, publishedAt: true },
-  })
+  const edital = await editaisRepository.findFaseInfoById(id)
   if (!edital) throw new EditalNaoEncontradoError()
 
   const statusAtual = edital.status as EditalStatus
@@ -133,7 +125,7 @@ export async function avancarFase(id: string, data: AvancarFaseInput, userId: st
     updateData.publishedAt = new Date()
   }
 
-  await prisma.edital.update({ where: { id }, data: updateData })
+  await editaisRepository.update(id, updateData)
 
   await logAudit({
     userId,
@@ -158,15 +150,12 @@ export async function avancarFase(id: string, data: AvancarFaseInput, userId: st
 }
 
 export async function updateAcessivel(id: string, data: EditalAcessivelInput, userId: string, ip?: string) {
-  const edital = await prisma.edital.findUnique({ where: { id }, select: { id: true } })
+  const edital = await editaisRepository.findIdById(id)
   if (!edital) throw new EditalNaoEncontradoError()
 
   const sanitized = sanitizeContent(data.conteudoAcessivel)
 
-  await prisma.edital.update({
-    where: { id },
-    data: { conteudoAcessivel: sanitized },
-  })
+  await editaisRepository.update(id, { conteudoAcessivel: sanitized })
 
   await logAudit({
     userId,
