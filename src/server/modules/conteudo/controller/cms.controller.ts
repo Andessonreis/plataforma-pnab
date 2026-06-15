@@ -9,18 +9,19 @@ import {
   updateCmsPage,
   deleteCmsPage,
 } from '../service/cms.service'
+import { toCmsPageDTO } from '../mapper/cms.mapper'
 
 const PUBLIC_CACHE = 'public, s-maxage=60, stale-while-revalidate=300'
 
 export const cmsController = {
   async list() {
     const pages = await listCmsPages()
-    return { data: pages, cacheControl: PUBLIC_CACHE }
+    return { data: pages.map(toCmsPageDTO), cacheControl: PUBLIC_CACHE }
   },
 
   async detail(ctx: RequestContext) {
     const page = await getCmsPageBySlug(ctx.params.id)
-    return { data: page, cacheControl: PUBLIC_CACHE }
+    return { data: toCmsPageDTO(page), cacheControl: PUBLIC_CACHE }
   },
 
   async create(ctx: RequestContext) {
@@ -28,7 +29,7 @@ export const cmsController = {
     if (!callerHasRole(caller, 'ADMIN')) throw new ForbiddenError()
     const data = cmsPageSchema.parse(ctx.body)
     const page = await createCmsPage(data, caller.userId, ipFromHeaders(ctx.headers))
-    return { data: page, status: 201 }
+    return { data: toCmsPageDTO(page), status: 201 }
   },
 
   async update(ctx: RequestContext) {
@@ -36,7 +37,7 @@ export const cmsController = {
     if (!callerHasRole(caller, 'ADMIN')) throw new ForbiddenError()
     const data = cmsPageSchema.parse(ctx.body)
     const page = await updateCmsPage(ctx.params.id, data, caller.userId, ipFromHeaders(ctx.headers))
-    return { data: page }
+    return { data: toCmsPageDTO(page) }
   },
 
   async remove(ctx: RequestContext) {

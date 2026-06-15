@@ -3,6 +3,7 @@
  * Reutiliza helpers modulares de shared.ts e layout-helpers.ts.
  */
 import { createDocument, docToBuffer, MARGINS, CONTENT_WIDTH, COLORS, PAGE_WIDTH } from './shared'
+import { formatTipoProponente, formatCurrency, camelCaseToLabel } from './format'
 import {
   addCompactHeader,
   addProtocolBadge,
@@ -64,11 +65,7 @@ function resolveCampoLabel(
 ): string {
   const def = camposFormulario.find((cf) => cf.nome === key)
   if (def) return def.label
-  return key
-    .replace(/([A-Z])/g, ' $1')
-    .replace(/_/g, ' ')
-    .replace(/^\w/, (c) => c.toUpperCase())
-    .trim()
+  return camelCaseToLabel(key)
 }
 
 /** Resolve o tipo de um campo a partir de camposFormulario. */
@@ -86,24 +83,6 @@ function maskCpfCnpj(value: string): string {
   const digits = value.replace(/\D/g, '')
   if (digits.length <= 6) return value
   return `${digits.slice(0, 3)}.***.***-${digits.slice(-2)}`
-}
-
-/** Formata tipo de proponente. */
-function formatTipoProponente(tipo: string): string {
-  const map: Record<string, string> = {
-    PF: 'Pessoa Física',
-    PJ: 'Pessoa Jurídica',
-    MEI: 'Microempreendedor Individual (MEI)',
-    COLETIVO: 'Coletivo Cultural',
-  }
-  return map[tipo] ?? tipo
-}
-
-/** Formata valor como moeda BRL. */
-function formatCurrency(value: unknown): string {
-  const num = Number(value)
-  if (isNaN(num)) return String(value)
-  return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
 /** Formata data no padrão DD/MM/YYYY. */

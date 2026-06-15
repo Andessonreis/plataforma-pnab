@@ -6,6 +6,7 @@
 import fs from 'fs'
 import path from 'path'
 import { createDocument, docToBuffer, MARGINS, CONTENT_WIDTH, COLORS, PAGE_WIDTH } from './shared'
+import { formatCurrency } from './format'
 import {
   addDivider,
   addLegalNotice,
@@ -77,11 +78,6 @@ function maskCpfCnpj(value: string): string {
   const digits = value.replace(/\D/g, '')
   if (digits.length <= 6) return value
   return `${digits.slice(0, 3)}.***.***-${digits.slice(-2)}`
-}
-
-/** Formata moeda BRL. */
-function formatCurrency(value: number): string {
-  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
 /** Meses em português por extenso. */

@@ -10,6 +10,7 @@ import {
   updateNoticia,
   deleteNoticia,
 } from '../service/noticias.service'
+import { toNoticiaDTO } from '../mapper/noticias.mapper'
 
 const PUBLIC_CACHE = 'public, s-maxage=60, stale-while-revalidate=300'
 
@@ -17,12 +18,12 @@ export const noticiasController = {
   async list(ctx: RequestContext) {
     const { page, pageSize } = paginationSchema.parse(ctx.query)
     const result = await listNoticias(page, pageSize)
-    return { data: result.data, meta: result.meta, cacheControl: PUBLIC_CACHE }
+    return { data: result.data.map(toNoticiaDTO), meta: result.meta, cacheControl: PUBLIC_CACHE }
   },
 
   async detail(ctx: RequestContext) {
     const noticia = await getNoticiaBySlug(ctx.params.id)
-    return { data: noticia, cacheControl: PUBLIC_CACHE }
+    return { data: toNoticiaDTO(noticia), cacheControl: PUBLIC_CACHE }
   },
 
   async create(ctx: RequestContext) {
@@ -30,7 +31,7 @@ export const noticiasController = {
     if (!callerHasRole(caller, 'ADMIN')) throw new ForbiddenError()
     const data = noticiaSchema.parse(ctx.body)
     const noticia = await createNoticia(data, caller.userId, ipFromHeaders(ctx.headers))
-    return { data: noticia, status: 201 }
+    return { data: toNoticiaDTO(noticia), status: 201 }
   },
 
   async update(ctx: RequestContext) {
@@ -38,7 +39,7 @@ export const noticiasController = {
     if (!callerHasRole(caller, 'ADMIN')) throw new ForbiddenError()
     const data = noticiaSchema.parse(ctx.body)
     const noticia = await updateNoticia(ctx.params.id, data, caller.userId, ipFromHeaders(ctx.headers))
-    return { data: noticia }
+    return { data: toNoticiaDTO(noticia) }
   },
 
   async remove(ctx: RequestContext) {

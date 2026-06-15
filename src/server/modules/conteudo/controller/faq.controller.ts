@@ -8,6 +8,7 @@ import {
   updateFaq,
   deleteFaq,
 } from '../service/faq.service'
+import { toFaqItemDTO } from '../mapper/faq.mapper'
 
 const PUBLIC_CACHE = 'public, s-maxage=60, stale-while-revalidate=300'
 
@@ -15,7 +16,7 @@ export const faqController = {
   async list(ctx: RequestContext) {
     const editalId = ctx.query.editalId ?? undefined
     const items = await listFaq(editalId)
-    return { data: items, cacheControl: PUBLIC_CACHE }
+    return { data: items.map(toFaqItemDTO), cacheControl: PUBLIC_CACHE }
   },
 
   async create(ctx: RequestContext) {
@@ -23,7 +24,7 @@ export const faqController = {
     if (!callerHasRole(caller, 'ADMIN', 'ATENDIMENTO')) throw new ForbiddenError()
     const data = faqSchema.parse(ctx.body)
     const item = await createFaq(data, caller.userId, ipFromHeaders(ctx.headers))
-    return { data: item, status: 201 }
+    return { data: toFaqItemDTO(item), status: 201 }
   },
 
   async update(ctx: RequestContext) {
@@ -31,7 +32,7 @@ export const faqController = {
     if (!callerHasRole(caller, 'ADMIN', 'ATENDIMENTO')) throw new ForbiddenError()
     const data = faqSchema.parse(ctx.body)
     const item = await updateFaq(ctx.params.id, data, caller.userId, ipFromHeaders(ctx.headers))
-    return { data: item }
+    return { data: toFaqItemDTO(item) }
   },
 
   async remove(ctx: RequestContext) {

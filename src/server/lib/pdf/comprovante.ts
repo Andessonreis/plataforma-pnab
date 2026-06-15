@@ -1,4 +1,5 @@
 import { createDocument, docToBuffer } from './shared'
+import { formatTipoProponente, camelCaseToLabel } from './format'
 import {
   addCompactHeader,
   addProtocolBadge,
@@ -126,16 +127,6 @@ function maskCpfCnpj(value: string): string {
   return `${digits.slice(0, 3)}.***.***-${digits.slice(-2)}`
 }
 
-function formatTipoProponente(tipo: string): string {
-  const map: Record<string, string> = {
-    PF: 'Pessoa Física',
-    PJ: 'Pessoa Jurídica',
-    MEI: 'Microempreendedor Individual (MEI)',
-    COLETIVO: 'Coletivo Cultural',
-  }
-  return map[tipo] ?? tipo
-}
-
 /**
  * Filtra e formata os campos do formulário para exibição resumida no comprovante.
  * Exclui campos vazios e limita ao máximo definido.
@@ -153,12 +144,7 @@ function buildCamposResumo(
       const rawStr = typeof value === 'object' ? JSON.stringify(value) : String(value)
       // Truncar valores muito longos para não quebrar layout
       const truncated = rawStr.length > 80 ? `${rawStr.slice(0, 77)}...` : rawStr
-      // Converter camelCase/snake_case para label legível
-      const label = key
-        .replace(/([A-Z])/g, ' $1')
-        .replace(/_/g, ' ')
-        .replace(/^\w/, (c) => c.toUpperCase())
-        .trim()
+      const label = camelCaseToLabel(key)
       return { label, value: truncated }
     })
 }
