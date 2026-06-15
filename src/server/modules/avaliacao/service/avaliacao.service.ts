@@ -1,5 +1,5 @@
 import { Prisma } from '@prisma/client'
-import { logAudit } from '@/lib/audit'
+import { logAudit } from '@server/lib/audit'
 import { CRITERIOS_AVALIACAO_PADRAO } from '@shared/avaliacao-criterios'
 import { gateAcaoFase } from '@shared/edital/gate'
 import { InscricaoNaoEncontradaError } from '@server/modules/inscricoes/errors/inscricoes.errors'

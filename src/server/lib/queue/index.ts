@@ -1,6 +1,6 @@
 import { Queue } from 'bullmq'
-import { redis } from '@/lib/redis'
-import type { EmailTemplate } from '@/lib/mail'
+import { redis } from '@server/lib/redis'
+import type { EmailTemplate } from '@server/lib/mail'
 import type { NotificationChannel } from '@prisma/client'
 
 // ─── Tipos de jobs ────────────────────────────────────────────────────────────

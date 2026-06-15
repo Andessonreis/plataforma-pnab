@@ -23,7 +23,7 @@ vi.mock('@supabase/supabase-js', () => ({
 }))
 
 // Desfaz o mock global do setup.ts para testar a implementação real
-vi.unmock('@/lib/storage')
+vi.unmock('@server/lib/storage')
 
 // Variáveis de ambiente necessárias para getSupabase()
 process.env.SUPABASE_URL = 'https://test.supabase.co'

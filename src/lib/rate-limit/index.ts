@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { redis } from '@/lib/redis'
+import { redis } from '@server/lib/redis'
 import type { RateLimitConfig } from './config'
 
 /**

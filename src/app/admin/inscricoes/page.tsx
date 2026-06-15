@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@server/lib/db'
 import { Card, Badge, Pagination, Button, EmptyState, FadeIn, IconExport, IconClipboard } from '@client/components/ui'
 import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
-import { getEditaisVisiveis } from '@/lib/edital-acesso'
+import { getEditaisVisiveis } from '@server/lib/edital-acesso'
 import type { InscricaoStatus } from '@prisma/client'
 
 export const metadata: Metadata = {

@@ -9,7 +9,7 @@ import {
   processSchedulerJob,
 } from '../scheduler.worker'
 import { prisma } from '@server/lib/db'
-import { logAudit } from '@/lib/audit'
+import { logAudit } from '@server/lib/audit'
 
 const mockPrisma = vi.mocked(prisma)
 const mockLogAudit = vi.mocked(logAudit)

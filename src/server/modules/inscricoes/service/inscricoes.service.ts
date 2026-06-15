@@ -1,6 +1,6 @@
 import { Prisma } from '@prisma/client'
-import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
-import { enqueueEmail } from '@/lib/queue'
+import { logAudit, AUDIT_ACTIONS } from '@server/lib/audit'
+import { enqueueEmail } from '@server/lib/queue'
 import { BadRequestError, ConflictError, ForbiddenError } from '@server/lib/http/errors'
 import type {
   CreateInscricaoInput,

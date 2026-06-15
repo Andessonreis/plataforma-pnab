@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // Desfaz o mock global para testar as funções reais do audit
-vi.unmock('@/lib/audit')
+vi.unmock('@server/lib/audit')
 
 import { logAudit, actionBadgeVariant, getRetentionDays } from '../index'
 import { prisma } from '@server/lib/db'

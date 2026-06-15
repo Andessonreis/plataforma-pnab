@@ -1,5 +1,5 @@
 import { Card, Badge, IconClock } from '@client/components/ui'
-import { ACTION_LABELS, actionBadgeVariant } from '@/lib/audit'
+import { ACTION_LABELS, actionBadgeVariant } from '@server/lib/audit'
 import { getHistoricoProcesso, type EventoHistorico } from '@/lib/services/historico-processo'
 
 const ROLE_LABELS: Record<string, string> = {

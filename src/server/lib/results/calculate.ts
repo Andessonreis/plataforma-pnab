@@ -8,7 +8,7 @@ import {
   calculateBlockSum,
   evaluateExpression,
   type NotaAvaliacao,
-} from './formula'
+} from '@shared/results/formula'
 
 export interface ResultadoInscricao {
   inscricaoId: string
@@ -241,5 +241,5 @@ export function parseNotas(raw: unknown): NotaAvaliacao[] {
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Re-exportar funções puras de formula.ts para manter compatibilidade
-export { calculateWithFormula, calculateWeightedAverage, calculateBlockSum, evaluateExpression } from './formula'
-export type { NotaAvaliacao } from './formula'
+export { calculateWithFormula, calculateWeightedAverage, calculateBlockSum, evaluateExpression } from '@shared/results/formula'
+export type { NotaAvaliacao } from '@shared/results/formula'

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import { z } from 'zod'
 import { auth } from '@server/lib/auth'
-import { renderTemplate } from '@/lib/mail/render'
+import { renderTemplate } from '@server/lib/mail/render'
 
 export const runtime = 'nodejs'
 

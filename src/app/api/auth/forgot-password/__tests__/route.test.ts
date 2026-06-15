@@ -2,9 +2,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { POST } from '../route'
 import { NextRequest } from 'next/server'
 import { prisma } from '@server/lib/db'
-import { logAudit } from '@/lib/audit'
+import { logAudit } from '@server/lib/audit'
 import { rateLimit } from '@/lib/rate-limit'
-import { sendEmail } from '@/lib/mail'
+import { sendEmail } from '@server/lib/mail'
 
 const mockPrisma = vi.mocked(prisma)
 const mockLogAudit = vi.mocked(logAudit)

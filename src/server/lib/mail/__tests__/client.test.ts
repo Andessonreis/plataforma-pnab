@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 // NOTA: este arquivo testa `sendViaResend` direto do módulo `../client`, então
-// o mock global `vi.mock('@/lib/mail', ...)` do `src/__tests__/setup.ts` (que
+// o mock global `vi.mock('@server/lib/mail', ...)` do `src/__tests__/setup.ts` (que
 // stuba `sendEmail`) NÃO intercepta esses testes — a chamada nem passa pelo
 // `src/lib/mail/index.ts`. O que importa aqui é o mock de `resend` definido
 // localmente abaixo, que controla o que `new Resend(...).emails.send(...)`

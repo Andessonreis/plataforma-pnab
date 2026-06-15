@@ -1,4 +1,4 @@
-import { AUDIT_ACTIONS, logAudit } from '@/lib/audit'
+import { AUDIT_ACTIONS, logAudit } from '@server/lib/audit'
 import { hashPassword, needsRehash, verifyPassword } from '@server/lib/auth/password'
 import { signAccessToken } from '@server/lib/auth/jwt'
 import {

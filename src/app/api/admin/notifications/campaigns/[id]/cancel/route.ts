@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import { auth } from '@server/lib/auth'
 import { prisma } from '@server/lib/db'
-import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
+import { logAudit, AUDIT_ACTIONS } from '@server/lib/audit'
 
 export const runtime = 'nodejs'
 

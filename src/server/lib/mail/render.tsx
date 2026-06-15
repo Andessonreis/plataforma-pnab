@@ -1,7 +1,7 @@
 import { render } from '@react-email/render'
 import { createElement, type ComponentType } from 'react'
 import { findActiveOverride, renderOverride } from './db-template'
-import { templateRegistry, type EmailTemplate } from './templates'
+import { templateRegistry, type EmailTemplate } from '@shared/mail/templates'
 
 export interface RenderedEmail {
   /** Assunto resolvido (override > subject explícito > default do template). */

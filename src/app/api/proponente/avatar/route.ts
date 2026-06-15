@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import { auth } from '@server/lib/auth'
 import { prisma } from '@server/lib/db'
-import { AUDIT_ACTIONS, logAudit } from '@/lib/audit'
-import { deleteFile, uploadFile } from '@/lib/storage'
+import { AUDIT_ACTIONS, logAudit } from '@server/lib/audit'
+import { deleteFile, uploadFile } from '@server/lib/storage'
 
 export const runtime = 'nodejs'
 

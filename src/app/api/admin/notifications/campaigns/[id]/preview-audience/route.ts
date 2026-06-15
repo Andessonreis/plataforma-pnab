@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import { auth } from '@server/lib/auth'
 import { prisma } from '@server/lib/db'
-import { countAudience } from '@/lib/notifications/audience'
-import type { AudienceFilter } from '@/lib/notifications/types'
+import { countAudience } from '@server/lib/notifications/audience'
+import type { AudienceFilter } from '@server/lib/notifications/types'
 
 export const runtime = 'nodejs'
 

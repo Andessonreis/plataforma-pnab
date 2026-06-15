@@ -1,5 +1,5 @@
-import { generateComprovante } from '@/lib/pdf/comprovante'
-import { generateProjetoCompleto } from '@/lib/pdf/projeto-completo'
+import { generateComprovante } from '@server/lib/pdf/comprovante'
+import { generateProjetoCompleto } from '@server/lib/pdf/projeto-completo'
 import { ForbiddenError } from '@server/lib/http/errors'
 import { InscricaoNaoEncontradaError } from '@server/modules/inscricoes/errors/inscricoes.errors'
 import { documentosInscricaoRepository } from '../repository/documentos-inscricao.repository'

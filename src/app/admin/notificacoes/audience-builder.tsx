@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import type { AudienceFilterInput } from '@/lib/notifications/schemas'
+import type { AudienceFilterInput } from '@server/lib/notifications/schemas'
 import { Card } from '@client/components/ui'
 import { UserPicker } from './user-picker'
 

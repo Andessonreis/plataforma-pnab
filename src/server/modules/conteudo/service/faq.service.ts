@@ -1,4 +1,4 @@
-import { logAudit } from '@/lib/audit'
+import { logAudit } from '@server/lib/audit'
 import type { FaqInput } from '@shared/schemas/faq.schema'
 import { faqRepository } from '../repository/faq.repository'
 import { FaqNaoEncontradoError } from '../errors/faq.errors'

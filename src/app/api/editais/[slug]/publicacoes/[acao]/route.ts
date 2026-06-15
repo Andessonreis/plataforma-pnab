@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import { z } from 'zod'
-import { getPublicacao, PUBLICACAO_LABELS } from '@/lib/edital/publicacoes'
+import { getPublicacao, PUBLICACAO_LABELS } from '@server/lib/edital/publicacoes'
 import { isAcaoPublicacao, isAcaoResultado, ACOES_PUBLICACAO } from '@/types/cronograma'
 import { maskCpfCnpj, maskName } from '@shared/utils/mask'
 import { toCsv } from '@/lib/export/csv'

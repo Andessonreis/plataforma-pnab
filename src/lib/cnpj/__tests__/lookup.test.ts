@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { redis } from '@/lib/redis'
+import { redis } from '@server/lib/redis'
 import * as providers from '../providers'
 import { lookupCnpj } from '../lookup'
 import type { CnpjLookupResult } from '../types'

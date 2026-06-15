@@ -1,5 +1,5 @@
 import { prisma } from '@server/lib/db'
-import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
+import { logAudit, AUDIT_ACTIONS } from '@server/lib/audit'
 
 export async function exportInscricoesCsv(editalId: string, userId: string, ip?: string) {
   const inscricoes = await prisma.inscricao.findMany({

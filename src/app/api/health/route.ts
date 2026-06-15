@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import { prisma } from '@server/lib/db'
-import { redis } from '@/lib/redis'
+import { redis } from '@server/lib/redis'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'

@@ -15,7 +15,7 @@ const mockPipeline = {
   exec: mockExec,
 }
 
-vi.mock('@/lib/redis', () => ({
+vi.mock('@server/lib/redis', () => ({
   redis: {
     pipeline: () => mockPipeline,
   },

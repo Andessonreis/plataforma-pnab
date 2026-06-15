@@ -9,7 +9,7 @@
  */
 
 import { prisma } from '@server/lib/db'
-import { enqueueEmail } from '@/lib/queue'
+import { enqueueEmail } from '@server/lib/queue'
 
 const SITE_URL_FALLBACK = 'https://culturaeturismo.irece.ba.gov.br'
 

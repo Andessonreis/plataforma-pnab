@@ -1,5 +1,5 @@
 import type { InscricaoStatus } from '@prisma/client'
-import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
+import { logAudit, AUDIT_ACTIONS } from '@server/lib/audit'
 import { cumulativeStatuses } from '@shared/status-maps'
 import { exportInscricoesRepository } from '../repository/export-inscricoes.repository'
 

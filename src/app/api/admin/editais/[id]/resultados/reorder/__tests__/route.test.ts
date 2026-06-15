@@ -2,8 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { PATCH } from '../route'
 import { NextRequest } from 'next/server'
 import { auth } from '@server/lib/auth'
-import * as calcModule from '@/lib/results/calculate'
-import { logAudit } from '@/lib/audit'
+import * as calcModule from '@server/lib/results/calculate'
+import { logAudit } from '@server/lib/audit'
 
 const mockAuth = vi.mocked(auth)
 const mockLogAudit = vi.mocked(logAudit)

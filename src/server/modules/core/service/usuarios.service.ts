@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from 'crypto'
-import { AUDIT_ACTIONS, logAudit } from '@/lib/audit'
-import { enqueueEmail } from '@/lib/queue'
-import { sendEmail } from '@/lib/mail'
+import { AUDIT_ACTIONS, logAudit } from '@server/lib/audit'
+import { enqueueEmail } from '@server/lib/queue'
+import { sendEmail } from '@server/lib/mail'
 import { hashPassword } from '@server/lib/auth/password'
 import { usuariosRepository } from '../repository/usuarios.repository'
 import {

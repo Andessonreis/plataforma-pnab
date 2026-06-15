@@ -1,14 +1,14 @@
 import { Worker } from 'bullmq'
-import { redis } from '@/lib/redis'
+import { redis } from '@server/lib/redis'
 import { prisma } from '@server/lib/db'
 import {
   enqueueEmail,
   enqueueNotificationDelivery,
   type NotificationDispatchJobData,
   type NotificationDeliveryJobData,
-} from '@/lib/queue'
-import { resolveAudience } from '@/lib/notifications/audience'
-import type { AudienceFilter } from '@/lib/notifications/types'
+} from '@server/lib/queue'
+import { resolveAudience } from '@server/lib/notifications/audience'
+import type { AudienceFilter } from '@server/lib/notifications/types'
 
 // ─── Worker: dispatch-campaign ──────────────────────────────────────────────
 // Resolve a audiência da campanha e enfileira 1 job de delivery por usuário.

@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import { auth } from '@server/lib/auth'
 import { prisma } from '@server/lib/db'
-import { TEMPLATE_META } from '@/lib/mail/placeholders'
-import type { EmailTemplate } from '@/lib/mail/templates'
+import { TEMPLATE_META } from '@shared/mail/placeholders'
+import type { EmailTemplate } from '@shared/mail/templates'
 
 export const runtime = 'nodejs'
 

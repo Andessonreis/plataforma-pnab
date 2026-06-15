@@ -1,6 +1,6 @@
 import type { InscricaoStatus } from '@prisma/client'
 import { prisma } from '@server/lib/db'
-import { cumulativeStatuses } from '@/lib/status-maps'
+import { cumulativeStatuses } from '@shared/status-maps'
 import { parseBrazilDateTime } from '@shared/utils/format'
 import type { AcaoPublicacao, CronogramaItem } from '@/types/cronograma'
 import { isAcaoPublicacao, isAcaoResultado } from '@/types/cronograma'

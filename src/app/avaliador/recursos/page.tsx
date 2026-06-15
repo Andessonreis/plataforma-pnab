@@ -4,7 +4,7 @@ import { auth } from '@server/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@server/lib/db'
 import { Card, Badge, EmptyState, FadeIn, IconShield } from '@client/components/ui'
-import { getEditaisVisiveis } from '@/lib/edital-acesso'
+import { getEditaisVisiveis } from '@server/lib/edital-acesso'
 
 export const metadata: Metadata = {
   title: 'Recursos — Portal PNAB Irecê',

@@ -1,5 +1,5 @@
 import { prisma } from '@server/lib/db'
-import { purgeOldAuditLogs } from '@/lib/audit'
+import { purgeOldAuditLogs } from '@server/lib/audit'
 
 interface QueryLogsParams {
   page: number

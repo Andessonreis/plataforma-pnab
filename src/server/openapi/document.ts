@@ -7,7 +7,7 @@ import { faqSchema } from '@shared/schemas/faq.schema'
 import { noticiaSchema } from '@shared/schemas/noticias.schema'
 import { createAtendimentoSchema, atendimentoPatchSchema } from '@shared/schemas/tickets.schema'
 import { createApiKeySchema } from '@shared/schemas/api-keys.schema'
-import { updateProfileSchema, registerSchema } from '@/lib/schemas/user'
+import { updateProfileSchema, registerSchema } from '@shared/schemas/user.schema'
 import { loginInputSchema } from '@shared/schemas/autenticacao.schema'
 import { editalSchema } from '@shared/schemas/editais.schema'
 

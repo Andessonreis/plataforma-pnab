@@ -1,4 +1,4 @@
-import { redis } from '@/lib/redis'
+import { redis } from '@server/lib/redis'
 import { fetchFromBrasilApi, fetchFromReceitaWs, CnpjProviderError } from './providers'
 import type { CnpjLookupResult } from './types'
 

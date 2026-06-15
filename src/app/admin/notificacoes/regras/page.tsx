@@ -4,7 +4,7 @@ import { auth } from '@server/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@server/lib/db'
 import { Card, Badge, Button, EmptyState, FadeIn, IconPlus, IconSettings } from '@client/components/ui'
-import { TRIGGER_REGISTRY } from '@/lib/notifications/triggers'
+import { TRIGGER_REGISTRY } from '@server/lib/notifications/triggers'
 
 export const metadata: Metadata = {
   title: 'Regras Automáticas — Portal PNAB Irecê',

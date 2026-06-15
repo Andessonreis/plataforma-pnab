@@ -1,7 +1,7 @@
 import type { RequestContext } from '@server/adapters/next-route'
 import { ForbiddenError } from '@server/lib/http/errors'
 import { resolveApiCaller, callerHasRole, ipFromHeaders } from '@server/lib/auth/api-caller'
-import { paginationSchema } from '@/lib/schemas/pagination'
+import { paginationSchema } from '@shared/schemas/pagination.schema'
 import { noticiaSchema } from '@shared/schemas/noticias.schema'
 import {
   listNoticias,

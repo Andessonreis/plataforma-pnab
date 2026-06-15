@@ -4,11 +4,11 @@ import { auth } from '@server/lib/auth'
 import { redirect, notFound } from 'next/navigation'
 import { prisma } from '@server/lib/db'
 import { Card, Badge } from '@client/components/ui'
-import { TRIGGER_REGISTRY } from '@/lib/notifications/triggers'
+import { TRIGGER_REGISTRY } from '@server/lib/notifications/triggers'
 import { RuleForm } from '../rule-form'
 import { ToggleRuleButton } from './toggle-button'
 import { DeleteRuleButton } from './delete-button'
-import type { AudienceFilterInput } from '@/lib/notifications/schemas'
+import type { AudienceFilterInput } from '@server/lib/notifications/schemas'
 
 interface Props {
   params: Promise<{ id: string }>

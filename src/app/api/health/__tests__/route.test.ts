@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { GET } from '../route'
 import { prisma } from '@server/lib/db'
-import { redis } from '@/lib/redis'
+import { redis } from '@server/lib/redis'
 
 const mockPrisma = vi.mocked(prisma)
 const mockRedis = vi.mocked(redis)

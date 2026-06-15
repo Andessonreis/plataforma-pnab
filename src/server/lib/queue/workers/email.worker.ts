@@ -1,6 +1,6 @@
 import { Worker } from 'bullmq'
-import { redis } from '@/lib/redis'
-import type { EmailJobData } from '@/lib/queue'
+import { redis } from '@server/lib/redis'
+import type { EmailJobData } from '@server/lib/queue'
 
 export const emailWorker = new Worker<EmailJobData>(
   'email',
@@ -10,7 +10,7 @@ export const emailWorker = new Worker<EmailJobData>(
     console.log(`[EmailWorker] Enviando "${template}" para ${to} (job ${job.id})`)
 
     // Importação lazy para evitar ciclo de dependência circular
-    const { sendEmail } = await import('@/lib/mail')
+    const { sendEmail } = await import('@server/lib/mail')
     await sendEmail({ to, subject, template, data })
 
     console.log(`[EmailWorker] E-mail enviado com sucesso (job ${job.id})`)

@@ -7,9 +7,9 @@
 import { checkAllowlist } from './allowlist'
 import { sendViaResend } from './client'
 import { renderTemplate } from './render'
-import type { EmailTemplate } from './templates'
+import type { EmailTemplate } from '@shared/mail/templates'
 
-export type { EmailTemplate, TemplateDataMap } from './templates'
+export type { EmailTemplate, TemplateDataMap } from '@shared/mail/templates'
 export { renderTemplate, defaultSubjectFor } from './render'
 
 // Id sentinela retornado quando o envio é descartado pela allowlist de teste.

@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 // O setup global (`src/__tests__/setup.ts`) stuba `sendEmail` com vi.fn().
 // Aqui precisamos da implementação real (que aplica a allowlist), então
 // desfazemos esse mock localmente — `vi.unmock` é içado igual `vi.mock`.
-vi.unmock('@/lib/mail')
+vi.unmock('@server/lib/mail')
 
 // Mock local de `resend` pra inspecionar se `emails.send` foi chamado
 // (precisamos garantir que skip pela allowlist NÃO chama o SDK).

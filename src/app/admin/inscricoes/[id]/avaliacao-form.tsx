@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { calculateTotal, type NotaAvaliacao } from '@/lib/results/formula'
+import { calculateTotal, type NotaAvaliacao } from '@shared/results/formula'
 import type { CriterioAvaliacao } from '@shared/avaliacao-criterios'
 import { viewNotaTotal } from '@/lib/services/avaliacao-view'
 import { avaliacaoClient } from '@client/api/avaliacao.client'

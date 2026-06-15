@@ -1,8 +1,8 @@
 import { Worker } from 'bullmq'
-import { redis } from '@/lib/redis'
+import { redis } from '@server/lib/redis'
 import { prisma } from '@server/lib/db'
-import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
-import { notifyEquipeHabilitacaoAberta } from '@/lib/edital/notify-habilitacao-aberta'
+import { logAudit, AUDIT_ACTIONS } from '@server/lib/audit'
+import { notifyEquipeHabilitacaoAberta } from '@server/lib/edital/notify-habilitacao-aberta'
 import type { EditalStatus } from '@prisma/client'
 import {
   FASE_TRANSICOES,
@@ -262,7 +262,7 @@ export const schedulerWorker = new Worker<SchedulerJobData>(
 
     // Avalia regras periódicas de notificação (rascunho pendente etc.)
     try {
-      const { evaluatePeriodicRules } = await import('@/lib/notifications/dispatch')
+      const { evaluatePeriodicRules } = await import('@server/lib/notifications/dispatch')
       const disparadas = await evaluatePeriodicRules()
       if (disparadas > 0) {
         console.log(`[Scheduler] ${disparadas} regra(s) de notificação periódica disparada(s)`)

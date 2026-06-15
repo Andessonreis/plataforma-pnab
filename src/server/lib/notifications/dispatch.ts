@@ -1,5 +1,5 @@
 import { prisma } from '@server/lib/db'
-import { enqueueCampaignDispatch } from '@/lib/queue'
+import { enqueueCampaignDispatch } from '@server/lib/queue'
 import { getTriggerDefinition } from './triggers'
 import type { AudienceFilter, TriggerConfig } from './types'
 import type { NotificationRule, NotificationRuleTrigger } from '@prisma/client'

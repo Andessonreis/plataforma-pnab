@@ -8,7 +8,7 @@ import { editalStatusLabel } from '@/lib/status-maps'
 import { ResultActions } from './result-actions'
 import { TiebreakerPanel } from './tiebreaker-panel'
 import { ResultadosPreview, type PreviewRow } from './resultados-preview'
-import { calculateResults } from '@/lib/results/calculate'
+import { calculateResults } from '@server/lib/results/calculate'
 import type { InscricaoStatus } from '@prisma/client'
 
 interface Props {

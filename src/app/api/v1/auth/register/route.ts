@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { createContext, created, handleError, logRequest } from '@/lib/api/response'
 import { getIp } from '@/lib/api/auth-resolver'
-import { registerSchema } from '@/lib/schemas/user'
+import { registerSchema } from '@shared/schemas/user.schema'
 import { rateLimit } from '@/lib/rate-limit'
 import { RATE_LIMITS } from '@/lib/rate-limit/config'
 import * as userService from '@/lib/services/user.service'

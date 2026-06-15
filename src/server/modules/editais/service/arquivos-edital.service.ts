@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto'
-import { uploadFile, deleteFile } from '@/lib/storage'
+import { uploadFile, deleteFile } from '@server/lib/storage'
 import { validateMagicBytes } from '@shared/upload/validate'
 import { editaisRepository } from '@server/modules/editais/repository/editais.repository'
 import { EditalNaoEncontradoError } from '@server/modules/editais/errors/editais.errors'

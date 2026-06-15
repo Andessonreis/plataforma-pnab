@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { auth } from '@server/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@server/lib/db'
-import { getEditaisVisiveis } from '@/lib/edital-acesso'
+import { getEditaisVisiveis } from '@server/lib/edital-acesso'
 import {
   Card, Badge, Button, StatCard, EmptyState,
   FadeIn, StaggerContainer, StaggerItem,

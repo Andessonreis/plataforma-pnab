@@ -1,8 +1,8 @@
 import { render } from '@react-email/render'
 import sanitizeHtml from 'sanitize-html'
 import { prisma } from '@server/lib/db'
-import { Layout } from './templates/_shared/layout'
-import type { EmailTemplate } from './templates'
+import { Layout } from '@shared/mail/templates/_shared/layout'
+import type { EmailTemplate } from '@shared/mail/templates'
 
 export interface ActiveOverride {
   subject: string

@@ -3,7 +3,7 @@ import { GET, PUT, DELETE } from '../route'
 import { NextRequest } from 'next/server'
 import { auth } from '@server/lib/auth'
 import { prisma } from '@server/lib/db'
-import { logAudit } from '@/lib/audit'
+import { logAudit } from '@server/lib/audit'
 
 const mockAuth = vi.mocked(auth)
 const mockPrisma = vi.mocked(prisma)

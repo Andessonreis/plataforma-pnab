@@ -4,7 +4,7 @@ import { randomUUID } from 'crypto'
 import bcrypt from 'bcryptjs'
 import { auth } from '@server/lib/auth'
 import { prisma } from '@server/lib/db'
-import { logAudit } from '@/lib/audit'
+import { logAudit } from '@server/lib/audit'
 
 export const runtime = 'nodejs'
 

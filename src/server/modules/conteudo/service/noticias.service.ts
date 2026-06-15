@@ -1,4 +1,4 @@
-import { logAudit } from '@/lib/audit'
+import { logAudit } from '@server/lib/audit'
 import { sanitizeContent } from '@shared/sanitize'
 import { generateContentSlug } from '@shared/utils/slug'
 import type { PaginationMeta } from '@shared/dtos/common.dto'

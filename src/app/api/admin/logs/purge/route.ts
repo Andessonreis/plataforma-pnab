@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import { auth } from '@server/lib/auth'
-import { purgeOldAuditLogs, getRetentionDays } from '@/lib/audit'
+import { purgeOldAuditLogs, getRetentionDays } from '@server/lib/audit'
 import { prisma } from '@server/lib/db'
 
 export const runtime = 'nodejs'

@@ -1,7 +1,7 @@
 import { prisma } from '@server/lib/db'
-import { logAudit } from '@/lib/audit'
-import { calculateResults, saveResults } from '@/lib/results/calculate'
-import { enqueueEmail } from '@/lib/queue'
+import { logAudit } from '@server/lib/audit'
+import { calculateResults, saveResults } from '@server/lib/results/calculate'
+import { enqueueEmail } from '@server/lib/queue'
 import { ServiceError } from '@shared/service-error'
 
 export async function getResultados(editalId: string) {

@@ -1,6 +1,6 @@
 import type { EditalStatus } from '@prisma/client'
 import { prisma } from '@server/lib/db'
-import { logAudit } from '@/lib/audit'
+import { logAudit } from '@server/lib/audit'
 import { sanitizeContent } from '@shared/sanitize'
 import { generateEditalSlug } from '@shared/utils/slug'
 import { ServiceError } from '@shared/service-error'

@@ -6,7 +6,7 @@ import { PageHeader, Badge } from '@client/components/ui'
 import { IconArrowLeft, IconDownload, IconClock } from '@client/components/ui/icons'
 import { formatDateTime } from '@shared/utils/format'
 import { maskCpfCnpj, maskName } from '@shared/utils/mask'
-import { getPublicacao } from '@/lib/edital/publicacoes'
+import { getPublicacao } from '@server/lib/edital/publicacoes'
 import { isAcaoPublicacao, isAcaoResultado } from '@/types/cronograma'
 import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
 

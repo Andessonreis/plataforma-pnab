@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Badge, Button, Card } from '@client/components/ui'
-import type { PlaceholderSpec } from '@/lib/mail/placeholders'
-import type { EmailTemplate } from '@/lib/mail/templates'
+import type { PlaceholderSpec } from '@shared/mail/placeholders'
+import type { EmailTemplate } from '@shared/mail/templates'
 
 interface InitialState {
   subject: string

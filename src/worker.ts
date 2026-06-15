@@ -4,14 +4,14 @@
  * Em produção, roda como serviço `worker` no docker-compose.yml
  */
 import 'dotenv/config'
-import { emailWorker } from '@/lib/queue/workers/email.worker'
-import { pdfWorker } from '@/lib/queue/workers/pdf.worker'
-import { schedulerWorker } from '@/lib/queue/workers/scheduler.worker'
+import { emailWorker } from '@server/lib/queue/workers/email.worker'
+import { pdfWorker } from '@server/lib/queue/workers/pdf.worker'
+import { schedulerWorker } from '@server/lib/queue/workers/scheduler.worker'
 import {
   notificationDispatchWorker,
   notificationDeliveryWorker,
-} from '@/lib/queue/workers/notification.worker'
-import { initSchedulerRepeatableJobs } from '@/lib/queue'
+} from '@server/lib/queue/workers/notification.worker'
+import { initSchedulerRepeatableJobs } from '@server/lib/queue'
 
 console.log('[Worker] Iniciado — aguardando jobs nas filas...')
 console.log(

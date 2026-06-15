@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { POST } from '../route'
 import { NextRequest } from 'next/server'
 import { auth } from '@server/lib/auth'
-import { uploadFile } from '@/lib/storage'
+import { uploadFile } from '@server/lib/storage'
 import { validateMagicBytes } from '@shared/upload/validate'
 
 const mockAuth = vi.mocked(auth)

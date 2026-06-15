@@ -1,7 +1,7 @@
 import type { RequestContext } from '@server/adapters/next-route'
 import { UnauthorizedError } from '@server/lib/http/errors'
 import { resolveApiCaller, callerIsAuthenticated, ipFromHeaders } from '@server/lib/auth/api-caller'
-import { updateProfileSchema } from '@/lib/schemas/user'
+import { updateProfileSchema } from '@shared/schemas/user.schema'
 import { getProfile, updateProfile } from '../service/me.service'
 
 export const meController = {

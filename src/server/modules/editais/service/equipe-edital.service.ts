@@ -1,4 +1,4 @@
-import { AUDIT_ACTIONS, logAudit } from '@/lib/audit'
+import { AUDIT_ACTIONS, logAudit } from '@server/lib/audit'
 import { BadRequestError, NotFoundError } from '@server/lib/http/errors'
 import { editaisRepository } from '@server/modules/editais/repository/editais.repository'
 import { EditalNaoEncontradoError } from '@server/modules/editais/errors/editais.errors'

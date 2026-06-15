@@ -3,8 +3,8 @@ import { z } from 'zod'
 import { randomUUID } from 'crypto'
 import { auth } from '@server/lib/auth'
 import { prisma } from '@server/lib/db'
-import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
-import { isTriggerImplementado } from '@/lib/notifications/triggers'
+import { logAudit, AUDIT_ACTIONS } from '@server/lib/audit'
+import { isTriggerImplementado } from '@server/lib/notifications/triggers'
 
 export const runtime = 'nodejs'
 

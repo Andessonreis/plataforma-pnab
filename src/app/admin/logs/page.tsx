@@ -4,7 +4,7 @@ import { auth } from '@server/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@server/lib/db'
 import { Card, Badge, Pagination, Button, EmptyState, FadeIn, IconInfo } from '@client/components/ui'
-import { ACTION_LABELS, actionBadgeVariant, getRetentionDays } from '@/lib/audit'
+import { ACTION_LABELS, actionBadgeVariant, getRetentionDays } from '@server/lib/audit'
 import { PurgeButton } from './purge-button'
 
 export const metadata: Metadata = {

@@ -1,6 +1,6 @@
 import type { UserRole } from '@prisma/client'
-import { logAudit } from '@/lib/audit'
-import { enqueueEmail } from '@/lib/queue'
+import { logAudit } from '@server/lib/audit'
+import { enqueueEmail } from '@server/lib/queue'
 import { gateAcaoFase } from '@shared/edital/gate'
 import { InscricaoNaoEncontradaError } from '@server/modules/inscricoes/errors/inscricoes.errors'
 import type { HabilitacaoInput } from '@shared/schemas/habilitacao.schema'

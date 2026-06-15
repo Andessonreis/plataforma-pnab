@@ -3,8 +3,8 @@ import { z } from 'zod'
 import { randomUUID } from 'crypto'
 import { auth } from '@server/lib/auth'
 import { prisma } from '@server/lib/db'
-import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
-import { campaignSchema } from '@/lib/notifications/schemas'
+import { logAudit, AUDIT_ACTIONS } from '@server/lib/audit'
+import { campaignSchema } from '@server/lib/notifications/schemas'
 
 export const runtime = 'nodejs'
 

@@ -4,7 +4,7 @@ import { auth } from '@server/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@server/lib/db'
 import { RuleForm } from '../rule-form'
-import { TRIGGER_REGISTRY } from '@/lib/notifications/triggers'
+import { TRIGGER_REGISTRY } from '@server/lib/notifications/triggers'
 
 export const metadata: Metadata = {
   title: 'Nova Regra Automática — Portal PNAB Irecê',

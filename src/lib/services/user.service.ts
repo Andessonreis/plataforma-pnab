@@ -1,10 +1,10 @@
 import bcrypt from 'bcryptjs'
 import { randomBytes } from 'crypto'
 import { prisma } from '@server/lib/db'
-import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
-import { sendEmail } from '@/lib/mail'
+import { logAudit, AUDIT_ACTIONS } from '@server/lib/audit'
+import { sendEmail } from '@server/lib/mail'
 import { ServiceError } from '@shared/service-error'
-import type { RegisterInput } from '@/lib/schemas/user'
+import type { RegisterInput } from '@shared/schemas/user.schema'
 
 export async function register(data: RegisterInput, ip?: string) {
   const existing = await prisma.user.findFirst({

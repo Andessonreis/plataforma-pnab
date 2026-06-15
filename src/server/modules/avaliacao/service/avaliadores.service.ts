@@ -1,5 +1,5 @@
 import { prisma } from '@server/lib/db'
-import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
+import { logAudit, AUDIT_ACTIONS } from '@server/lib/audit'
 import { gateAcaoFase } from '@shared/edital/gate'
 import { InscricaoNaoEncontradaError } from '@server/modules/inscricoes/errors/inscricoes.errors'
 import { avaliadoresRepository } from '../repository/avaliadores.repository'
