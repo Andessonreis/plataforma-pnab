@@ -1,4 +1,4 @@
-import { uploadFile, deleteFile, getSignedUrl } from '@server/lib/storage'
+import { uploadFile, deleteFile, getSignedUrl, extractStoragePathFromUrl } from '@server/lib/storage'
 import { validateMagicBytes, sanitizeFilename } from '@shared/upload/validate'
 import { MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_MB, ALLOWED_MIMES, MIME_LABEL } from '@shared/upload/anexo-config'
 import { logAudit } from '@server/lib/audit'
@@ -9,10 +9,6 @@ import { anexosInscricaoRepository } from '../repository/anexos-inscricao.reposi
 import { AnexoNaoEncontradoError, ArquivoInvalidoError } from '../errors/anexos-inscricao.errors'
 
 const BUCKET = 'propostas'
-
-function storagePathFromUrl(url: string): string | undefined {
-  return new URL(url).pathname.split(`/${BUCKET}/`).pop()
-}
 
 export async function uploadAnexo(
   inscricaoId: string,
@@ -79,7 +75,7 @@ export async function removeAnexo(inscricaoId: string, anexoId: string, userId: 
     throw new ForbiddenError('Apenas rascunhos podem ter anexos removidos.')
   }
 
-  const storagePath = storagePathFromUrl(anexo.url)
+  const storagePath = extractStoragePathFromUrl(anexo.url, BUCKET)
   if (storagePath) {
     try {
       await deleteFile(BUCKET, storagePath)
@@ -96,7 +92,7 @@ export async function getAnexoSignedUrl(inscricaoId: string, anexoId: string) {
   const anexo = await anexosInscricaoRepository.findAnexoUrl(anexoId)
   if (!anexo || anexo.inscricaoId !== inscricaoId) throw new AnexoNaoEncontradoError()
 
-  const storagePath = storagePathFromUrl(anexo.url)
+  const storagePath = extractStoragePathFromUrl(anexo.url, BUCKET)
   if (!storagePath) throw new ArquivoInvalidoError('Caminho do arquivo inválido.')
 
   const url = await getSignedUrl(BUCKET, storagePath, 3600)

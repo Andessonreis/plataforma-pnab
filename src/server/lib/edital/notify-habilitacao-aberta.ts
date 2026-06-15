@@ -10,8 +10,7 @@
 
 import { prisma } from '@server/lib/db'
 import { enqueueEmail } from '@server/lib/queue'
-
-const SITE_URL_FALLBACK = 'https://culturaeturismo.irece.ba.gov.br'
+import { getBaseUrl } from '@server/lib/config'
 
 export interface NotifyHabilitacaoAbertaResult {
   admins: number
@@ -39,7 +38,7 @@ export async function notifyEquipeHabilitacaoAberta(
     return { admins: admins.length, inscricoesPendentes }
   }
 
-  const base = (process.env.NEXT_PUBLIC_SITE_URL || SITE_URL_FALLBACK).replace(/\/$/, '')
+  const base = getBaseUrl()
   const url = `${base}/admin/habilitacao`
 
   await Promise.all(

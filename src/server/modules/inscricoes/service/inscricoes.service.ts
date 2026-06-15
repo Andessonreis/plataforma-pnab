@@ -1,7 +1,8 @@
 import { Prisma } from '@prisma/client'
 import { logAudit, AUDIT_ACTIONS } from '@server/lib/audit'
-import { enqueueEmail } from '@server/lib/queue'
+import { safeEnqueueEmail } from '@server/lib/queue'
 import { BadRequestError, ConflictError, ForbiddenError } from '@server/lib/http/errors'
+import { isOwnerOrStaff } from '@server/lib/auth/ownership'
 import type {
   CreateInscricaoInput,
   InscricoesAdminQuery,
@@ -102,8 +103,8 @@ export async function submitInscricao(id: string, userId: string, ip?: string) {
     ip,
   })
 
-  try {
-    await enqueueEmail({
+  await safeEnqueueEmail(
+    {
       to: inscricao.proponente.email,
       subject: `Inscrição ${updated.numero} enviada com sucesso`,
       template: 'comprovante_inscricao',
@@ -113,10 +114,9 @@ export async function submitInscricao(id: string, userId: string, ip?: string) {
         edital: inscricao.edital.titulo,
         submittedAt: now.toISOString(),
       },
-    })
-  } catch {
-    console.error('[inscricao] Falha ao enfileirar e-mail de confirmação')
-  }
+    },
+    'inscricao',
+  )
 
   return { numero: updated.numero, submittedAt: updated.submittedAt?.toISOString() ?? null }
 }
@@ -150,9 +150,9 @@ export async function getInscricaoById(id: string, callerId: string, callerRole:
   const inscricao = await inscricoesRepository.findDetalhe(id)
   if (!inscricao) throw new InscricaoNaoEncontradaError()
 
-  const isOwner = inscricao.proponenteId === callerId
-  const isAdmin = callerRole === 'ADMIN'
-  if (!isOwner && !isAdmin) throw new InscricaoNaoEncontradaError()
+  if (!isOwnerOrStaff(inscricao.proponenteId, { id: callerId, role: callerRole }, ['ADMIN'])) {
+    throw new InscricaoNaoEncontradaError()
+  }
 
   return inscricao
 }

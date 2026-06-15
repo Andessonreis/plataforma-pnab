@@ -1,7 +1,8 @@
 import { createHash, randomBytes } from 'crypto'
 import { AUDIT_ACTIONS, logAudit } from '@server/lib/audit'
-import { enqueueEmail } from '@server/lib/queue'
+import { safeEnqueueEmail } from '@server/lib/queue'
 import { sendEmail } from '@server/lib/mail'
+import { getBaseUrl } from '@server/lib/config'
 import { hashPassword } from '@server/lib/auth/password'
 import { usuariosRepository } from '../repository/usuarios.repository'
 import {
@@ -14,10 +15,6 @@ const RESET_TOKEN_TTL_MS = 60 * 60 * 1000 // 1 hora
 
 function hashResetToken(token: string): string {
   return createHash('sha256').update(token).digest('hex')
-}
-
-function siteUrl(): string {
-  return process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXTAUTH_URL ?? ''
 }
 
 export const usuariosService = {
@@ -55,15 +52,14 @@ export const usuariosService = {
       ip: ctx.ip ?? undefined,
     })
 
-    try {
-      await enqueueEmail({
+    await safeEnqueueEmail(
+      {
         to: user.email,
         template: 'boas_vindas',
-        data: { nome: user.nome, url: `${siteUrl()}/proponente` },
-      })
-    } catch (err) {
-      console.error({ warn: 'enqueue_boas_vindas_failed', error: err instanceof Error ? err.message : 'Unknown' })
-    }
+        data: { nome: user.nome, url: `${getBaseUrl()}/proponente` },
+      },
+      'usuario',
+    )
 
     return { id: user.id, email: user.email, nome: user.nome }
   },
@@ -84,7 +80,7 @@ export const usuariosService = {
     const expiresAt = new Date(Date.now() + RESET_TOKEN_TTL_MS)
     await usuariosRepository.createResetToken(user.id, hashResetToken(rawToken), expiresAt)
 
-    const resetUrl = `${siteUrl()}/recuperar-senha/reset?token=${rawToken}`
+    const resetUrl = `${getBaseUrl()}/recuperar-senha/reset?token=${rawToken}`
     await sendEmail({
       to: user.email,
       subject: 'Recuperação de Senha — Portal PNAB Irecê',

@@ -36,6 +36,22 @@ export function generateSimpleSlug(titulo: string): string {
 }
 
 /**
+ * Resolve colisão de slug: se `exists(base)` for verdadeiro, sufixa o slug
+ * com um timestamp em base36 para garantir unicidade. O callback `exists`
+ * encapsula a consulta de cada módulo (incluindo o caso update, que exclui
+ * o próprio id da checagem).
+ */
+export async function ensureUniqueSlug(
+  base: string,
+  exists: (slug: string) => Promise<boolean> | boolean,
+): Promise<string> {
+  if (await exists(base)) {
+    return `${base}-${Date.now().toString(36)}`
+  }
+  return base
+}
+
+/**
  * Gera identificador UPPER_SNAKE_CASE a partir de um label.
  * Ex: "Certidão Negativa de Débitos" → "CERTIDAO_NEGATIVA_DE_DEBITOS"
  */

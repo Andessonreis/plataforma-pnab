@@ -1,6 +1,7 @@
 import type { UserRole } from '@prisma/client'
 import { logAudit } from '@server/lib/audit'
-import { enqueueEmail } from '@server/lib/queue'
+import { safeEnqueueEmail } from '@server/lib/queue'
+import { getBaseUrl } from '@server/lib/config'
 import { gateAcaoFase } from '@shared/edital/gate'
 import { InscricaoNaoEncontradaError } from '@server/modules/inscricoes/errors/inscricoes.errors'
 import type { HabilitacaoInput } from '@shared/schemas/habilitacao.schema'
@@ -60,9 +61,9 @@ export async function updateHabilitacao(
     ip,
   })
 
-  try {
-    const baseUrl = process.env.NEXTAUTH_URL ?? 'http://localhost:3000'
-    await enqueueEmail({
+  const baseUrl = getBaseUrl()
+  await safeEnqueueEmail(
+    {
       to: inscricao.proponente.email,
       subject: `Resultado da Habilitação — ${inscricao.edital.titulo}`,
       template: 'habilitacao',
@@ -74,10 +75,9 @@ export async function updateHabilitacao(
         motivo: data.motivo ?? null,
         url: `${baseUrl}/proponente/inscricoes`,
       },
-    })
-  } catch {
-    console.error('[habilitacao] Falha ao enfileirar e-mail de habilitação')
-  }
+    },
+    'habilitacao',
+  )
 
   return {
     mensagem: `Inscrição ${data.status === 'HABILITADA' ? 'habilitada' : 'inabilitada'} com sucesso.`,

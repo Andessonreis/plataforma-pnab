@@ -1,6 +1,6 @@
 import { logAudit } from '@server/lib/audit'
 import { sanitizeContent } from '@shared/sanitize'
-import { generateSimpleSlug } from '@shared/utils/slug'
+import { generateSimpleSlug, ensureUniqueSlug } from '@shared/utils/slug'
 import type { CmsPageInput } from '@shared/schemas/cms.schema'
 import { cmsRepository } from '../repository/cms.repository'
 import { CmsPaginaNaoEncontradaError } from '../errors/cms.errors'
@@ -16,10 +16,9 @@ export async function getCmsPageBySlug(slug: string) {
 }
 
 export async function createCmsPage(data: CmsPageInput, userId: string, ip?: string) {
-  let slug = generateSimpleSlug(data.titulo)
-  if (await cmsRepository.findBySlug(slug)) {
-    slug = `${slug}-${Date.now().toString(36)}`
-  }
+  const slug = await ensureUniqueSlug(generateSimpleSlug(data.titulo), async (s) =>
+    Boolean(await cmsRepository.findBySlug(s)),
+  )
 
   const page = await cmsRepository.create({
     titulo: data.titulo,
@@ -46,10 +45,9 @@ export async function updateCmsPage(id: string, data: CmsPageInput, userId: stri
 
   let slug = existing.slug
   if (data.titulo !== existing.titulo) {
-    slug = generateSimpleSlug(data.titulo)
-    if (await cmsRepository.findSlugConflict(slug, id)) {
-      slug = `${slug}-${Date.now().toString(36)}`
-    }
+    slug = await ensureUniqueSlug(generateSimpleSlug(data.titulo), async (s) =>
+      Boolean(await cmsRepository.findSlugConflict(s, id)),
+    )
   }
 
   const page = await cmsRepository.update(id, {

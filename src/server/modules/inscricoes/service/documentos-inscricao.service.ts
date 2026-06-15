@@ -1,6 +1,7 @@
 import { generateComprovante } from '@server/lib/pdf/comprovante'
 import { generateProjetoCompleto } from '@server/lib/pdf/projeto-completo'
 import { InscricaoNaoEncontradaError } from '@server/modules/inscricoes/errors/inscricoes.errors'
+import { isOwnerOrStaff } from '@server/lib/auth/ownership'
 import { documentosInscricaoRepository } from '../repository/documentos-inscricao.repository'
 import { DocumentoIndisponivelError } from '../errors/documentos-inscricao.errors'
 
@@ -23,9 +24,9 @@ function assertAcesso(
   status: string,
   mensagemIndisponivel: string,
 ) {
-  const isOwner = proponenteId === callerId
-  const isAdmin = callerRole === 'ADMIN'
-  if (!isOwner && !isAdmin) throw new InscricaoNaoEncontradaError()
+  if (!isOwnerOrStaff(proponenteId, { id: callerId, role: callerRole }, ['ADMIN'])) {
+    throw new InscricaoNaoEncontradaError()
+  }
   if (status === 'RASCUNHO') throw new DocumentoIndisponivelError(mensagemIndisponivel)
 }
 

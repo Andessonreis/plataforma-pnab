@@ -1,6 +1,7 @@
 import { AUDIT_ACTIONS, logAudit } from '@server/lib/audit'
 import { calculateResults, saveManualOrder, saveResults } from '@server/lib/results/calculate'
 import { enqueueEmail } from '@server/lib/queue'
+import { getBaseUrl } from '@server/lib/config'
 import { generateRelatorioFinal } from '@server/lib/pdf/relatorio-final'
 import { generateListaInscricoes } from '@server/lib/pdf/lista-inscricoes'
 import { inscricaoStatusLabel, cumulativeStatuses } from '@shared/status-maps'
@@ -77,7 +78,7 @@ export const resultadosEditalService = {
     )
 
     const template = fase === 'RESULTADO_FINAL' ? 'resultado_final' : 'resultado_preliminar'
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXTAUTH_URL ?? 'http://localhost:3000'
+    const baseUrl = getBaseUrl()
 
     for (const inscricao of inscricoes) {
       await enqueueEmail({

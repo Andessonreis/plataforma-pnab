@@ -46,6 +46,15 @@ export async function uploadFile(
 }
 
 /**
+ * Extrai o caminho interno (path dentro do bucket) a partir de uma URL
+ * pública/assinada do Supabase. Retorna `undefined` quando o segmento do
+ * bucket não está presente no path.
+ */
+export function extractStoragePathFromUrl(url: string, bucket: string): string | undefined {
+  return new URL(url).pathname.split(`/${bucket}/`).pop()
+}
+
+/**
  * Remove um arquivo do bucket.
  */
 export async function deleteFile(bucket: string, path: string): Promise<void> {

@@ -1,8 +1,10 @@
 import type { EditalStatus, InscricaoStatus } from '@prisma/client'
 import { logAudit, AUDIT_ACTIONS } from '@server/lib/audit'
-import { enqueueEmail } from '@server/lib/queue'
+import { safeEnqueueEmail } from '@server/lib/queue'
 import { respostaRecursoLiberada } from '@shared/edital/fase'
-import { uploadFile, getSignedUrl } from '@server/lib/storage'
+import { uploadFile, getSignedUrl, extractStoragePathFromUrl } from '@server/lib/storage'
+import { getBaseUrl } from '@server/lib/config'
+import { INTERNAL_ROLES, isOwnerOrStaff } from '@server/lib/auth/ownership'
 import { validateMagicBytes, sanitizeFilename } from '@shared/upload/validate'
 import { janelaParaAcao, mensagemJanela } from '@shared/utils/cronograma-janela'
 import type { AcaoJanela } from '@shared/types/cronograma'
@@ -24,7 +26,7 @@ import {
 } from '../errors/recursos.errors'
 
 const BUCKET = 'propostas'
-const INTERNAL_ROLES = ['ADMIN', 'HABILITADOR', 'AVALIADOR', 'ATENDIMENTO']
+const STAFF_ROLES_LISTAGEM = ['ADMIN', 'HABILITADOR']
 const MAX_ANEXO_SIZE = 10 * 1024 * 1024
 const ANEXO_MIMES = ['application/pdf', 'image/png', 'image/jpeg']
 
@@ -38,10 +40,6 @@ const STATUS_ALLOWS_RECURSO: Record<string, string[]> = {
 const RECURSO_FASE_TO_JANELA: Partial<Record<string, AcaoJanela>> = {
   HABILITACAO: 'RECURSO_HABILITACAO_JANELA',
   RESULTADO_PRELIMINAR: 'RECURSO_RESULTADO_JANELA',
-}
-
-function storagePathFromUrl(url: string): string | undefined {
-  return new URL(url).pathname.split(`/${BUCKET}/`).pop()
 }
 
 export async function submitRecurso(
@@ -94,9 +92,10 @@ export async function listRecursos(inscricaoId: string, callerId: string, caller
   const inscricao = await recursosRepository.findInscricaoParaList(inscricaoId)
   if (!inscricao) throw new InscricaoNaoEncontradaError()
 
-  const isOwner = inscricao.proponenteId === callerId
-  const isStaff = callerRole === 'ADMIN' || callerRole === 'HABILITADOR'
-  if (!isOwner && !isStaff) throw new InscricaoNaoEncontradaError()
+  const isStaff = STAFF_ROLES_LISTAGEM.includes(callerRole)
+  if (!isOwnerOrStaff(inscricao.proponenteId, { id: callerId, role: callerRole }, STAFF_ROLES_LISTAGEM)) {
+    throw new InscricaoNaoEncontradaError()
+  }
 
   const recursos = await recursosRepository.listByInscricao(inscricaoId)
   if (isStaff) return recursos
@@ -195,9 +194,9 @@ export async function decideRecurso(
 
   await aplicarDecisao(inscricaoId, recursoId, recurso.fase, data.decisao, data.justificativa, 'ADMIN')
 
-  const baseUrl = process.env.NEXTAUTH_URL ?? 'http://localhost:3000'
-  try {
-    await enqueueEmail({
+  const baseUrl = getBaseUrl()
+  await safeEnqueueEmail(
+    {
       to: recurso.inscricao.proponente.email,
       subject: `Recurso ${data.decisao === 'DEFERIDO' ? 'Deferido' : 'Indeferido'} — ${recurso.inscricao.edital.titulo}`,
       template: 'resultado_final',
@@ -205,10 +204,9 @@ export async function decideRecurso(
         edital: recurso.inscricao.edital.titulo,
         url: `${baseUrl}/proponente/inscricoes/${inscricaoId}`,
       },
-    })
-  } catch {
-    console.error('[recurso] Falha ao enfileirar e-mail de decisão')
-  }
+    },
+    'recurso',
+  )
 
   await logAudit({
     userId,
@@ -233,11 +231,11 @@ export async function getAnexoRecursoSignedUrl(
     throw new NotFoundError('Anexo não encontrado.')
   }
 
-  const isStaff = INTERNAL_ROLES.includes(user.role)
-  const isOwner = recurso.inscricao.proponenteId === user.id
-  if (!isStaff && !isOwner) throw new RecursoNaoEncontradoError()
+  if (!isOwnerOrStaff(recurso.inscricao.proponenteId, user, INTERNAL_ROLES)) {
+    throw new RecursoNaoEncontradoError()
+  }
 
-  const storagePath = storagePathFromUrl(url)
+  const storagePath = extractStoragePathFromUrl(url, BUCKET)
   if (!storagePath) throw new BadRequestError('Caminho do arquivo inválido.')
 
   const signedUrl = await getSignedUrl(BUCKET, storagePath, 3600)

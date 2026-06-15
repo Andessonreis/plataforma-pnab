@@ -1,6 +1,6 @@
 import { logAudit } from '@server/lib/audit'
 import { sanitizeContent } from '@shared/sanitize'
-import { generateContentSlug } from '@shared/utils/slug'
+import { generateContentSlug, ensureUniqueSlug } from '@shared/utils/slug'
 import type { PaginationMeta } from '@shared/dtos/common.dto'
 import type { NoticiaInput } from '@shared/schemas/noticias.schema'
 import { noticiasRepository } from '../repository/noticias.repository'
@@ -29,10 +29,9 @@ export async function getNoticiaBySlug(slug: string) {
 }
 
 export async function createNoticia(data: NoticiaInput, userId: string, ip?: string) {
-  let slug = generateContentSlug(data.titulo)
-  if (await noticiasRepository.findBySlug(slug)) {
-    slug = `${slug}-${Date.now().toString(36)}`
-  }
+  const slug = await ensureUniqueSlug(generateContentSlug(data.titulo), async (s) =>
+    Boolean(await noticiasRepository.findBySlug(s)),
+  )
 
   const noticia = await noticiasRepository.create({
     titulo: data.titulo,
@@ -62,10 +61,9 @@ export async function updateNoticia(id: string, data: NoticiaInput, userId: stri
 
   let slug = existing.slug
   if (data.titulo !== existing.titulo) {
-    slug = generateContentSlug(data.titulo)
-    if (await noticiasRepository.findSlugConflict(slug, id)) {
-      slug = `${slug}-${Date.now().toString(36)}`
-    }
+    slug = await ensureUniqueSlug(generateContentSlug(data.titulo), async (s) =>
+      Boolean(await noticiasRepository.findSlugConflict(s, id)),
+    )
   }
 
   const noticia = await noticiasRepository.update(id, {

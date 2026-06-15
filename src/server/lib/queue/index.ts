@@ -101,6 +101,19 @@ export async function enqueueEmail(data: EmailJobData) {
   return emailQueue.add('send', data)
 }
 
+/**
+ * Enfileira um e-mail em modo fire-and-forget: falhas ao enfileirar são
+ * logadas e engolidas para não derrubar o fluxo principal. `contextLabel`
+ * identifica o módulo de origem no log (ex.: 'inscricao', 'habilitacao').
+ */
+export async function safeEnqueueEmail(data: EmailJobData, contextLabel: string) {
+  try {
+    await enqueueEmail(data)
+  } catch {
+    console.error(`[${contextLabel}] Falha ao enfileirar e-mail`)
+  }
+}
+
 export async function enqueuePdf(data: PdfJobData) {
   return pdfQueue.add('generate', data)
 }

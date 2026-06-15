@@ -1,7 +1,7 @@
 import type { EditalStatus } from '@prisma/client'
 import { logAudit } from '@server/lib/audit'
 import { sanitizeContent } from '@shared/sanitize'
-import { generateEditalSlug } from '@shared/utils/slug'
+import { generateEditalSlug, ensureUniqueSlug } from '@shared/utils/slug'
 import { BadRequestError } from '@server/lib/http/errors'
 import { editaisRepository } from '../repository/editais.repository'
 import { EditalNaoEncontradoError } from '../errors/editais.errors'
@@ -25,11 +25,9 @@ const SEQUENCIA_FASES: EditalStatus[] = [
 ]
 
 export async function createEdital(data: EditalInput, userId: string, ip?: string) {
-  let slug = generateEditalSlug(data.titulo, data.ano)
-  const existingSlug = await editaisRepository.findBySlug(slug)
-  if (existingSlug) {
-    slug = `${slug}-${Date.now().toString(36)}`
-  }
+  const slug = await ensureUniqueSlug(generateEditalSlug(data.titulo, data.ano), async (s) =>
+    Boolean(await editaisRepository.findBySlug(s)),
+  )
 
   const edital = await editaisRepository.create({
     titulo: data.titulo,
@@ -66,11 +64,9 @@ export async function updateEdital(id: string, data: EditalInput, userId: string
 
   let slug = existing.slug
   if (data.titulo !== existing.titulo) {
-    slug = generateEditalSlug(data.titulo, data.ano)
-    const slugExists = await editaisRepository.findFirstBySlugExcludingId(slug, id)
-    if (slugExists) {
-      slug = `${slug}-${Date.now().toString(36)}`
-    }
+    slug = await ensureUniqueSlug(generateEditalSlug(data.titulo, data.ano), async (s) =>
+      Boolean(await editaisRepository.findFirstBySlugExcludingId(s, id)),
+    )
   }
 
   const isPublishing = existing.status === 'RASCUNHO' && data.status !== 'RASCUNHO'

@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto'
-import { uploadFile, deleteFile } from '@server/lib/storage'
+import { uploadFile, deleteFile, extractStoragePathFromUrl } from '@server/lib/storage'
 import { validateMagicBytes } from '@shared/upload/validate'
 import { editaisRepository } from '@server/modules/editais/repository/editais.repository'
 import { EditalNaoEncontradoError } from '@server/modules/editais/errors/editais.errors'
@@ -63,9 +63,8 @@ export const arquivosEditalService = {
     if (!arquivo) throw new ArquivoEditalNaoEncontradoError()
 
     try {
-      const urlObj = new URL(arquivo.url)
-      const parts = urlObj.pathname.split('/storage/v1/object/public/editais/')
-      if (parts.length === 2) await deleteFile('editais', parts[1])
+      const storagePath = extractStoragePathFromUrl(arquivo.url, 'editais')
+      if (storagePath) await deleteFile('editais', storagePath)
     } catch (err) {
       console.error({ warn: 'falha_deletar_storage', error: err instanceof Error ? err.message : 'Unknown' })
     }
