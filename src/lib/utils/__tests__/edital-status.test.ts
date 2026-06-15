@@ -1,10 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import type { EditalStatus } from '@prisma/client'
-import {
-  getStatusDisplay,
-  OPEN_STATUSES,
-  CLOSED_STATUSES,
-} from '@/lib/utils/edital-status'
+import { getStatusDisplay } from '@client/utils/edital-status-ui'
+import { OPEN_STATUSES, CLOSED_STATUSES } from '@shared/utils/edital-status'
 
 const ALL_STATUSES: EditalStatus[] = [
   'RASCUNHO', 'PUBLICADO', 'INSCRICOES_ABERTAS', 'INSCRICOES_ENCERRADAS',

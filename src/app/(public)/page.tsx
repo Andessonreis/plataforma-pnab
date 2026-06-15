@@ -19,7 +19,7 @@ import {
   IconEye,
   IconMail,
 } from '@client/components/ui/icons'
-import { getStatusDisplay } from '@/lib/utils/edital-status'
+import { getStatusDisplay } from '@client/utils/edital-status-ui'
 import { formatCurrency, formatDate } from '@shared/utils/format'
 import { getNextDeadline } from '@shared/utils/cronograma'
 import { HeroCarousel, type SlideData } from '@client/components/home/hero-carousel'

@@ -6,9 +6,8 @@ import type {
 } from '@shared/dtos/inscricoes.dto'
 import type { CreateInscricaoInput, UpdateInscricaoInput } from '@shared/schemas/inscricoes.schema'
 import type { AnexoUploadMeta } from '@shared/schemas/anexos-inscricao.schema'
-
-type ApiSuccess<T> = { data: T; requestId: string }
-type ApiError = { error: string; message: string; requestId: string; details?: unknown }
+import type { ApiSuccess, ApiError } from './_http'
+import { unwrap } from './_http'
 
 export class InscricaoDuplicadaError extends Error {
   constructor(
@@ -18,15 +17,6 @@ export class InscricaoDuplicadaError extends Error {
     super(message)
     this.name = 'InscricaoDuplicadaError'
   }
-}
-
-async function unwrap<T>(res: Response): Promise<T> {
-  if (!res.ok) {
-    const err = (await res.json().catch(() => null)) as ApiError | null
-    throw new Error(err?.message ?? `Erro ${res.status}`)
-  }
-  const body = (await res.json()) as ApiSuccess<T>
-  return body.data
 }
 
 const BASE = '/api/v1/inscricoes/inscricao'

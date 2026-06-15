@@ -10,17 +10,7 @@ import type {
   RedefinicaoSenhaInput,
 } from '@shared/schemas/usuarios.schema'
 
-type ApiSuccess<T> = { data: T; requestId: string }
-type ApiError = { error: string; message: string; requestId: string }
-
-async function unwrap<T>(res: Response): Promise<T> {
-  if (!res.ok) {
-    const err = (await res.json().catch(() => null)) as ApiError | null
-    throw new Error(err?.message ?? `Erro ${res.status}`)
-  }
-  const body = (await res.json()) as ApiSuccess<T>
-  return body.data
-}
+import { unwrap } from './_http'
 
 export const autenticacaoClient = {
   async login(input: LoginInput): Promise<SessaoDTO> {
