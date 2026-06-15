@@ -9,7 +9,7 @@ export default function ApiDocsPage() {
   return (
     <main className="min-h-screen bg-white">
       <div className="mx-auto max-w-7xl px-4 py-8">
-        <SwaggerUI url="/openapi.yaml" />
+        <SwaggerUI url="/api/openapi" />
       </div>
     </main>
   )
