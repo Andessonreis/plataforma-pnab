@@ -11,7 +11,7 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
-    "worker": "tsx src/worker.ts",
+    "worker": "tsx --tsconfig tsconfig.worker.json src/worker.ts",
     "db:seed": "tsx prisma/seed.ts",
     "db:seed:uat": "tsx prisma/seed-uat.ts",
     "seed:prod": "tsx prisma/seed-production.ts",
