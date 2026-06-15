@@ -22,3 +22,10 @@ export const atendimentoQuerySchema = z.object({
   pageSize: z.coerce.number().int().min(1).max(50).default(15),
   status: z.enum(['ABERTO', 'EM_ATENDIMENTO', 'FECHADO']).optional(),
 })
+
+export const atendimentoPatchSchema = z.object({
+  status: z.enum(['ABERTO', 'EM_ATENDIMENTO', 'FECHADO']).optional(),
+  resposta: z.object({ texto: z.string().min(5) }).optional(),
+})
+
+export type AtendimentoPatchInput = z.infer<typeof atendimentoPatchSchema>

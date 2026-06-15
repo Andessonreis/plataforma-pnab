@@ -1,43 +1,7 @@
-import { NextRequest } from 'next/server'
-import { z } from 'zod'
-import { createContext, ok, handleError, forbidden, logRequest } from '@/lib/api/response'
-import { resolveAuth, requireRole } from '@/lib/api/auth-resolver'
-import * as atendimentoService from '@/lib/services/ticket.service'
+import { adaptNextRoute } from '@server/adapters/next-route'
+import { ticketsController } from '@server/modules/atendimento/controller/tickets.controller'
 
 export const runtime = 'nodejs'
 
-interface RouteParams { params: Promise<{ id: string }> }
-
-const patchSchema = z.object({
-  status: z.enum(['ABERTO', 'EM_ATENDIMENTO', 'FECHADO']).optional(),
-  resposta: z.object({ texto: z.string().min(5) }).optional(),
-})
-
-export async function GET(req: NextRequest, { params }: RouteParams) {
-  const ctx = createContext()
-  try {
-    const caller = await resolveAuth(req)
-    if (!requireRole(caller, 'ADMIN', 'ATENDIMENTO')) return forbidden(ctx)
-    const { id } = await params
-    const atendimento = await atendimentoService.getAtendimentoById(id)
-    logRequest(ctx, 'GET', `/api/v1/tickets/${id}`, 200)
-    return ok(ctx, atendimento)
-  } catch (err) {
-    return handleError(ctx, err)
-  }
-}
-
-export async function PUT(req: NextRequest, { params }: RouteParams) {
-  const ctx = createContext()
-  try {
-    const caller = await resolveAuth(req)
-    if (!requireRole(caller, 'ADMIN', 'ATENDIMENTO')) return forbidden(ctx)
-    const { id } = await params
-    const data = patchSchema.parse(await req.json())
-    const result = await atendimentoService.updateAtendimento(id, data, caller.userId)
-    logRequest(ctx, 'PUT', `/api/v1/tickets/${id}`, 200)
-    return ok(ctx, result)
-  } catch (err) {
-    return handleError(ctx, err)
-  }
-}
+export const GET = adaptNextRoute(ticketsController.detail)
+export const PUT = adaptNextRoute(ticketsController.update)
