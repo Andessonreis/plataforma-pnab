@@ -8,7 +8,7 @@ import { AudienceBuilder, type EditalOption } from '../audience-builder'
 import { LinkPicker } from '../link-picker'
 import { NotificationPreview } from '../notification-preview'
 import { MESSAGE_TEMPLATES, type MessageTemplate } from '../templates'
-import type { AudienceFilterInput } from '@server/lib/notifications/schemas'
+import type { AudienceFilterInput } from '@shared/schemas/notifications.schema'
 
 interface CampaignFormProps {
   editais: EditalOption[]

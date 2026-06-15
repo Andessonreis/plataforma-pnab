@@ -73,17 +73,17 @@ export function buildOpenApiDocument() {
   // ── Conteúdo ──────────────────────────────────────────────────────────────
   crud({ tag: 'CMS', base: '/cms', name: 'páginas de conteúdo', input: cmsPageSchema, publicList: true, writeRoles: 'ADMIN' })
   registry.registerPath({
-    method: 'get', path: '/cms/{id}', tags: ['CMS'], summary: 'Detalha página por slug',
+    method: 'get', path: '/cms/pagina/{id}', tags: ['CMS'], summary: 'Detalha página por slug',
     request: { params: z.object({ id: z.string() }) },
     responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
   })
   registry.registerPath({
-    method: 'put', path: '/cms/{id}', tags: ['CMS'], summary: 'Atualiza página (ADMIN)', security: sec,
+    method: 'put', path: '/cms/pagina/{id}', tags: ['CMS'], summary: 'Atualiza página (ADMIN)', security: sec,
     request: { params: z.object({ id: z.string() }), body: json(cmsPageSchema) },
     responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
   })
   registry.registerPath({
-    method: 'delete', path: '/cms/{id}', tags: ['CMS'], summary: 'Remove página (ADMIN)', security: sec,
+    method: 'delete', path: '/cms/pagina/{id}', tags: ['CMS'], summary: 'Remove página (ADMIN)', security: sec,
     request: { params: z.object({ id: z.string() }) },
     responses: { 200: { description: 'OK', ...json(envelope(z.object({ message: z.string() }))) }, ...errors },
   })

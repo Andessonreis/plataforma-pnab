@@ -8,7 +8,7 @@ import type { CampaignStatus } from '@prisma/client'
 import { DispatchButton } from './dispatch-button'
 import { CampaignActionButtons } from './action-buttons'
 import { CampaignForm } from '../campaign-form'
-import type { AudienceFilterInput } from '@server/lib/notifications/schemas'
+import type { AudienceFilterInput } from '@shared/schemas/notifications.schema'
 
 interface Props {
   params: Promise<{ id: string }>

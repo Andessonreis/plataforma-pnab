@@ -4,7 +4,7 @@ import { randomUUID } from 'crypto'
 import { auth } from '@server/lib/auth'
 import { prisma } from '@server/lib/db'
 import { logAudit, AUDIT_ACTIONS } from '@server/lib/audit'
-import { campaignSchema } from '@server/lib/notifications/schemas'
+import { campaignSchema } from '@shared/schemas/notifications.schema'
 
 export const runtime = 'nodejs'
 

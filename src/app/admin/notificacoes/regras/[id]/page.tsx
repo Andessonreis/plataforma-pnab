@@ -8,7 +8,7 @@ import { TRIGGER_REGISTRY } from '@server/lib/notifications/triggers'
 import { RuleForm } from '../rule-form'
 import { ToggleRuleButton } from './toggle-button'
 import { DeleteRuleButton } from './delete-button'
-import type { AudienceFilterInput } from '@server/lib/notifications/schemas'
+import type { AudienceFilterInput } from '@shared/schemas/notifications.schema'
 
 interface Props {
   params: Promise<{ id: string }>
