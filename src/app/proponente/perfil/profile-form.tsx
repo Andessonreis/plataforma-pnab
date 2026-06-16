@@ -12,6 +12,19 @@ interface ProfileFormProps {
   initialData: ProfileInitialData
 }
 
+function toFieldErrors(details: unknown): Record<string, string> | null {
+  if (!Array.isArray(details)) return null
+  const errors: Record<string, string> = {}
+  for (const item of details) {
+    if (item && typeof item === 'object' && 'path' in item && 'message' in item) {
+      const path = (item as { path: unknown }).path
+      const field = Array.isArray(path) ? path.join('.') : String(path)
+      if (field) errors[field] = String((item as { message: unknown }).message)
+    }
+  }
+  return Object.keys(errors).length > 0 ? errors : null
+}
+
 export function ProfileForm({ initialData }: ProfileFormProps) {
   const [nome, setNome] = useState(initialData.nome)
   const [email, setEmail] = useState(initialData.email)
@@ -50,7 +63,7 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
     try {
       const form = new FormData()
       form.append('file', file)
-      const res = await fetch('/api/proponente/avatar', { method: 'POST', body: form })
+      const res = await fetch('/api/v1/me/avatar', { method: 'POST', body: form })
       const json = await res.json()
       if (!res.ok) {
         setAvatarMessage({ type: 'error', text: json.message ?? 'Falha ao enviar foto' })
@@ -75,7 +88,7 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
     setAvatarBusy(true)
     setAvatarMessage(null)
     try {
-      const res = await fetch('/api/proponente/avatar', { method: 'DELETE' })
+      const res = await fetch('/api/v1/me/avatar', { method: 'DELETE' })
       const json = await res.json()
       if (!res.ok) {
         setAvatarMessage({ type: 'error', text: json.message ?? 'Falha ao remover' })
@@ -118,7 +131,7 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
     setErrors({})
 
     try {
-      const res = await fetch('/api/proponente/perfil', {
+      const res = await fetch('/api/v1/me', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -131,8 +144,9 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
       const data = await res.json()
 
       if (!res.ok) {
-        if (data.fieldErrors) {
-          setErrors(data.fieldErrors)
+        const fieldErrors = toFieldErrors(data.details)
+        if (fieldErrors) {
+          setErrors(fieldErrors)
         } else {
           setMessage({ type: 'error', text: data.message || 'Erro ao atualizar perfil.' })
         }
@@ -164,7 +178,7 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
     setLoading(true)
 
     try {
-      const res = await fetch('/api/proponente/perfil', {
+      const res = await fetch('/api/v1/me', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ currentPassword, newPassword }),

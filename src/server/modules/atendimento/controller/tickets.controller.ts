@@ -8,6 +8,7 @@ import {
 } from '@shared/schemas/tickets.schema'
 import {
   createAtendimento,
+  criarContatoPublico,
   listAtendimentos,
   getAtendimentoById,
   updateAtendimento,
@@ -30,6 +31,16 @@ export const ticketsController = {
       ipFromHeaders(ctx.headers),
     )
     return { data: atendimento, status: 201 }
+  },
+
+  async contato(ctx: RequestContext) {
+    const data = createAtendimentoSchema.parse(ctx.body)
+    const caller = await resolveApiCaller(ctx.headers)
+    const result = await criarContatoPublico(
+      { ...data, autorId: caller?.userId },
+      ipFromHeaders(ctx.headers),
+    )
+    return { data: { ...result, message: 'Mensagem enviada com sucesso.' }, status: 201 }
   },
 
   async detail(ctx: RequestContext) {

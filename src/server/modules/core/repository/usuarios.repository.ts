@@ -24,6 +24,40 @@ export const usuariosRepository = {
     return prisma.user.create({ data })
   },
 
+  search(args: {
+    q?: string
+    ids?: string[]
+    role?: string
+    limit: number
+  }) {
+    const where: Prisma.UserWhereInput = { ativo: true }
+    if (args.role) where.role = args.role as Prisma.UserWhereInput['role']
+
+    if (args.ids && args.ids.length > 0) {
+      where.id = { in: args.ids }
+    } else if (args.q) {
+      where.OR = [
+        { nome: { contains: args.q, mode: 'insensitive' } },
+        { email: { contains: args.q, mode: 'insensitive' } },
+        { cpfCnpj: { contains: args.q.replace(/\D/g, '') } },
+      ]
+    }
+
+    return prisma.user.findMany({
+      where,
+      orderBy: { nome: 'asc' },
+      take: args.limit,
+      select: {
+        id: true,
+        nome: true,
+        email: true,
+        cpfCnpj: true,
+        tipoProponente: true,
+        role: true,
+      },
+    })
+  },
+
   findResetTokenByHash(tokenHash: string) {
     return prisma.passwordResetToken.findUnique({
       where: { token: tokenHash },

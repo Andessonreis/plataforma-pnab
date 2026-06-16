@@ -30,7 +30,7 @@ export function UserPicker({ selectedIds, onChange, label = 'Adicionar destinatÃ
     const missing = selectedIds.filter((id) => !selected.find((u) => u.id === id))
     if (missing.length === 0) return
 
-    fetch(`/api/admin/users/search?ids=${encodeURIComponent(missing.join(','))}`)
+    fetch(`/api/v1/usuarios/busca?ids=${encodeURIComponent(missing.join(','))}`)
       .then((r) => r.json())
       .then((d) => {
         if (Array.isArray(d.data) && d.data.length > 0) {
@@ -51,7 +51,7 @@ export function UserPicker({ selectedIds, onChange, label = 'Adicionar destinatÃ
     }
     setLoading(true)
     const timer = setTimeout(() => {
-      fetch(`/api/admin/users/search?q=${encodeURIComponent(query.trim())}&role=PROPONENTE&limit=15`)
+      fetch(`/api/v1/usuarios/busca?q=${encodeURIComponent(query.trim())}&role=PROPONENTE&limit=15`)
         .then((r) => r.json())
         .then((d) => setResults(Array.isArray(d.data) ? d.data : []))
         .catch(() => setResults([]))

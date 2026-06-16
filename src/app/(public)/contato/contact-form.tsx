@@ -60,20 +60,20 @@ export function ContactForm({ editais }: ContactFormProps) {
         body.editalId = formData.editalId
       }
 
-      const res = await fetch('/api/contato', {
+      const res = await fetch('/api/v1/contato', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
 
-      const data = await res.json()
+      const json = await res.json()
 
       if (!res.ok) {
-        setError(data.message || 'Erro ao enviar mensagem. Tente novamente.')
+        setError(json.message || 'Erro ao enviar mensagem. Tente novamente.')
         return
       }
 
-      setProtocolo(data.protocolo)
+      setProtocolo(json.data.protocolo)
       // Limpa o formulario
       setFormData({
         nomeContato: '',

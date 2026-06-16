@@ -55,19 +55,19 @@ export function ImageUpload({
       fd.append('file', file)
       fd.append('pasta', pasta)
 
-      const res = await fetch('/api/admin/upload-imagem', { method: 'POST', body: fd })
-      const data = await res.json()
+      const res = await fetch('/api/v1/upload/imagem', { method: 'POST', body: fd })
+      const json = await res.json()
 
       if (!res.ok) {
         toast({
           variant: 'destructive',
           title: 'Falha no upload',
-          description: data.message || 'Não foi possível enviar a imagem.',
+          description: json.message || 'Não foi possível enviar a imagem.',
         })
         return
       }
 
-      onChange(data.url)
+      onChange(json.data.url)
       toast({ title: 'Imagem enviada com sucesso' })
     } catch {
       toast({

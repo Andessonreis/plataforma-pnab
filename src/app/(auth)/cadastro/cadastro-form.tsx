@@ -116,7 +116,7 @@ export function CadastroForm() {
           uploadForm.append('file', declaracaoFile)
           uploadForm.append('userId', userId)
 
-          const uploadRes = await fetch('/api/auth/register/upload-declaracao', {
+          const uploadRes = await fetch('/api/v1/autenticacao/usuarios/declaracao', {
             method: 'POST',
             body: uploadForm,
           })

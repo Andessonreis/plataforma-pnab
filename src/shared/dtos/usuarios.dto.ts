@@ -18,3 +18,12 @@ export type CadastroResultDTO = {
 export type GenericMessageDTO = {
   mensagem: string
 }
+
+export type BuscaUsuarioDTO = {
+  id: string
+  nome: string
+  email: string
+  cpfCnpj: string | null
+  tipoProponente: string | null
+  role: UserRole
+}

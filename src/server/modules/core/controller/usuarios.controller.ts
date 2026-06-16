@@ -1,14 +1,24 @@
 import type { RequestContext } from '@server/adapters/next-route'
-import { ipFromHeaders } from '@server/lib/auth/api-caller'
+import { ForbiddenError } from '@server/lib/http/errors'
+import { resolveApiCaller, callerHasRole, ipFromHeaders } from '@server/lib/auth/api-caller'
 import {
   cadastroInputSchema,
   recuperacaoSenhaInputSchema,
   redefinicaoSenhaInputSchema,
+  buscaUsuariosInputSchema,
 } from '@shared/schemas/usuarios.schema'
-import type { CadastroResultDTO, GenericMessageDTO } from '@shared/dtos/usuarios.dto'
+import type { BuscaUsuarioDTO, CadastroResultDTO, GenericMessageDTO } from '@shared/dtos/usuarios.dto'
 import { usuariosService } from '../service/usuarios.service'
 
 export const usuariosController = {
+  async buscar(ctx: RequestContext) {
+    const caller = await resolveApiCaller(ctx.headers)
+    if (!callerHasRole(caller, 'ADMIN')) throw new ForbiddenError('Acesso negado.')
+    const input = buscaUsuariosInputSchema.parse(ctx.query)
+    const data = (await usuariosService.buscar(input)) as BuscaUsuarioDTO[]
+    return { data }
+  },
+
   async cadastrar(ctx: RequestContext) {
     const input = cadastroInputSchema.parse(ctx.body)
     const usuario = await usuariosService.cadastrar(input, { ip: ipFromHeaders(ctx.headers) })

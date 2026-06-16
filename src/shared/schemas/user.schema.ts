@@ -40,6 +40,7 @@ export const resetPasswordSchema = z.object({
 
 export const updateProfileSchema = z.object({
   nome: z.string().min(3).optional(),
+  email: z.string().email('E-mail inválido').optional(),
   telefone: z.string().optional(),
   cep: z.string().min(8).max(8).optional(),
   logradouro: z.string().optional(),

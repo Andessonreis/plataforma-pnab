@@ -1,5 +1,7 @@
 import type { Prisma } from '@prisma/client'
 import { logAudit, AUDIT_ACTIONS } from '@server/lib/audit'
+import { editaisRepository } from '@server/modules/editais/repository/editais.repository'
+import { EditalNaoEncontradoError } from '@server/modules/editais/errors/editais.errors'
 import { ticketsRepository } from '../repository/tickets.repository'
 import { AtendimentoNaoEncontradoError } from '../errors/tickets.errors'
 
@@ -42,6 +44,16 @@ export async function createAtendimento(data: CreateAtendimentoData, ip?: string
   })
 
   return atendimento
+}
+
+export async function criarContatoPublico(data: CreateAtendimentoData, ip?: string) {
+  if (data.editalId) {
+    const edital = await editaisRepository.findById(data.editalId)
+    if (!edital) throw new EditalNaoEncontradoError()
+  }
+
+  const atendimento = await createAtendimento(data, ip)
+  return { protocolo: atendimento.protocolo }
 }
 
 export async function listAtendimentos(page: number, pageSize: number, status?: string) {

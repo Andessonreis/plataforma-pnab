@@ -28,6 +28,18 @@ export const meRepository = {
     return prisma.user.findUnique({ where: { id: userId }, select: { password: true } })
   },
 
+  findByEmailExcept(email: string, userId: string) {
+    return prisma.user.findFirst({ where: { email, id: { not: userId } }, select: { id: true } })
+  },
+
+  findAvatar(userId: string) {
+    return prisma.user.findUnique({ where: { id: userId }, select: { avatarUrl: true } })
+  },
+
+  updateAvatar(userId: string, avatarUrl: string | null) {
+    return prisma.user.update({ where: { id: userId }, data: { avatarUrl } })
+  },
+
   update(userId: string, data: Prisma.UserUpdateInput) {
     return prisma.user.update({ where: { id: userId }, data })
   },

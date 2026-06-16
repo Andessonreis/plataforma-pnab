@@ -37,3 +37,12 @@ export const redefinicaoSenhaInputSchema = z.object({
 })
 
 export type RedefinicaoSenhaInput = z.infer<typeof redefinicaoSenhaInputSchema>
+
+export const buscaUsuariosInputSchema = z.object({
+  q: z.string().trim().min(2).max(120).optional(),
+  ids: z.string().trim().min(1).max(2000).optional(),
+  role: z.enum(['PROPONENTE', 'ATENDIMENTO', 'HABILITADOR', 'AVALIADOR', 'ADMIN']).optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+})
+
+export type BuscaUsuariosInput = z.infer<typeof buscaUsuariosInputSchema>

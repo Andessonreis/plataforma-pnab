@@ -9,7 +9,7 @@ import {
   TokenRecuperacaoInvalidoError,
   UsuarioJaCadastradoError,
 } from '../errors/usuarios.errors'
-import type { CadastroInput } from '@shared/schemas/usuarios.schema'
+import type { CadastroInput, BuscaUsuariosInput } from '@shared/schemas/usuarios.schema'
 
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000 // 1 hora
 
@@ -18,6 +18,21 @@ function hashResetToken(token: string): string {
 }
 
 export const usuariosService = {
+  async buscar(input: BuscaUsuariosInput) {
+    if (!input.q && !input.ids) return []
+
+    const ids = input.ids
+      ? input.ids.split(',').map((s) => s.trim()).filter(Boolean).slice(0, 50)
+      : undefined
+
+    return usuariosRepository.search({
+      q: input.q,
+      ids,
+      role: input.role,
+      limit: input.limit,
+    })
+  },
+
   async cadastrar(input: CadastroInput, ctx: { ip?: string | null }) {
     const existing = await usuariosRepository.findByCpfCnpjOrEmail(input.cpfCnpj, input.email)
     if (existing) {
