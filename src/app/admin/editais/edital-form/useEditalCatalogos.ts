@@ -40,7 +40,7 @@ export function useEditalCatalogos() {
     async function fetchElegíveis() {
       try {
         const [resAval, resHab] = await Promise.all([
-          fetch('/api/admin/avaliadores'),
+          fetch('/api/v1/avaliadores'),
           fetch('/api/admin/habilitadores'),
         ])
         if (resAval.ok) {

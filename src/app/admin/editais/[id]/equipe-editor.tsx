@@ -215,7 +215,7 @@ export function EquipeEditor({ editalId, initialAvaliadores, initialHabilitadore
   const fetchElegíveis = useCallback(async () => {
     try {
       const [resAval, resHab] = await Promise.all([
-        fetch('/api/admin/avaliadores'),
+        fetch('/api/v1/avaliadores'),
         fetch('/api/admin/habilitadores'),
       ])
 
