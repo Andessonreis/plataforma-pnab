@@ -117,7 +117,7 @@ export function TiposAnexoManager({ initialTipos, initialTags }: Props) {
           return
         }
       } else {
-        const res = await fetch('/api/v1/configuracoes/tipos-anexo', {
+        const res = await fetch('/api/v1/configuracoes/tipos-anexo/tipo', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),

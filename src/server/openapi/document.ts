@@ -84,6 +84,7 @@ function crud(opts: {
   publicDetail?: boolean
   listRoles?: string
   writeRoles: string
+  createPath?: string
 }) {
   registry.registerPath({
     method: 'get',
@@ -95,7 +96,7 @@ function crud(opts: {
   })
   registry.registerPath({
     method: 'post',
-    path: opts.base,
+    path: opts.createPath ?? opts.base,
     tags: [opts.tag],
     summary: `Cria ${opts.name} (${opts.writeRoles})`,
     security: sec,
@@ -155,7 +156,7 @@ export function buildOpenApiDocument() {
   registry.register('ErrorResponse', errorResponse)
 
   // ── Conteúdo (CMS / FAQ / Notícias) ─────────────────────────────────────────
-  crud({ tag: 'CMS', base: '/cms', name: 'páginas de conteúdo', input: cmsPageSchema, publicList: true, writeRoles: 'ADMIN' })
+  crud({ tag: 'CMS', base: '/cms', createPath: '/cms/pagina', name: 'páginas de conteúdo', input: cmsPageSchema, publicList: true, writeRoles: 'ADMIN' })
   registry.registerPath({
     method: 'get', path: '/cms/pagina/{id}', tags: ['CMS'], summary: 'Detalha página por slug',
     request: { params: params('id') },
@@ -172,7 +173,7 @@ export function buildOpenApiDocument() {
     responses: { 200: { description: 'OK', ...json(envelope(z.object({ message: z.string() }))) }, ...errors },
   })
 
-  crud({ tag: 'FAQ', base: '/faq', name: 'itens de FAQ', input: faqSchema, publicList: true, writeRoles: 'ADMIN, ATENDIMENTO' })
+  crud({ tag: 'FAQ', base: '/faq', createPath: '/faq/item', name: 'itens de FAQ', input: faqSchema, publicList: true, writeRoles: 'ADMIN, ATENDIMENTO' })
   registry.registerPath({
     method: 'put', path: '/faq/item/{id}', tags: ['FAQ'], summary: 'Atualiza item de FAQ (ADMIN, ATENDIMENTO)', security: sec,
     request: { params: params('id'), body: json(faqSchema) },
@@ -189,7 +190,7 @@ export function buildOpenApiDocument() {
     responses: { 200: { description: 'OK', ...json(paginatedEnvelope(z.unknown())) }, ...errors },
   })
   registry.registerPath({
-    method: 'post', path: '/noticias', tags: ['Notícias'], summary: 'Cria notícia (ADMIN)', security: sec,
+    method: 'post', path: '/noticias/noticia', tags: ['Notícias'], summary: 'Cria notícia (ADMIN)', security: sec,
     request: { body: json(noticiaSchema) },
     responses: { 201: { description: 'Criado', ...json(envelope(z.unknown())) }, ...errors },
   })
@@ -215,7 +216,7 @@ export function buildOpenApiDocument() {
     responses: { 200: { description: 'OK', ...json(paginatedEnvelope(z.unknown())) }, ...errors },
   })
   registry.registerPath({
-    method: 'post', path: '/tickets', tags: ['Tickets'], summary: 'Abre ticket (público)',
+    method: 'post', path: '/tickets/ticket', tags: ['Tickets'], summary: 'Abre ticket (público)',
     request: { body: json(createAtendimentoSchema) },
     responses: { 201: { description: 'Criado', ...json(envelope(z.unknown())) }, ...errors },
   })
@@ -236,7 +237,7 @@ export function buildOpenApiDocument() {
     responses: { 200: { description: 'OK', ...json(envelope(z.array(z.unknown()))) }, ...errors },
   })
   registry.registerPath({
-    method: 'post', path: '/auth/api-keys', tags: ['API Keys'], summary: 'Cria API key (chave crua retornada uma vez)', security: sec,
+    method: 'post', path: '/auth/api-keys/api-key', tags: ['API Keys'], summary: 'Cria API key (chave crua retornada uma vez)', security: sec,
     request: { body: json(createApiKeySchema) },
     responses: { 201: { description: 'Criado', ...json(envelope(z.unknown())) }, ...errors },
   })
@@ -562,7 +563,7 @@ export function buildOpenApiDocument() {
     responses: { 200: { description: 'OK', ...json(envelope(z.array(z.unknown()))) }, ...errors },
   })
   registry.registerPath({
-    method: 'post', path: '/notificacoes/campanhas', tags: ['Notificações · Campanhas'], summary: 'Cria campanha (ADMIN)', security: sec,
+    method: 'post', path: '/notificacoes/campanhas/campanha', tags: ['Notificações · Campanhas'], summary: 'Cria campanha (ADMIN)', security: sec,
     request: { body: json(campaignSchema) },
     responses: { 201: { description: 'Criado', ...json(envelope(z.unknown())) }, ...errors },
   })
@@ -603,7 +604,7 @@ export function buildOpenApiDocument() {
     responses: { 200: { description: 'OK', ...json(envelope(z.array(z.unknown()))) }, ...errors },
   })
   registry.registerPath({
-    method: 'post', path: '/notificacoes/regras', tags: ['Notificações · Regras'], summary: 'Cria regra (ADMIN)', security: sec,
+    method: 'post', path: '/notificacoes/regras/regra', tags: ['Notificações · Regras'], summary: 'Cria regra (ADMIN)', security: sec,
     request: { body: json(ruleSchema) },
     responses: { 201: { description: 'Criado', ...json(envelope(z.unknown())) }, ...errors },
   })
@@ -662,7 +663,7 @@ export function buildOpenApiDocument() {
     responses: { 200: { description: 'OK', ...json(envelope(z.array(z.unknown()))) }, ...errors },
   })
   registry.registerPath({
-    method: 'post', path: '/configuracoes/categorias', tags: ['Configurações · Categorias'], summary: 'Cria categoria (ADMIN)', security: sec,
+    method: 'post', path: '/configuracoes/categorias/categoria', tags: ['Configurações · Categorias'], summary: 'Cria categoria (ADMIN)', security: sec,
     request: { body: json(categoriaCreateSchema) },
     responses: { 201: { description: 'Criado', ...json(envelope(z.unknown())) }, ...errors },
   })
@@ -688,7 +689,7 @@ export function buildOpenApiDocument() {
     responses: { 200: { description: 'OK', ...json(envelope(z.array(z.unknown()))) }, ...errors },
   })
   registry.registerPath({
-    method: 'post', path: '/configuracoes/templates-avaliacao', tags: ['Configurações · Templates de Avaliação'], summary: 'Cria template de avaliação (ADMIN)', security: sec,
+    method: 'post', path: '/configuracoes/templates-avaliacao/template', tags: ['Configurações · Templates de Avaliação'], summary: 'Cria template de avaliação (ADMIN)', security: sec,
     request: { body: json(templateAvaliacaoCreateSchema) },
     responses: { 201: { description: 'Criado', ...json(envelope(z.unknown())) }, ...errors },
   })
@@ -714,7 +715,7 @@ export function buildOpenApiDocument() {
     responses: { 200: { description: 'OK', ...json(envelope(z.array(z.unknown()))) }, ...errors },
   })
   registry.registerPath({
-    method: 'post', path: '/configuracoes/tipos-anexo', tags: ['Configurações · Tipos de Anexo'], summary: 'Cria tipo de anexo (ADMIN)', security: sec,
+    method: 'post', path: '/configuracoes/tipos-anexo/tipo', tags: ['Configurações · Tipos de Anexo'], summary: 'Cria tipo de anexo (ADMIN)', security: sec,
     request: { body: json(tipoAnexoCreateSchema) },
     responses: { 201: { description: 'Criado', ...json(envelope(z.unknown())) }, ...errors },
   })
@@ -761,7 +762,7 @@ export function buildOpenApiDocument() {
     responses: { 200: { description: 'OK', ...json(envelope(z.array(z.unknown()))) }, ...errors },
   })
   registry.registerPath({
-    method: 'post', path: '/banners', tags: ['Banners'], summary: 'Cria banner (ADMIN)', security: sec,
+    method: 'post', path: '/banners/banner', tags: ['Banners'], summary: 'Cria banner (ADMIN)', security: sec,
     request: { body: json(bannerSchema) },
     responses: { 201: { description: 'Criado', ...json(envelope(z.unknown())) }, ...errors },
   })
@@ -787,7 +788,7 @@ export function buildOpenApiDocument() {
     responses: { 200: { description: 'OK', ...json(envelope(z.array(z.unknown()))) }, ...errors },
   })
   registry.registerPath({
-    method: 'post', path: '/slides', tags: ['Slides'], summary: 'Cria slide (ADMIN)', security: sec,
+    method: 'post', path: '/slides/slide', tags: ['Slides'], summary: 'Cria slide (ADMIN)', security: sec,
     request: { body: json(slideSchema) },
     responses: { 201: { description: 'Criado', ...json(envelope(z.unknown())) }, ...errors },
   })
@@ -809,12 +810,12 @@ export function buildOpenApiDocument() {
 
   // ── Newsletter / Contato ─────────────────────────────────────────────────────
   registry.registerPath({
-    method: 'post', path: '/newsletter', tags: ['Newsletter'], summary: 'Inscreve e-mail na newsletter (público)',
+    method: 'post', path: '/newsletter/inscricao', tags: ['Newsletter'], summary: 'Inscreve e-mail na newsletter (público)',
     request: { body: json(newsletterInscricaoSchema) },
     responses: { 201: { description: 'Criado', ...json(envelope(z.unknown())) }, ...errors },
   })
   registry.registerPath({
-    method: 'post', path: '/contato', tags: ['Contato'], summary: 'Abre ticket de contato (público)',
+    method: 'post', path: '/contato/mensagem', tags: ['Contato'], summary: 'Abre ticket de contato (público)',
     request: { body: json(createAtendimentoSchema) },
     responses: { 201: { description: 'Criado', ...json(envelope(z.unknown())) }, ...errors },
   })

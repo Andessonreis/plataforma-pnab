@@ -40,7 +40,7 @@ export function CmsForm({ initialData }: CmsFormProps) {
     try {
       const url = isEdit
         ? `/api/v1/cms/pagina/${initialData.id}`
-        : '/api/v1/cms'
+        : '/api/v1/cms/pagina'
 
       const res = await fetch(url, {
         method: isEdit ? 'PUT' : 'POST',

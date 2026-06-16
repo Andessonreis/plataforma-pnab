@@ -3,4 +3,4 @@ import { regrasController } from '@server/modules/notificacoes/regras/regras.con
 
 export const runtime = 'nodejs'
 
-export const GET = adaptNextRoute(regrasController.list)
+export const POST = adaptNextRoute(regrasController.create)

@@ -86,7 +86,7 @@ export function CategoriasManager({ initialCategorias }: Props) {
           return
         }
       } else {
-        const res = await fetch('/api/v1/configuracoes/categorias', {
+        const res = await fetch('/api/v1/configuracoes/categorias/categoria', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

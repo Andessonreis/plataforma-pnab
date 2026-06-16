@@ -3,4 +3,4 @@ import { tiposAnexoController } from '@server/modules/configuracoes/controller/t
 
 export const runtime = 'nodejs'
 
-export const GET = adaptNextRoute(tiposAnexoController.list)
+export const POST = adaptNextRoute(tiposAnexoController.create)

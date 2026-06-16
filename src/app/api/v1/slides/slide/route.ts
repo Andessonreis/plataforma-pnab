@@ -3,4 +3,4 @@ import { slidesController } from '@server/modules/conteudo/controller/slides.con
 
 export const runtime = 'nodejs'
 
-export const GET = adaptNextRoute(slidesController.list)
+export const POST = adaptNextRoute(slidesController.create)

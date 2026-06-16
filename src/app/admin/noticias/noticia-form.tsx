@@ -54,7 +54,7 @@ export function NoticiaForm({ initialData, noticiaId }: NoticiaFormProps) {
     try {
       const url = isEdit
         ? `/api/v1/noticias/noticia/${noticiaId}`
-        : '/api/v1/noticias'
+        : '/api/v1/noticias/noticia'
 
       const res = await fetch(url, {
         method: isEdit ? 'PUT' : 'POST',

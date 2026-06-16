@@ -60,7 +60,7 @@ export function ContactForm({ editais }: ContactFormProps) {
         body.editalId = formData.editalId
       }
 
-      const res = await fetch('/api/v1/contato', {
+      const res = await fetch('/api/v1/contato/mensagem', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),

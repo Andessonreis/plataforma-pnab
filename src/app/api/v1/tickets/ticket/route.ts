@@ -3,4 +3,4 @@ import { ticketsController } from '@server/modules/atendimento/controller/ticket
 
 export const runtime = 'nodejs'
 
-export const GET = adaptNextRoute(ticketsController.list)
+export const POST = adaptNextRoute(ticketsController.create)

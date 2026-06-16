@@ -3,4 +3,4 @@ import { categoriasController } from '@server/modules/configuracoes/controller/c
 
 export const runtime = 'nodejs'
 
-export const GET = adaptNextRoute(categoriasController.list)
+export const POST = adaptNextRoute(categoriasController.create)

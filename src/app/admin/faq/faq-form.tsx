@@ -52,7 +52,7 @@ export function FaqForm({ initialData, faqItemId, editais }: FaqFormProps) {
     try {
       const url = isEdit
         ? `/api/v1/faq/item/${faqItemId}`
-        : '/api/v1/faq'
+        : '/api/v1/faq/item'
 
       const res = await fetch(url, {
         method: isEdit ? 'PUT' : 'POST',

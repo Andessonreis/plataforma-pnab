@@ -3,4 +3,4 @@ import { cmsController } from '@server/modules/conteudo/controller/cms.controlle
 
 export const runtime = 'nodejs'
 
-export const GET = adaptNextRoute(cmsController.list)
+export const POST = adaptNextRoute(cmsController.create)

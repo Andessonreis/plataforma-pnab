@@ -3,4 +3,4 @@ import { campanhasController } from '@server/modules/notificacoes/campanhas/camp
 
 export const runtime = 'nodejs'
 
-export const GET = adaptNextRoute(campanhasController.list)
+export const POST = adaptNextRoute(campanhasController.create)

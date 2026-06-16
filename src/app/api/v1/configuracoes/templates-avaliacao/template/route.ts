@@ -3,4 +3,4 @@ import { templatesAvaliacaoController } from '@server/modules/configuracoes/cont
 
 export const runtime = 'nodejs'
 
-export const GET = adaptNextRoute(templatesAvaliacaoController.list)
+export const POST = adaptNextRoute(templatesAvaliacaoController.create)

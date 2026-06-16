@@ -117,7 +117,7 @@ export function TemplatesManager({ initialTemplates }: Props) {
           return
         }
       } else {
-        const res = await fetch('/api/v1/configuracoes/templates-avaliacao', {
+        const res = await fetch('/api/v1/configuracoes/templates-avaliacao/template', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),

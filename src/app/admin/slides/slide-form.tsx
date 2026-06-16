@@ -58,7 +58,7 @@ export function SlideForm({ initialData, slideId }: SlideFormProps) {
     try {
       const url = isEdit
         ? `/api/v1/slides/slide/${slideId}`
-        : '/api/v1/slides'
+        : '/api/v1/slides/slide'
 
       const res = await fetch(url, {
         method: isEdit ? 'PUT' : 'POST',

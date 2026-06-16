@@ -103,7 +103,7 @@ export function CampaignForm({ editais, initialData, campaignId }: CampaignFormP
     try {
       const url = isEdit
         ? `/api/v1/notificacoes/campanhas/campanha/${campaignId}`
-        : '/api/v1/notificacoes/campanhas'
+        : '/api/v1/notificacoes/campanhas/campanha'
 
       const res = await fetch(url, {
         method: isEdit ? 'PUT' : 'POST',

@@ -52,7 +52,7 @@ export function BannerForm({ initialData, bannerId }: BannerFormProps) {
     try {
       const url = isEdit
         ? `/api/v1/banners/banner/${bannerId}`
-        : '/api/v1/banners'
+        : '/api/v1/banners/banner'
 
       const res = await fetch(url, {
         method: isEdit ? 'PUT' : 'POST',

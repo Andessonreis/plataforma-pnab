@@ -132,7 +132,7 @@ export function RuleForm({ editais, triggers, initialData, ruleId }: RuleFormPro
     try {
       const url = isEdit
         ? `/api/v1/notificacoes/regras/regra/${ruleId}`
-        : '/api/v1/notificacoes/regras'
+        : '/api/v1/notificacoes/regras/regra'
 
       const res = await fetch(url, {
         method: isEdit ? 'PUT' : 'POST',

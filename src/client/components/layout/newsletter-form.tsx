@@ -14,7 +14,7 @@ function NewsletterForm() {
     setErrorMsg('')
 
     try {
-      const res = await fetch('/api/v1/newsletter', {
+      const res = await fetch('/api/v1/newsletter/inscricao', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nome, email }),

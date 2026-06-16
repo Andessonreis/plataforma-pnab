@@ -3,4 +3,4 @@ import { apiKeysController } from '@server/modules/core/controller/api-keys.cont
 
 export const runtime = 'nodejs'
 
-export const GET = adaptNextRoute(apiKeysController.list)
+export const POST = adaptNextRoute(apiKeysController.create)
