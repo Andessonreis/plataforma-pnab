@@ -95,7 +95,7 @@ export function GerarListasModal({ editalId, editalTitulo, editalStatus }: Gerar
     try {
       const url = format === 'pdf'
         ? editaisClient.listaPdfUrl(editalId, selected)
-        : `/api/v1/inscricoes/export?editalId=${editalId}&status=${selected}`
+        : `/api/v1/inscricoes/exportacao?editalId=${editalId}&status=${selected}`
 
       const res = await fetch(url)
       if (!res.ok) throw new Error(`Erro ${res.status}`)

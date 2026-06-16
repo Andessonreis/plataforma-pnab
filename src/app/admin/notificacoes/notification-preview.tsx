@@ -14,7 +14,7 @@ interface Props {
 type Tab = 'email' | 'inapp'
 
 // Preview ao vivo da notificação. Faz fetch debounced no endpoint
-// /api/v1/notificacoes/preview enquanto admin digita.
+// /api/v1/notificacoes/previa enquanto admin digita.
 export function NotificationPreview({ titulo, assunto, corpo, link, ctaLabel }: Props) {
   const [tab, setTab] = useState<Tab>('email')
   const [emailHtml, setEmailHtml] = useState<string | null>(null)
@@ -28,7 +28,7 @@ export function NotificationPreview({ titulo, assunto, corpo, link, ctaLabel }: 
       setLoading(true)
       setError(null)
       try {
-        const res = await fetch('/api/v1/notificacoes/preview', {
+        const res = await fetch('/api/v1/notificacoes/previa', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ titulo, assunto, corpo, link, ctaLabel }),

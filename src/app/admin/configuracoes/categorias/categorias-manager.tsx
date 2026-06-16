@@ -169,7 +169,7 @@ export function CategoriasManager({ initialCategorias }: Props) {
 
     // Persistir reordenação
     try {
-      await fetch('/api/v1/configuracoes/categorias/reorder', {
+      await fetch('/api/v1/configuracoes/categorias/reordenacao', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

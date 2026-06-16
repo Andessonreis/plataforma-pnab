@@ -18,7 +18,7 @@ export default function ExportButton({ total }: ExportButtonProps) {
     if (editalId) params.set('editalId', editalId)
     if (status) params.set('status', status)
     const qs = params.toString()
-    return `/api/v1/inscricoes/export${qs ? `?${qs}` : ''}`
+    return `/api/v1/inscricoes/exportacao${qs ? `?${qs}` : ''}`
   }
 
   async function handleDownload() {

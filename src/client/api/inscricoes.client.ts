@@ -52,12 +52,12 @@ export const inscricoesClient = {
   },
 
   async submit(id: string): Promise<InscricaoEnvioDTO> {
-    const res = await fetch(`${BASE}/${id}/submit`, { method: 'POST', credentials: 'same-origin' })
+    const res = await fetch(`${BASE}/${id}/submissao`, { method: 'POST', credentials: 'same-origin' })
     return unwrap<InscricaoEnvioDTO>(res)
   },
 
   async retract(id: string): Promise<{ mensagem: string }> {
-    const res = await fetch(`${BASE}/${id}/retract`, { method: 'POST', credentials: 'same-origin' })
+    const res = await fetch(`${BASE}/${id}/retratacao`, { method: 'POST', credentials: 'same-origin' })
     return unwrap<{ mensagem: string }>(res)
   },
 

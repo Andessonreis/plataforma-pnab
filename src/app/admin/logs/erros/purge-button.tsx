@@ -24,7 +24,7 @@ export function PurgeButton({ retentionDays, totalLogs }: Props) {
     setLoading(true)
     setResult(null)
     try {
-      const url = force ? '/api/v1/logs/erros/purge?force=true' : '/api/v1/logs/erros/purge'
+      const url = force ? '/api/v1/logs/erros/expurgo?force=true' : '/api/v1/logs/erros/expurgo'
       const res = await fetch(url, { method: 'POST' })
       const json = await res.json()
       if (res.ok) {

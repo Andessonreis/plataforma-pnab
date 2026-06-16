@@ -184,7 +184,7 @@ export const editaisClient = {
   },
 
   async reordenarResultados(editalId: string, orderedIds: string[]): Promise<void> {
-    const res = await fetch(`/api/v1/editais/edital/${editalId}/resultados/reorder`, {
+    const res = await fetch(`/api/v1/editais/edital/${editalId}/resultados/reordenacao`, {
       method: 'PATCH',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ orderedIds }),

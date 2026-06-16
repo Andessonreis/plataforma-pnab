@@ -40,7 +40,7 @@ export const autenticacaoClient = {
   },
 
   async refresh(): Promise<SessaoDTO | null> {
-    const res = await fetch('/api/v1/autenticacao/sessoes/sessao/refresh', {
+    const res = await fetch('/api/v1/autenticacao/sessoes/sessao/renovacao', {
       method: 'POST',
       credentials: 'same-origin',
     })

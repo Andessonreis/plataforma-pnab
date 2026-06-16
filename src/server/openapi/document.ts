@@ -233,16 +233,16 @@ export function buildOpenApiDocument() {
 
   // ── API Keys ────────────────────────────────────────────────────────────────
   registry.registerPath({
-    method: 'get', path: '/auth/api-keys', tags: ['API Keys'], summary: 'Lista API keys do usuário', security: sec,
+    method: 'get', path: '/autenticacao/api-keys', tags: ['API Keys'], summary: 'Lista API keys do usuário', security: sec,
     responses: { 200: { description: 'OK', ...json(envelope(z.array(z.unknown()))) }, ...errors },
   })
   registry.registerPath({
-    method: 'post', path: '/auth/api-keys/api-key', tags: ['API Keys'], summary: 'Cria API key (chave crua retornada uma vez)', security: sec,
+    method: 'post', path: '/autenticacao/api-keys/api-key', tags: ['API Keys'], summary: 'Cria API key (chave crua retornada uma vez)', security: sec,
     request: { body: json(createApiKeySchema) },
     responses: { 201: { description: 'Criado', ...json(envelope(z.unknown())) }, ...errors },
   })
   registry.registerPath({
-    method: 'delete', path: '/auth/api-keys/api-key/{id}', tags: ['API Keys'], summary: 'Revoga API key', security: sec,
+    method: 'delete', path: '/autenticacao/api-keys/api-key/{id}', tags: ['API Keys'], summary: 'Revoga API key', security: sec,
     request: { params: params('id') },
     responses: { 200: { description: 'OK', ...json(envelope(z.object({ message: z.string() }))) }, ...errors },
   })
@@ -277,7 +277,7 @@ export function buildOpenApiDocument() {
     responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
   })
   registry.registerPath({
-    method: 'post', path: '/autenticacao/sessoes/sessao/refresh', tags: ['Autenticação'], summary: 'Renova token de sessão',
+    method: 'post', path: '/autenticacao/sessoes/sessao/renovacao', tags: ['Autenticação'], summary: 'Renova token de sessão',
     request: { body: json(refreshInputSchema) },
     responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
   })
@@ -386,7 +386,7 @@ export function buildOpenApiDocument() {
     responses: { 201: { description: 'Criado', ...json(envelope(z.unknown())) }, ...errors },
   })
   registry.registerPath({
-    method: 'patch', path: '/editais/edital/{id}/resultados/reorder', tags: ['Editais'], summary: 'Reordena resultados (ADMIN)', security: sec,
+    method: 'patch', path: '/editais/edital/{id}/resultados/reordenacao', tags: ['Editais'], summary: 'Reordena resultados (ADMIN)', security: sec,
     request: { params: params('id'), body: json(reordenarResultadosInputSchema) },
     responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
   })
@@ -402,7 +402,7 @@ export function buildOpenApiDocument() {
     responses: { 201: { description: 'Criado', ...json(envelope(z.unknown())) }, ...errors },
   })
   registry.registerPath({
-    method: 'get', path: '/inscricoes/export', tags: ['Inscrições'], summary: 'Exporta inscrições em CSV (ADMIN)', security: sec,
+    method: 'get', path: '/inscricoes/exportacao', tags: ['Inscrições'], summary: 'Exporta inscrições em CSV (ADMIN)', security: sec,
     responses: { 200: { description: 'CSV', content: { 'text/csv': { schema: z.string() } } }, ...errors },
   })
   registry.registerPath({
@@ -416,12 +416,12 @@ export function buildOpenApiDocument() {
     responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
   })
   registry.registerPath({
-    method: 'post', path: '/inscricoes/inscricao/{id}/submit', tags: ['Inscrições'], summary: 'Submete inscrição (PROPONENTE)', security: sec,
+    method: 'post', path: '/inscricoes/inscricao/{id}/submissao', tags: ['Inscrições'], summary: 'Submete inscrição (PROPONENTE)', security: sec,
     request: { params: params('id') },
     responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
   })
   registry.registerPath({
-    method: 'post', path: '/inscricoes/inscricao/{id}/retract', tags: ['Inscrições'], summary: 'Retrata submissão da inscrição (PROPONENTE)', security: sec,
+    method: 'post', path: '/inscricoes/inscricao/{id}/retratacao', tags: ['Inscrições'], summary: 'Retrata submissão da inscrição (PROPONENTE)', security: sec,
     request: { params: params('id') },
     responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
   })
@@ -530,7 +530,7 @@ export function buildOpenApiDocument() {
 
   // ── Contemplados ─────────────────────────────────────────────────────────────
   registry.registerPath({
-    method: 'post', path: '/contemplados/import', tags: ['Contemplados'], summary: 'Importa contemplados via CSV (ADMIN, multipart/form-data)', security: sec,
+    method: 'post', path: '/contemplados/importacao', tags: ['Contemplados'], summary: 'Importa contemplados via CSV (ADMIN, multipart/form-data)', security: sec,
     request: {
       body: {
         content: {
@@ -549,11 +549,11 @@ export function buildOpenApiDocument() {
     responses: { 200: { description: 'OK', ...json(paginatedEnvelope(z.unknown())) }, ...errors },
   })
   registry.registerPath({
-    method: 'post', path: '/logs/purge', tags: ['Logs'], summary: 'Expurga logs de auditoria antigos (ADMIN)', security: sec,
+    method: 'post', path: '/logs/expurgo', tags: ['Logs'], summary: 'Expurga logs de auditoria antigos (ADMIN)', security: sec,
     responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
   })
   registry.registerPath({
-    method: 'post', path: '/logs/erros/purge', tags: ['Logs'], summary: 'Expurga logs de erro antigos (ADMIN)', security: sec,
+    method: 'post', path: '/logs/erros/expurgo', tags: ['Logs'], summary: 'Expurga logs de erro antigos (ADMIN)', security: sec,
     responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
   })
 
@@ -678,7 +678,7 @@ export function buildOpenApiDocument() {
     responses: { 200: { description: 'OK', ...json(envelope(z.object({ message: z.string() }))) }, ...errors },
   })
   registry.registerPath({
-    method: 'put', path: '/configuracoes/categorias/reorder', tags: ['Configurações · Categorias'], summary: 'Reordena categorias (ADMIN)', security: sec,
+    method: 'put', path: '/configuracoes/categorias/reordenacao', tags: ['Configurações · Categorias'], summary: 'Reordena categorias (ADMIN)', security: sec,
     request: { body: json(categoriaReorderSchema) },
     responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
   })
@@ -746,7 +746,7 @@ export function buildOpenApiDocument() {
     responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
   })
   registry.registerPath({
-    method: 'post', path: '/email-templates/template/{id}/preview', tags: ['E-mail Templates'], summary: 'Pré-visualiza template renderizado (ADMIN)', security: sec,
+    method: 'post', path: '/email-templates/template/{id}/previa', tags: ['E-mail Templates'], summary: 'Pré-visualiza template renderizado (ADMIN)', security: sec,
     request: { params: params('id'), body: json(emailTemplatePreviewSchema) },
     responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
   })

@@ -24,7 +24,7 @@ export function DownloadButton({ editalId, status, format, label, count }: Downl
       const url =
         format === 'pdf'
           ? editaisClient.listaPdfUrl(editalId, status)
-          : `/api/v1/inscricoes/export?editalId=${editalId}&status=${status}`
+          : `/api/v1/inscricoes/exportacao?editalId=${editalId}&status=${status}`
 
       const res = await fetch(url)
       if (!res.ok) throw new Error(`Erro ${res.status}`)

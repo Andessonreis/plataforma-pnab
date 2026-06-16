@@ -50,7 +50,7 @@ export function TemplateEditor({ templateKey, meta, initial }: Props) {
     setPreviewLoading(true)
     setPreviewError(null)
     try {
-      const res = await fetch(`/api/v1/email-templates/template/${templateKey}/preview`, {
+      const res = await fetch(`/api/v1/email-templates/template/${templateKey}/previa`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ subject, body }),

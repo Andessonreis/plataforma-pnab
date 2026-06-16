@@ -49,7 +49,7 @@ export function ImportForm({ editais }: ImportFormProps) {
       formData.append('file', file)
       formData.append('editalId', selectedEditalId)
 
-      const response = await fetch('/api/v1/contemplados/import', {
+      const response = await fetch('/api/v1/contemplados/importacao', {
         method: 'POST',
         body: formData,
       })
