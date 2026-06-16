@@ -42,6 +42,14 @@ export type EditalInput = {
   etapasCustomizadas: unknown[]
   vagasContemplados?: number | null
   vagasSuplentes?: number | null
+  criteriosAvaliacao?: unknown[] | null
+  formulaAvaliacao?: string | null
+  tiposAnexo?: unknown[] | null
+  notaMinima?: number | null
+  desempate?: unknown[] | null
+  tiposProponentePermitidos?: string[]
+  equipeAvaliadores?: string[]
+  equipeHabilitadores?: string[]
 }
 
 function buildQueryString(params: ListEditaisParams): string {

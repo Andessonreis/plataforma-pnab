@@ -33,7 +33,7 @@ import {
   decidirRecursoSchema,
   responderRecursoSchema,
 } from '@shared/schemas/recursos.schema'
-import { importContempladosSchema } from '@shared/schemas/contemplados.schema'
+import { importContempladosFormSchema } from '@shared/schemas/contemplados.schema'
 
 const ID = registry.registerParameter(
   'Id',
@@ -114,7 +114,7 @@ export function buildOpenApiDocument() {
   registry.register('SubmeterRecursoInput', submeterRecursoSchema)
   registry.register('DecidirRecursoInput', decidirRecursoSchema)
   registry.register('ResponderRecursoInput', responderRecursoSchema)
-  registry.register('ImportContempladosInput', importContempladosSchema)
+  registry.register('ImportContempladosInput', importContempladosFormSchema)
   registry.register('ErrorResponse', errorResponse)
 
   // ── Conteúdo (CMS / FAQ / Notícias) ─────────────────────────────────────────
@@ -492,9 +492,17 @@ export function buildOpenApiDocument() {
 
   // ── Contemplados ─────────────────────────────────────────────────────────────
   registry.registerPath({
-    method: 'post', path: '/contemplados/import', tags: ['Contemplados'], summary: 'Importa contemplados (ADMIN)', security: sec,
-    request: { body: json(importContempladosSchema) },
-    responses: { 201: { description: 'Criado', ...json(envelope(z.unknown())) }, ...errors },
+    method: 'post', path: '/contemplados/import', tags: ['Contemplados'], summary: 'Importa contemplados via CSV (ADMIN, multipart/form-data)', security: sec,
+    request: {
+      body: {
+        content: {
+          'multipart/form-data': {
+            schema: importContempladosFormSchema.extend({ file: z.string().openapi({ format: 'binary' }) }),
+          },
+        },
+      },
+    },
+    responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
   })
 
   // ── Logs ─────────────────────────────────────────────────────────────────────

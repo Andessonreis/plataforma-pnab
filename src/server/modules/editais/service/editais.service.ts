@@ -4,12 +4,43 @@ import { sanitizeContent } from '@shared/sanitize'
 import { generateEditalSlug, ensureUniqueSlug } from '@shared/utils/slug'
 import { BadRequestError } from '@server/lib/http/errors'
 import { editaisRepository } from '../repository/editais.repository'
+import { equipeEditalRepository } from '../repository/equipe-edital.repository'
 import { EditalNaoEncontradoError } from '../errors/editais.errors'
 import type {
   AvancarFaseInput,
   EditalAcessivelInput,
   EditalInput,
 } from '@shared/schemas/editais.schema'
+import type { Prisma } from '@prisma/client'
+
+type JsonInput = Prisma.InputJsonValue
+
+async function syncEquipe(editalId: string, avaliadorIds: string[], habilitadorIds: string[]) {
+  const membrosAtuais = await equipeEditalRepository.listByEdital(editalId)
+
+  const atuaisAval = new Set(membrosAtuais.filter((m) => m.funcao === 'AVALIADOR').map((m) => m.userId))
+  const atuaisHab = new Set(membrosAtuais.filter((m) => m.funcao === 'HABILITADOR').map((m) => m.userId))
+  const novosAval = new Set(avaliadorIds)
+  const novosHab = new Set(habilitadorIds)
+
+  const avalRemover = [...atuaisAval].filter((id) => !novosAval.has(id))
+  const habRemover = [...atuaisHab].filter((id) => !novosHab.has(id))
+  for (const userId of avalRemover) {
+    await equipeEditalRepository.delete(editalId, userId, 'AVALIADOR')
+  }
+  for (const userId of habRemover) {
+    await equipeEditalRepository.delete(editalId, userId, 'HABILITADOR')
+  }
+
+  const avalAdicionar = avaliadorIds.filter((id) => !atuaisAval.has(id))
+  const habAdicionar = habilitadorIds.filter((id) => !atuaisHab.has(id))
+  if (avalAdicionar.length > 0) {
+    await equipeEditalRepository.createMany(editalId, avalAdicionar, 'AVALIADOR')
+  }
+  if (habAdicionar.length > 0) {
+    await equipeEditalRepository.createMany(editalId, habAdicionar, 'HABILITADOR')
+  }
+}
 
 const SEQUENCIA_FASES: EditalStatus[] = [
   'RASCUNHO',
@@ -39,12 +70,23 @@ export async function createEdital(data: EditalInput, userId: string, ip?: strin
     categorias: data.categorias,
     acoesAfirmativas: data.acoesAfirmativas ?? null,
     regrasElegibilidade: data.regrasElegibilidade ?? null,
-    cronograma: data.cronograma,
-    camposFormulario: data.camposFormulario as unknown as import('@prisma/client').Prisma.InputJsonValue,
+    cronograma: data.cronograma as unknown as JsonInput,
+    camposFormulario: data.camposFormulario as unknown as JsonInput,
+    etapasCustomizadas: data.etapasCustomizadas as unknown as JsonInput,
     vagasContemplados: data.vagasContemplados ?? null,
     vagasSuplentes: data.vagasSuplentes ?? null,
+    criteriosAvaliacao: (data.criteriosAvaliacao ?? null) as unknown as JsonInput,
+    formulaAvaliacao: data.formulaAvaliacao ?? null,
+    tiposAnexo: (data.tiposAnexo ?? null) as unknown as JsonInput,
+    notaMinima: data.notaMinima ?? null,
+    desempate: (data.desempate ?? null) as unknown as JsonInput,
+    tiposProponentePermitidos: data.tiposProponentePermitidos,
     ...(data.status !== 'RASCUNHO' ? { publishedAt: new Date() } : {}),
   })
+
+  if (data.equipeAvaliadores.length > 0 || data.equipeHabilitadores.length > 0) {
+    await syncEquipe(edital.id, data.equipeAvaliadores, data.equipeHabilitadores)
+  }
 
   await logAudit({
     userId,
@@ -82,12 +124,21 @@ export async function updateEdital(id: string, data: EditalInput, userId: string
     categorias: data.categorias,
     acoesAfirmativas: data.acoesAfirmativas ?? null,
     regrasElegibilidade: data.regrasElegibilidade ?? null,
-    cronograma: data.cronograma,
-    camposFormulario: data.camposFormulario as unknown as import('@prisma/client').Prisma.InputJsonValue,
+    cronograma: data.cronograma as unknown as JsonInput,
+    camposFormulario: data.camposFormulario as unknown as JsonInput,
+    etapasCustomizadas: data.etapasCustomizadas as unknown as JsonInput,
     vagasContemplados: data.vagasContemplados ?? null,
     vagasSuplentes: data.vagasSuplentes ?? null,
+    criteriosAvaliacao: (data.criteriosAvaliacao ?? null) as unknown as JsonInput,
+    formulaAvaliacao: data.formulaAvaliacao ?? null,
+    tiposAnexo: (data.tiposAnexo ?? null) as unknown as JsonInput,
+    notaMinima: data.notaMinima ?? null,
+    desempate: (data.desempate ?? null) as unknown as JsonInput,
+    tiposProponentePermitidos: data.tiposProponentePermitidos,
     ...(publishedAt ? { publishedAt } : {}),
   })
+
+  await syncEquipe(edital.id, data.equipeAvaliadores, data.equipeHabilitadores)
 
   await logAudit({
     userId,

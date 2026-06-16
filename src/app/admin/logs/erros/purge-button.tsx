@@ -24,14 +24,14 @@ export function PurgeButton({ retentionDays, totalLogs }: Props) {
     setLoading(true)
     setResult(null)
     try {
-      const url = force ? '/api/admin/logs/erros/purge?force=true' : '/api/admin/logs/erros/purge'
+      const url = force ? '/api/v1/logs/erros/purge?force=true' : '/api/v1/logs/erros/purge'
       const res = await fetch(url, { method: 'POST' })
-      const data = await res.json()
+      const json = await res.json()
       if (res.ok) {
-        setResult(`${data.removidos} log(s) removido(s).`)
+        setResult(`${json.data.removidos} log(s) removido(s).`)
         router.refresh()
       } else {
-        setResult(data.message || 'Erro ao executar limpeza.')
+        setResult(json.message || 'Erro ao executar limpeza.')
       }
     } catch {
       setResult('Erro de conexão.')

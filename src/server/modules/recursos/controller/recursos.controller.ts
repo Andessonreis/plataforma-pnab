@@ -4,6 +4,7 @@ import { requireAuth, requireProponente, requireRole } from '@server/lib/auth/gu
 import { BadRequestError } from '@server/lib/http/errors'
 import {
   decidirRecursoSchema,
+  listarRecursosQuerySchema,
   responderRecursoSchema,
   submeterRecursoSchema,
 } from '@shared/schemas/recursos.schema'
@@ -11,6 +12,7 @@ import { toRecurso } from '../mapper/recursos.mapper'
 import {
   decideRecurso,
   getAnexoRecursoSignedUrl,
+  listAllRecursos,
   listRecursos,
   responderRecurso,
   submitRecurso,
@@ -22,6 +24,13 @@ export const recursosController = {
     const user = await requireAuth(ctx.headers)
     const recursos = await listRecursos(ctx.params.id, user.id, user.role)
     return { data: recursos.map(toRecurso) }
+  },
+
+  async listAll(ctx: RequestContext) {
+    await requireRole(ctx.headers, 'ADMIN', 'HABILITADOR')
+    const params = listarRecursosQuerySchema.parse(ctx.query)
+    const result = await listAllRecursos(params)
+    return { data: result.data, meta: result.meta }
   },
 
   async submit(ctx: RequestContext) {

@@ -21,3 +21,12 @@ export const responderRecursoSchema = z.object({
 })
 
 export type ResponderRecursoInput = z.infer<typeof responderRecursoSchema>
+
+export const listarRecursosQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(50).default(12),
+  fase: z.string().optional(),
+  pendente: z.string().optional(),
+})
+
+export type ListarRecursosQueryInput = z.infer<typeof listarRecursosQuerySchema>

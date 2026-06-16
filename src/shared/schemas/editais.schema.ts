@@ -1,4 +1,6 @@
 import { z } from 'zod'
+import { validateCronogramaOrderServer } from '@shared/utils/cronograma'
+import type { CronogramaItem } from '@shared/types/cronograma'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Cronograma
@@ -71,11 +73,74 @@ export const editalSchema = z.object({
     'HABILITACAO', 'AVALIACAO', 'RESULTADO_PRELIMINAR', 'RECURSO',
     'RESULTADO_FINAL', 'ENCERRADO',
   ]).default('RASCUNHO'),
-  cronograma: z.array(cronogramaItemSchema).default([]),
+  cronograma: z
+    .array(cronogramaItemSchema)
+    .default([])
+    .superRefine((items, ctx) => {
+      const errors = validateCronogramaOrderServer(items as CronogramaItem[])
+      for (const msg of errors) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: msg, path: [] })
+      }
+    }),
   camposFormulario: z.array(z.record(z.string(), z.unknown())).default([]),
-  etapasCustomizadas: z.array(etapaCustomizadaSchema).default([]),
+  etapasCustomizadas: z
+    .array(etapaCustomizadaSchema)
+    .default([])
+    .superRefine((etapas, ctx) => {
+      const ids = etapas.map((e) => e.id)
+      const dupes = ids.filter((id, i) => ids.indexOf(id) !== i)
+      if (dupes.length > 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `IDs de etapas duplicados: ${[...new Set(dupes)].join(', ')}`,
+          path: [],
+        })
+      }
+    }),
   vagasContemplados: z.number().int().min(1).nullable().optional(),
   vagasSuplentes: z.number().int().min(0).nullable().optional(),
+  criteriosAvaliacao: z
+    .array(
+      z.object({
+        criterio: z.string().min(1),
+        peso: z.number().min(0),
+        notaMax: z.number().min(0),
+        descricao: z.string().optional(),
+        bloco: z.string().optional(),
+        modo: z.enum(['slider', 'discreto']).optional(),
+        naoAtende: z.number().min(0).optional(),
+        parcial: z.number().min(0).optional(),
+        plenamente: z.number().min(0).optional(),
+      }),
+    )
+    .nullable()
+    .optional(),
+  formulaAvaliacao: z.string().max(200).nullable().optional(),
+  tiposAnexo: z
+    .array(
+      z.object({
+        tipo: z.string().min(1),
+        label: z.string().min(1),
+        obrigatorio: z.boolean().default(false),
+      }),
+    )
+    .nullable()
+    .optional(),
+  notaMinima: z.number().min(0).nullable().optional(),
+  desempate: z
+    .array(
+      z.object({
+        descricao: z.string().min(1),
+        tipo: z.enum(['bloco', 'criterio']),
+        ref: z.string().min(1),
+        direcao: z.enum(['desc', 'asc']).default('desc'),
+      }),
+    )
+    .nullable()
+    .optional(),
+  tiposProponentePermitidos: z.array(z.enum(['PF', 'MEI', 'PJ', 'COLETIVO'])).default([]),
+  equipeAvaliadores: z.array(z.string().min(1)).default([]),
+  equipeHabilitadores: z.array(z.string().min(1)).default([]),
 })
 
 export type EditalInput = z.infer<typeof editalSchema>

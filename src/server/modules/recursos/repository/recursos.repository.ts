@@ -104,4 +104,25 @@ export const recursosRepository = {
       select: { inscricaoId: true, urlAnexos: true, inscricao: { select: { proponenteId: true } } },
     })
   },
+
+  listAggregated(where: Prisma.RecursoWhereInput, skip: number, take: number) {
+    return prisma.recurso.findMany({
+      where,
+      include: {
+        inscricao: {
+          include: {
+            proponente: { select: { nome: true, cpfCnpj: true } },
+            edital: { select: { titulo: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take,
+    })
+  },
+
+  countAggregated(where: Prisma.RecursoWhereInput): Promise<number> {
+    return prisma.recurso.count({ where })
+  },
 }

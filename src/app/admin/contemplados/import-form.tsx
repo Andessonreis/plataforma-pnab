@@ -49,17 +49,19 @@ export function ImportForm({ editais }: ImportFormProps) {
       formData.append('file', file)
       formData.append('editalId', selectedEditalId)
 
-      const response = await fetch('/api/admin/contemplados/import', {
+      const response = await fetch('/api/v1/contemplados/import', {
         method: 'POST',
         body: formData,
       })
 
-      const data = await response.json()
+      const json = await response.json()
 
       if (!response.ok) {
-        setErrorMessage(data.message || 'Erro ao importar arquivo.')
+        setErrorMessage(json.message || 'Erro ao importar arquivo.')
         return
       }
+
+      const data = json.data as ImportResult
 
       setResult({
         imported: data.imported,

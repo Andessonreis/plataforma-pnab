@@ -32,4 +32,19 @@ export const logsRepository = {
       orderBy: { entity: 'asc' },
     })
   },
+
+  async deleteAllAuditLogs(): Promise<number> {
+    const result = await prisma.auditLog.deleteMany({})
+    return result.count
+  },
+
+  async deleteAllErrorLogs(): Promise<number> {
+    const result = await prisma.errorLog.deleteMany({})
+    return result.count
+  },
+
+  async deleteErrorLogsOlderThan(cutoff: Date): Promise<number> {
+    const result = await prisma.errorLog.deleteMany({ where: { timestamp: { lt: cutoff } } })
+    return result.count
+  },
 }

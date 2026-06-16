@@ -11,8 +11,10 @@ import type { AcaoJanela } from '@shared/types/cronograma'
 import { BadRequestError, ForbiddenError, NotFoundError } from '@server/lib/http/errors'
 import { InscricaoNaoEncontradaError } from '@server/modules/inscricoes/errors/inscricoes.errors'
 import type { ConsolidacaoEstado } from '@shared/dtos/recursos.dto'
+import type { Prisma } from '@prisma/client'
 import type {
   DecidirRecursoInput,
+  ListarRecursosQueryInput,
   ResponderRecursoInput,
   SubmeterRecursoInput,
 } from '@shared/schemas/recursos.schema'
@@ -86,6 +88,24 @@ export async function submitRecurso(
   })
 
   return recurso
+}
+
+export async function listAllRecursos(params: ListarRecursosQueryInput) {
+  const { page, pageSize, fase, pendente } = params
+
+  const where: Prisma.RecursoWhereInput = {}
+  if (fase) where.fase = fase
+  if (pendente === 'true') where.decisao = null
+
+  const [data, total] = await Promise.all([
+    recursosRepository.listAggregated(where, (page - 1) * pageSize, pageSize),
+    recursosRepository.countAggregated(where),
+  ])
+
+  return {
+    data,
+    meta: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) },
+  }
 }
 
 export async function listRecursos(inscricaoId: string, callerId: string, callerRole: string) {

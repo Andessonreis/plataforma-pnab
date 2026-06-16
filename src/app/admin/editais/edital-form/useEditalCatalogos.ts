@@ -41,7 +41,7 @@ export function useEditalCatalogos() {
       try {
         const [resAval, resHab] = await Promise.all([
           fetch('/api/v1/avaliadores'),
-          fetch('/api/admin/habilitadores'),
+          fetch('/api/v1/habilitadores'),
         ])
         if (resAval.ok) {
           const json = await resAval.json()

@@ -24,6 +24,7 @@ import { SecaoCamposFormulario } from './edital-form/sections/SecaoCamposFormula
 import { SecaoCriterios } from './edital-form/sections/SecaoCriterios'
 import { SecaoTiposAnexo } from './edital-form/sections/SecaoTiposAnexo'
 import { SecaoEquipe } from './edital-form/sections/SecaoEquipe'
+import { editaisClient } from '@client/api/editais.client'
 
 export function EditalForm({ initialData }: EditalFormProps) {
   const router = useRouter()
@@ -244,24 +245,11 @@ export function EditalForm({ initialData }: EditalFormProps) {
     }
 
     try {
-      const url = isEdit
-        ? `/api/admin/editais?id=${initialData!.id}`
-        : '/api/admin/editais'
-      const method = isEdit ? 'PUT' : 'POST'
+      const edital = isEdit
+        ? await editaisClient.update(initialData!.id, body)
+        : await editaisClient.create(body)
 
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(isEdit ? { ...body, id: initialData!.id } : body),
-      })
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        throw new Error(data.message ?? `Erro ${res.status}`)
-      }
-
-      const data = await res.json()
-      const editalId: string = data.id ?? initialData?.id ?? ''
+      const editalId: string = edital.id ?? initialData?.id ?? ''
 
       if (arquivosRef.current?.hasPending()) {
         await arquivosRef.current.uploadPending(editalId)
