@@ -7,7 +7,7 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
-RUN npm install
+RUN --mount=type=cache,target=/root/.npm,id=npm-cache-full npm install
 
 # ── Dependências de produção (sem dev — para runtime) ────────────────────────
 FROM base AS prod-deps
@@ -15,7 +15,7 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
-RUN npm install --omit=dev
+RUN --mount=type=cache,target=/root/.npm,id=npm-cache-prod npm install --omit=dev
 
 # ── Build ─────────────────────────────────────────────────────────────────────
 FROM base AS builder
