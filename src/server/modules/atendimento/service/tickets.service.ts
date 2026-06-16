@@ -20,8 +20,14 @@ interface HistoricoItem {
   criadoEm: string
 }
 
-export async function createAtendimento(data: CreateAtendimentoData, ip?: string) {
-  const protocolo = `ATD-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`
+export async function createAtendimento(
+  data: CreateAtendimentoData,
+  ip?: string,
+  protocoloOverride?: string,
+) {
+  const protocolo =
+    protocoloOverride ??
+    `ATD-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`
 
   const atendimento = await ticketsRepository.create({
     protocolo,
@@ -52,7 +58,9 @@ export async function criarContatoPublico(data: CreateAtendimentoData, ip?: stri
     if (!edital) throw new EditalNaoEncontradoError()
   }
 
-  const atendimento = await createAtendimento(data, ip)
+  // Contato público preserva o formato de protocolo PNAB-ANO-XXXXXX do v0.
+  const protocolo = `PNAB-${new Date().getFullYear()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`
+  const atendimento = await createAtendimento(data, ip, protocolo)
   return { protocolo: atendimento.protocolo }
 }
 

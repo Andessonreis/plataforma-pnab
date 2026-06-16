@@ -11,6 +11,9 @@ import {
 } from '../service/slides.service'
 import { toSlideDTO } from '../mapper/slides.mapper'
 
+// Slides do carrossel da home → revalida a home após mutação.
+const REVALIDATE = [{ path: '/' }]
+
 export const slidesController = {
   async list(ctx: RequestContext) {
     const caller = await resolveApiCaller(ctx.headers)
@@ -31,7 +34,7 @@ export const slidesController = {
     if (!callerHasRole(caller, 'ADMIN')) throw new ForbiddenError()
     const data = slideSchema.parse(ctx.body)
     const slide = await createSlide(data, caller.userId, ipFromHeaders(ctx.headers))
-    return { data: toSlideDTO(slide), status: 201 }
+    return { data: toSlideDTO(slide), status: 201, revalidate: REVALIDATE }
   },
 
   async update(ctx: RequestContext) {
@@ -39,13 +42,13 @@ export const slidesController = {
     if (!callerHasRole(caller, 'ADMIN')) throw new ForbiddenError()
     const data = slideSchema.parse(ctx.body)
     const slide = await updateSlide(ctx.params.id, data, caller.userId, ipFromHeaders(ctx.headers))
-    return { data: toSlideDTO(slide) }
+    return { data: toSlideDTO(slide), revalidate: REVALIDATE }
   },
 
   async remove(ctx: RequestContext) {
     const caller = await resolveApiCaller(ctx.headers)
     if (!callerHasRole(caller, 'ADMIN')) throw new ForbiddenError()
     await deleteSlide(ctx.params.id, caller.userId, ipFromHeaders(ctx.headers))
-    return { data: { message: 'Slide excluído.' } }
+    return { data: { message: 'Slide excluído.' }, revalidate: REVALIDATE }
   },
 }

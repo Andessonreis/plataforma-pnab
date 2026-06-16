@@ -34,6 +34,28 @@ import {
   responderRecursoSchema,
 } from '@shared/schemas/recursos.schema'
 import { importContempladosFormSchema } from '@shared/schemas/contemplados.schema'
+import { campaignSchema, ruleSchema } from '@shared/schemas/notifications.schema'
+import {
+  categoriaCreateSchema,
+  categoriaUpdateSchema,
+  categoriaReorderSchema,
+} from '@shared/schemas/configuracoes-categorias.schema'
+import {
+  templateAvaliacaoCreateSchema,
+  templateAvaliacaoUpdateSchema,
+} from '@shared/schemas/configuracoes-templates-avaliacao.schema'
+import {
+  tipoAnexoCreateSchema,
+  tipoAnexoUpdateSchema,
+} from '@shared/schemas/configuracoes-tipos-anexo.schema'
+import {
+  emailTemplateUpsertSchema,
+  emailTemplatePreviewSchema,
+  emailTemplateTestSendSchema,
+} from '@shared/schemas/email-templates.schema'
+import { bannerSchema } from '@shared/schemas/banners.schema'
+import { slideSchema } from '@shared/schemas/slides.schema'
+import { newsletterInscricaoSchema } from '@shared/schemas/newsletter.schema'
 
 const ID = registry.registerParameter(
   'Id',
@@ -115,6 +137,21 @@ export function buildOpenApiDocument() {
   registry.register('DecidirRecursoInput', decidirRecursoSchema)
   registry.register('ResponderRecursoInput', responderRecursoSchema)
   registry.register('ImportContempladosInput', importContempladosFormSchema)
+  registry.register('CampaignInput', campaignSchema)
+  registry.register('RuleInput', ruleSchema)
+  registry.register('CategoriaCreateInput', categoriaCreateSchema)
+  registry.register('CategoriaUpdateInput', categoriaUpdateSchema)
+  registry.register('CategoriaReorderInput', categoriaReorderSchema)
+  registry.register('TemplateAvaliacaoCreateInput', templateAvaliacaoCreateSchema)
+  registry.register('TemplateAvaliacaoUpdateInput', templateAvaliacaoUpdateSchema)
+  registry.register('TipoAnexoCreateInput', tipoAnexoCreateSchema)
+  registry.register('TipoAnexoUpdateInput', tipoAnexoUpdateSchema)
+  registry.register('EmailTemplateUpsertInput', emailTemplateUpsertSchema)
+  registry.register('EmailTemplatePreviewInput', emailTemplatePreviewSchema)
+  registry.register('EmailTemplateTestSendInput', emailTemplateTestSendSchema)
+  registry.register('BannerInput', bannerSchema)
+  registry.register('SlideInput', slideSchema)
+  registry.register('NewsletterInscricaoInput', newsletterInscricaoSchema)
   registry.register('ErrorResponse', errorResponse)
 
   // ── Conteúdo (CMS / FAQ / Notícias) ─────────────────────────────────────────
@@ -509,6 +546,356 @@ export function buildOpenApiDocument() {
   registry.registerPath({
     method: 'get', path: '/logs', tags: ['Logs'], summary: 'Lista logs de auditoria (ADMIN)', security: sec,
     responses: { 200: { description: 'OK', ...json(paginatedEnvelope(z.unknown())) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'post', path: '/logs/purge', tags: ['Logs'], summary: 'Expurga logs de auditoria antigos (ADMIN)', security: sec,
+    responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'post', path: '/logs/erros/purge', tags: ['Logs'], summary: 'Expurga logs de erro antigos (ADMIN)', security: sec,
+    responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
+  })
+
+  // ── Notificações · Campanhas ─────────────────────────────────────────────────
+  registry.registerPath({
+    method: 'get', path: '/notificacoes/campanhas', tags: ['Notificações · Campanhas'], summary: 'Lista campanhas de notificação (ADMIN)', security: sec,
+    responses: { 200: { description: 'OK', ...json(envelope(z.array(z.unknown()))) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'post', path: '/notificacoes/campanhas', tags: ['Notificações · Campanhas'], summary: 'Cria campanha (ADMIN)', security: sec,
+    request: { body: json(campaignSchema) },
+    responses: { 201: { description: 'Criado', ...json(envelope(z.unknown())) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'get', path: '/notificacoes/campanhas/campanha/{id}', tags: ['Notificações · Campanhas'], summary: 'Detalha campanha (ADMIN)', security: sec,
+    request: { params: params('id') },
+    responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'put', path: '/notificacoes/campanhas/campanha/{id}', tags: ['Notificações · Campanhas'], summary: 'Atualiza campanha (ADMIN)', security: sec,
+    request: { params: params('id'), body: json(campaignSchema) },
+    responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'delete', path: '/notificacoes/campanhas/campanha/{id}', tags: ['Notificações · Campanhas'], summary: 'Remove campanha (ADMIN)', security: sec,
+    request: { params: params('id') },
+    responses: { 200: { description: 'OK', ...json(envelope(z.object({ message: z.string() }))) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'post', path: '/notificacoes/campanhas/campanha/{id}/envio', tags: ['Notificações · Campanhas'], summary: 'Dispara envio da campanha (ADMIN)', security: sec,
+    request: { params: params('id') },
+    responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'post', path: '/notificacoes/campanhas/campanha/{id}/cancelamento', tags: ['Notificações · Campanhas'], summary: 'Cancela envio da campanha (ADMIN)', security: sec,
+    request: { params: params('id') },
+    responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'post', path: '/notificacoes/campanhas/campanha/{id}/audiencia', tags: ['Notificações · Campanhas'], summary: 'Calcula audiência da campanha (ADMIN)', security: sec,
+    request: { params: params('id') },
+    responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
+  })
+
+  // ── Notificações · Regras ────────────────────────────────────────────────────
+  registry.registerPath({
+    method: 'get', path: '/notificacoes/regras', tags: ['Notificações · Regras'], summary: 'Lista regras de notificação (ADMIN)', security: sec,
+    responses: { 200: { description: 'OK', ...json(envelope(z.array(z.unknown()))) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'post', path: '/notificacoes/regras', tags: ['Notificações · Regras'], summary: 'Cria regra (ADMIN)', security: sec,
+    request: { body: json(ruleSchema) },
+    responses: { 201: { description: 'Criado', ...json(envelope(z.unknown())) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'get', path: '/notificacoes/regras/regra/{id}', tags: ['Notificações · Regras'], summary: 'Detalha regra (ADMIN)', security: sec,
+    request: { params: params('id') },
+    responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'put', path: '/notificacoes/regras/regra/{id}', tags: ['Notificações · Regras'], summary: 'Atualiza regra (ADMIN)', security: sec,
+    request: { params: params('id'), body: json(ruleSchema) },
+    responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'delete', path: '/notificacoes/regras/regra/{id}', tags: ['Notificações · Regras'], summary: 'Remove regra (ADMIN)', security: sec,
+    request: { params: params('id') },
+    responses: { 200: { description: 'OK', ...json(envelope(z.object({ message: z.string() }))) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'post', path: '/notificacoes/regras/regra/{id}/ativacao', tags: ['Notificações · Regras'], summary: 'Ativa/desativa regra (ADMIN)', security: sec,
+    request: { params: params('id'), body: json(z.object({ ativo: z.boolean() })) },
+    responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'post', path: '/notificacoes/regras/regra/{id}/audiencia', tags: ['Notificações · Regras'], summary: 'Calcula audiência da regra (ADMIN)', security: sec,
+    request: { params: params('id') },
+    responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
+  })
+
+  // ── Notificações · Inbox ─────────────────────────────────────────────────────
+  registry.registerPath({
+    method: 'get', path: '/notificacoes', tags: ['Notificações'], summary: 'Lista notificações enviadas (ADMIN)', security: sec,
+    responses: { 200: { description: 'OK', ...json(paginatedEnvelope(z.unknown())) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'get', path: '/notificacoes/me', tags: ['Notificações'], summary: 'Inbox do usuário autenticado', security: sec,
+    responses: { 200: { description: 'OK', ...json(paginatedEnvelope(z.unknown())) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'get', path: '/notificacoes/me/nao-lidas', tags: ['Notificações'], summary: 'Conta notificações não lidas', security: sec,
+    responses: { 200: { description: 'OK', ...json(envelope(z.object({ total: z.number() }))) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'post', path: '/notificacoes/me/lidas', tags: ['Notificações'], summary: 'Marca todas como lidas', security: sec,
+    responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'post', path: '/notificacoes/me/notificacao/{id}/leitura', tags: ['Notificações'], summary: 'Marca notificação como lida', security: sec,
+    request: { params: params('id') },
+    responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
+  })
+
+  // ── Configurações · Categorias ───────────────────────────────────────────────
+  registry.registerPath({
+    method: 'get', path: '/configuracoes/categorias', tags: ['Configurações · Categorias'], summary: 'Lista categorias (ADMIN)', security: sec,
+    responses: { 200: { description: 'OK', ...json(envelope(z.array(z.unknown()))) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'post', path: '/configuracoes/categorias', tags: ['Configurações · Categorias'], summary: 'Cria categoria (ADMIN)', security: sec,
+    request: { body: json(categoriaCreateSchema) },
+    responses: { 201: { description: 'Criado', ...json(envelope(z.unknown())) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'put', path: '/configuracoes/categorias/categoria/{id}', tags: ['Configurações · Categorias'], summary: 'Atualiza categoria (ADMIN)', security: sec,
+    request: { params: params('id'), body: json(categoriaUpdateSchema) },
+    responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'delete', path: '/configuracoes/categorias/categoria/{id}', tags: ['Configurações · Categorias'], summary: 'Remove categoria (ADMIN)', security: sec,
+    request: { params: params('id') },
+    responses: { 200: { description: 'OK', ...json(envelope(z.object({ message: z.string() }))) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'put', path: '/configuracoes/categorias/reorder', tags: ['Configurações · Categorias'], summary: 'Reordena categorias (ADMIN)', security: sec,
+    request: { body: json(categoriaReorderSchema) },
+    responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
+  })
+
+  // ── Configurações · Templates de Avaliação ───────────────────────────────────
+  registry.registerPath({
+    method: 'get', path: '/configuracoes/templates-avaliacao', tags: ['Configurações · Templates de Avaliação'], summary: 'Lista templates de avaliação (ADMIN)', security: sec,
+    responses: { 200: { description: 'OK', ...json(envelope(z.array(z.unknown()))) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'post', path: '/configuracoes/templates-avaliacao', tags: ['Configurações · Templates de Avaliação'], summary: 'Cria template de avaliação (ADMIN)', security: sec,
+    request: { body: json(templateAvaliacaoCreateSchema) },
+    responses: { 201: { description: 'Criado', ...json(envelope(z.unknown())) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'get', path: '/configuracoes/templates-avaliacao/template/{id}', tags: ['Configurações · Templates de Avaliação'], summary: 'Detalha template de avaliação (ADMIN)', security: sec,
+    request: { params: params('id') },
+    responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'put', path: '/configuracoes/templates-avaliacao/template/{id}', tags: ['Configurações · Templates de Avaliação'], summary: 'Atualiza template de avaliação (ADMIN)', security: sec,
+    request: { params: params('id'), body: json(templateAvaliacaoUpdateSchema) },
+    responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'delete', path: '/configuracoes/templates-avaliacao/template/{id}', tags: ['Configurações · Templates de Avaliação'], summary: 'Remove template de avaliação (ADMIN)', security: sec,
+    request: { params: params('id') },
+    responses: { 200: { description: 'OK', ...json(envelope(z.object({ message: z.string() }))) }, ...errors },
+  })
+
+  // ── Configurações · Tipos de Anexo ───────────────────────────────────────────
+  registry.registerPath({
+    method: 'get', path: '/configuracoes/tipos-anexo', tags: ['Configurações · Tipos de Anexo'], summary: 'Lista tipos de anexo (ADMIN)', security: sec,
+    responses: { 200: { description: 'OK', ...json(envelope(z.array(z.unknown()))) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'post', path: '/configuracoes/tipos-anexo', tags: ['Configurações · Tipos de Anexo'], summary: 'Cria tipo de anexo (ADMIN)', security: sec,
+    request: { body: json(tipoAnexoCreateSchema) },
+    responses: { 201: { description: 'Criado', ...json(envelope(z.unknown())) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'put', path: '/configuracoes/tipos-anexo/tipo/{id}', tags: ['Configurações · Tipos de Anexo'], summary: 'Atualiza tipo de anexo (ADMIN)', security: sec,
+    request: { params: params('id'), body: json(tipoAnexoUpdateSchema) },
+    responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'delete', path: '/configuracoes/tipos-anexo/tipo/{id}', tags: ['Configurações · Tipos de Anexo'], summary: 'Remove tipo de anexo (ADMIN)', security: sec,
+    request: { params: params('id') },
+    responses: { 200: { description: 'OK', ...json(envelope(z.object({ message: z.string() }))) }, ...errors },
+  })
+
+  // ── E-mail Templates ─────────────────────────────────────────────────────────
+  registry.registerPath({
+    method: 'get', path: '/email-templates', tags: ['E-mail Templates'], summary: 'Lista templates de e-mail (ADMIN)', security: sec,
+    responses: { 200: { description: 'OK', ...json(envelope(z.array(z.unknown()))) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'get', path: '/email-templates/template/{id}', tags: ['E-mail Templates'], summary: 'Detalha template de e-mail (ADMIN)', security: sec,
+    request: { params: params('id') },
+    responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'put', path: '/email-templates/template/{id}', tags: ['E-mail Templates'], summary: 'Atualiza template de e-mail (ADMIN)', security: sec,
+    request: { params: params('id'), body: json(emailTemplateUpsertSchema) },
+    responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'post', path: '/email-templates/template/{id}/preview', tags: ['E-mail Templates'], summary: 'Pré-visualiza template renderizado (ADMIN)', security: sec,
+    request: { params: params('id'), body: json(emailTemplatePreviewSchema) },
+    responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'post', path: '/email-templates/template/{id}/teste', tags: ['E-mail Templates'], summary: 'Envia e-mail de teste (ADMIN)', security: sec,
+    request: { params: params('id'), body: json(emailTemplateTestSendSchema) },
+    responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
+  })
+
+  // ── Banners ──────────────────────────────────────────────────────────────────
+  registry.registerPath({
+    method: 'get', path: '/banners', tags: ['Banners'], summary: 'Lista banners (ADMIN)', security: sec,
+    responses: { 200: { description: 'OK', ...json(envelope(z.array(z.unknown()))) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'post', path: '/banners', tags: ['Banners'], summary: 'Cria banner (ADMIN)', security: sec,
+    request: { body: json(bannerSchema) },
+    responses: { 201: { description: 'Criado', ...json(envelope(z.unknown())) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'get', path: '/banners/banner/{id}', tags: ['Banners'], summary: 'Detalha banner (ADMIN)', security: sec,
+    request: { params: params('id') },
+    responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'put', path: '/banners/banner/{id}', tags: ['Banners'], summary: 'Atualiza banner (ADMIN)', security: sec,
+    request: { params: params('id'), body: json(bannerSchema) },
+    responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'delete', path: '/banners/banner/{id}', tags: ['Banners'], summary: 'Remove banner (ADMIN)', security: sec,
+    request: { params: params('id') },
+    responses: { 200: { description: 'OK', ...json(envelope(z.object({ message: z.string() }))) }, ...errors },
+  })
+
+  // ── Slides ───────────────────────────────────────────────────────────────────
+  registry.registerPath({
+    method: 'get', path: '/slides', tags: ['Slides'], summary: 'Lista slides (ADMIN)', security: sec,
+    responses: { 200: { description: 'OK', ...json(envelope(z.array(z.unknown()))) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'post', path: '/slides', tags: ['Slides'], summary: 'Cria slide (ADMIN)', security: sec,
+    request: { body: json(slideSchema) },
+    responses: { 201: { description: 'Criado', ...json(envelope(z.unknown())) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'get', path: '/slides/slide/{id}', tags: ['Slides'], summary: 'Detalha slide (ADMIN)', security: sec,
+    request: { params: params('id') },
+    responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'put', path: '/slides/slide/{id}', tags: ['Slides'], summary: 'Atualiza slide (ADMIN)', security: sec,
+    request: { params: params('id'), body: json(slideSchema) },
+    responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'delete', path: '/slides/slide/{id}', tags: ['Slides'], summary: 'Remove slide (ADMIN)', security: sec,
+    request: { params: params('id') },
+    responses: { 200: { description: 'OK', ...json(envelope(z.object({ message: z.string() }))) }, ...errors },
+  })
+
+  // ── Newsletter / Contato ─────────────────────────────────────────────────────
+  registry.registerPath({
+    method: 'post', path: '/newsletter', tags: ['Newsletter'], summary: 'Inscreve e-mail na newsletter (público)',
+    request: { body: json(newsletterInscricaoSchema) },
+    responses: { 201: { description: 'Criado', ...json(envelope(z.unknown())) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'post', path: '/contato', tags: ['Contato'], summary: 'Abre ticket de contato (público)',
+    request: { body: json(createAtendimentoSchema) },
+    responses: { 201: { description: 'Criado', ...json(envelope(z.unknown())) }, ...errors },
+  })
+
+  // ── Upload ───────────────────────────────────────────────────────────────────
+  registry.registerPath({
+    method: 'post', path: '/upload/imagem', tags: ['Upload'], summary: 'Envia imagem para o storage (ADMIN, multipart/form-data)', security: sec,
+    request: {
+      body: {
+        content: {
+          'multipart/form-data': {
+            schema: z.object({
+              file: z.string().openapi({ format: 'binary' }),
+              pasta: z.string().optional(),
+            }),
+          },
+        },
+      },
+    },
+    responses: { 201: { description: 'Criado', ...json(envelope(z.object({ url: z.string() }))) }, ...errors },
+  })
+
+  // ── Usuários ─────────────────────────────────────────────────────────────────
+  registry.registerPath({
+    method: 'get', path: '/usuarios/busca', tags: ['Usuários'], summary: 'Busca usuários por nome/CPF/papel (ADMIN)', security: sec,
+    request: {
+      query: z.object({
+        q: z.string().optional(),
+        ids: z.string().optional(),
+        role: z.enum(['PROPONENTE', 'ATENDIMENTO', 'HABILITADOR', 'AVALIADOR', 'ADMIN']).optional(),
+        limit: z.coerce.number().optional(),
+      }),
+    },
+    responses: { 200: { description: 'OK', ...json(envelope(z.array(z.unknown()))) }, ...errors },
+  })
+
+  // ── Me · Avatar ──────────────────────────────────────────────────────────────
+  registry.registerPath({
+    method: 'post', path: '/me/avatar', tags: ['Me'], summary: 'Envia avatar do usuário (autenticado, multipart/form-data)', security: sec,
+    request: {
+      body: {
+        content: {
+          'multipart/form-data': { schema: z.object({ file: z.string().openapi({ format: 'binary' }) }) },
+        },
+      },
+    },
+    responses: { 200: { description: 'OK', ...json(envelope(z.object({ url: z.string() }))) }, ...errors },
+  })
+  registry.registerPath({
+    method: 'delete', path: '/me/avatar', tags: ['Me'], summary: 'Remove avatar do usuário (autenticado)', security: sec,
+    responses: { 200: { description: 'OK', ...json(envelope(z.object({ message: z.string() }))) }, ...errors },
+  })
+
+  // ── Autenticação · Declaração ────────────────────────────────────────────────
+  registry.registerPath({
+    method: 'post', path: '/autenticacao/usuarios/declaracao', tags: ['Autenticação'], summary: 'Envia declaração do usuário (autenticado, multipart/form-data)', security: sec,
+    request: {
+      body: {
+        content: {
+          'multipart/form-data': {
+            schema: z.object({
+              file: z.string().openapi({ format: 'binary' }),
+              userId: z.string(),
+            }),
+          },
+        },
+      },
+    },
+    responses: { 200: { description: 'OK', ...json(envelope(z.unknown())) }, ...errors },
+  })
+
+  // ── Recursos (lista agregada) ────────────────────────────────────────────────
+  registry.registerPath({
+    method: 'get', path: '/recursos', tags: ['Recursos'], summary: 'Lista recursos visíveis ao usuário (autenticado)', security: sec,
+    responses: { 200: { description: 'OK', ...json(paginatedEnvelope(z.unknown())) }, ...errors },
+  })
+
+  // ── Habilitadores ────────────────────────────────────────────────────────────
+  registry.registerPath({
+    method: 'get', path: '/habilitadores', tags: ['Habilitadores'], summary: 'Lista habilitadores (ADMIN)', security: sec,
+    responses: { 200: { description: 'OK', ...json(envelope(z.array(z.unknown()))) }, ...errors },
   })
 
   void ID

@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { ZodError } from 'zod'
 import { ApiError, InternalError } from '@server/lib/http/errors'
 import { ServiceError } from '@shared/service-error'
@@ -29,6 +30,10 @@ export type ControllerResult<T> =
       status?: number
       meta?: PaginationMeta
       cacheControl?: string
+      /** Caminhos do Next a revalidar após a mutação (ISR). O controller só
+       * declara; é o adapter (camada Next) que invalida — mantém o módulo
+       * desacoplado do framework. */
+      revalidate?: { path: string; type?: 'layout' | 'page' }[]
     }
   | {
       file: ControllerFile
@@ -75,6 +80,10 @@ export function adaptNextRoute<T>(controller: Controller<T>) {
         }
         const body = typeof f.body === 'string' ? f.body : new Uint8Array(f.body)
         return new NextResponse(body, { status: result.status ?? 200, headers })
+      }
+
+      if (result.revalidate) {
+        for (const r of result.revalidate) revalidatePath(r.path, r.type)
       }
 
       return jsonSuccess(result.data, {

@@ -11,6 +11,9 @@ import {
 } from '../service/banners.service'
 import { toBannerDTO } from '../mapper/banners.mapper'
 
+// Banners aparecem no layout público → revalida o layout inteiro após mutação.
+const REVALIDATE = [{ path: '/', type: 'layout' as const }]
+
 export const bannersController = {
   async list(ctx: RequestContext) {
     const caller = await resolveApiCaller(ctx.headers)
@@ -31,7 +34,7 @@ export const bannersController = {
     if (!callerHasRole(caller, 'ADMIN')) throw new ForbiddenError()
     const data = bannerSchema.parse(ctx.body)
     const banner = await createBanner(data, caller.userId, ipFromHeaders(ctx.headers))
-    return { data: toBannerDTO(banner), status: 201 }
+    return { data: toBannerDTO(banner), status: 201, revalidate: REVALIDATE }
   },
 
   async update(ctx: RequestContext) {
@@ -39,13 +42,13 @@ export const bannersController = {
     if (!callerHasRole(caller, 'ADMIN')) throw new ForbiddenError()
     const data = bannerSchema.parse(ctx.body)
     const banner = await updateBanner(ctx.params.id, data, caller.userId, ipFromHeaders(ctx.headers))
-    return { data: toBannerDTO(banner) }
+    return { data: toBannerDTO(banner), revalidate: REVALIDATE }
   },
 
   async remove(ctx: RequestContext) {
     const caller = await resolveApiCaller(ctx.headers)
     if (!callerHasRole(caller, 'ADMIN')) throw new ForbiddenError()
     await deleteBanner(ctx.params.id, caller.userId, ipFromHeaders(ctx.headers))
-    return { data: { message: 'Banner excluído.' } }
+    return { data: { message: 'Banner excluído.' }, revalidate: REVALIDATE }
   },
 }
