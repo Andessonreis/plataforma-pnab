@@ -1,15 +1,15 @@
-'use client'
+import { redirect } from 'next/navigation'
+import { auth } from '@server/lib/auth'
+import { SwaggerClient } from './swagger-client'
 
-import dynamic from 'next/dynamic'
-import 'swagger-ui-react/swagger-ui.css'
+export default async function ApiDocsPage() {
+  const session = await auth()
+  if (session?.user?.role !== 'ADMIN') redirect('/')
 
-const SwaggerUI = dynamic(() => import('swagger-ui-react'), { ssr: false })
-
-export default function ApiDocsPage() {
   return (
     <main className="min-h-screen bg-white">
       <div className="mx-auto max-w-7xl px-4 py-8">
-        <SwaggerUI url="/api/openapi" />
+        <SwaggerClient />
       </div>
     </main>
   )
