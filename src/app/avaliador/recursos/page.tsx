@@ -30,7 +30,7 @@ export default async function AvaliadorRecursosPage() {
     orderBy: { createdAt: 'desc' },
     include: {
       edital: { select: { titulo: true } },
-      proponente: { select: { nome: true, cpfCnpj: true } },
+      proponente: { select: { nome: true } },
       recursos: {
         orderBy: { createdAt: 'desc' },
         include: {

@@ -6,6 +6,7 @@ import { prisma } from '@server/lib/db'
 import { Card, Badge, Pagination, Button, EmptyState, FadeIn, IconClipboard } from '@client/components/ui'
 import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
 import { getEditaisVisiveis } from '@server/lib/edital-acesso'
+import { maskCpfCnpj } from '@shared/utils/mask'
 import type { InscricaoStatus } from '@prisma/client'
 
 export const metadata: Metadata = {
@@ -155,7 +156,7 @@ export default async function AvaliadorInscricoesPage({ searchParams }: Props) {
                         <td className="py-3 px-4 font-mono text-xs">{ins.numero}</td>
                         <td className="py-3 px-4">
                           <p className="font-medium text-slate-900">{ins.proponente.nome}</p>
-                          <p className="text-xs text-slate-500">{ins.proponente.cpfCnpj}</p>
+                          <p className="text-xs text-slate-500">{maskCpfCnpj(ins.proponente.cpfCnpj)}</p>
                         </td>
                         <td className="py-3 px-4 text-slate-600">{ins.edital.titulo}</td>
                         <td className="py-3 px-4 text-slate-600">{ins.categoria ?? '—'}</td>

@@ -12,6 +12,7 @@ import { RecursoRespostaAvaliador } from '@/app/admin/inscricoes/[id]/recurso-re
 import { RecursoAnexos } from '@client/components/recurso/recurso-anexos'
 import { temAcessoEdital } from '@server/lib/edital-acesso'
 import { DadosInscricaoView } from '@client/components/inscricao/dados-inscricao-view'
+import { maskCpfCnpj } from '@shared/utils/mask'
 import { podeAvaliar, mensagemForaDaFase } from '@shared/edital/fase'
 import { ForaDaFaseAlert } from '@client/components/edital/fora-da-fase-alert'
 import type { CampoFormulario } from '@shared/types/campo-formulario'
@@ -44,7 +45,7 @@ export default async function AvaliadorInscricaoDetailPage({ params }: Props) {
         },
       },
       proponente: {
-        select: { nome: true, cpfCnpj: true, email: true, telefone: true, tipoProponente: true },
+        select: { nome: true, cpfCnpj: true, tipoProponente: true },
       },
       anexos: true,
       avaliacoes: {
@@ -108,7 +109,7 @@ export default async function AvaliadorInscricaoDetailPage({ params }: Props) {
       </div>
 
       <DadosInscricaoView
-        proponente={inscricao.proponente}
+        proponente={{ ...inscricao.proponente, cpfCnpj: maskCpfCnpj(inscricao.proponente.cpfCnpj) }}
         categoria={inscricao.categoria}
         campos={campos}
         camposFormulario={camposFormulario}
