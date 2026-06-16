@@ -3,24 +3,15 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Button, Input } from '@client/components/ui'
-import {
-  formatTelefoneBR,
-  unmaskTelefone,
-  formatCpfCnpj,
-  formatCep,
-  unmaskCep,
-} from '@shared/utils/format'
+import { Button } from '@client/components/ui'
+import { unmaskTelefone, unmaskCep } from '@shared/utils/format'
 import { autenticacaoClient } from '@client/api/autenticacao.client'
-
-type TipoProponente = 'PF' | 'PJ' | 'MEI' | 'COLETIVO'
-
-const tipoLabels: Record<TipoProponente, string> = {
-  PF: 'Pessoa Física',
-  PJ: 'Pessoa Jurídica',
-  MEI: 'MEI',
-  COLETIVO: 'Coletivo Cultural',
-}
+import type { TipoProponente } from './cadastro-form/types'
+import { TipoProponenteField } from './cadastro-form/tipo-proponente-field'
+import { DadosProponenteFields } from './cadastro-form/dados-proponente-fields'
+import { EnderecoFields } from './cadastro-form/endereco-fields'
+import { DeclaracaoColetivoField } from './cadastro-form/declaracao-coletivo-field'
+import { SenhaFields } from './cadastro-form/senha-fields'
 
 export function CadastroForm() {
   const router = useRouter()
@@ -44,8 +35,6 @@ export function CadastroForm() {
     password: '',
     confirmPassword: '',
   })
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loadingCep, setLoadingCep] = useState(false)
   const [loadingCnpj, setLoadingCnpj] = useState(false)
   const [cnpjHint, setCnpjHint] = useState('')
@@ -240,271 +229,34 @@ export function CadastroForm() {
     finally { setLoadingCep(false) }
   }
 
-  const UF_OPTIONS = [
-    'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG',
-    'PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO',
-  ]
-
   const isCnpj = tipo === 'PJ' || tipo === 'MEI'
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5" noValidate>
-      {/* Seleção do tipo */}
-      <fieldset>
-        <legend className="block text-sm font-medium text-slate-700 mb-2">
-          Tipo de proponente
-        </legend>
-        <div className="grid grid-cols-2 gap-2">
-          {(Object.entries(tipoLabels) as [TipoProponente, string][]).map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setTipo(value)}
-              className={[
-                'rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors min-h-[44px]',
-                tipo === value
-                  ? 'border-brand-600 bg-brand-50 text-brand-700'
-                  : 'border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50',
-              ].join(' ')}
-              aria-pressed={tipo === value}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </fieldset>
+      <TipoProponenteField tipo={tipo} onChange={setTipo} />
 
-      <Input
-        label={isCnpj ? 'Razão Social' : 'Nome completo'}
-        type="text"
-        placeholder={isCnpj ? 'Razão Social da empresa' : 'Seu nome completo'}
-        value={formData.nome}
-        onChange={(e) => updateField('nome', e.target.value)}
-        required
-        autoComplete="name"
+      <DadosProponenteFields
+        formData={formData}
+        updateField={updateField}
+        isCnpj={isCnpj}
+        loadingCnpj={loadingCnpj}
+        cnpjHint={cnpjHint}
+        onCnpjBlur={handleCnpjBlur}
       />
 
-      <Input
-        label={isCnpj ? 'CNPJ' : 'CPF'}
-        type="text"
-        inputMode="numeric"
-        placeholder={isCnpj ? '00.000.000/0000-00' : '000.000.000-00'}
-        value={formData.cpfCnpj}
-        onChange={(e) => updateField('cpfCnpj', formatCpfCnpj(e.target.value))}
-        onBlur={isCnpj ? handleCnpjBlur : undefined}
-        maxLength={isCnpj ? 18 : 14}
-        required
-        autoComplete="off"
-        hint={
-          isCnpj
-            ? loadingCnpj
-              ? 'Consultando CNPJ na Receita...'
-              : cnpjHint || undefined
-            : undefined
-        }
+      <EnderecoFields
+        formData={formData}
+        updateField={updateField}
+        loadingCep={loadingCep}
+        onCepBlur={handleCepBlur}
       />
-
-      <Input
-        label="E-mail"
-        type="email"
-        placeholder="seu@email.com"
-        value={formData.email}
-        onChange={(e) => updateField('email', e.target.value)}
-        required
-        autoComplete="email"
-      />
-
-      <Input
-        label="Telefone"
-        type="tel"
-        inputMode="numeric"
-        placeholder="(74) 99999-0000"
-        value={formData.telefone}
-        onChange={(e) => updateField('telefone', formatTelefoneBR(e.target.value))}
-        maxLength={15}
-        required
-        autoComplete="tel"
-      />
-
-      {/* Endereço */}
-      <fieldset className="space-y-4 pt-2">
-        <legend className="block text-sm font-medium text-slate-700 mb-2">
-          Endereço
-        </legend>
-
-        <div className="grid grid-cols-3 gap-3">
-          <div className="col-span-1">
-            <Input
-              label="CEP"
-              type="text"
-              inputMode="numeric"
-              placeholder="00000-000"
-              value={formData.cep}
-              onChange={(e) => updateField('cep', formatCep(e.target.value))}
-              onBlur={handleCepBlur}
-              maxLength={9}
-              required
-              hint={loadingCep ? 'Buscando...' : undefined}
-            />
-          </div>
-          <div className="col-span-2">
-            <Input
-              label="Logradouro"
-              type="text"
-              placeholder="Rua, Avenida, etc."
-              value={formData.logradouro}
-              onChange={(e) => updateField('logradouro', e.target.value)}
-              required
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-3">
-          <Input
-            label="Número"
-            type="text"
-            placeholder="123"
-            value={formData.numero}
-            onChange={(e) => updateField('numero', e.target.value)}
-          />
-          <div className="col-span-2">
-            <Input
-              label="Complemento"
-              type="text"
-              placeholder="Apto, Sala, etc."
-              value={formData.complemento}
-              onChange={(e) => updateField('complemento', e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-3">
-          <Input
-            label="Bairro"
-            type="text"
-            placeholder="Bairro"
-            value={formData.bairro}
-            onChange={(e) => updateField('bairro', e.target.value)}
-            required
-          />
-          <Input
-            label="Cidade"
-            type="text"
-            placeholder="Cidade"
-            value={formData.cidade}
-            onChange={(e) => updateField('cidade', e.target.value)}
-            required
-          />
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">UF</label>
-            <select
-              value={formData.uf}
-              onChange={(e) => updateField('uf', e.target.value)}
-              required
-              className="w-full min-h-[44px] rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus-visible:outline-none"
-            >
-              <option value="">UF</option>
-              {UF_OPTIONS.map((uf) => (
-                <option key={uf} value={uf}>{uf}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </fieldset>
 
       {/* Declaração do coletivo — exibido apenas para COLETIVO */}
       {tipo === 'COLETIVO' && (
-        <div className="w-full">
-          <label
-            htmlFor="declaracao-coletivo"
-            className="block text-sm font-medium text-slate-700 mb-1.5"
-          >
-            Declaração do Coletivo (PDF)
-            <span className="text-red-500 ml-0.5" aria-hidden="true">*</span>
-          </label>
-          <input
-            id="declaracao-coletivo"
-            type="file"
-            accept=".pdf"
-            onChange={(e) => {
-              const file = e.target.files?.[0] ?? null
-              setDeclaracaoFile(file)
-            }}
-            className={[
-              'block w-full rounded-lg border px-3 py-2.5 text-sm text-slate-900',
-              'transition-colors',
-              'focus:outline-none focus:ring-2 focus:ring-offset-0',
-              'min-h-[44px]',
-              'border-slate-300 focus:border-brand-500 focus:ring-brand-200',
-              'file:mr-3 file:rounded-md file:border-0 file:bg-brand-50 file:px-3 file:py-1.5',
-              'file:text-sm file:font-medium file:text-brand-700 file:cursor-pointer',
-              'hover:file:bg-brand-100',
-            ].join(' ')}
-          />
-          <p className="mt-1.5 text-sm text-slate-500">
-            Documento que comprova a existência e representação do coletivo.
-          </p>
-        </div>
+        <DeclaracaoColetivoField onFileChange={setDeclaracaoFile} />
       )}
 
-      <Input
-        label="Senha"
-        type={showPassword ? 'text' : 'password'}
-        placeholder="Mínimo 8 caracteres"
-        value={formData.password}
-        onChange={(e) => updateField('password', e.target.value)}
-        required
-        autoComplete="new-password"
-        hint="Mínimo de 8 caracteres"
-        rightIcon={
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="text-slate-400 hover:text-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded min-h-[44px] min-w-[44px] flex items-center justify-center -mr-2"
-            aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-          >
-            {showPassword ? (
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12c1.292 4.338 5.31 7.5 10.066 7.5.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
-              </svg>
-            ) : (
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-              </svg>
-            )}
-          </button>
-        }
-      />
-
-      <Input
-        label="Confirmar senha"
-        type={showConfirmPassword ? 'text' : 'password'}
-        placeholder="Repita a senha"
-        value={formData.confirmPassword}
-        onChange={(e) => updateField('confirmPassword', e.target.value)}
-        required
-        autoComplete="new-password"
-        rightIcon={
-          <button
-            type="button"
-            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            className="text-slate-400 hover:text-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded min-h-[44px] min-w-[44px] flex items-center justify-center -mr-2"
-            aria-label={showConfirmPassword ? 'Ocultar senha' : 'Mostrar senha'}
-          >
-            {showConfirmPassword ? (
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12c1.292 4.338 5.31 7.5 10.066 7.5.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
-              </svg>
-            ) : (
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-              </svg>
-            )}
-          </button>
-        }
-      />
+      <SenhaFields formData={formData} updateField={updateField} />
 
       {error && (
         <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700" role="alert">
