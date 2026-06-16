@@ -54,10 +54,10 @@ export const EditalArquivos = forwardRef<EditalArquivosHandle, EditalArquivosPro
     useEffect(() => {
       async function loadTipos() {
         try {
-          const res = await fetch('/api/admin/configuracoes/tipos-anexo')
+          const res = await fetch('/api/v1/configuracoes/tipos-anexo')
           if (res.ok) {
             const json = await res.json()
-            const tipos: { tipo: string; label: string }[] = json.data ?? json.tipos ?? []
+            const tipos: { tipo: string; label: string }[] = json.data?.tipos ?? []
             if (tipos.length > 0) {
               const opts = tipos.map((t) => ({ value: t.tipo, label: t.label }))
               setTipoOptions(opts)

@@ -19,19 +19,19 @@ export function DispatchButton({ campaignId }: DispatchButtonProps) {
   async function handlePreview() {
     setPreviewing(true)
     try {
-      const res = await fetch(`/api/admin/notifications/campaigns/${campaignId}/preview-audience`, {
+      const res = await fetch(`/api/v1/notificacoes/campanhas/campanha/${campaignId}/audiencia`, {
         method: 'POST',
       })
-      const data = await res.json()
+      const json = await res.json()
       if (!res.ok) {
         toast({
           variant: 'destructive',
           title: 'Erro ao calcular audiência',
-          description: data.message ?? 'Tente novamente.',
+          description: json.message ?? 'Tente novamente.',
         })
         return
       }
-      setPreviewCount(data.total)
+      setPreviewCount(json.data.total)
       setShowConfirm(true)
     } finally {
       setPreviewing(false)
@@ -41,21 +41,21 @@ export function DispatchButton({ campaignId }: DispatchButtonProps) {
   async function handleConfirmSend() {
     setSending(true)
     try {
-      const res = await fetch(`/api/admin/notifications/campaigns/${campaignId}/send`, {
+      const res = await fetch(`/api/v1/notificacoes/campanhas/campanha/${campaignId}/envio`, {
         method: 'POST',
       })
-      const data = await res.json()
+      const json = await res.json()
       if (!res.ok) {
         toast({
           variant: 'destructive',
           title: 'Erro ao disparar',
-          description: data.message ?? 'Tente novamente.',
+          description: json.message ?? 'Tente novamente.',
         })
         return
       }
       toast({
         title: 'Campanha enfileirada',
-        description: `${data.totalAlvo} destinatário(s) — entrega em andamento.`,
+        description: `${json.data.totalAlvo} destinatário(s) — entrega em andamento.`,
       })
       setShowConfirm(false)
       router.refresh()

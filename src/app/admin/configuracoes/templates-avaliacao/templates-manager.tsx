@@ -52,7 +52,7 @@ export function TemplatesManager({ initialTemplates }: Props) {
 
   async function refreshList() {
     try {
-      const res = await fetch('/api/admin/configuracoes/templates-avaliacao?all=true')
+      const res = await fetch('/api/v1/configuracoes/templates-avaliacao?all=true')
       if (res.ok) {
         const json = await res.json()
         setTemplates(json.data)
@@ -106,7 +106,7 @@ export function TemplatesManager({ initialTemplates }: Props) {
         const body: Record<string, unknown> = { ...payload }
         if (editingTemplate.isSystem) delete body.nome
 
-        const res = await fetch(`/api/admin/configuracoes/templates-avaliacao/${editingTemplate.id}`, {
+        const res = await fetch(`/api/v1/configuracoes/templates-avaliacao/template/${editingTemplate.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
@@ -117,7 +117,7 @@ export function TemplatesManager({ initialTemplates }: Props) {
           return
         }
       } else {
-        const res = await fetch('/api/admin/configuracoes/templates-avaliacao', {
+        const res = await fetch('/api/v1/configuracoes/templates-avaliacao', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
@@ -142,7 +142,7 @@ export function TemplatesManager({ initialTemplates }: Props) {
   async function handleDelete(id: string) {
     setLoading(true)
     try {
-      const res = await fetch(`/api/admin/configuracoes/templates-avaliacao/${id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/v1/configuracoes/templates-avaliacao/template/${id}`, { method: 'DELETE' })
       if (!res.ok) {
         const data = await res.json()
         setError(data.message || 'Erro ao excluir.')
@@ -161,7 +161,7 @@ export function TemplatesManager({ initialTemplates }: Props) {
   async function handleToggleAtivo(t: Template) {
     setLoading(true)
     try {
-      const res = await fetch(`/api/admin/configuracoes/templates-avaliacao/${t.id}`, {
+      const res = await fetch(`/api/v1/configuracoes/templates-avaliacao/template/${t.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ativo: !t.ativo }),

@@ -12,13 +12,13 @@ export function MarkAllReadButton() {
   async function handleClick() {
     setLoading(true)
     try {
-      const res = await fetch('/api/proponente/notifications/read-all', { method: 'POST' })
-      const data = await res.json()
+      const res = await fetch('/api/v1/notificacoes/me/lidas', { method: 'POST' })
+      const json = await res.json()
       if (!res.ok) {
-        toast({ variant: 'destructive', title: data.message ?? 'Erro' })
+        toast({ variant: 'destructive', title: json.message ?? 'Erro' })
         return
       }
-      toast({ title: `${data.updated} notificação(ões) marcada(s) como lida(s)` })
+      toast({ title: `${json.data.updated} notificação(ões) marcada(s) como lida(s)` })
       router.refresh()
     } finally {
       setLoading(false)

@@ -35,10 +35,10 @@ export function NotificationBell({ listLink = '/proponente/notificacoes' }: { li
 
   const fetchCount = useCallback(async () => {
     try {
-      const res = await fetch('/api/proponente/notifications/unread-count', { cache: 'no-store' })
+      const res = await fetch('/api/v1/notificacoes/me/nao-lidas', { cache: 'no-store' })
       if (!res.ok) return
-      const data = await res.json()
-      setCount(data.count ?? 0)
+      const json = await res.json()
+      setCount(json.data?.count ?? 0)
     } catch {
       // silencioso — não bloqueia a UI
     }
@@ -46,12 +46,12 @@ export function NotificationBell({ listLink = '/proponente/notificacoes' }: { li
 
   const fetchItems = useCallback(async () => {
     try {
-      const res = await fetch('/api/proponente/notifications?pageSize=5&lida=false', {
+      const res = await fetch('/api/v1/notificacoes/me?pageSize=5&lida=false', {
         cache: 'no-store',
       })
       if (!res.ok) return
-      const data = await res.json()
-      setItems(data.data ?? [])
+      const json = await res.json()
+      setItems(json.data ?? [])
       setLoaded(true)
     } catch {
       // silencioso
@@ -68,7 +68,7 @@ export function NotificationBell({ listLink = '/proponente/notificacoes' }: { li
     setItems((prev) => prev.filter((n) => n.id !== id))
     setCount((c) => Math.max(0, c - 1))
     try {
-      await fetch(`/api/proponente/notifications/${id}/read`, { method: 'POST' })
+      await fetch(`/api/v1/notificacoes/me/notificacao/${id}/leitura`, { method: 'POST' })
     } catch {
       // se falhar, refetch reconcilia
       fetchCount()

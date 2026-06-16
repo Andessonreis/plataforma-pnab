@@ -50,7 +50,7 @@ export function TemplateEditor({ templateKey, meta, initial }: Props) {
     setPreviewLoading(true)
     setPreviewError(null)
     try {
-      const res = await fetch(`/api/admin/email-templates/${templateKey}/preview`, {
+      const res = await fetch(`/api/v1/email-templates/template/${templateKey}/preview`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ subject, body }),
@@ -98,7 +98,7 @@ export function TemplateEditor({ templateKey, meta, initial }: Props) {
     setSaving(true)
     setSaveError(null)
     try {
-      const res = await fetch(`/api/admin/email-templates/${templateKey}`, {
+      const res = await fetch(`/api/v1/email-templates/template/${templateKey}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ subject, body, enabled }),
@@ -126,7 +126,7 @@ export function TemplateEditor({ templateKey, meta, initial }: Props) {
     setTestSending(true)
     setTestFeedback(null)
     try {
-      const res = await fetch(`/api/admin/email-templates/${templateKey}/test-send`, {
+      const res = await fetch(`/api/v1/email-templates/template/${templateKey}/teste`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ subject, body }),
@@ -136,7 +136,7 @@ export function TemplateEditor({ templateKey, meta, initial }: Props) {
         setTestFeedback({ type: 'error', message: json.message ?? 'Falha ao enviar teste' })
         return
       }
-      setTestFeedback({ type: 'success', message: json.message })
+      setTestFeedback({ type: 'success', message: json.data.message })
       // Limpa a notificação após 8s
       setTimeout(() => setTestFeedback(null), 8000)
     } catch (err) {

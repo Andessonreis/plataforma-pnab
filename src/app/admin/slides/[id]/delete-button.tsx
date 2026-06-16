@@ -22,7 +22,7 @@ export function DeleteSlideButton({ slideId, slideTitle }: DeleteSlideButtonProp
     setLoading(true)
 
     try {
-      const res = await fetch(`/api/admin/slides/${slideId}`, {
+      const res = await fetch(`/api/v1/slides/slide/${slideId}`, {
         method: 'DELETE',
       })
 

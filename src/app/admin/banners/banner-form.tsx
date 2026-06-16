@@ -51,8 +51,8 @@ export function BannerForm({ initialData, bannerId }: BannerFormProps) {
 
     try {
       const url = isEdit
-        ? `/api/admin/banners/${bannerId}`
-        : '/api/admin/banners'
+        ? `/api/v1/banners/banner/${bannerId}`
+        : '/api/v1/banners'
 
       const res = await fetch(url, {
         method: isEdit ? 'PUT' : 'POST',
@@ -63,8 +63,19 @@ export function BannerForm({ initialData, bannerId }: BannerFormProps) {
       const data = await res.json()
 
       if (!res.ok) {
-        if (data.fieldErrors) {
-          setErrors(data.fieldErrors)
+        const fieldErrors = Array.isArray(data.details)
+          ? data.details.reduce(
+              (acc: Record<string, string>, issue: { path?: unknown[]; message?: string }) => {
+                const key = Array.isArray(issue.path) ? issue.path.join('.') : ''
+                if (key && issue.message) acc[key] = issue.message
+                return acc
+              },
+              {},
+            )
+          : {}
+
+        if (Object.keys(fieldErrors).length > 0) {
+          setErrors(fieldErrors)
           toast({
             variant: 'destructive',
             title: 'Verifique os campos do formulário',
@@ -83,7 +94,7 @@ export function BannerForm({ initialData, bannerId }: BannerFormProps) {
         title: isEdit ? 'Banner atualizado' : 'Banner criado com sucesso',
       })
       if (!isEdit) {
-        router.push(`/admin/banners/${data.id}`)
+        router.push(`/admin/banners/${data.data.id}`)
       }
     } catch {
       toast({

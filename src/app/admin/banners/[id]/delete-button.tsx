@@ -22,7 +22,7 @@ export function DeleteBannerButton({ bannerId, bannerTitle }: DeleteBannerButton
     setLoading(true)
 
     try {
-      const res = await fetch(`/api/admin/banners/${bannerId}`, {
+      const res = await fetch(`/api/v1/banners/banner/${bannerId}`, {
         method: 'DELETE',
       })
 

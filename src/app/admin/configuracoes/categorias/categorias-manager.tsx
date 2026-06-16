@@ -46,7 +46,7 @@ export function CategoriasManager({ initialCategorias }: Props) {
 
   async function refreshList() {
     try {
-      const res = await fetch('/api/admin/configuracoes/categorias?all=true')
+      const res = await fetch('/api/v1/configuracoes/categorias?all=true')
       if (res.ok) {
         const json = await res.json()
         setCategorias(json.data)
@@ -75,7 +75,7 @@ export function CategoriasManager({ initialCategorias }: Props) {
           payload.nome = formNome.trim()
         }
 
-        const res = await fetch(`/api/admin/configuracoes/categorias/${editingCat.id}`, {
+        const res = await fetch(`/api/v1/configuracoes/categorias/categoria/${editingCat.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
@@ -86,7 +86,7 @@ export function CategoriasManager({ initialCategorias }: Props) {
           return
         }
       } else {
-        const res = await fetch('/api/admin/configuracoes/categorias', {
+        const res = await fetch('/api/v1/configuracoes/categorias', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -114,7 +114,7 @@ export function CategoriasManager({ initialCategorias }: Props) {
   async function handleDelete(id: string) {
     setLoading(true)
     try {
-      const res = await fetch(`/api/admin/configuracoes/categorias/${id}`, {
+      const res = await fetch(`/api/v1/configuracoes/categorias/categoria/${id}`, {
         method: 'DELETE',
       })
       if (!res.ok) {
@@ -135,7 +135,7 @@ export function CategoriasManager({ initialCategorias }: Props) {
   async function handleToggleAtiva(cat: Category) {
     setLoading(true)
     try {
-      const res = await fetch(`/api/admin/configuracoes/categorias/${cat.id}`, {
+      const res = await fetch(`/api/v1/configuracoes/categorias/categoria/${cat.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ativa: !cat.ativa }),
@@ -169,7 +169,7 @@ export function CategoriasManager({ initialCategorias }: Props) {
 
     // Persistir reordenação
     try {
-      await fetch('/api/admin/configuracoes/categorias/reorder', {
+      await fetch('/api/v1/configuracoes/categorias/reorder', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

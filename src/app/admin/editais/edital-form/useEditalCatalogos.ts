@@ -68,10 +68,10 @@ export function useEditalCatalogos() {
   useEffect(() => {
     async function fetchTiposAnexo() {
       try {
-        const res = await fetch('/api/admin/configuracoes/tipos-anexo')
+        const res = await fetch('/api/v1/configuracoes/tipos-anexo')
         if (res.ok) {
           const json = await res.json()
-          setTiposAnexoDisponiveis(json.data)
+          setTiposAnexoDisponiveis(json.data.tipos)
         }
       } catch {
         // silencioso
@@ -84,7 +84,7 @@ export function useEditalCatalogos() {
   useEffect(() => {
     async function fetchTemplates() {
       try {
-        const res = await fetch('/api/admin/configuracoes/templates-avaliacao')
+        const res = await fetch('/api/v1/configuracoes/templates-avaliacao')
         if (res.ok) {
           const json = await res.json()
           setTemplatesDisponiveis(json.data.map((t: { id: string; nome: string; criterios: unknown; formula: string | null }) => ({
@@ -105,7 +105,7 @@ export function useEditalCatalogos() {
   useEffect(() => {
     async function fetchCategorias() {
       try {
-        const res = await fetch('/api/admin/configuracoes/categorias')
+        const res = await fetch('/api/v1/configuracoes/categorias')
         if (res.ok) {
           const json = await res.json()
           setCategoriasDisponiveis(json.data)

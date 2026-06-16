@@ -33,7 +33,7 @@ export function NotificationItem({
     setMarking(true)
     setIsRead(true)
     try {
-      await fetch(`/api/proponente/notifications/${id}/read`, { method: 'POST' })
+      await fetch(`/api/v1/notificacoes/me/notificacao/${id}/leitura`, { method: 'POST' })
       router.refresh()
     } finally {
       setMarking(false)

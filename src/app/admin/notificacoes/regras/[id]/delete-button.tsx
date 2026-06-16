@@ -24,10 +24,10 @@ export function DeleteRuleButton({ ruleId, ruleName }: DeleteRuleButtonProps) {
     }
     setLoading(true)
     try {
-      const res = await fetch(`/api/admin/notifications/rules/${ruleId}`, { method: 'DELETE' })
-      const data = await res.json()
+      const res = await fetch(`/api/v1/notificacoes/regras/regra/${ruleId}`, { method: 'DELETE' })
+      const json = await res.json()
       if (!res.ok) {
-        toast({ variant: 'destructive', title: data.message ?? 'Erro' })
+        toast({ variant: 'destructive', title: json.message ?? 'Erro' })
         return
       }
       router.push('/admin/notificacoes/regras')

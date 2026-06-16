@@ -30,12 +30,12 @@ export function CampaignActionButtons({
     }
     setLoading(true)
     try {
-      const res = await fetch(`/api/admin/notifications/campaigns/${campaignId}`, {
+      const res = await fetch(`/api/v1/notificacoes/campanhas/campanha/${campaignId}`, {
         method: 'DELETE',
       })
-      const data = await res.json()
+      const json = await res.json()
       if (!res.ok) {
-        toast({ variant: 'destructive', title: data.message ?? 'Erro ao excluir' })
+        toast({ variant: 'destructive', title: json.message ?? 'Erro ao excluir' })
         return
       }
       router.push('/admin/notificacoes/campanhas')
@@ -48,12 +48,12 @@ export function CampaignActionButtons({
     if (!window.confirm('Cancelar disparo desta campanha?')) return
     setLoading(true)
     try {
-      const res = await fetch(`/api/admin/notifications/campaigns/${campaignId}/cancel`, {
+      const res = await fetch(`/api/v1/notificacoes/campanhas/campanha/${campaignId}/cancelamento`, {
         method: 'POST',
       })
-      const data = await res.json()
+      const json = await res.json()
       if (!res.ok) {
-        toast({ variant: 'destructive', title: data.message ?? 'Erro ao cancelar' })
+        toast({ variant: 'destructive', title: json.message ?? 'Erro ao cancelar' })
         return
       }
       toast({ title: 'Campanha cancelada.' })

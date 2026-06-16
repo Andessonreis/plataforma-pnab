@@ -57,8 +57,8 @@ export function SlideForm({ initialData, slideId }: SlideFormProps) {
 
     try {
       const url = isEdit
-        ? `/api/admin/slides/${slideId}`
-        : '/api/admin/slides'
+        ? `/api/v1/slides/slide/${slideId}`
+        : '/api/v1/slides'
 
       const res = await fetch(url, {
         method: isEdit ? 'PUT' : 'POST',
@@ -69,8 +69,19 @@ export function SlideForm({ initialData, slideId }: SlideFormProps) {
       const data = await res.json()
 
       if (!res.ok) {
-        if (data.fieldErrors) {
-          setErrors(data.fieldErrors)
+        const fieldErrors = Array.isArray(data.details)
+          ? data.details.reduce(
+              (acc: Record<string, string>, issue: { path?: unknown[]; message?: string }) => {
+                const key = Array.isArray(issue.path) ? issue.path.join('.') : ''
+                if (key && issue.message) acc[key] = issue.message
+                return acc
+              },
+              {},
+            )
+          : {}
+
+        if (Object.keys(fieldErrors).length > 0) {
+          setErrors(fieldErrors)
           toast({
             variant: 'destructive',
             title: 'Verifique os campos do formulário',
@@ -89,7 +100,7 @@ export function SlideForm({ initialData, slideId }: SlideFormProps) {
         title: isEdit ? 'Slide atualizado' : 'Slide criado com sucesso',
       })
       if (!isEdit) {
-        router.push(`/admin/slides/${data.id}`)
+        router.push(`/admin/slides/${data.data.id}`)
       }
     } catch {
       toast({

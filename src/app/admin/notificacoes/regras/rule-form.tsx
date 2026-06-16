@@ -131,25 +131,35 @@ export function RuleForm({ editais, triggers, initialData, ruleId }: RuleFormPro
 
     try {
       const url = isEdit
-        ? `/api/admin/notifications/rules/${ruleId}`
-        : '/api/admin/notifications/rules'
+        ? `/api/v1/notificacoes/regras/regra/${ruleId}`
+        : '/api/v1/notificacoes/regras'
 
       const res = await fetch(url, {
         method: isEdit ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
-      const data = await res.json()
+      const json = await res.json()
 
       if (!res.ok) {
-        if (data.fieldErrors) {
-          setErrors(data.fieldErrors)
+        const fieldErrors = Array.isArray(json.details)
+          ? json.details.reduce(
+              (acc: Record<string, string>, issue: { path?: unknown[]; message?: string }) => {
+                const key = Array.isArray(issue.path) ? issue.path.join('.') : ''
+                if (key && issue.message) acc[key] = issue.message
+                return acc
+              },
+              {},
+            )
+          : {}
+        if (Object.keys(fieldErrors).length > 0) {
+          setErrors(fieldErrors)
           toast({ variant: 'destructive', title: 'Verifique os campos' })
         } else {
           toast({
             variant: 'destructive',
             title: 'Erro ao salvar regra',
-            description: data.message,
+            description: json.message,
           })
         }
         return
@@ -157,7 +167,7 @@ export function RuleForm({ editais, triggers, initialData, ruleId }: RuleFormPro
 
       toast({ title: isEdit ? 'Regra atualizada' : 'Regra criada (desativada)' })
       if (!isEdit) {
-        router.push(`/admin/notificacoes/regras/${data.id}`)
+        router.push(`/admin/notificacoes/regras/${json.data.id}`)
       }
     } catch {
       toast({

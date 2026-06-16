@@ -73,11 +73,11 @@ export function TiposAnexoManager({ initialTipos, initialTags }: Props) {
 
   async function refreshList() {
     try {
-      const res = await fetch('/api/admin/configuracoes/tipos-anexo')
+      const res = await fetch('/api/v1/configuracoes/tipos-anexo')
       if (res.ok) {
         const json = await res.json()
-        setTipos(json.data)
-        setTags(json.tags)
+        setTipos(json.data.tipos)
+        setTags(json.data.tags)
       }
     } catch {
       // silencioso
@@ -106,7 +106,7 @@ export function TiposAnexoManager({ initialTipos, initialTags }: Props) {
       }
 
       if (editingTipo) {
-        const res = await fetch(`/api/admin/configuracoes/tipos-anexo/${editingTipo.id}`, {
+        const res = await fetch(`/api/v1/configuracoes/tipos-anexo/tipo/${editingTipo.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
@@ -117,7 +117,7 @@ export function TiposAnexoManager({ initialTipos, initialTags }: Props) {
           return
         }
       } else {
-        const res = await fetch('/api/admin/configuracoes/tipos-anexo', {
+        const res = await fetch('/api/v1/configuracoes/tipos-anexo', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
@@ -142,7 +142,7 @@ export function TiposAnexoManager({ initialTipos, initialTags }: Props) {
   async function handleDelete(id: string) {
     setLoading(true)
     try {
-      const res = await fetch(`/api/admin/configuracoes/tipos-anexo/${id}`, {
+      const res = await fetch(`/api/v1/configuracoes/tipos-anexo/tipo/${id}`, {
         method: 'DELETE',
       })
       if (!res.ok) {

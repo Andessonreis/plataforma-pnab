@@ -33,17 +33,17 @@ export function ToggleRuleButton({ ruleId, ativo, implementado }: ToggleRuleButt
 
     setLoading(true)
     try {
-      const res = await fetch(`/api/admin/notifications/rules/${ruleId}/toggle`, {
+      const res = await fetch(`/api/v1/notificacoes/regras/regra/${ruleId}/ativacao`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ativo: !ativo }),
       })
-      const data = await res.json()
+      const json = await res.json()
       if (!res.ok) {
-        toast({ variant: 'destructive', title: data.message ?? 'Erro' })
+        toast({ variant: 'destructive', title: json.message ?? 'Erro' })
         return
       }
-      toast({ title: data.ativo ? 'Regra ativada' : 'Regra desativada' })
+      toast({ title: json.data.ativo ? 'Regra ativada' : 'Regra desativada' })
       router.refresh()
     } finally {
       setLoading(false)
