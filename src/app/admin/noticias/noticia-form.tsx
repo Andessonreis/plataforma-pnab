@@ -53,8 +53,8 @@ export function NoticiaForm({ initialData, noticiaId }: NoticiaFormProps) {
 
     try {
       const url = isEdit
-        ? `/api/admin/noticias?id=${noticiaId}`
-        : '/api/admin/noticias'
+        ? `/api/v1/noticias/noticia/${noticiaId}`
+        : '/api/v1/noticias'
 
       const res = await fetch(url, {
         method: isEdit ? 'PUT' : 'POST',
@@ -65,8 +65,19 @@ export function NoticiaForm({ initialData, noticiaId }: NoticiaFormProps) {
       const data = await res.json()
 
       if (!res.ok) {
-        if (data.fieldErrors) {
-          setErrors(data.fieldErrors)
+        const fieldErrors = Array.isArray(data.details)
+          ? data.details.reduce(
+              (acc: Record<string, string>, issue: { path?: unknown[]; message?: string }) => {
+                const key = Array.isArray(issue.path) ? issue.path.join('.') : ''
+                if (key && issue.message) acc[key] = issue.message
+                return acc
+              },
+              {},
+            )
+          : {}
+
+        if (Object.keys(fieldErrors).length > 0) {
+          setErrors(fieldErrors)
           toast({
             variant: 'destructive',
             title: 'Verifique os campos do formulário',

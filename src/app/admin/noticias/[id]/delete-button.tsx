@@ -22,7 +22,7 @@ export function DeleteNoticiaButton({ noticiaId, noticiaTitle }: DeleteNoticiaBu
     setLoading(true)
 
     try {
-      const res = await fetch(`/api/admin/noticias/${noticiaId}`, {
+      const res = await fetch(`/api/v1/noticias/noticia/${noticiaId}`, {
         method: 'DELETE',
       })
 

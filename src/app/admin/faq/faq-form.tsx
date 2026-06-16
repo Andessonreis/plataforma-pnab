@@ -51,8 +51,8 @@ export function FaqForm({ initialData, faqItemId, editais }: FaqFormProps) {
 
     try {
       const url = isEdit
-        ? `/api/admin/faq?id=${faqItemId}`
-        : '/api/admin/faq'
+        ? `/api/v1/faq/item/${faqItemId}`
+        : '/api/v1/faq'
 
       const res = await fetch(url, {
         method: isEdit ? 'PUT' : 'POST',
@@ -60,20 +60,24 @@ export function FaqForm({ initialData, faqItemId, editais }: FaqFormProps) {
         body: JSON.stringify(body),
       })
 
-      const data = await res.json()
+      const json = await res.json()
 
       if (!res.ok) {
-        if (data.fieldErrors) {
-          setErrors(data.fieldErrors)
+        if (json.error === 'VALIDATION_ERROR' && Array.isArray(json.details)) {
+          const fieldErrors: Record<string, string> = {}
+          for (const issue of json.details) {
+            fieldErrors[issue.path.join('.')] = issue.message
+          }
+          setErrors(fieldErrors)
         } else {
-          setMessage({ type: 'error', text: data.message || 'Erro ao salvar item de FAQ.' })
+          setMessage({ type: 'error', text: json.message || 'Erro ao salvar item de FAQ.' })
         }
         return
       }
 
       setMessage({ type: 'success', text: isEdit ? 'Item de FAQ atualizado.' : 'Item de FAQ criado com sucesso.' })
       if (!isEdit) {
-        router.push(`/admin/faq/${data.id}`)
+        router.push(`/admin/faq/${json.data.id}`)
       }
     } catch {
       setMessage({ type: 'error', text: 'Erro de conexão. Tente novamente.' })

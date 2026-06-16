@@ -39,8 +39,8 @@ export function CmsForm({ initialData }: CmsFormProps) {
 
     try {
       const url = isEdit
-        ? `/api/admin/cms?id=${initialData.id}`
-        : '/api/admin/cms'
+        ? `/api/v1/cms/pagina/${initialData.id}`
+        : '/api/v1/cms'
 
       const res = await fetch(url, {
         method: isEdit ? 'PUT' : 'POST',
@@ -48,20 +48,25 @@ export function CmsForm({ initialData }: CmsFormProps) {
         body: JSON.stringify(body),
       })
 
-      const data = await res.json()
+      const json = await res.json()
 
       if (!res.ok) {
-        if (data.fieldErrors) {
-          setErrors(data.fieldErrors)
+        if (json.error === 'VALIDATION_ERROR' && Array.isArray(json.details)) {
+          const fieldErrors: Record<string, string> = {}
+          for (const issue of json.details) {
+            const field = Array.isArray(issue.path) ? issue.path.join('.') : String(issue.path ?? '')
+            if (field) fieldErrors[field] = issue.message
+          }
+          setErrors(fieldErrors)
         } else {
-          setMessage({ type: 'error', text: data.message || 'Erro ao salvar página.' })
+          setMessage({ type: 'error', text: json.message || 'Erro ao salvar página.' })
         }
         return
       }
 
       setMessage({ type: 'success', text: isEdit ? 'Página atualizada.' : 'Página criada com sucesso.' })
       if (!isEdit) {
-        router.push(`/admin/cms/${data.id}`)
+        router.push(`/admin/cms/${json.data.id}`)
       }
     } catch {
       setMessage({ type: 'error', text: 'Erro de conexão. Tente novamente.' })
@@ -78,13 +83,13 @@ export function CmsForm({ initialData }: CmsFormProps) {
     setMessage(null)
 
     try {
-      const res = await fetch(`/api/admin/cms/${initialData.id}`, {
+      const res = await fetch(`/api/v1/cms/pagina/${initialData.id}`, {
         method: 'DELETE',
       })
 
       if (!res.ok) {
-        const data = await res.json()
-        setMessage({ type: 'error', text: data.message || 'Erro ao excluir página.' })
+        const json = await res.json()
+        setMessage({ type: 'error', text: json.message || 'Erro ao excluir página.' })
         return
       }
 
