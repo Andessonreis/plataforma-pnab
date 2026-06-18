@@ -34,9 +34,9 @@ function faseEsperada(acao: FaseAcao): EditalStatus {
  * avança para a fase seguinte à do recurso (resposta divulgada "no fim da fase").
  */
 const FASE_LIBERACAO_RECURSO: Record<string, EditalStatus> = {
-  HABILITACAO: 'AVALIACAO',
-  RESULTADO_PRELIMINAR: 'RESULTADO_FINAL',
-  RESULTADO_FINAL: 'ENCERRADO',
+  HABILITACAO: 'HABILITACAO',
+  RESULTADO_PRELIMINAR: 'RESULTADO_PRELIMINAR',
+  RESULTADO_FINAL: 'RESULTADO_FINAL',
 }
 
 export function respostaRecursoLiberada(faseRecurso: string, editalStatus: EditalStatus): boolean {

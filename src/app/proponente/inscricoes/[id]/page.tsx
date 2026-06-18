@@ -68,7 +68,21 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
         select: { notaTotal: true, parecer: true, finalizada: true, createdAt: true },
       },
       recursos: {
-        select: { id: true, fase: true, texto: true, urlAnexos: true, decisao: true, justificativa: true, createdAt: true },
+        select: {
+          id: true,
+          fase: true,
+          texto: true,
+          urlAnexos: true,
+          decisao: true,
+          justificativa: true,
+          createdAt: true,
+          respostas: {
+            select: {
+              decisao: true,
+              justificativa: true,
+            },
+          },
+        },
         orderBy: { createdAt: 'desc' },
       },
     },
@@ -370,6 +384,26 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
                       <div className="mt-2 pt-2 border-t border-slate-200">
                         <p className="text-[11px] uppercase font-semibold text-slate-500 tracking-wide mb-0.5">Decisão da comissão</p>
                         <p className="text-xs text-slate-700 whitespace-pre-wrap break-words">{recurso.justificativa}</p>
+                      </div>
+                    )}
+
+                    {/* Respostas individuais (considerações dos avaliadores) — #producao: nomes ocultos */}
+                    {liberada && recurso.respostas && recurso.respostas.length > 0 && (
+                      <div className="mt-3 pt-2 border-t border-slate-200 space-y-3">
+                        <p className="text-[11px] uppercase font-semibold text-slate-500 tracking-wide">Considerações dos avaliadores</p>
+                        {recurso.respostas.map((resp, idx) => (
+                          <div key={idx} className="bg-white/50 p-2 rounded border border-slate-100">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase">Avaliador {idx + 1}</span>
+                              <Badge variant={resp.decisao === 'DEFERIDO' ? 'success' : 'error'} className="text-[9px] px-1.5 py-0">
+                                {resp.decisao}
+                              </Badge>
+                            </div>
+                            <p className="text-[11px] text-slate-600 italic whitespace-pre-wrap break-words">
+                              "{resp.justificativa}"
+                            </p>
+                          </div>
+                        ))}
                       </div>
                     )}
                     <p className="text-xs text-slate-400 mt-2">
