@@ -96,6 +96,10 @@ export const AUDIT_ACTIONS = {
   EMAIL_TEMPLATE_ATUALIZADO: 'EMAIL_TEMPLATE_ATUALIZADO',
   EMAIL_TEMPLATE_HABILITADO: 'EMAIL_TEMPLATE_HABILITADO',
   EMAIL_TEMPLATE_DESABILITADO: 'EMAIL_TEMPLATE_DESABILITADO',
+
+  // Admin — gestão de usuários
+  USUARIO_CRIADO: 'USUARIO_CRIADO',
+  USUARIO_ROLE_ALTERADA: 'USUARIO_ROLE_ALTERADA',
 } as const
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS]
@@ -167,6 +171,8 @@ export const ACTION_LABELS: Record<string, string> = {
   NOTIFICACAO_REGRA_EXCLUIDA: 'Regra de notificação excluída',
   NOTIFICACAO_REGRA_ATIVADA: 'Regra de notificação ativada',
   NOTIFICACAO_REGRA_DESATIVADA: 'Regra de notificação desativada',
+  USUARIO_CRIADO: 'Usuário criado (admin)',
+  USUARIO_ROLE_ALTERADA: 'Perfil de acesso alterado',
 }
 
 interface LogAuditParams {

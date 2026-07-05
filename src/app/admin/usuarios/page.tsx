@@ -4,6 +4,8 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { Card, Badge, Pagination, Button, EmptyState, FadeIn, IconUsers } from '@/components/ui'
 import type { UserRole } from '@prisma/client'
+import { RoleSelect } from './role-select'
+import { NovoUsuarioModal } from './novo-usuario-modal'
 
 export const metadata: Metadata = {
   title: 'Usuários — Portal PNAB Irecê',
@@ -23,14 +25,6 @@ const roleLabels: Record<UserRole, string> = {
   HABILITADOR: 'Habilitador',
   AVALIADOR: 'Avaliador',
   ADMIN: 'Administrador',
-}
-
-const roleBadgeVariant: Record<UserRole, 'success' | 'warning' | 'error' | 'info' | 'neutral'> = {
-  PROPONENTE: 'neutral',
-  ATENDIMENTO: 'info',
-  HABILITADOR: 'warning',
-  AVALIADOR: 'success',
-  ADMIN: 'error',
 }
 
 export default async function AdminUsuariosPage({ searchParams }: Props) {
@@ -85,9 +79,12 @@ export default async function AdminUsuariosPage({ searchParams }: Props) {
   return (
     <section>
       <FadeIn>
-        <div className="mb-4 sm:mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Usuários</h1>
-          <p className="text-xs sm:text-sm text-slate-600 mt-0.5 sm:mt-1">{total} usuário(s)</p>
+        <div className="mb-4 sm:mb-6 flex items-start justify-between gap-3">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Usuários</h1>
+            <p className="text-xs sm:text-sm text-slate-600 mt-0.5 sm:mt-1">{total} usuário(s)</p>
+          </div>
+          <NovoUsuarioModal />
         </div>
       </FadeIn>
 
@@ -157,9 +154,12 @@ export default async function AdminUsuariosPage({ searchParams }: Props) {
               >
                 <div className="flex items-start justify-between gap-2 mb-1.5">
                   <p className="text-sm font-medium text-slate-900 leading-snug">{user.nome}</p>
-                  <Badge variant={roleBadgeVariant[user.role]}>
-                    {roleLabels[user.role]}
-                  </Badge>
+                  <RoleSelect
+                    userId={user.id}
+                    userName={user.nome}
+                    currentRole={user.role}
+                    isSelf={user.id === session.user.id}
+                  />
                 </div>
                 <p className="text-xs text-slate-500 mb-1">{user.email}</p>
                 <div className="flex items-center justify-between text-[11px] text-slate-500">
@@ -197,9 +197,12 @@ export default async function AdminUsuariosPage({ searchParams }: Props) {
                       <td className="py-3 px-4 font-mono text-xs text-slate-600">{user.cpfCnpj ?? '—'}</td>
                       <td className="py-3 px-4 text-slate-600">{user.email}</td>
                       <td className="py-3 px-4">
-                        <Badge variant={roleBadgeVariant[user.role]}>
-                          {roleLabels[user.role]}
-                        </Badge>
+                        <RoleSelect
+                          userId={user.id}
+                          userName={user.nome}
+                          currentRole={user.role}
+                          isSelf={user.id === session.user.id}
+                        />
                       </td>
                       <td className="py-3 px-4 text-center">
                         <span className="inline-flex items-center justify-center h-6 min-w-[24px] rounded-full bg-slate-100 text-xs font-medium text-slate-600">
