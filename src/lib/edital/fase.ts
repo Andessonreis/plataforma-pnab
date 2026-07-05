@@ -35,7 +35,9 @@ function faseEsperada(acao: FaseAcao): EditalStatus {
  */
 const FASE_LIBERACAO_RECURSO: Record<string, EditalStatus> = {
   HABILITACAO: 'HABILITACAO',
-  RESULTADO_PRELIMINAR: 'RESULTADO_PRELIMINAR',
+  // Recursos contra o resultado preliminar são julgados durante a fase
+  // RECURSO — a decisão só é divulgada junto com o resultado final.
+  RESULTADO_PRELIMINAR: 'RESULTADO_FINAL',
   RESULTADO_FINAL: 'RESULTADO_FINAL',
 }
 
