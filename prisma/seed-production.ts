@@ -8,7 +8,7 @@
  *   --clean    Apaga TODOS os editais de teste antes de criar
  */
 
-import { PrismaClient } from '@prisma/client'
+import { Prisma, PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
@@ -762,11 +762,11 @@ async function main() {
     await prisma.edital.update({
       where: { id: existing.id },
       data: {
-        camposFormulario: camposFormulario as unknown[],
-        criteriosAvaliacao: criteriosAvaliacao as unknown[],
-        tiposAnexo: tiposAnexo as unknown[],
-        desempate: desempate as unknown[],
-        cronograma: cronograma as unknown[],
+        camposFormulario: camposFormulario as Prisma.InputJsonValue,
+        criteriosAvaliacao: criteriosAvaliacao as Prisma.InputJsonValue,
+        tiposAnexo: tiposAnexo as Prisma.InputJsonValue,
+        desempate: desempate as Prisma.InputJsonValue,
+        cronograma: cronograma as Prisma.InputJsonValue,
         formulaAvaliacao: '((B1+B2)/2)+B3',
         regrasElegibilidade,
         acoesAfirmativas,
@@ -790,13 +790,13 @@ async function main() {
         regrasElegibilidade,
         acoesAfirmativas,
         tiposProponentePermitidos: ['PJ'],
-        cronograma: cronograma as unknown[],
-        camposFormulario: camposFormulario as unknown[],
-        criteriosAvaliacao: criteriosAvaliacao as unknown[],
+        cronograma: cronograma as Prisma.InputJsonValue,
+        camposFormulario: camposFormulario as Prisma.InputJsonValue,
+        criteriosAvaliacao: criteriosAvaliacao as Prisma.InputJsonValue,
         formulaAvaliacao: '((B1+B2)/2)+B3',
-        tiposAnexo: tiposAnexo as unknown[],
+        tiposAnexo: tiposAnexo as Prisma.InputJsonValue,
         notaMinima: 3.0,
-        desempate: desempate as unknown[],
+        desempate: desempate as Prisma.InputJsonValue,
         vagasContemplados: 1,
         vagasSuplentes: null,
       },

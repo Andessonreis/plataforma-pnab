@@ -13,6 +13,9 @@ export const colors = {
   warning: '#fef3c7',
   warningBorder: '#f59e0b',
   warningText: '#92400e',
+  success: '#d1fae5',
+  successBorder: '#10b981',
+  successText: '#065f46',
 } as const
 
 export const fonts = {
