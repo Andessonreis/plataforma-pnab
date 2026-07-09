@@ -29,10 +29,10 @@ jobs:
         run: npx prisma generate
 
       - name: Lint
-        run: npm run lint || true
+        run: npm run lint
 
       - name: Typecheck
-        run: npx tsc --noEmit || true
+        run: npm run typecheck
 
       # Middleware ainda excluído: bug ESM entre vitest e next-auth@beta
       # (Cannot find module 'next/server' em next-auth/lib/env.js).
