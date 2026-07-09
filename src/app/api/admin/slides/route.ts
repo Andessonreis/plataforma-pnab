@@ -24,7 +24,7 @@ const slideSchema = z.object({
 
 // ── GET — Listar slides ─────────────────────────────────────────────────────
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   const requestId = randomUUID()
   const start = Date.now()
 

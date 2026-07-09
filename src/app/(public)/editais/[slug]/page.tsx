@@ -20,7 +20,7 @@ import {
   IconQuestion,
 } from '@/components/ui/icons'
 import { getPublicStatusDisplay } from '@/lib/utils/edital-status'
-import { formatCurrency, formatDate, formatDateTime, parseBrazilDateTime } from '@/lib/utils/format'
+import { formatCurrency, formatDate, formatDateTime } from '@/lib/utils/format'
 import { parseCronogramaPublico, getNextDeadline, getCronogramaItemStatus } from '@/lib/utils/cronograma'
 import { isAcaoPublicacao } from '@/types/cronograma'
 import { getBadgeVariantForTipo } from '@/lib/utils/badge-variant'

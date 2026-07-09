@@ -67,7 +67,7 @@ export function RecursoDecidido({
               Considerações:
             </Text>
             <Text style={{ ...styles.paragraph, margin: 0, fontSize: '14px', fontStyle: 'italic' }}>
-              "{justificativa}"
+              &ldquo;{justificativa}&rdquo;
             </Text>
           </>
         )}

@@ -26,7 +26,6 @@ export default async function AdminEmailTemplatesPage() {
     override: byKey.get(key) ?? null,
   }))
 
-  const totalEditados = overrides.length
   const totalAtivos = overrides.filter((o) => o.enabled).length
 
   return (

@@ -2,7 +2,6 @@
  * Helpers modulares de layout para documentos PDF (comprovante, declaração, resultados).
  * Todos os helpers operam sobre um PDFDocument já criado e posicionam o cursor.
  */
-import type PDFDocument from 'pdfkit'
 import { COLORS, MARGINS, CONTENT_WIDTH, PAGE_WIDTH } from './shared'
 
 // ─── Constantes de layout compacto ──────────────────────────────────────────

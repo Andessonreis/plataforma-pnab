@@ -4,7 +4,6 @@ import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/db'
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
 import { authConfig } from './config'
-import type { UserRole } from '@prisma/client'
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,

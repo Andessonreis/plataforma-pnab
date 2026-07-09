@@ -6,7 +6,7 @@ import type {
   CronogramaLegacyItem,
   CronogramaValidationWarning,
 } from '@/types/cronograma'
-import { CRONOGRAMA_FASES_ORDENADAS, CRONOGRAMA_FASES_FORMULARIO } from '@/types/cronograma'
+import { CRONOGRAMA_FASES_ORDENADAS } from '@/types/cronograma'
 import { editalCronogramaLabel } from '@/lib/status-maps'
 import { parseBrazilDateTime } from '@/lib/utils/format'
 

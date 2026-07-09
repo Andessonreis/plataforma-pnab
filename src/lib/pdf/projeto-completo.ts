@@ -2,7 +2,7 @@
  * Gerador de PDF completo do projeto — todas as seções, multi-página.
  * Reutiliza helpers modulares de shared.ts e layout-helpers.ts.
  */
-import { createDocument, docToBuffer, MARGINS, CONTENT_WIDTH, COLORS, PAGE_WIDTH } from './shared'
+import { createDocument, docToBuffer, MARGINS, CONTENT_WIDTH, COLORS } from './shared'
 import {
   addCompactHeader,
   addProtocolBadge,

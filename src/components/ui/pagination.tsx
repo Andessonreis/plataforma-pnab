@@ -28,8 +28,6 @@ function Pagination({ currentPage, totalPages, baseUrl, className = '' }: Pagina
     pages.push(totalPages)
   }
 
-  const separator = baseUrl.includes('?') ? '&' : '?'
-
   function buildUrl(page: number) {
     // Substitui page param existente ou adiciona
     const url = new URL(baseUrl, 'http://localhost')

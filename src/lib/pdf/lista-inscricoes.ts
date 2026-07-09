@@ -2,7 +2,7 @@
  * Gerador de PDF de lista oficial de inscrições por status/fase.
  * Tabela paginada com header repetido, zebra striping, CPF mascarado.
  */
-import { createDocument, docToBuffer, MARGINS, CONTENT_WIDTH, COLORS, PAGE_WIDTH } from './shared'
+import { createDocument, docToBuffer, MARGINS, CONTENT_WIDTH, COLORS } from './shared'
 import {
   addCompactHeader,
   addInfoBlock,

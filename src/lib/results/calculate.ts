@@ -5,8 +5,6 @@ import { CRITERIOS_AVALIACAO_PADRAO } from '@/lib/avaliacao-criterios'
 import {
   calculateWithFormula,
   calculateWeightedAverage,
-  calculateBlockSum,
-  evaluateExpression,
   type NotaAvaliacao,
 } from './formula'
 

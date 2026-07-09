@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { prisma } from '@/lib/db'
-import { Button, PageHeader, EmptyState } from '@/components/ui'
+import { PageHeader, EmptyState } from '@/components/ui'
 import {
   IconQuestion,
   IconDocument,

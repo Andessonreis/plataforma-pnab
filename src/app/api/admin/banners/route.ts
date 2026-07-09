@@ -25,7 +25,7 @@ const bannerSchema = z.object({
 
 // ── GET — Listar banners ────────────────────────────────────────────────────
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   const requestId = randomUUID()
   const start = Date.now()
 

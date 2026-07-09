@@ -3,10 +3,8 @@ import Link from 'next/link'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { Card, Badge, Pagination, Button, EmptyState, FadeIn, IconClipboard } from '@/components/ui'
-import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
+import { Card, Pagination, Button, EmptyState, FadeIn, IconClipboard } from '@/components/ui'
 import { getEditaisVisiveis } from '@/lib/edital-acesso'
-import type { InscricaoStatus } from '@prisma/client'
 
 export const metadata: Metadata = {
   title: 'Minhas Avaliações — Portal PNAB Irecê',
