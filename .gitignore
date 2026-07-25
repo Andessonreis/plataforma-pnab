@@ -66,3 +66,5 @@ docs/
 
 # Prisma (migrations SÃO commitadas, shadow DB não)
 prisma/*.db
+.omc/
+CLAUDE.md
