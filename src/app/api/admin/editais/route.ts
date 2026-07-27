@@ -26,6 +26,7 @@ const cronogramaCustomSchema = z.object({
   dataHora: z.string().default(''),
   fimEm: z.string().optional(),
   acao: z.enum([
+    'RECURSO_EDITAL_JANELA',
     'RECURSO_HABILITACAO_JANELA',
     'RECURSO_RESULTADO_JANELA',
     'PUBLICACAO_INSCRITOS',
@@ -46,12 +47,25 @@ const cronogramaItemSchema = z.union([
   cronogramaLegacySchema,
 ])
 
+const categoriaConfigSchema = z.object({
+  nome: z.string().min(1),
+  vagasAmplaConcorrencia: z.number().int().min(0).nullable(),
+  cotas: z.array(z.object({
+    key: z.string().min(1),
+    label: z.string().min(1),
+    vagas: z.number().int().min(0),
+  })).default([]),
+  valorPorProjeto: z.number().min(0).nullable(),
+  valorTotalCategoria: z.number().min(0),
+})
+
 const editalSchema = z.object({
   titulo: z.string().min(3, 'Título deve ter no mínimo 3 caracteres'),
   resumo: z.string().nullable().optional(),
   ano: z.number().int().min(2020).max(2099),
   valorTotal: z.number().nullable().optional(),
   categorias: z.array(z.string()).default([]),
+  categoriasConfig: z.array(categoriaConfigSchema).nullable().optional(),
   acoesAfirmativas: z.string().nullable().optional(),
   regrasElegibilidade: z.string().nullable().optional(),
   status: z.enum([
@@ -115,6 +129,17 @@ const editalSchema = z.object({
   // Equipe do edital (IDs dos membros)
   equipeAvaliadores: z.array(z.string().min(1)).default([]),
   equipeHabilitadores: z.array(z.string().min(1)).default([]),
+}).superRefine((data, ctx) => {
+  const nomesForaDeCategorias = (data.categoriasConfig ?? [])
+    .map(c => c.nome)
+    .filter(nome => !data.categorias.includes(nome))
+  if (nomesForaDeCategorias.length > 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: `categoriasConfig referencia categorias não selecionadas: ${nomesForaDeCategorias.join(', ')}`,
+      path: ['categoriasConfig'],
+    })
+  }
 })
 
 // ── Gerar slug a partir do titulo ───────────────────────────────────────────
@@ -210,6 +235,7 @@ export async function POST(req: NextRequest) {
         resumo: data.resumo ?? null,
         valorTotal: data.valorTotal ?? null,
         categorias: data.categorias,
+        categoriasConfig: (data.categoriasConfig ?? null) as unknown as import('@prisma/client').Prisma.InputJsonValue,
         acoesAfirmativas: data.acoesAfirmativas ?? null,
         regrasElegibilidade: data.regrasElegibilidade ?? null,
         cronograma: data.cronograma,
@@ -354,6 +380,7 @@ export async function PUT(req: NextRequest) {
         resumo: data.resumo ?? null,
         valorTotal: data.valorTotal ?? null,
         categorias: data.categorias,
+        categoriasConfig: (data.categoriasConfig ?? null) as unknown as import('@prisma/client').Prisma.InputJsonValue,
         acoesAfirmativas: data.acoesAfirmativas ?? null,
         regrasElegibilidade: data.regrasElegibilidade ?? null,
         cronograma: data.cronograma,

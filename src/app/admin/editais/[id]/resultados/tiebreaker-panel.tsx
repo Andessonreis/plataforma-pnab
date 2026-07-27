@@ -36,6 +36,8 @@ interface TiebreakerPanelProps {
 }
 
 interface TieGroup {
+  key: string
+  categoria: string | null
   nota: number
   items: InscricaoItem[]
 }
@@ -86,20 +88,22 @@ function SortableItem({ item, index }: { item: InscricaoItem; index: number }) {
 }
 
 export function TiebreakerPanel({ editalId, inscricoes }: TiebreakerPanelProps) {
-  // Identifica grupos empatados
+  // Identifica grupos empatados — escopado por categoria, pra não misturar
+  // empates de categorias diferentes num mesmo grupo de desempate.
   const tieGroups: TieGroup[] = []
-  const notaMap = new Map<number, InscricaoItem[]>()
+  const grupoMap = new Map<string, InscricaoItem[]>()
 
   for (const item of inscricoes) {
     if (item.notaFinal == null) continue
     const nota = Number(item.notaFinal)
-    if (!notaMap.has(nota)) notaMap.set(nota, [])
-    notaMap.get(nota)!.push(item)
+    const key = `${item.categoria ?? '—'}::${nota}`
+    if (!grupoMap.has(key)) grupoMap.set(key, [])
+    grupoMap.get(key)!.push(item)
   }
 
-  for (const [nota, items] of notaMap) {
+  for (const [key, items] of grupoMap) {
     if (items.length > 1) {
-      tieGroups.push({ nota, items })
+      tieGroups.push({ key, categoria: items[0].categoria, nota: Number(items[0].notaFinal), items })
     }
   }
 
@@ -118,7 +122,7 @@ export function TiebreakerPanel({ editalId, inscricoes }: TiebreakerPanelProps) 
       </p>
 
       {tieGroups.map((group) => (
-        <TieGroupPanel key={group.nota} group={group} editalId={editalId} />
+        <TieGroupPanel key={group.key} group={group} editalId={editalId} />
       ))}
     </div>
   )
@@ -173,7 +177,7 @@ function TieGroupPanel({ group, editalId }: { group: TieGroup; editalId: string 
     <div className="rounded-xl border border-amber-300 bg-white p-4 space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-amber-700 bg-amber-100 px-2.5 py-1 rounded-full">
-          Nota {group.nota.toFixed(2)} — {items.length} inscrições empatadas
+          {group.categoria ? `${group.categoria} — ` : ''}Nota {group.nota.toFixed(2)} — {items.length} inscrições empatadas
         </span>
         <Button
           type="button"

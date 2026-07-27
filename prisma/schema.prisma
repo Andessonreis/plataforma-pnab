@@ -255,6 +255,10 @@ model Edital {
   resumo                    String?
   valorTotal                Decimal?     @db.Decimal(12, 2)
   categorias                String[]
+  // Vagas/cotas/valor por categoria (opcional — ausente = categorias tratadas
+  // só como rótulo, sem corte por categoria no resultado).
+  // [{ nome, vagasAmplaConcorrencia: number|null, cotas: [{key,label,vagas}], valorPorProjeto: number|null, valorTotalCategoria: number }]
+  categoriasConfig          Json?
   acoesAfirmativas          String?
   regrasElegibilidade       String?
   // Tipos de proponente aceitos (vazio = todos): PF, MEI, PJ, COLETIVO
@@ -317,6 +321,8 @@ model Inscricao {
   proponenteId       String
   status             InscricaoStatus @default(RASCUNHO)
   categoria          String?
+  // Chaves das cotas (edital.categoriasConfig[].cotas[].key) que o proponente optou por concorrer
+  cotasOptIn         String[]        @default([])
   // Campos dinâmicos preenchidos pelo proponente
   campos             Json            @default("{}")
   orcamento          Json?
@@ -581,6 +587,7 @@ model Atendimento {
   autorId      String?
   nomeContato  String
   emailContato String
+  telefone     String?
   assunto      String
   mensagem     String
   status       AtendimentoStatus @default(ABERTO)

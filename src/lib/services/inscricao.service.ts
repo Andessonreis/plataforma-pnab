@@ -5,12 +5,13 @@ import { Prisma } from '@prisma/client'
 import { ServiceError } from './errors'
 import { resolveCharLimits } from '@/lib/campo-limits'
 import { filterCamposByTipo, type CampoFormulario } from '@/types/campo-formulario'
+import { invalidCotasOptIn, type CategoriaConfig } from '@/types/categoria-config'
 import type { CreateInscricaoInput, UpdateInscricaoInput } from '@/lib/schemas/inscricao'
 
 export async function createInscricao(data: CreateInscricaoInput, userId: string, ip?: string) {
   const edital = await prisma.edital.findUnique({
     where: { id: data.editalId },
-    select: { id: true, status: true, ano: true, categorias: true },
+    select: { id: true, status: true, ano: true, categorias: true, categoriasConfig: true },
   })
 
   if (!edital) throw new ServiceError('NOT_FOUND', 'Edital não encontrado.')
@@ -25,6 +26,15 @@ export async function createInscricao(data: CreateInscricaoInput, userId: string
 
   if (data.categoria && edital.categorias.length > 0 && !edital.categorias.includes(data.categoria)) {
     throw new ServiceError('BAD_REQUEST', 'Categoria inválida para este edital.')
+  }
+
+  const cotasInvalidas = invalidCotasOptIn(
+    edital.categoriasConfig as unknown as CategoriaConfig[] | null,
+    data.categoria,
+    data.cotasOptIn,
+  )
+  if (cotasInvalidas.length > 0) {
+    throw new ServiceError('BAD_REQUEST', `Cota inválida para esta categoria: ${cotasInvalidas.join(', ')}`)
   }
 
   let inscricao!: { id: string; numero: string }
@@ -42,6 +52,7 @@ export async function createInscricao(data: CreateInscricaoInput, userId: string
           proponenteId: userId,
           status: 'RASCUNHO',
           categoria: data.categoria ?? null,
+          cotasOptIn: data.cotasOptIn,
           campos: {},
         },
         select: { id: true, numero: true },
@@ -70,26 +81,37 @@ export async function createInscricao(data: CreateInscricaoInput, userId: string
 export async function updateInscricao(id: string, data: UpdateInscricaoInput, userId: string) {
   const inscricao = await prisma.inscricao.findUnique({
     where: { id },
-    select: { id: true, proponenteId: true, status: true, editalId: true },
+    select: { id: true, proponenteId: true, status: true, editalId: true, categoria: true },
   })
 
   if (!inscricao) throw new ServiceError('NOT_FOUND', 'Inscrição não encontrada.')
   if (inscricao.proponenteId !== userId) throw new ServiceError('FORBIDDEN', 'Acesso negado.')
   if (inscricao.status !== 'RASCUNHO') throw new ServiceError('FORBIDDEN', 'Apenas rascunhos podem ser editados.')
 
-  if (data.categoria !== undefined) {
+  if (data.categoria !== undefined || data.cotasOptIn !== undefined) {
     const edital = await prisma.edital.findUnique({
       where: { id: inscricao.editalId },
-      select: { categorias: true },
+      select: { categorias: true, categoriasConfig: true },
     })
     if (edital && edital.categorias.length > 0 && data.categoria && !edital.categorias.includes(data.categoria)) {
       throw new ServiceError('BAD_REQUEST', 'Categoria inválida para este edital.')
+    }
+
+    const categoriaEfetiva = data.categoria !== undefined ? data.categoria : inscricao.categoria
+    const cotasInvalidas = invalidCotasOptIn(
+      edital?.categoriasConfig as unknown as CategoriaConfig[] | null,
+      categoriaEfetiva,
+      data.cotasOptIn ?? [],
+    )
+    if (cotasInvalidas.length > 0) {
+      throw new ServiceError('BAD_REQUEST', `Cota inválida para esta categoria: ${cotasInvalidas.join(', ')}`)
     }
   }
 
   const updateData: Record<string, unknown> = {}
   if (data.campos !== undefined) updateData.campos = data.campos
   if (data.categoria !== undefined) updateData.categoria = data.categoria || null
+  if (data.cotasOptIn !== undefined) updateData.cotasOptIn = data.cotasOptIn
   if (data.orcamento !== undefined) updateData.orcamento = data.orcamento
 
   return prisma.inscricao.update({

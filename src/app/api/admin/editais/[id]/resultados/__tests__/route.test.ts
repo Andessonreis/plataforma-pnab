@@ -129,10 +129,11 @@ describe('POST /api/admin/editais/[id]/resultados', () => {
       vagasSuplentes: 2,
       notaMinima: null,
       desempate: null,
+      categoriasConfig: null,
     } as never)
 
     const resultados = [
-      { inscricaoId: 'i1', proponenteNome: 'Ana', categoria: null, notaFinal: 9, totalAvaliacoes: 2 },
+      { inscricaoId: 'i1', proponenteNome: 'Ana', categoria: null, cotasOptIn: [], notaFinal: 9, totalAvaliacoes: 2 },
     ]
     vi.spyOn(calcModule, 'calculateResults').mockResolvedValue(resultados)
     const saveResultsSpy = vi.spyOn(calcModule, 'saveResults').mockResolvedValue(undefined)
@@ -143,6 +144,7 @@ describe('POST /api/admin/editais/[id]/resultados', () => {
       contemplados: 3,
       suplentes: 2,
       notaMinima: null,
+      categoriasConfig: null,
     })
   })
 
@@ -157,10 +159,11 @@ describe('POST /api/admin/editais/[id]/resultados', () => {
       vagasSuplentes: null,
       notaMinima: null,
       desempate: null,
+      categoriasConfig: null,
     } as never)
 
     vi.spyOn(calcModule, 'calculateResults').mockResolvedValue([
-      { inscricaoId: 'i1', proponenteNome: 'Ana', categoria: null, notaFinal: 9, totalAvaliacoes: 2 },
+      { inscricaoId: 'i1', proponenteNome: 'Ana', categoria: null, cotasOptIn: [], notaFinal: 9, totalAvaliacoes: 2 },
     ])
     vi.spyOn(calcModule, 'saveResults').mockResolvedValue(undefined)
 

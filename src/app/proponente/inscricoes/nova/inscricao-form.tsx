@@ -74,6 +74,7 @@ interface EditalInfo {
   id: string
   titulo: string
   categorias: string[]
+  categoriasConfig?: import('@/types/categoria-config').CategoriaConfig[] | null
   camposFormulario: CampoFormulario[]
   tiposAnexo?: TipoAnexoEdital[] | null
   etapasCustomizadas?: EtapaCustomizada[]
@@ -87,6 +88,7 @@ interface InscricaoFormProps {
   // Dados existentes para edição de rascunho
   inscricaoId?: string
   initialCategoria?: string
+  initialCotasOptIn?: string[]
   initialCampos?: Record<string, unknown>
   initialAnexos?: Anexo[]
 }
@@ -105,6 +107,7 @@ export default function InscricaoForm({
   tipoProponente,
   inscricaoId: existingId,
   initialCategoria = '',
+  initialCotasOptIn = [],
   initialCampos = {},
   initialAnexos = [],
 }: InscricaoFormProps) {
@@ -134,6 +137,18 @@ export default function InscricaoForm({
   const [currentStep, setCurrentStep] = useState(0)
   const [inscricaoId, setInscricaoId] = useState(existingId || '')
   const [categoria, setCategoria] = useState(initialCategoria)
+  const [cotasOptIn, setCotasOptIn] = useState<string[]>(initialCotasOptIn)
+  const categoriaConfig = edital.categoriasConfig?.find((c) => c.nome === categoria)
+
+  function handleCategoriaChange(novaCategoria: string) {
+    setCategoria(novaCategoria)
+    // Cotas só fazem sentido pra categoria escolhida — limpa ao trocar
+    setCotasOptIn([])
+  }
+
+  function toggleCota(key: string) {
+    setCotasOptIn((prev) => prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key])
+  }
   const [campos, setCampos] = useState<Record<string, unknown>>(initialCampos)
   const [anexos, setAnexos] = useState<Anexo[]>(initialAnexos)
   const [saving, setSaving] = useState(false)
@@ -162,6 +177,7 @@ export default function InscricaoForm({
       body: JSON.stringify({
         editalId: edital.id,
         categoria: categoria || undefined,
+        cotasOptIn,
       }),
     })
 
@@ -178,7 +194,7 @@ export default function InscricaoForm({
 
     setInscricaoId(data.id)
     return data.id as string
-  }, [inscricaoId, edital.id, categoria, router])
+  }, [inscricaoId, edital.id, categoria, cotasOptIn, router])
 
   // ─── Salvar rascunho ──────────────────────────────────────────────────────
 
@@ -193,7 +209,7 @@ export default function InscricaoForm({
       const res = await fetch(`/api/proponente/inscricoes/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ campos, categoria: categoria || undefined }),
+        body: JSON.stringify({ campos, categoria: categoria || undefined, cotasOptIn }),
       })
 
       if (!res.ok) {
@@ -208,7 +224,7 @@ export default function InscricaoForm({
     } finally {
       setSaving(false)
     }
-  }, [createInscricao, campos, categoria])
+  }, [createInscricao, campos, categoria, cotasOptIn])
 
   // ─── Upload de anexo ──────────────────────────────────────────────────────
 
@@ -279,7 +295,7 @@ export default function InscricaoForm({
       await fetch(`/api/proponente/inscricoes/${inscricaoId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ campos, categoria: categoria || undefined }),
+        body: JSON.stringify({ campos, categoria: categoria || undefined, cotasOptIn }),
       })
 
       const res = await fetch(`/api/proponente/inscricoes/${inscricaoId}/submit`, {
@@ -295,7 +311,7 @@ export default function InscricaoForm({
     } finally {
       setSubmitting(false)
     }
-  }, [inscricaoId, campos, categoria, router])
+  }, [inscricaoId, campos, categoria, cotasOptIn, router])
 
   // ─── Navegação entre etapas ───────────────────────────────────────────────
 
@@ -631,11 +647,33 @@ export default function InscricaoForm({
           <Select
             label="Categoria"
             value={categoria}
-            onChange={(e) => setCategoria(e.target.value)}
+            onChange={(e) => handleCategoriaChange(e.target.value)}
             options={edital.categorias.map((cat): SelectOption => ({ value: cat, label: cat }))}
             placeholder="Selecione a categoria..."
             required
           />
+
+          {categoriaConfig && categoriaConfig.cotas.length > 0 && (
+            <div className="mt-6 border-t border-slate-200 pt-5">
+              <h3 className="text-sm font-medium text-slate-900">Deseja concorrer às cotas?</h3>
+              <p className="text-sm text-slate-500 mt-1 mb-3">
+                Opcional. Ao marcar, você concorrerá simultaneamente às vagas de ampla concorrência e à(s) cota(s)
+                escolhida(s), e deverá enviar a autodeclaração correspondente na etapa de anexos.
+              </p>
+              <div className="space-y-2">
+                {categoriaConfig.cotas.map((cota) => (
+                  <label key={cota.key} className="flex items-center gap-2 text-sm text-slate-700">
+                    <input
+                      type="checkbox"
+                      checked={cotasOptIn.includes(cota.key)}
+                      onChange={() => toggleCota(cota.key)}
+                    />
+                    {cota.label}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
         </Card>
       )}
 
@@ -869,6 +907,14 @@ export default function InscricaoForm({
               <div>
                 <h3 className="text-sm font-medium text-slate-500 mb-1">Categoria</h3>
                 <p className="text-slate-900">{categoria || <span className="text-red-500">Não selecionada</span>}</p>
+                {cotasOptIn.length > 0 && (
+                  <p className="text-sm text-slate-600 mt-1">
+                    Concorrendo às cotas:{' '}
+                    {cotasOptIn
+                      .map((key) => categoriaConfig?.cotas.find((c) => c.key === key)?.label ?? key)
+                      .join(', ')}
+                  </p>
+                )}
               </div>
             )}
 

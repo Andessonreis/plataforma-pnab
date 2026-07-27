@@ -125,7 +125,7 @@ export async function POST(
 
     const edital = await prisma.edital.findUnique({
       where: { id },
-      select: { id: true, titulo: true, slug: true, status: true, vagasContemplados: true, vagasSuplentes: true, notaMinima: true },
+      select: { id: true, titulo: true, slug: true, status: true, vagasContemplados: true, vagasSuplentes: true, notaMinima: true, categoriasConfig: true },
     })
 
     if (!edital) {
@@ -153,6 +153,9 @@ export async function POST(
       contemplados: edital.vagasContemplados,
       suplentes: edital.vagasSuplentes,
       notaMinima: edital.notaMinima ? Number(edital.notaMinima) : null,
+      categoriasConfig: Array.isArray(edital.categoriasConfig)
+        ? (edital.categoriasConfig as unknown as import('@/types/categoria-config').CategoriaConfig[])
+        : null,
     })
 
     // Atualiza status do edital

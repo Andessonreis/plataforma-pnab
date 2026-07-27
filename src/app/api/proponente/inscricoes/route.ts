@@ -5,12 +5,14 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
 import { Prisma } from '@prisma/client'
+import { invalidCotasOptIn } from '@/types/categoria-config'
 
 export const runtime = 'nodejs'
 
 const createSchema = z.object({
   editalId: z.string().min(1, 'editalId é obrigatório'),
   categoria: z.string().optional(),
+  cotasOptIn: z.array(z.string()).default([]),
 })
 
 const listSchema = z.object({
@@ -43,7 +45,7 @@ export async function POST(req: NextRequest) {
     // Verificar se edital existe e está com inscrições abertas
     const edital = await prisma.edital.findUnique({
       where: { id: data.editalId },
-      select: { id: true, status: true, ano: true, categorias: true, tiposProponentePermitidos: true },
+      select: { id: true, status: true, ano: true, categorias: true, categoriasConfig: true, tiposProponentePermitidos: true },
     })
 
     if (!edital) {
@@ -110,6 +112,21 @@ export async function POST(req: NextRequest) {
       return res
     }
 
+    const cotasInvalidas = invalidCotasOptIn(
+      edital.categoriasConfig as unknown as import('@/types/categoria-config').CategoriaConfig[] | null,
+      data.categoria,
+      data.cotasOptIn,
+    )
+    if (cotasInvalidas.length > 0) {
+      const res = NextResponse.json(
+        { error: 'BAD_REQUEST', message: `Cota inválida para esta categoria: ${cotasInvalidas.join(', ')}`, requestId },
+        { status: 400 },
+      )
+      res.headers.set('X-Request-Id', requestId)
+      res.headers.set('Cache-Control', 'no-store')
+      return res
+    }
+
     // Gerar número sequencial: PNAB-{ano}-{sequencial 4 dígitos}
     // Conta globalmente por ano para evitar colisão entre editais do mesmo ano
     // Retry em caso de race condition no unique constraint
@@ -128,6 +145,7 @@ export async function POST(req: NextRequest) {
             proponenteId: userId,
             status: 'RASCUNHO',
             categoria: data.categoria ?? null,
+            cotasOptIn: data.cotasOptIn,
             campos: {},
           },
           select: { id: true, numero: true },

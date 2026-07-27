@@ -3,6 +3,7 @@ import { z } from 'zod'
 export const createInscricaoSchema = z.object({
   editalId: z.string().min(1, 'editalId é obrigatório'),
   categoria: z.string().optional(),
+  cotasOptIn: z.array(z.string()).default([]),
 })
 
 export type CreateInscricaoInput = z.infer<typeof createInscricaoSchema>
@@ -10,6 +11,7 @@ export type CreateInscricaoInput = z.infer<typeof createInscricaoSchema>
 export const updateInscricaoSchema = z.object({
   campos: z.record(z.unknown()).optional(),
   categoria: z.string().optional(),
+  cotasOptIn: z.array(z.string()).optional(),
   orcamento: z.record(z.unknown()).optional(),
 })
 

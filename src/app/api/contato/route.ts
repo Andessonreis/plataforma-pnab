@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto'
 import { prisma } from '@/lib/db'
 import { rateLimit } from '@/lib/rate-limit'
 import { RATE_LIMITS } from '@/lib/rate-limit/config'
+import { generateUniqueProtocolo } from '@/lib/atendimento/protocolo'
 
 export const runtime = 'nodejs'
 
@@ -14,16 +15,6 @@ const contatoSchema = z.object({
   assunto: z.string().min(3, 'Assunto deve ter no minimo 3 caracteres').max(200, 'Assunto muito longo'),
   mensagem: z.string().min(10, 'Mensagem deve ter no minimo 10 caracteres').max(5000, 'Mensagem muito longa'),
 })
-
-function generateProtocolo(): string {
-  const year = new Date().getFullYear()
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-  let code = ''
-  for (let i = 0; i < 6; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length))
-  }
-  return `PNAB-${year}-${code}`
-}
 
 export async function POST(req: NextRequest) {
   const requestId = randomUUID()
@@ -37,17 +28,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const data = contatoSchema.parse(body)
 
-    // Gera protocolo unico
-    let protocolo = generateProtocolo()
-
-    // Verifica unicidade (improvavel, mas seguro)
-    let exists = await prisma.atendimento.findUnique({ where: { protocolo } })
-    let attempts = 0
-    while (exists && attempts < 5) {
-      protocolo = generateProtocolo()
-      exists = await prisma.atendimento.findUnique({ where: { protocolo } })
-      attempts++
-    }
+    const protocolo = await generateUniqueProtocolo()
 
     // Se o editalId foi informado, verifica se o edital existe
     if (data.editalId) {

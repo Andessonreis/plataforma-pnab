@@ -16,6 +16,7 @@ import type { TipoProponente } from '@prisma/client'
 import { CronogramaEditor } from './cronograma-editor'
 import { EtapasCustomizadasEditor } from './etapas-customizadas-editor'
 import type { TipoAnexo } from '@/lib/constants/attachment-types'
+import type { CategoriaConfig, CotaConfig } from '@/types/categoria-config'
 
 const TIPO_PROPONENTE_OPTIONS: { value: TipoProponente; label: string }[] = [
   { value: 'PF', label: 'Pessoa Física' },
@@ -38,6 +39,7 @@ interface EditalFormProps {
     ano: number
     valorTotal: string
     categorias: string[]
+    categoriasConfig?: CategoriaConfig[] | null
     acoesAfirmativas: string
     regrasElegibilidade: string
     cronograma: CronogramaItem[]
@@ -139,6 +141,9 @@ export function EditalForm({ initialData }: EditalFormProps) {
     return isNaN(num) ? '' : num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   })
   const [categorias, setCategorias] = useState<string[]>(initialData?.categorias ?? [])
+  const [categoriasConfig, setCategoriasConfig] = useState<CategoriaConfig[]>(
+    initialData?.categoriasConfig ?? []
+  )
   const [regrasElegibilidade, setRegrasElegibilidade] = useState(initialData?.regrasElegibilidade ?? '')
   const [acoesAfirmativas, setAcoesAfirmativas] = useState(initialData?.acoesAfirmativas ?? '')
   const [status, setStatus] = useState<EditalStatus>(initialData?.status ?? 'RASCUNHO')
@@ -350,6 +355,50 @@ export function EditalForm({ initialData }: EditalFormProps) {
     setCategorias(prev =>
       prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
     )
+    // Remove a config de vagas/cotas junto, se a categoria for desmarcada
+    setCategoriasConfig(prev => prev.filter(c => c.nome !== cat))
+  }
+
+  const COTAS_SUGERIDAS: CotaConfig[] = [
+    { key: 'negros', label: 'Cotas Pessoas Negras', vagas: 0 },
+    { key: 'indigena_pcd', label: 'Cotas Indígenas e/ou PCD', vagas: 0 },
+  ]
+
+  function getCategoriaConfig(nome: string): CategoriaConfig | undefined {
+    return categoriasConfig.find(c => c.nome === nome)
+  }
+
+  function ativarConfigCategoria(nome: string) {
+    setCategoriasConfig(prev => prev.some(c => c.nome === nome) ? prev : [
+      ...prev,
+      { nome, vagasAmplaConcorrencia: 0, cotas: COTAS_SUGERIDAS, valorPorProjeto: null, valorTotalCategoria: 0 },
+    ])
+  }
+
+  function removerConfigCategoria(nome: string) {
+    setCategoriasConfig(prev => prev.filter(c => c.nome !== nome))
+  }
+
+  function updateCategoriaConfig(nome: string, patch: Partial<CategoriaConfig>) {
+    setCategoriasConfig(prev => prev.map(c => c.nome === nome ? { ...c, ...patch } : c))
+  }
+
+  function updateCotaConfig(nome: string, key: string, patch: Partial<CotaConfig>) {
+    setCategoriasConfig(prev => prev.map(c =>
+      c.nome === nome ? { ...c, cotas: c.cotas.map(cota => cota.key === key ? { ...cota, ...patch } : cota) } : c
+    ))
+  }
+
+  function addCotaConfig(nome: string) {
+    setCategoriasConfig(prev => prev.map(c =>
+      c.nome === nome ? { ...c, cotas: [...c.cotas, { key: `cota_${c.cotas.length + 1}`, label: '', vagas: 0 }] } : c
+    ))
+  }
+
+  function removeCotaConfig(nome: string, key: string) {
+    setCategoriasConfig(prev => prev.map(c =>
+      c.nome === nome ? { ...c, cotas: c.cotas.filter(cota => cota.key !== key) } : c
+    ))
   }
 
   function addCampoFormulario() {
@@ -450,6 +499,7 @@ export function EditalForm({ initialData }: EditalFormProps) {
       ano: Number(ano),
       valorTotal: valorTotalNum,
       categorias,
+      categoriasConfig: categoriasConfig.length > 0 ? categoriasConfig : null,
       regrasElegibilidade,
       acoesAfirmativas,
       status,
@@ -693,6 +743,130 @@ export function EditalForm({ initialData }: EditalFormProps) {
             <p className="mt-3 text-xs text-slate-500">
               {categorias.length} categoria(s) selecionada(s)
             </p>
+          )}
+
+          {categorias.length > 0 && (
+            <div className="mt-6 space-y-3">
+              <p className="text-sm font-medium text-slate-700">Vagas, cotas e valor por categoria (opcional)</p>
+              <p className="text-xs text-slate-500">
+                Configure quando o edital reservar vagas e valores específicos por categoria (ex.: quadro de vagas do edital).
+                Categorias sem configuração continuam funcionando normalmente, sem corte por categoria no resultado.
+              </p>
+              {categorias.map(nome => {
+                const config = getCategoriaConfig(nome)
+                return (
+                  <div key={nome} className="border border-slate-200 rounded-lg p-3 sm:p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-sm font-medium text-slate-800">{nome}</span>
+                      {config ? (
+                        <button
+                          type="button"
+                          onClick={() => removerConfigCategoria(nome)}
+                          className="text-xs text-red-600 hover:text-red-700 shrink-0"
+                        >
+                          Remover configuração
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => ativarConfigCategoria(nome)}
+                          className="text-xs text-brand-600 hover:text-brand-700 shrink-0"
+                        >
+                          + Configurar vagas/cotas
+                        </button>
+                      )}
+                    </div>
+
+                    {config && (
+                      <div className="mt-3 space-y-3">
+                        <label className="flex items-center gap-2 text-xs text-slate-600">
+                          <input
+                            type="checkbox"
+                            checked={config.vagasAmplaConcorrencia === null}
+                            onChange={e => updateCategoriaConfig(nome, { vagasAmplaConcorrencia: e.target.checked ? null : 0 })}
+                          />
+                          Sem limite discreto de vagas (só valor total da categoria)
+                        </label>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          {config.vagasAmplaConcorrencia !== null && (
+                            <Input
+                              label="Vagas ampla concorrência"
+                              type="number"
+                              min={0}
+                              value={String(config.vagasAmplaConcorrencia)}
+                              onChange={e => updateCategoriaConfig(nome, { vagasAmplaConcorrencia: Number(e.target.value) || 0 })}
+                            />
+                          )}
+                          <Input
+                            label="Valor por projeto (R$)"
+                            type="number"
+                            min={0}
+                            step="0.01"
+                            value={config.valorPorProjeto != null ? String(config.valorPorProjeto) : ''}
+                            onChange={e => updateCategoriaConfig(nome, { valorPorProjeto: e.target.value.trim() ? Number(e.target.value) : null })}
+                            placeholder="Sem valor fixo por projeto"
+                          />
+                          <Input
+                            label="Valor total da categoria (R$)"
+                            type="number"
+                            min={0}
+                            step="0.01"
+                            value={String(config.valorTotalCategoria)}
+                            onChange={e => updateCategoriaConfig(nome, { valorTotalCategoria: Number(e.target.value) || 0 })}
+                          />
+                        </div>
+
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-medium text-slate-600">Cotas reservadas</span>
+                            <button
+                              type="button"
+                              onClick={() => addCotaConfig(nome)}
+                              className="text-xs text-brand-600 hover:text-brand-700"
+                            >
+                              + Adicionar cota
+                            </button>
+                          </div>
+                          <div className="space-y-2">
+                            {config.cotas.map(cota => (
+                              <div key={cota.key} className="flex items-center gap-2">
+                                <input
+                                  type="text"
+                                  value={cota.label}
+                                  onChange={e => updateCotaConfig(nome, cota.key, { label: e.target.value })}
+                                  placeholder="Nome da cota"
+                                  className="flex-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm focus-visible:outline-2 focus-visible:outline-offset-2"
+                                />
+                                <input
+                                  type="number"
+                                  min={0}
+                                  value={cota.vagas}
+                                  onChange={e => updateCotaConfig(nome, cota.key, { vagas: Number(e.target.value) || 0 })}
+                                  className="w-20 rounded-md border border-slate-300 px-2 py-1.5 text-sm focus-visible:outline-2 focus-visible:outline-offset-2"
+                                  aria-label={`Vagas para ${cota.label || 'cota'}`}
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => removeCotaConfig(nome, cota.key)}
+                                  className="text-slate-400 hover:text-red-500 px-1"
+                                  aria-label={`Remover cota ${cota.label || ''}`}
+                                >
+                                  &times;
+                                </button>
+                              </div>
+                            ))}
+                            {config.cotas.length === 0 && (
+                              <p className="text-xs text-slate-400">Nenhuma cota — todas as vagas são de ampla concorrência.</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
           )}
         </>}
       </Card>

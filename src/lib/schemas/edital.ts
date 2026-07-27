@@ -20,6 +20,7 @@ const cronogramaCustomSchema = z.object({
   dataHora: z.string().default(''),
   fimEm: z.string().optional(),
   acao: z.enum([
+    'RECURSO_EDITAL_JANELA',
     'RECURSO_HABILITACAO_JANELA',
     'RECURSO_RESULTADO_JANELA',
     'PUBLICACAO_INSCRITOS',

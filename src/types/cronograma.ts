@@ -12,6 +12,7 @@ export interface CronogramaFaseItem {
 // Dois grupos:
 //
 // Janelas temporais (gating de funcionalidade entre dataHora e fimEm):
+//   - RECURSO_EDITAL_JANELA:      libera botão público de recurso contra o edital (pré-inscrição)
 //   - RECURSO_HABILITACAO_JANELA: libera form de recurso fase HABILITACAO
 //   - RECURSO_RESULTADO_JANELA:   libera form de recurso fase RESULTADO_PRELIMINAR
 //
@@ -22,6 +23,7 @@ export interface CronogramaFaseItem {
 //
 // Outras ações futuras podem ser adicionadas sem mudar schema.
 export type AcaoJanela =
+  | 'RECURSO_EDITAL_JANELA'
   | 'RECURSO_HABILITACAO_JANELA'
   | 'RECURSO_RESULTADO_JANELA'
   | 'PUBLICACAO_INSCRITOS'

@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db'
-import type { InscricaoStatus } from '@prisma/client'
+import type { InscricaoStatus, Prisma } from '@prisma/client'
 import type { CriterioAvaliacao } from '@/lib/avaliacao-criterios'
 import { CRITERIOS_AVALIACAO_PADRAO } from '@/lib/avaliacao-criterios'
 import {
@@ -9,11 +9,14 @@ import {
   evaluateExpression,
   type NotaAvaliacao,
 } from './formula'
+import { alocarVagasCategoria } from './alocar-cotas'
+import type { CategoriaConfig } from '@/types/categoria-config'
 
 export interface ResultadoInscricao {
   inscricaoId: string
   proponenteNome: string
   categoria: string | null
+  cotasOptIn?: string[]
   notaFinal: number
   totalAvaliacoes: number
   empatados?: string[]
@@ -67,6 +70,7 @@ export async function calculateResults(
         inscricaoId: inscricao.id,
         proponenteNome: inscricao.proponente.nome,
         categoria: inscricao.categoria,
+        cotasOptIn: inscricao.cotasOptIn,
         notaFinal: 0,
         totalAvaliacoes: 0,
       })
@@ -88,6 +92,7 @@ export async function calculateResults(
       inscricaoId: inscricao.id,
       proponenteNome: inscricao.proponente.nome,
       categoria: inscricao.categoria,
+      cotasOptIn: inscricao.cotasOptIn,
       notaFinal: Math.round(notaFinal * 100) / 100,
       totalAvaliacoes: inscricao.avaliacoes.length,
     })
@@ -118,59 +123,107 @@ export interface VagasConfig {
   contemplados?: number | null
   suplentes?: number | null
   notaMinima?: number | null
+  // Vagas/cotas/valor por categoria. Presente e não-vazio → resultado é
+  // calculado e a posição é ranqueada POR CATEGORIA (concorrência
+  // concomitante + remanejamento de cotas), ignorando `contemplados`.
+  // Ausente/vazio → comportamento legado (ranking único do edital inteiro).
+  categoriasConfig?: CategoriaConfig[] | null
+}
+
+const CONFIG_SEM_VAGAS_DISCRETAS = (nome: string | null): CategoriaConfig => ({
+  nome: nome ?? '—',
+  vagasAmplaConcorrencia: null,
+  cotas: [],
+  valorPorProjeto: null,
+  valorTotalCategoria: 0,
+})
+
+function decideStatusLegado(r: ResultadoInscricao, index: number, vagas?: VagasConfig): InscricaoStatus {
+  const temNota = r.notaFinal > 0 && r.totalAvaliacoes > 0
+  if (!temNota) return 'NAO_CONTEMPLADA'
+  if (vagas?.notaMinima != null && r.notaFinal < vagas.notaMinima) return 'NAO_CONTEMPLADA'
+  if (vagas?.contemplados != null) {
+    const posicao = index + 1
+    if (posicao <= vagas.contemplados) return 'CONTEMPLADA'
+    if (vagas.suplentes != null && posicao <= vagas.contemplados + vagas.suplentes) return 'SUPLENTE'
+    if (vagas.suplentes == null) return 'SUPLENTE'
+    return 'NAO_CONTEMPLADA'
+  }
+  return 'CONTEMPLADA'
 }
 
 /**
  * Salva as notas finais calculadas nas inscrições.
  *
  * Na fase RESULTADO_FINAL, aplica lógica de ranking:
- * - Se vagasContemplados definido: posições 1..N → CONTEMPLADA, N+1..N+M → SUPLENTE, restantes → NAO_CONTEMPLADA
- * - Se vagasContemplados é null: comportamento anterior (todos com nota > 0 = CONTEMPLADA)
+ * - Com `categoriasConfig`: ranking e corte são calculados POR CATEGORIA,
+ *   respeitando ampla concorrência + cotas + remanejamento (ver alocar-cotas.ts).
+ *   `posicao` passa a ser a posição dentro da categoria.
+ * - Sem `categoriasConfig` (comportamento legado):
+ *   - Se vagasContemplados definido: posições 1..N → CONTEMPLADA, N+1..N+M → SUPLENTE, restantes → NAO_CONTEMPLADA
+ *   - Se vagasContemplados é null: todos com nota > 0 = CONTEMPLADA
  */
 export async function saveResults(
   resultados: ResultadoInscricao[],
   fase: 'RESULTADO_PRELIMINAR' | 'RESULTADO_FINAL',
   vagas?: VagasConfig,
 ): Promise<void> {
-  const updates = resultados.map((r, index) => {
-    let status: InscricaoStatus = fase
+  const categoriasConfig = vagas?.categoriasConfig
+  const usaCategorias = categoriasConfig != null && categoriasConfig.length > 0
 
-    if (fase === 'RESULTADO_FINAL') {
-      const temNota = r.notaFinal > 0 && r.totalAvaliacoes > 0
+  if (!usaCategorias) {
+    const updates = resultados.map((r, index) =>
+      prisma.inscricao.update({
+        where: { id: r.inscricaoId },
+        data: {
+          notaFinal: r.notaFinal,
+          posicao: index + 1,
+          status: fase === 'RESULTADO_FINAL' ? decideStatusLegado(r, index, vagas) : fase,
+        },
+      })
+    )
+    await prisma.$transaction(updates)
+    return
+  }
 
-      if (!temNota) {
-        status = 'NAO_CONTEMPLADA'
-      } else if (vagas?.notaMinima != null && r.notaFinal < vagas.notaMinima) {
-        // Abaixo da nota mínima para classificação
-        status = 'NAO_CONTEMPLADA'
-      } else if (vagas?.contemplados != null) {
-        // Ranking com vagas definidas (resultados já vêm ordenados por nota desc)
-        const posicao = index + 1
-        if (posicao <= vagas.contemplados) {
-          status = 'CONTEMPLADA'
-        } else if (vagas.suplentes != null && posicao <= vagas.contemplados + vagas.suplentes) {
-          status = 'SUPLENTE'
-        } else if (vagas.suplentes == null) {
-          // Sem limite de suplentes: todos restantes com nota são suplentes
-          status = 'SUPLENTE'
-        } else {
-          status = 'NAO_CONTEMPLADA'
-        }
-      } else {
-        // Sem vagas definidas: comportamento anterior
-        status = 'CONTEMPLADA'
-      }
+  // Agrupa por categoria preservando a ordem recebida (já vem nota-desc de calculateResults)
+  const porCategoria = new Map<string | null, ResultadoInscricao[]>()
+  for (const r of resultados) {
+    if (!porCategoria.has(r.categoria)) porCategoria.set(r.categoria, [])
+    porCategoria.get(r.categoria)!.push(r)
+  }
+
+  const updates: Prisma.PrismaPromise<unknown>[] = []
+  for (const [categoria, grupo] of porCategoria) {
+    if (fase !== 'RESULTADO_FINAL') {
+      grupo.forEach((r, i) => {
+        updates.push(prisma.inscricao.update({
+          where: { id: r.inscricaoId },
+          data: { notaFinal: r.notaFinal, posicao: i + 1, status: fase },
+        }))
+      })
+      continue
     }
 
-    return prisma.inscricao.update({
-      where: { id: r.inscricaoId },
-      data: {
+    const config = categoriasConfig.find((c) => c.nome === categoria) ?? CONFIG_SEM_VAGAS_DISCRETAS(categoria)
+    const alocacao = alocarVagasCategoria(
+      grupo.map((r) => ({
+        inscricaoId: r.inscricaoId,
         notaFinal: r.notaFinal,
-        posicao: index + 1,
-        status,
-      },
+        totalAvaliacoes: r.totalAvaliacoes,
+        cotasOptIn: r.cotasOptIn ?? [],
+      })),
+      config,
+      vagas?.notaMinima,
+      vagas?.suplentes,
+    )
+    grupo.forEach((r, i) => {
+      updates.push(prisma.inscricao.update({
+        where: { id: r.inscricaoId },
+        data: { notaFinal: r.notaFinal, posicao: alocacao[i].posicaoCategoria, status: alocacao[i].status },
+      }))
     })
-  })
+  }
 
   await prisma.$transaction(updates)
 }

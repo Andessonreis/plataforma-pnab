@@ -47,7 +47,7 @@ export async function publishResultados(
 ) {
   const edital = await prisma.edital.findUnique({
     where: { id: editalId },
-    select: { id: true, titulo: true, slug: true, status: true, vagasContemplados: true, vagasSuplentes: true },
+    select: { id: true, titulo: true, slug: true, status: true, vagasContemplados: true, vagasSuplentes: true, notaMinima: true, categoriasConfig: true },
   })
   if (!edital) throw new ServiceError('NOT_FOUND', 'Edital não encontrado.')
 
@@ -59,6 +59,10 @@ export async function publishResultados(
   await saveResults(resultados, fase, {
     contemplados: edital.vagasContemplados,
     suplentes: edital.vagasSuplentes,
+    notaMinima: edital.notaMinima ? Number(edital.notaMinima) : null,
+    categoriasConfig: Array.isArray(edital.categoriasConfig)
+      ? (edital.categoriasConfig as unknown as import('@/types/categoria-config').CategoriaConfig[])
+      : null,
   })
 
   const editalStatus = fase === 'RESULTADO_FINAL' ? 'RESULTADO_FINAL' : 'RESULTADO_PRELIMINAR'

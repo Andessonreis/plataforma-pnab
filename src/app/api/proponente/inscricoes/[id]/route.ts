@@ -3,12 +3,14 @@ import { z } from 'zod'
 import { randomUUID } from 'crypto'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { invalidCotasOptIn } from '@/types/categoria-config'
 
 export const runtime = 'nodejs'
 
 const updateSchema = z.object({
   campos: z.record(z.unknown()).optional(),
   categoria: z.string().optional(),
+  cotasOptIn: z.array(z.string()).optional(),
   orcamento: z.record(z.unknown()).optional(),
 })
 
@@ -119,7 +121,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
 
     const inscricao = await prisma.inscricao.findUnique({
       where: { id },
-      select: { id: true, proponenteId: true, status: true, editalId: true },
+      select: { id: true, proponenteId: true, status: true, editalId: true, categoria: true },
     })
 
     if (!inscricao) {
@@ -155,15 +157,31 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     const body = await req.json()
     const data = updateSchema.parse(body)
 
-    // Validar categoria se fornecida
-    if (data.categoria !== undefined) {
+    // Validar categoria e cotas se fornecidas
+    if (data.categoria !== undefined || data.cotasOptIn !== undefined) {
       const edital = await prisma.edital.findUnique({
         where: { id: inscricao.editalId },
-        select: { categorias: true },
+        select: { categorias: true, categoriasConfig: true },
       })
       if (edital && edital.categorias.length > 0 && data.categoria && !edital.categorias.includes(data.categoria)) {
         const res = NextResponse.json(
           { error: 'BAD_REQUEST', message: 'Categoria inválida para este edital.', requestId },
+          { status: 400 },
+        )
+        res.headers.set('X-Request-Id', requestId)
+        res.headers.set('Cache-Control', 'no-store')
+        return res
+      }
+
+      const categoriaEfetiva = data.categoria !== undefined ? data.categoria : inscricao.categoria
+      const cotasInvalidas = invalidCotasOptIn(
+        edital?.categoriasConfig as unknown as import('@/types/categoria-config').CategoriaConfig[] | null,
+        categoriaEfetiva,
+        data.cotasOptIn ?? [],
+      )
+      if (cotasInvalidas.length > 0) {
+        const res = NextResponse.json(
+          { error: 'BAD_REQUEST', message: `Cota inválida para esta categoria: ${cotasInvalidas.join(', ')}`, requestId },
           { status: 400 },
         )
         res.headers.set('X-Request-Id', requestId)
@@ -175,6 +193,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     const updateData: Record<string, unknown> = {}
     if (data.campos !== undefined) updateData.campos = data.campos
     if (data.categoria !== undefined) updateData.categoria = data.categoria || null
+    if (data.cotasOptIn !== undefined) updateData.cotasOptIn = data.cotasOptIn
     if (data.orcamento !== undefined) updateData.orcamento = data.orcamento
 
     const updated = await prisma.inscricao.update({

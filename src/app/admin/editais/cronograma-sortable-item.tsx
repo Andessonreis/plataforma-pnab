@@ -7,6 +7,7 @@ import { editalCronogramaLabel } from '@/lib/status-maps'
 import { getItemValidationWarnings } from '@/lib/utils/cronograma'
 
 const ACOES_JANELA: { value: AcaoJanela; label: string; grupo: 'janela' | 'publicacao' }[] = [
+  { value: 'RECURSO_EDITAL_JANELA', label: 'Janela de recurso contra o edital', grupo: 'janela' },
   { value: 'RECURSO_HABILITACAO_JANELA', label: 'Janela de recurso de habilitação', grupo: 'janela' },
   { value: 'RECURSO_RESULTADO_JANELA', label: 'Janela de recurso do resultado preliminar', grupo: 'janela' },
   { value: 'PUBLICACAO_INSCRITOS', label: 'Publicação da lista de inscritos', grupo: 'publicacao' },

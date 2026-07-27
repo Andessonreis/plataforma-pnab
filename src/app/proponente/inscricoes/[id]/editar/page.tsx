@@ -31,6 +31,7 @@ export default async function EditarInscricaoPage({ params }: Props) {
           id: true,
           titulo: true,
           categorias: true,
+          categoriasConfig: true,
           camposFormulario: true,
           etapasCustomizadas: true,
           tiposAnexo: true,
@@ -116,6 +117,8 @@ export default async function EditarInscricaoPage({ params }: Props) {
           id: inscricao.edital.id,
           titulo: inscricao.edital.titulo,
           categorias: inscricao.edital.categorias,
+          categoriasConfig: (Array.isArray(inscricao.edital.categoriasConfig)
+            ? inscricao.edital.categoriasConfig : null) as unknown as import('@/types/categoria-config').CategoriaConfig[] | null,
           camposFormulario: camposFormulario as unknown as CampoFormulario[],
           etapasCustomizadas: (Array.isArray(inscricao.edital.etapasCustomizadas)
             ? (inscricao.edital.etapasCustomizadas as unknown as import('@/types/etapa-customizada').EtapaCustomizada[])
@@ -129,6 +132,7 @@ export default async function EditarInscricaoPage({ params }: Props) {
         tipoProponente={user?.tipoProponente ?? null}
         inscricaoId={inscricao.id}
         initialCategoria={inscricao.categoria ?? ''}
+        initialCotasOptIn={inscricao.cotasOptIn}
         initialCampos={campos}
         initialAnexos={inscricao.anexos.map((a) => ({
           ...a,

@@ -15,6 +15,7 @@ export const RATE_LIMITS: Record<string, RateLimitConfig> = {
 
   // Público
   contato: { window: 60, max: 5 },
+  'recurso-edital': { window: 60, max: 3 },
   newsletter: { window: 60, max: 5 },
   'cnpj/lookup': { window: 60, max: 10 },
 

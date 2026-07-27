@@ -82,6 +82,8 @@ export default async function EditarEditalPage({ params }: Props) {
           ano: edital.ano,
           valorTotal: edital.valorTotal ? String(edital.valorTotal) : '',
           categorias: edital.categorias,
+          categoriasConfig: (Array.isArray(edital.categoriasConfig)
+            ? edital.categoriasConfig : null) as unknown as import('@/types/categoria-config').CategoriaConfig[] | null,
           acoesAfirmativas: edital.acoesAfirmativas ?? '',
           regrasElegibilidade: edital.regrasElegibilidade ?? '',
           cronograma,

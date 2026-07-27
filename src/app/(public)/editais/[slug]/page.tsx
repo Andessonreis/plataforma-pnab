@@ -24,6 +24,7 @@ import { formatCurrency, formatDate, formatDateTime, parseBrazilDateTime } from 
 import { parseCronogramaPublico, getNextDeadline, getCronogramaItemStatus } from '@/lib/utils/cronograma'
 import { isAcaoPublicacao } from '@/types/cronograma'
 import { getBadgeVariantForTipo } from '@/lib/utils/badge-variant'
+import { RecursoEditalButton } from './recurso-edital-button'
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
@@ -94,6 +95,14 @@ export default async function EditalPage({ params }: Props) {
       tipoLabels[at.tipo] = at.label
     }
   }
+
+  const categoriasConfig = (Array.isArray(edital.categoriasConfig)
+    ? edital.categoriasConfig
+    : []) as unknown as import('@/types/categoria-config').CategoriaConfig[]
+  // União das cotas de todas as categorias, na ordem de primeira aparição — vira colunas da tabela.
+  const cotaLabels = [...new Map(
+    categoriasConfig.flatMap((c) => c.cotas.map((cota) => [cota.label, cota.label] as const))
+  ).values()]
 
   const cronograma = parseCronogramaPublico(edital.cronograma, edital.status, edital.publishedAt)
   const now = new Date()
@@ -345,6 +354,11 @@ export default async function EditalPage({ params }: Props) {
                                   </Link>
                                 </div>
                               )}
+                              {isCurrent && item.acao === 'RECURSO_EDITAL_JANELA' && (
+                                <div className="mt-2 text-xs">
+                                  <RecursoEditalButton slug={slug} />
+                                </div>
+                              )}
                             </div>
                           </li>
                         )
@@ -455,6 +469,57 @@ export default async function EditalPage({ params }: Props) {
                                 <IconDownload className="h-4 w-4" />
                                 Baixar
                               </a>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Quadro de Vagas por Categoria */}
+              {categoriasConfig.length > 0 && (
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 sm:p-8">
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 shrink-0">
+                      <IconCurrency className="h-5 w-5" />
+                    </div>
+                    <h2 className="text-xl font-semibold text-slate-900 pt-1">
+                      Quadro de Vagas por Categoria
+                    </h2>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-slate-200 text-left text-slate-500">
+                          <th scope="col" className="py-2 pr-3 font-medium">Categoria</th>
+                          <th scope="col" className="py-2 pr-3 font-medium">Ampla concorrência</th>
+                          {cotaLabels.map((label) => (
+                            <th key={label} scope="col" className="py-2 pr-3 font-medium">{label}</th>
+                          ))}
+                          <th scope="col" className="py-2 pr-3 font-medium">Valor por projeto</th>
+                          <th scope="col" className="py-2 font-medium text-right">Valor total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {categoriasConfig.map((cat) => (
+                          <tr key={cat.nome} className="border-b border-slate-100 last:border-0">
+                            <td className="py-2.5 pr-3 text-slate-900 font-medium">{cat.nome}</td>
+                            <td className="py-2.5 pr-3 text-slate-700">{cat.vagasAmplaConcorrencia ?? '—'}</td>
+                            {cotaLabels.map((label) => {
+                              const cota = cat.cotas.find((c) => c.label === label)
+                              return (
+                                <td key={label} className="py-2.5 pr-3 text-slate-700">
+                                  {cota ? cota.vagas : '—'}
+                                </td>
+                              )
+                            })}
+                            <td className="py-2.5 pr-3 text-slate-700">
+                              {cat.valorPorProjeto != null ? formatCurrency(cat.valorPorProjeto) : '—'}
+                            </td>
+                            <td className="py-2.5 text-right text-slate-900 font-medium">
+                              {formatCurrency(cat.valorTotalCategoria)}
                             </td>
                           </tr>
                         ))}

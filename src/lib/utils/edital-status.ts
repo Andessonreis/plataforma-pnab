@@ -66,6 +66,7 @@ const ACAO_PUBLIC_DISPLAY: Partial<Record<AcaoJanela, StatusDisplay>> = {
   PUBLICACAO_INSCRITOS: { label: 'Inscritos publicados', badgeVariant: 'info' },
   PUBLICACAO_HABILITADOS: { label: 'Habilitados publicados', badgeVariant: 'info' },
   PUBLICACAO_HABILITADOS_POS_RECURSOS: { label: 'Habilitados pós-recursos', badgeVariant: 'info' },
+  RECURSO_EDITAL_JANELA: { label: 'Prazo de recurso contra o edital', badgeVariant: 'warning' },
   RECURSO_HABILITACAO_JANELA: { label: 'Prazo de recursos', badgeVariant: 'warning' },
   RECURSO_RESULTADO_JANELA: { label: 'Prazo de recursos', badgeVariant: 'warning' },
 }
