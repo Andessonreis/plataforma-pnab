@@ -6,8 +6,9 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['pdfkit'],
   experimental: {
     // Middleware (RBAC) intercepta todas as rotas, inclusive /api — o limite
-    // padrão de 10MB truncava uploads de vídeo (até 150MB, ver MAX_VIDEO_SIZE_MB).
-    middlewareClientMaxBodySize: '160mb',
+    // padrão de 10MB truncava uploads de vídeo. Mantido acima do MAX_VIDEO_SIZE_MB
+    // (50MB, teto do plano do Supabase Storage) com folga pro overhead do multipart.
+    middlewareClientMaxBodySize: '60mb',
   },
   typescript: {
     ignoreBuildErrors: true,
