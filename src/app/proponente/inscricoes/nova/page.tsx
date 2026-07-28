@@ -38,6 +38,7 @@ export default async function NovaInscricaoPage({ searchParams }: Props) {
       tiposAnexo: true,
       tiposProponentePermitidos: true,
       status: true,
+      videoHabilitado: true,
       arquivos: {
         orderBy: { createdAt: 'asc' },
         select: { id: true, tipo: true, titulo: true, url: true, acessivel: true },
@@ -163,6 +164,7 @@ export default async function NovaInscricaoPage({ searchParams }: Props) {
             : null,
           arquivos: edital.arquivos,
           tipoLabels,
+          videoHabilitado: edital.videoHabilitado,
         }}
         tipoProponente={user?.tipoProponente ?? null}
       />

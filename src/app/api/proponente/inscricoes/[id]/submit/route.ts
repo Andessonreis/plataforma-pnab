@@ -6,6 +6,7 @@ import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
 import { enqueueEmail } from '@/lib/queue'
 import { resolveCharLimits } from '@/lib/campo-limits'
 import { filterCamposByTipo, type CampoFormulario } from '@/types/campo-formulario'
+import { VIDEO_ANEXO_TIPOS } from '@/lib/upload/anexo-config'
 
 export const runtime = 'nodejs'
 
@@ -212,11 +213,13 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
 
     // Atualizar status
     const now = new Date()
+    const submissaoPorVideo = inscricao.anexos.some((a) => a.tipo === VIDEO_ANEXO_TIPOS.substitutivo)
     const updated = await prisma.inscricao.update({
       where: { id },
       data: {
         status: 'ENVIADA',
         submittedAt: now,
+        submissaoPorVideo,
       },
       select: { numero: true, submittedAt: true },
     })

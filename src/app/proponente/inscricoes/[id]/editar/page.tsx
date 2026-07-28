@@ -36,6 +36,7 @@ export default async function EditarInscricaoPage({ params }: Props) {
           etapasCustomizadas: true,
           tiposAnexo: true,
           status: true,
+          videoHabilitado: true,
           arquivos: {
             orderBy: { createdAt: 'asc' },
             select: { id: true, tipo: true, titulo: true, url: true, acessivel: true },
@@ -128,6 +129,7 @@ export default async function EditarInscricaoPage({ params }: Props) {
             : null,
           arquivos: inscricao.edital.arquivos,
           tipoLabels,
+          videoHabilitado: inscricao.edital.videoHabilitado,
         }}
         tipoProponente={user?.tipoProponente ?? null}
         inscricaoId={inscricao.id}

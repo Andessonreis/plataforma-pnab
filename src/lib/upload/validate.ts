@@ -24,6 +24,15 @@ const MAGIC_BYTES: Record<string, { signature: number[]; offset?: number }[]> = 
   'application/vnd.ms-excel': [
     { signature: [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1] }, // OLE2 (XLS legado)
   ],
+  'video/mp4': [
+    { signature: [0x66, 0x74, 0x79, 0x70], offset: 4 }, // ISO BMFF "ftyp" box
+  ],
+  'video/quicktime': [
+    { signature: [0x66, 0x74, 0x79, 0x70], offset: 4 }, // .mov também usa "ftyp" (QuickTime File Format)
+  ],
+  'video/webm': [
+    { signature: [0x1a, 0x45, 0xdf, 0xa3] }, // EBML header (Matroska/WebM)
+  ],
 }
 
 /**

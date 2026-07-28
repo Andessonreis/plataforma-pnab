@@ -287,6 +287,10 @@ model Edital {
   vagasContemplados         Int?
   // Número de vagas para suplentes (null = todos restantes com nota)
   vagasSuplentes            Int?
+  // Libera a etapa opcional de inscrição por vídeo (substitui o preenchimento
+  // manual das etapas customizadas por um vídeo único, ou aceita vídeo
+  // complementar opcional junto do preenchimento manual)
+  videoHabilitado           Boolean      @default(false)
   // Data real de publicação (preenchida quando status sai de RASCUNHO)
   publishedAt               DateTime?
   createdAt                 DateTime     @default(now())
@@ -329,6 +333,9 @@ model Inscricao {
   notaFinal          Decimal?        @db.Decimal(5, 2)
   posicao            Int?
   motivoInabilitacao String?
+  // Optou por substituir o preenchimento manual das etapas customizadas
+  // por um vídeo único (etapa "video" do wizard de inscrição)
+  submissaoPorVideo  Boolean         @default(false)
   submittedAt        DateTime?
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt

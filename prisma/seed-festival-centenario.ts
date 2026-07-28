@@ -305,6 +305,7 @@ async function main() {
         tiposProponentePermitidos: [],
         vagasContemplados: null,
         vagasSuplentes: null,
+        videoHabilitado: true,
       },
     })
     console.log('  Edital atualizado com sucesso.\n')
@@ -333,6 +334,7 @@ async function main() {
         desempate: toJson(desempate),
         vagasContemplados: null,
         vagasSuplentes: null,
+        videoHabilitado: true,
       },
     })
     console.log(`  Edital criado com sucesso! (id: ${edital.id}, slug: ${edital.slug})\n`)

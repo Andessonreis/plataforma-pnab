@@ -57,23 +57,16 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       return res
     }
 
-    // Extrair path do storage a partir da URL pública
+    // Link externo (vídeo por Drive/YouTube/etc.) — não está no nosso storage, usa a URL direto
     const urlObj = new URL(anexo.url)
     const storagePath = urlObj.pathname.split('/propostas/').pop()
+    const isExternalLink = !urlObj.pathname.includes('/propostas/')
 
-    if (!storagePath) {
-      const res = NextResponse.json(
-        { error: 'INTERNAL_ERROR', message: 'Caminho do arquivo inválido.', requestId },
-        { status: 500 },
-      )
-      res.headers.set('X-Request-Id', requestId)
-      res.headers.set('Cache-Control', 'no-store')
-      return res
-    }
+    const finalUrl = isExternalLink
+      ? anexo.url
+      : await getSignedUrl('propostas', storagePath as string, 3600)
 
-    const signedUrl = await getSignedUrl('propostas', storagePath, 3600)
-
-    const res = NextResponse.json({ url: signedUrl, requestId })
+    const res = NextResponse.json({ url: finalUrl, requestId })
     res.headers.set('X-Request-Id', requestId)
     res.headers.set('Cache-Control', 'no-store')
 

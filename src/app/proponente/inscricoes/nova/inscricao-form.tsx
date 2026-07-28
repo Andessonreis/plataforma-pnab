@@ -11,18 +11,17 @@ import { filterCamposByTipo, type CampoFormulario } from '@/types/campo-formular
 import type { EtapaCustomizada } from '@/types/etapa-customizada'
 import type { TipoProponente } from '@prisma/client'
 import { PNAB_DEFAULT_ATTACHMENT_TYPES } from '@/lib/constants/attachment-types'
-import {
-  validateAnexoFile,
-  describeValidationError,
-  MAX_FILE_SIZE_MB,
-  MIME_LABEL,
-} from '@/lib/upload/anexo-config'
+import { VIDEO_ANEXO_TIPOS } from '@/lib/upload/anexo-config'
+import type { Anexo } from '@/types/anexo'
 import {
   BlocoInfo,
   TabelaInput,
   GrupoRepetivelInput,
   CampoEstruturaRevisao,
 } from './campo-estrutura'
+import { AnexoUpload } from './anexo-upload'
+import { VideoAttach } from './video-attach'
+import { VideoStep } from './video-step'
 
 // ─── Contador de caracteres ──────────────────────────────────────────────────
 
@@ -52,14 +51,6 @@ function CharCounter({ current, max, min }: { current: number; max: number; min?
   )
 }
 
-interface Anexo {
-  id: string
-  tipo: string
-  titulo: string
-  url: string
-  createdAt: string
-}
-
 type TipoAnexoEdital = import('@/lib/constants/attachment-types').TipoAnexo
 
 interface ArquivoEditalDownload {
@@ -80,6 +71,7 @@ interface EditalInfo {
   etapasCustomizadas?: EtapaCustomizada[]
   arquivos?: ArquivoEditalDownload[]
   tipoLabels?: Record<string, string>
+  videoHabilitado?: boolean
 }
 
 interface InscricaoFormProps {
@@ -96,6 +88,7 @@ interface InscricaoFormProps {
 type Step =
   | { kind: 'categoria' }
   | { kind: 'dados' }
+  | { kind: 'video' }
   | { kind: 'etapa_custom'; etapa: EtapaCustomizada }
   | { kind: 'anexos' }
   | { kind: 'revisao' }
@@ -125,15 +118,6 @@ export default function InscricaoForm({
     .map((e) => ({ ...e, campos: filterCamposByTipo(e.campos, tipoProponente) }))
     .filter((e) => e.campos.length > 0)
 
-  // Determinar etapas — customizadas entram entre "dados" e "anexos"
-  const steps: Step[] = [
-    ...(hasCategorias ? [{ kind: 'categoria' as const }] : []),
-    { kind: 'dados' as const },
-    ...etapasCustomizadas.map((etapa) => ({ kind: 'etapa_custom' as const, etapa })),
-    { kind: 'anexos' as const },
-    { kind: 'revisao' as const },
-  ]
-
   const [currentStep, setCurrentStep] = useState(0)
   const [inscricaoId, setInscricaoId] = useState(existingId || '')
   const [categoria, setCategoria] = useState(initialCategoria)
@@ -156,6 +140,23 @@ export default function InscricaoForm({
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+
+  // Vídeo substitutivo já anexado (se houver) — dispensa o preenchimento das etapas customizadas
+  const anexoVideoSubstitutivo = anexos.find((a) => a.tipo === VIDEO_ANEXO_TIPOS.substitutivo) ?? null
+  const submissaoPorVideo = !!anexoVideoSubstitutivo
+  // Vídeo complementar (opcional) — só relevante quando o proponente preencheu manualmente
+  const anexoVideoComplementar = anexos.find((a) => a.tipo === VIDEO_ANEXO_TIPOS.complementar) ?? null
+
+  // Determinar etapas — vídeo entra logo após "dados"; customizadas só aparecem
+  // se o proponente não optou por substituí-las por um vídeo único.
+  const steps: Step[] = [
+    ...(hasCategorias ? [{ kind: 'categoria' as const }] : []),
+    { kind: 'dados' as const },
+    ...(edital.videoHabilitado ? [{ kind: 'video' as const }] : []),
+    ...(submissaoPorVideo ? [] : etapasCustomizadas.map((etapa) => ({ kind: 'etapa_custom' as const, etapa }))),
+    { kind: 'anexos' as const },
+    { kind: 'revisao' as const },
+  ]
 
   const step = steps[currentStep]
 
@@ -253,6 +254,39 @@ export default function InscricaoForm({
       return true
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro no upload')
+      return false
+    } finally {
+      setUploading(false)
+    }
+  }, [createInscricao])
+
+  // ─── Anexar vídeo por link (Drive/YouTube/etc., sem upload de arquivo) ─────
+
+  const handleAttachVideoLink = useCallback(async (url: string, tipo: string, titulo: string): Promise<boolean> => {
+    setUploading(true)
+    setError('')
+
+    try {
+      const id = await createInscricao()
+      if (!id) return false
+
+      const formData = new FormData()
+      formData.append('url', url)
+      formData.append('tipo', tipo)
+      formData.append('titulo', titulo)
+
+      const res = await fetch(`/api/proponente/inscricoes/${id}/anexos`, {
+        method: 'POST',
+        body: formData,
+      })
+
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.message || 'Erro ao anexar link')
+
+      setAnexos((prev) => [...prev, data.data])
+      return true
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao anexar link')
       return false
     } finally {
       setUploading(false)
@@ -588,6 +622,7 @@ export default function InscricaoForm({
             const label =
               s.kind === 'categoria' ? 'Categoria' :
               s.kind === 'dados' ? 'Dados do Projeto' :
+              s.kind === 'video' ? 'Vídeo' :
               s.kind === 'etapa_custom' ? s.etapa.titulo :
               s.kind === 'anexos' ? 'Anexos' :
               'Revisão'
@@ -695,6 +730,18 @@ export default function InscricaoForm({
             )}
           </div>
         </Card>
+      )}
+
+      {/* ─── Etapa: Vídeo (opcional, só quando o edital libera) ────────────── */}
+      {step.kind === 'video' && (
+        <VideoStep
+          etapasCustomizadas={etapasCustomizadas}
+          anexoVideo={anexoVideoSubstitutivo}
+          uploading={uploading}
+          onUploadFile={handleUpload}
+          onAttachLink={handleAttachVideoLink}
+          onRemove={handleDeleteAnexo}
+        />
       )}
 
       {/* ─── Etapa: customizada (definida pelo admin no edital) ────────────── */}
@@ -859,6 +906,25 @@ export default function InscricaoForm({
             {/* Upload */}
             <AnexoUpload onUpload={handleUpload} uploading={uploading} tiposAnexoEdital={edital.tiposAnexo} />
 
+            {/* Vídeo complementar opcional — só quando o edital libera vídeo e o proponente não optou pelo vídeo substitutivo */}
+            {edital.videoHabilitado && !submissaoPorVideo && (
+              <div className="mt-6 rounded-lg border border-slate-200 p-4">
+                <h3 className="text-sm font-semibold text-slate-800 mb-1">Vídeo complementar (opcional)</h3>
+                <p className="text-xs text-slate-500 mb-3">
+                  Se quiser, anexe um vídeo complementar à sua inscrição preenchida manualmente.
+                </p>
+                <VideoAttach
+                  tipo={VIDEO_ANEXO_TIPOS.complementar}
+                  tituloPadrao="Vídeo complementar"
+                  attached={anexoVideoComplementar}
+                  uploading={uploading}
+                  onUploadFile={handleUpload}
+                  onAttachLink={handleAttachVideoLink}
+                  onRemove={handleDeleteAnexo}
+                />
+              </div>
+            )}
+
             {/* Lista de anexos */}
             {anexos.length > 0 && (
               <div className="mt-6 space-y-3">
@@ -928,8 +994,16 @@ export default function InscricaoForm({
               </dl>
             </div>
 
-            {/* Etapas customizadas */}
-            {etapasCustomizadas.map((etapa) => (
+            {/* Vídeo da inscrição, se optou por substituir as etapas customizadas */}
+            {submissaoPorVideo && anexoVideoSubstitutivo && (
+              <div>
+                <h3 className="text-sm font-medium text-slate-500 mb-1">Vídeo da inscrição</h3>
+                <p className="text-slate-900 text-sm break-all">{anexoVideoSubstitutivo.url}</p>
+              </div>
+            )}
+
+            {/* Etapas customizadas — omitidas quando a inscrição foi feita por vídeo */}
+            {!submissaoPorVideo && etapasCustomizadas.map((etapa) => (
               <div key={etapa.id}>
                 <h3 className="text-sm font-medium text-slate-500 mb-3">{etapa.titulo}</h3>
                 <dl className="space-y-3">
@@ -1020,216 +1094,6 @@ export default function InscricaoForm({
           )}
         </div>
       </div>
-    </div>
-  )
-}
-
-// Tipos de anexo padrão (derivado da constante compartilhada)
-const TIPOS_ANEXO_PADRAO: SelectOption[] = PNAB_DEFAULT_ATTACHMENT_TYPES.map(t => ({
-  value: t.tipo,
-  label: t.label,
-}))
-
-// ─── Componente de Upload ────────────────────────────────────────────────────
-
-function AnexoUpload({
-  onUpload,
-  uploading,
-  tiposAnexoEdital,
-}: {
-  onUpload: (file: File, tipo: string, titulo: string) => Promise<boolean>
-  uploading: boolean
-  tiposAnexoEdital?: TipoAnexoEdital[] | null
-}) {
-  const [tipo, setTipo] = useState('')
-  const [files, setFiles] = useState<File[]>([])
-  const [dragOver, setDragOver] = useState(false)
-  const [localError, setLocalError] = useState('')
-  const [localSuccess, setLocalSuccess] = useState('')
-  const [progress, setProgress] = useState<{ current: number; total: number } | null>(null)
-
-  const tipoOptions: SelectOption[] = tiposAnexoEdital?.length
-    ? tiposAnexoEdital.map(t => ({ value: t.tipo, label: t.label }))
-    : TIPOS_ANEXO_PADRAO
-
-  const addFiles = (list: FileList | File[]) => {
-    const arr = Array.from(list)
-    if (arr.length === 0) return
-    setLocalSuccess('')
-
-    // #78 — validação client-side imediata: tamanho + tipo, antes do upload
-    const aceitos: File[] = []
-    const rejeitados: string[] = []
-    for (const f of arr) {
-      const err = validateAnexoFile(f)
-      if (err) {
-        rejeitados.push(describeValidationError(err))
-      } else {
-        aceitos.push(f)
-      }
-    }
-
-    if (rejeitados.length > 0) {
-      setLocalError(rejeitados.join(' '))
-    } else {
-      setLocalError('')
-    }
-
-    if (aceitos.length > 0) {
-      setFiles((prev) => [...prev, ...aceitos])
-    }
-  }
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) addFiles(e.target.files)
-    e.target.value = ''
-  }
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    setDragOver(false)
-    if (e.dataTransfer.files) addFiles(e.dataTransfer.files)
-  }
-
-  const removeFile = (idx: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== idx))
-  }
-
-  const handleSubmit = async () => {
-    if (files.length === 0 || !tipo) return
-    setLocalError('')
-    setLocalSuccess('')
-
-    let enviados = 0
-    const falhas: string[] = []
-    for (let i = 0; i < files.length; i++) {
-      setProgress({ current: i + 1, total: files.length })
-      const f = files[i]
-      const titulo = f.name.replace(/\.[^.]+$/, '')
-      const ok = await onUpload(f, tipo, titulo)
-      if (ok) enviados++
-      else falhas.push(f.name)
-    }
-    setProgress(null)
-
-    if (falhas.length === 0) {
-      setLocalSuccess(
-        enviados === 1
-          ? 'Arquivo enviado com sucesso!'
-          : `${enviados} arquivos enviados com sucesso!`,
-      )
-      setTimeout(() => setLocalSuccess(''), 4000)
-      setFiles([])
-      setTipo('')
-    } else {
-      setLocalError(
-        `Falha no envio de ${falhas.length} arquivo(s): ${falhas.join(', ')}. Verifique os arquivos e tente novamente.`,
-      )
-      // mantém os arquivos falhos pra o usuário reenviar
-      setFiles((prev) => prev.filter((f) => falhas.includes(f.name)))
-    }
-  }
-
-  const formatSize = (bytes: number) => {
-    if (bytes < 1024) return `${bytes} B`
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
-    return `${(bytes / 1024 / 1024).toFixed(1)} MB`
-  }
-
-  return (
-    <div className="space-y-4">
-      {localError && (
-        <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700" role="alert">
-          {localError}
-        </div>
-      )}
-      {localSuccess && (
-        <div className="rounded-lg bg-green-50 border border-green-200 p-3 text-sm text-green-700" role="status">
-          {localSuccess}
-        </div>
-      )}
-
-      {/* Drop zone */}
-      <div
-        onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
-        onDragLeave={() => setDragOver(false)}
-        onDrop={handleDrop}
-        className={`relative rounded-lg border-2 border-dashed p-6 text-center transition-colors
-          ${dragOver ? 'border-brand-500 bg-brand-50' : 'border-slate-300 bg-slate-50'}
-        `}
-      >
-        <IconDocument className="h-8 w-8 text-slate-400 mx-auto mb-2" />
-        <p className="text-sm text-slate-600">
-          {files.length > 0 ? (
-            <span className="font-medium text-brand-700">
-              {files.length === 1 ? files[0].name : `${files.length} arquivos selecionados`}
-            </span>
-          ) : (
-            <>Arraste arquivos ou <span className="text-brand-600 font-medium">clique para selecionar</span></>
-          )}
-        </p>
-        <p className="text-xs text-slate-400 mt-1">
-          {MIME_LABEL} — máx. {MAX_FILE_SIZE_MB}MB cada. Você pode selecionar vários arquivos de uma vez.
-        </p>
-        <input
-          id="anexo-file"
-          type="file"
-          accept=".pdf,.png,.jpg,.jpeg"
-          multiple
-          onChange={handleFileChange}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-          aria-label="Selecionar arquivos para upload"
-        />
-      </div>
-
-      {/* Lista de arquivos selecionados (ainda não enviados) */}
-      {files.length > 0 && (
-        <ul className="space-y-2" role="list" aria-label="Arquivos selecionados">
-          {files.map((f, i) => (
-            <li key={`${f.name}-${i}`} className="flex items-center justify-between gap-3 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm">
-              <div className="min-w-0 flex-1 flex items-center gap-2">
-                <IconDocument className="h-4 w-4 text-slate-400 shrink-0" />
-                <span className="truncate text-slate-800">{f.name}</span>
-                <span className="text-xs text-slate-400 shrink-0">{formatSize(f.size)}</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => removeFile(i)}
-                disabled={uploading}
-                className="text-slate-400 hover:text-red-600 text-xs font-medium px-2 disabled:opacity-50"
-                aria-label={`Remover ${f.name} da seleção`}
-              >
-                Remover
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {/* Tipo (aplicado a todos os arquivos) */}
-      <Select
-        label="Tipo do documento"
-        value={tipo}
-        onChange={(e) => setTipo(e.target.value)}
-        options={tipoOptions}
-        placeholder="Selecione o tipo..."
-        required
-        hint="O tipo será aplicado a todos os arquivos selecionados. Para tipos diferentes, envie em lotes separados."
-      />
-
-      <Button
-        onClick={handleSubmit}
-        disabled={files.length === 0 || !tipo}
-        loading={uploading}
-        variant="secondary"
-        type="button"
-      >
-        {progress
-          ? `Enviando ${progress.current}/${progress.total}...`
-          : files.length > 1
-            ? `Enviar ${files.length} arquivos`
-            : 'Enviar Anexo'}
-      </Button>
     </div>
   )
 }

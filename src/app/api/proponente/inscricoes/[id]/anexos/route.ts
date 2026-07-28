@@ -5,7 +5,17 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { uploadFile, deleteFile } from '@/lib/storage'
 import { validateMagicBytes, sanitizeFilename } from '@/lib/upload/validate'
-import { MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_MB, ALLOWED_MIMES, MIME_LABEL } from '@/lib/upload/anexo-config'
+import {
+  MAX_FILE_SIZE_BYTES,
+  MAX_FILE_SIZE_MB,
+  ALLOWED_MIMES,
+  MIME_LABEL,
+  MAX_VIDEO_SIZE_BYTES,
+  MAX_VIDEO_SIZE_MB,
+  ALLOWED_VIDEO_MIMES,
+  VIDEO_MIME_LABEL,
+  VIDEO_ANEXO_TIPOS,
+} from '@/lib/upload/anexo-config'
 import { logAudit } from '@/lib/audit'
 
 export const runtime = 'nodejs'
@@ -35,7 +45,12 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
 
     const inscricao = await prisma.inscricao.findUnique({
       where: { id },
-      select: { id: true, proponenteId: true, status: true },
+      select: {
+        id: true,
+        proponenteId: true,
+        status: true,
+        edital: { select: { videoHabilitado: true } },
+      },
     })
 
     if (!inscricao) {
@@ -70,12 +85,13 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
 
     const formData = await req.formData()
     const file = formData.get('file') as File | null
+    const videoUrl = formData.get('url') as string | null
     const tipo = formData.get('tipo') as string | null
     const titulo = formData.get('titulo') as string | null
 
-    if (!file || !tipo || !titulo) {
+    if ((!file && !videoUrl) || !tipo || !titulo) {
       const res = NextResponse.json(
-        { error: 'BAD_REQUEST', message: 'Campos file, tipo e titulo são obrigatórios.', requestId },
+        { error: 'BAD_REQUEST', message: 'Campos file (ou url) e tipo/titulo são obrigatórios.', requestId },
         { status: 400 },
       )
       res.headers.set('X-Request-Id', requestId)
@@ -83,10 +99,73 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
       return res
     }
 
-    // Validar tamanho
-    if (file.size > MAX_FILE_SIZE_BYTES) {
+    // Vídeo (substitutivo ou complementar) só é aceito quando o edital libera a etapa de vídeo
+    const isVideoTipo = (tipo === VIDEO_ANEXO_TIPOS.substitutivo || tipo === VIDEO_ANEXO_TIPOS.complementar)
+    if (isVideoTipo && !inscricao.edital.videoHabilitado) {
       const res = NextResponse.json(
-        { error: 'BAD_REQUEST', message: `Arquivo excede o limite de ${MAX_FILE_SIZE_MB}MB.`, requestId },
+        { error: 'BAD_REQUEST', message: 'Este edital não aceita anexo de vídeo.', requestId },
+        { status: 400 },
+      )
+      res.headers.set('X-Request-Id', requestId)
+      res.headers.set('Cache-Control', 'no-store')
+      return res
+    }
+
+    // Link de vídeo (Drive/YouTube/etc.) — sem upload, só valida a URL e cria o registro
+    if (!file && videoUrl) {
+      if (!isVideoTipo) {
+        const res = NextResponse.json(
+          { error: 'BAD_REQUEST', message: 'Anexo por link só é aceito para vídeo.', requestId },
+          { status: 400 },
+        )
+        res.headers.set('X-Request-Id', requestId)
+        res.headers.set('Cache-Control', 'no-store')
+        return res
+      }
+
+      if (!/^https:\/\/.+/i.test(videoUrl)) {
+        const res = NextResponse.json(
+          { error: 'BAD_REQUEST', message: 'Informe um link de vídeo válido (https://...).', requestId },
+          { status: 400 },
+        )
+        res.headers.set('X-Request-Id', requestId)
+        res.headers.set('Cache-Control', 'no-store')
+        return res
+      }
+
+      const anexoLink = await prisma.anexoInscricao.create({
+        data: { inscricaoId: id, tipo, titulo, url: videoUrl },
+        select: { id: true, url: true, titulo: true, tipo: true, createdAt: true },
+      })
+
+      await logAudit({
+        userId: session.user.id,
+        action: 'ANEXO_ENVIADO',
+        entity: 'AnexoInscricao',
+        entityId: anexoLink.id,
+        details: { inscricaoId: id, tipo, url: videoUrl },
+        ip: req.headers.get('x-forwarded-for') ?? undefined,
+      })
+
+      const res = NextResponse.json({ data: anexoLink, requestId }, { status: 201 })
+      res.headers.set('X-Request-Id', requestId)
+      res.headers.set('Cache-Control', 'no-store')
+
+      console.log({ requestId, method: 'POST', path: `/api/proponente/inscricoes/${id}/anexos`, status: 201, durationMs: Date.now() - start })
+      return res
+    }
+
+    // A partir daqui, é upload de arquivo — `file` está garantidamente presente
+    const uploadedFile = file as File
+    const maxSizeBytes = isVideoTipo ? MAX_VIDEO_SIZE_BYTES : MAX_FILE_SIZE_BYTES
+    const maxSizeMb = isVideoTipo ? MAX_VIDEO_SIZE_MB : MAX_FILE_SIZE_MB
+    const allowedMimes: readonly string[] = isVideoTipo ? ALLOWED_VIDEO_MIMES : ALLOWED_MIMES
+    const mimeLabel = isVideoTipo ? VIDEO_MIME_LABEL : MIME_LABEL
+
+    // Validar tamanho
+    if (uploadedFile.size > maxSizeBytes) {
+      const res = NextResponse.json(
+        { error: 'BAD_REQUEST', message: `Arquivo excede o limite de ${maxSizeMb}MB.`, requestId },
         { status: 400 },
       )
       res.headers.set('X-Request-Id', requestId)
@@ -95,9 +174,9 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     }
 
     // Validar MIME type
-    if (!ALLOWED_MIMES.includes(file.type as typeof ALLOWED_MIMES[number])) {
+    if (!allowedMimes.includes(uploadedFile.type)) {
       const res = NextResponse.json(
-        { error: 'BAD_REQUEST', message: `Tipo de arquivo não permitido. Aceitos: ${MIME_LABEL}.`, requestId },
+        { error: 'BAD_REQUEST', message: `Tipo de arquivo não permitido. Aceitos: ${mimeLabel}.`, requestId },
         { status: 400 },
       )
       res.headers.set('X-Request-Id', requestId)
@@ -106,8 +185,8 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     }
 
     // Validar magic bytes
-    const buffer = Buffer.from(await file.arrayBuffer())
-    if (!validateMagicBytes(buffer, file.type)) {
+    const buffer = Buffer.from(await uploadedFile.arrayBuffer())
+    if (!validateMagicBytes(buffer, uploadedFile.type)) {
       const res = NextResponse.json(
         { error: 'BAD_REQUEST', message: 'Conteúdo do arquivo não corresponde ao tipo declarado.', requestId },
         { status: 400 },
@@ -118,9 +197,9 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     }
 
     // Upload para Supabase
-    const safeName = sanitizeFilename(file.name)
+    const safeName = sanitizeFilename(uploadedFile.name)
     const storagePath = `inscricoes/${id}/${safeName}`
-    const url = await uploadFile('propostas', storagePath, buffer, file.type)
+    const url = await uploadFile('propostas', storagePath, buffer, uploadedFile.type)
 
     // Criar registro no banco — com rollback do arquivo se falhar
     let anexo: { id: string; url: string; titulo: string; tipo: string; createdAt: Date }
