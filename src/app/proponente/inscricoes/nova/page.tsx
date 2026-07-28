@@ -63,10 +63,10 @@ export default async function NovaInscricaoPage({ searchParams }: Props) {
     }
   }
 
-  // Buscar tipo de proponente do usuário
+  // Buscar dados do usuário (tipo de proponente + dados pessoais pra pré-preencher o formulário)
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { tipoProponente: true },
+    select: { tipoProponente: true, nome: true, email: true, telefone: true },
   })
 
   // Verificar elegibilidade por tipo de proponente
@@ -130,6 +130,20 @@ export default async function NovaInscricaoPage({ searchParams }: Props) {
     ? edital.camposFormulario
     : []
 
+  // Pré-preenche campos de dados pessoais com o que já foi capturado no cadastro
+  // (o proponente pode editar livremente) — só quando o edital define um campo
+  // com esses nomes convencionados.
+  const DADOS_PESSOAIS_DO_CADASTRO: Record<string, string | undefined> = {
+    nome_completo: user?.nome,
+    telefone_contato: user?.telefone ?? undefined,
+    email_contato: user?.email,
+  }
+  const camposNomes = new Set(camposFormulario.map((c) => (c as { nome?: string }).nome))
+  const initialCampos: Record<string, unknown> = {}
+  for (const [nome, valor] of Object.entries(DADOS_PESSOAIS_DO_CADASTRO)) {
+    if (valor && camposNomes.has(nome)) initialCampos[nome] = valor
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -167,6 +181,7 @@ export default async function NovaInscricaoPage({ searchParams }: Props) {
           videoHabilitado: edital.videoHabilitado,
         }}
         tipoProponente={user?.tipoProponente ?? null}
+        initialCampos={initialCampos}
       />
     </div>
   )

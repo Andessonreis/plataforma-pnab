@@ -4,6 +4,11 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   basePath: process.env.NEXT_PUBLIC_BASE_PATH || undefined,
   serverExternalPackages: ['pdfkit'],
+  experimental: {
+    // Middleware (RBAC) intercepta todas as rotas, inclusive /api — o limite
+    // padrão de 10MB truncava uploads de vídeo (até 150MB, ver MAX_VIDEO_SIZE_MB).
+    middlewareClientMaxBodySize: '160mb',
+  },
   typescript: {
     ignoreBuildErrors: true,
   },
