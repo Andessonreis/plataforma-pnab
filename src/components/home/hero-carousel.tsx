@@ -19,6 +19,7 @@ export interface SlideData {
   ctaUrl: string
   ctaSecondaryLabel?: string
   ctaSecondaryUrl?: string
+  isImageOnly?: boolean
 }
 
 interface HeroCarouselProps {
@@ -108,6 +109,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
 
   const slide = slides[current]
   const isHero = slide.tipo === 'hero'
+  const isImageOnly = slide.isImageOnly || slide.imagemUrl?.includes('novo_editais')
   const bgImage = slide.imagemUrl || getEditalFallbackImage(current)
 
   return (
@@ -132,93 +134,89 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.12}
           onDragEnd={handleDragEnd}
-          className="relative min-h-[480px] sm:min-h-[600px]"
+          className="relative min-h-[300px] sm:min-h-[480px] lg:min-h-[560px]"
         >
-          {/* Imagem de fundo real (sem gradiente de cor gerado) */}
-          {isHero && slide.imagemUrl ? (
-            <Image
-              src={slide.imagemUrl}
-              alt={slide.titulo}
-              fill
-              priority={current === 0}
-              className="object-cover object-center"
-              sizes="100vw"
-            />
+          {isImageOnly && slide.imagemUrl ? (
+            /* Banner puro: sem textos sobrepostos ou escurecimento por gradiente */
+            <Link
+              href={slide.ctaUrl}
+              className="relative w-full min-h-[300px] sm:min-h-[480px] lg:min-h-[560px] flex items-center justify-center bg-[#800539] overflow-hidden group cursor-pointer"
+              title={slide.titulo}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={slide.imagemUrl}
+                alt={slide.titulo}
+                className="w-full h-full object-contain max-h-[600px] transition-transform duration-300 group-hover:scale-[1.01]"
+              />
+            </Link>
           ) : (
-            <img
-              src={bgImage}
-              alt={slide.titulo}
-              className="absolute inset-0 h-full w-full object-cover object-center"
-            />
-          )}
+            <>
+              {/* Imagem de fundo real (outros slides) */}
+              <img
+                src={bgImage}
+                alt={slide.titulo}
+                className="absolute inset-0 h-full w-full object-cover object-center"
+              />
 
-          {/* Overlay escuro para garantir legibilidade dos textos sobre a foto */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/40" />
+              {/* Overlay escuro para garantir legibilidade dos textos sobre a foto */}
+              <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/40" />
 
-          {/* Decorativo para slides sem imagem */}
-          {!slide.imagemUrl && !isHero && (
-            <div className="absolute right-0 top-0 h-full w-1/3 opacity-10" aria-hidden="true">
-              <svg viewBox="0 0 200 200" className="h-full w-full" fill="currentColor">
-                <circle cx="100" cy="100" r="80" />
-                <circle cx="160" cy="40" r="40" />
-                <circle cx="40" cy="160" r="30" />
-              </svg>
-            </div>
-          )}
-
-          {/* Conteúdo */}
-          <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-28 lg:py-32 flex items-center min-h-[480px] sm:min-h-[600px]">
-            <div className={isHero ? 'max-w-3xl' : 'max-w-2xl'}>
-              {slide.badge && (
-                <span
-                  className={`inline-flex items-center rounded-full border px-3 py-1 text-xs sm:text-sm font-semibold mb-4 sm:mb-6 ${getBadgeClasses(slide.badgeVariant)}`}
-                >
-                  {slide.badge}
-                </span>
-              )}
-
-              {isHero ? (
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.1]">
-                  {slide.titulo}
-                  {slide.subtitulo && (
-                    <>
-                      <br />
-                      {slide.subtitulo}
-                    </>
+              {/* Conteúdo sobreposto */}
+              <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-28 lg:py-32 flex items-center min-h-[480px] sm:min-h-[600px]">
+                <div className={isHero ? 'max-w-3xl' : 'max-w-2xl'}>
+                  {slide.badge && (
+                    <span
+                      className={`inline-flex items-center rounded-full border px-3 py-1 text-xs sm:text-sm font-semibold mb-4 sm:mb-6 ${getBadgeClasses(slide.badgeVariant)}`}
+                    >
+                      {slide.badge}
+                    </span>
                   )}
-                </h1>
-              ) : (
-                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight leading-[1.15]">
-                  {slide.titulo}
-                </h2>
-              )}
 
-              {slide.descricao && (
-                <p className={`mt-4 sm:mt-6 leading-relaxed text-white/85 ${
-                  isHero ? 'text-lg sm:text-xl max-w-2xl' : 'text-base sm:text-lg max-w-xl'
-                }`}>
-                  {slide.descricao}
-                </p>
-              )}
+                  {isHero ? (
+                    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.1]">
+                      {slide.titulo}
+                      {slide.subtitulo && (
+                        <>
+                          <br />
+                          {slide.subtitulo}
+                        </>
+                      )}
+                    </h1>
+                  ) : (
+                    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight leading-[1.15]">
+                      {slide.titulo}
+                    </h2>
+                  )}
 
-              <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-4">
-                <Link
-                  href={slide.ctaUrl}
-                  className="inline-flex items-center justify-center rounded-lg bg-accent-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-accent-500/25 hover:bg-accent-600 transition-colors min-h-[44px]"
-                >
-                  {slide.ctaLabel}
-                </Link>
-                {slide.ctaSecondaryLabel && slide.ctaSecondaryUrl && (
-                  <Link
-                    href={slide.ctaSecondaryUrl}
-                    className="inline-flex items-center justify-center rounded-lg bg-white/15 backdrop-blur-sm border border-white/25 px-6 py-3 text-sm font-semibold text-white hover:bg-white/25 transition-colors min-h-[44px]"
-                  >
-                    {slide.ctaSecondaryLabel}
-                  </Link>
-                )}
+                  {slide.descricao && (
+                    <p className={`mt-4 sm:mt-6 leading-relaxed text-white/85 ${
+                      isHero ? 'text-lg sm:text-xl max-w-2xl' : 'text-base sm:text-lg max-w-xl'
+                    }`}>
+                      {slide.descricao}
+                    </p>
+                  )}
+
+                  <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-4">
+                    <Link
+                      href={slide.ctaUrl}
+                      className="inline-flex items-center justify-center rounded-lg bg-accent-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-accent-500/25 hover:bg-accent-600 transition-colors min-h-[44px]"
+                    >
+                      {slide.ctaLabel}
+                    </Link>
+                    {slide.ctaSecondaryLabel && slide.ctaSecondaryUrl && (
+                      <Link
+                        href={slide.ctaSecondaryUrl}
+                        className="inline-flex items-center justify-center rounded-lg bg-white/15 backdrop-blur-sm border border-white/25 px-6 py-3 text-sm font-semibold text-white hover:bg-white/25 transition-colors min-h-[44px]"
+                      >
+                        {slide.ctaSecondaryLabel}
+                      </Link>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            </>
+          )}
         </motion.div>
       </AnimatePresence>
 
