@@ -1,4 +1,4 @@
-name: Deploy
+name: Deploy Production
 
 on:
   workflow_run:
@@ -9,7 +9,7 @@ on:
 
 jobs:
   deploy:
-    name: Deploy na VPS
+    name: Deploy na VPS (Produção)
     runs-on: ubuntu-latest
     # Só roda se o CI da branch main terminou com sucesso (ou se for disparo manual)
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}

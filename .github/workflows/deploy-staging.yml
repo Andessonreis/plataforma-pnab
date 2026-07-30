@@ -1,0 +1,60 @@
+name: Deploy Staging
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [dev, develop]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy na VPS (Staging — staging.cidadeslab.dev)
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Deploy Staging via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          command_timeout: 20m
+          script: |
+            set -euo pipefail
+
+            # Determina pasta de destino (padrão: /opt/pnab-staging)
+            TARGET_DIR="${VPS_STAGING_APP_DIR:-/opt/pnab-staging}"
+            if [ -d "$TARGET_DIR" ]; then
+              cd "$TARGET_DIR"
+            elif [ -d "/opt/pnab-staging" ]; then
+              cd "/opt/pnab-staging"
+            else
+              echo "Diretório de staging não encontrado."
+              exit 1
+            fi
+
+            # Atualiza o repositório na branch dev
+            git fetch origin dev || git fetch origin develop || git fetch origin main
+            git clean -fd -e .env -e 'backups/' -e '.next/' -e '*.log'
+            git merge --ff-only origin/dev || git merge --ff-only origin/develop || git merge --ff-only origin/main
+
+            # Define o docker compose file apropriado
+            COMPOSE_FILE="docker-compose.prod.yml"
+            if [ -f "docker-compose.staging.yml" ]; then
+              COMPOSE_FILE="docker-compose.staging.yml"
+            fi
+
+            # Rebuild das imagens de staging
+            docker compose -f "$COMPOSE_FILE" build
+
+            # Aplica schema do Prisma no banco de staging
+            docker compose -f "$COMPOSE_FILE" run --rm app npx prisma db push --skip-generate
+
+            # Reinicia a aplicação de staging
+            docker compose -f "$COMPOSE_FILE" up -d app
+
+            # Limpa imagens antigas do Docker
+            docker image prune -f
