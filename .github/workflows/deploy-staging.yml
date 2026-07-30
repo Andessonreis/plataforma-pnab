@@ -47,8 +47,8 @@ jobs:
               COMPOSE_FILE="docker-compose.staging.yml"
             fi
 
-            # Garante a existência da rede Docker pnab-network
-            docker network create pnab-network 2>/dev/null || true
+            # Garante a existência da rede Docker pnab_pnab-network
+            docker network create pnab_pnab-network 2>/dev/null || true
 
             # Rebuild das imagens de staging
             docker compose -f "$COMPOSE_FILE" build
