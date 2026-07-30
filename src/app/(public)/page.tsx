@@ -96,16 +96,22 @@ export default async function HomePage() {
 
   // ── Montar slides do carrossel ──────────────────────────────────────────
 
-  // Slide 1: Hero principal em destaque — Arte completa do banner sem texto sobreposto
+  // Slide 1: Hero principal em destaque com layout lateral (banner em moldura + destaque)
   const heroSlides: SlideData[] = [
     {
       id: 'hero-principal',
       tipo: 'hero',
-      titulo: 'Festival de Arte e Cultura de Irecê — Chamamento Público 02/2026',
-      descricao: 'Os editais da PNAB Irecê já estão abertos. Mais de R$ 400 mil em fomento.',
+      titulo: 'Festival de Arte e Cultura de Irecê',
+      subtitulo: 'Centenário da Cidade — Chamamento Público 02/2026',
+      descricao:
+        'Inscreva sua proposta no Festival de Arte e Cultura de Irecê. 15 categorias, mais de R$ 400 mil em fomento, cotas para pessoas negras, indígenas e PCD.',
       imagemUrl: '/images/banner/novo_banner/novo_editais.jpeg',
-      ctaLabel: 'Ver Edital',
+      badge: 'Destaque · Inscrições Abertas',
+      badgeVariant: 'warning',
+      ctaLabel: 'Ver Edital em Destaque',
       ctaUrl: '/editais/festival-arte-cultura-irece-centenario-2026',
+      ctaSecondaryLabel: 'Cadastrar-se como Proponente',
+      ctaSecondaryUrl: '/cadastro',
       isImageOnly: true,
     },
   ]

@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence, type PanInfo } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
-import { IconChevronLeft, IconChevronRight } from '@/components/ui/icons'
+import { IconChevronLeft, IconChevronRight, IconArrowRight } from '@/components/ui/icons'
 
 export interface SlideData {
   id: string
@@ -134,22 +134,85 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.12}
           onDragEnd={handleDragEnd}
-          className="relative min-h-[300px] sm:min-h-[480px] lg:min-h-[560px]"
+          className="relative min-h-[480px] sm:min-h-[580px]"
         >
           {isImageOnly && slide.imagemUrl ? (
-            /* Banner puro: sem textos sobrepostos ou escurecimento por gradiente */
-            <Link
-              href={slide.ctaUrl}
-              className="relative w-full min-h-[300px] sm:min-h-[480px] lg:min-h-[560px] flex items-center justify-center bg-[#800539] overflow-hidden group cursor-pointer"
-              title={slide.titulo}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={slide.imagemUrl}
-                alt={slide.titulo}
-                className="w-full h-full object-contain max-h-[600px] transition-transform duration-300 group-hover:scale-[1.01]"
-              />
-            </Link>
+            /* Banner Lateral de Destaque com Moldura Premium */
+            <div className="relative w-full h-full min-h-[480px] sm:min-h-[580px] bg-gradient-to-br from-[#800539] via-[#60032a] to-[#3a0219] flex items-center">
+              {/* Brilho sutil de fundo */}
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-500/10 via-transparent to-transparent pointer-events-none" />
+
+              <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 sm:py-16 w-full">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+                  {/* Coluna de Destaque / Informações (Esquerda) */}
+                  <div className="lg:col-span-6 flex flex-col justify-center text-left">
+                    {slide.badge && (
+                      <div className="mb-4">
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-400/20 border border-amber-400/40 px-3.5 py-1 text-xs sm:text-sm font-semibold text-amber-200 backdrop-blur-sm">
+                          <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
+                          {slide.badge}
+                        </span>
+                      </div>
+                    )}
+
+                    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white leading-[1.15]">
+                      {slide.titulo}
+                    </h1>
+
+                    {slide.subtitulo && (
+                      <p className="mt-2 text-lg sm:text-xl font-medium text-amber-200/95">
+                        {slide.subtitulo}
+                      </p>
+                    )}
+
+                    {slide.descricao && (
+                      <p className="mt-4 text-base sm:text-lg text-white/85 leading-relaxed max-w-xl">
+                        {slide.descricao}
+                      </p>
+                    )}
+
+                    <div className="mt-8 flex flex-wrap gap-3.5">
+                      <Link
+                        href={slide.ctaUrl}
+                        className="inline-flex items-center justify-center rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold px-6 py-3.5 text-base shadow-xl shadow-amber-500/20 transition-all transform hover:-translate-y-0.5 min-h-[48px]"
+                      >
+                        {slide.ctaLabel}
+                        <IconArrowRight className="ml-2 h-5 w-5" />
+                      </Link>
+                      {slide.ctaSecondaryLabel && slide.ctaSecondaryUrl && (
+                        <Link
+                          href={slide.ctaSecondaryUrl}
+                          className="inline-flex items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 px-6 py-3.5 text-base font-semibold text-white backdrop-blur-sm transition-all min-h-[48px]"
+                        >
+                          {slide.ctaSecondaryLabel}
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Coluna da Imagem em Moldura (Direita) */}
+                  <div className="lg:col-span-6 flex items-center justify-center">
+                    <Link
+                      href={slide.ctaUrl}
+                      className="group relative w-full aspect-[16/9] rounded-2xl overflow-hidden shadow-2xl border border-white/20 ring-1 ring-black/30 bg-slate-900 transition-all duration-300 hover:shadow-amber-500/15 hover:border-amber-400/50 hover:-translate-y-1 block"
+                      title={slide.titulo}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={slide.imagemUrl}
+                        alt={slide.titulo}
+                        className="w-full h-full object-cover object-center group-hover:scale-[1.02] transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                        <span className="text-xs font-semibold text-white bg-black/70 px-3 py-1.5 rounded-lg backdrop-blur-sm border border-white/10">
+                          Clique para acessar o edital completo
+                        </span>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
           ) : (
             <>
               {/* Imagem de fundo real (outros slides) */}
