@@ -331,9 +331,13 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
                           className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                       ) : (
-                        <div className="h-full w-full bg-gradient-to-br from-brand-600 via-brand-500 to-accent-500 flex items-center justify-center">
-                          <IconNews className="h-10 w-10 text-white/30" />
-                        </div>
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src="/images/banner/foto_site (6).png"
+                          alt={item.titulo}
+                          loading="lazy"
+                          className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/15 to-transparent" />
                     </div>

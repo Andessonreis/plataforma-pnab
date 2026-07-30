@@ -109,9 +109,13 @@ export default async function NoticiasPage({ searchParams }: NoticiasPageProps) 
                             className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
                         ) : (
-                          <div className="h-full w-full bg-gradient-to-br from-brand-600 via-brand-500 to-accent-500 flex items-center justify-center">
-                            <IconNews className="h-20 w-20 text-white/30" />
-                          </div>
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src="/images/banner/foto_site (5).png"
+                            alt={featured.titulo}
+                            loading="eager"
+                            className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
                         )}
                         {/* Overlay gradiente sutil */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent lg:bg-gradient-to-r lg:from-transparent lg:to-black/5" />
@@ -225,9 +229,13 @@ function NoticiaCard({ noticia }: { noticia: NoticiaData }) {
             className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
-          <div className="h-full w-full bg-gradient-to-br from-brand-600 via-brand-500 to-accent-500 flex items-center justify-center">
-            <IconNews className="h-12 w-12 text-white/30" />
-          </div>
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src="/images/banner/foto_site (6).png"
+            alt={noticia.titulo}
+            loading="lazy"
+            className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+          />
         )}
         {/* Overlay gradiente inferior */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/15 to-transparent" />

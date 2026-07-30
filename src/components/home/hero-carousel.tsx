@@ -54,14 +54,16 @@ function getBadgeClasses(variant?: 'success' | 'warning' | 'neutral') {
   }
 }
 
-// Gradiente para slides de edital/notícia (sem imagem)
-function getEditalGradient(index: number) {
-  const gradients = [
-    'bg-gradient-to-br from-brand-600 via-brand-700 to-brand-800',
-    'bg-gradient-to-br from-accent-600 via-accent-700 to-accent-800',
-    'bg-gradient-to-br from-slate-700 via-slate-800 to-brand-900',
+// Fotos reais para slides sem imagem
+function getEditalFallbackImage(index: number) {
+  const images = [
+    '/images/banner/foto_site (3).png',
+    '/images/banner/foto_site (4).png',
+    '/images/banner/foto_site (5).png',
+    '/images/banner/foto_site (6).png',
+    '/images/banner/foto_site (2).png',
   ]
-  return gradients[index % gradients.length]
+  return images[index % images.length]
 }
 
 export function HeroCarousel({ slides }: HeroCarouselProps) {
@@ -106,10 +108,11 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
 
   const slide = slides[current]
   const isHero = slide.tipo === 'hero'
+  const bgImage = slide.imagemUrl || getEditalFallbackImage(current)
 
   return (
     <section
-      className="relative text-white overflow-hidden"
+      className="relative text-white overflow-hidden bg-slate-950"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       role="region"
@@ -129,32 +132,28 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.12}
           onDragEnd={handleDragEnd}
-          className={`relative min-h-[480px] sm:min-h-[600px] ${
-            isHero ? '' : (slide.imagemUrl ? 'bg-slate-900' : getEditalGradient(current))
-          }`}
+          className="relative min-h-[480px] sm:min-h-[600px]"
         >
-          {/* Imagem de fundo */}
-          {slide.imagemUrl && (
-            <>
-              {isHero ? (
-                <Image
-                  src={slide.imagemUrl}
-                  alt=""
-                  fill
-                  priority={current === 0}
-                  className="object-cover"
-                  sizes="100vw"
-                />
-              ) : (
-                <img
-                  src={slide.imagemUrl}
-                  alt=""
-                  className="absolute inset-0 h-full w-full object-cover"
-                />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/55 to-black/40" />
-            </>
+          {/* Imagem de fundo real (sem gradiente de cor gerado) */}
+          {isHero && slide.imagemUrl ? (
+            <Image
+              src={slide.imagemUrl}
+              alt={slide.titulo}
+              fill
+              priority={current === 0}
+              className="object-cover object-center"
+              sizes="100vw"
+            />
+          ) : (
+            <img
+              src={bgImage}
+              alt={slide.titulo}
+              className="absolute inset-0 h-full w-full object-cover object-center"
+            />
           )}
+
+          {/* Overlay escuro para garantir legibilidade dos textos sobre a foto */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/40" />
 
           {/* Decorativo para slides sem imagem */}
           {!slide.imagemUrl && !isHero && (
