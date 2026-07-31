@@ -57,7 +57,7 @@ export function SecaoServicos() {
         >
           {SERVICOS.map((servico) => (
             <StaggerItem key={servico.titulo}>
-              <div className="group relative flex h-full flex-col overflow-hidden rounded-md border-2 border-tinta-900/15 bg-papel-50 p-6 transition-colors duration-300 hover:border-tinta-900/35 sm:p-7">
+              <div className="group relative flex h-full flex-col overflow-hidden rounded-md border-2 border-tinta-900/15 bg-papel-50 p-6 transition-colors duration-300 hover:border-tinta-900/30 sm:p-7">
                 <div className={`absolute left-0 top-0 h-1.5 w-full ${servico.faixa}`} />
 
                 <div

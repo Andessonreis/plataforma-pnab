@@ -32,6 +32,14 @@ export function FolhaDeRosto({ publicados, abertos, proximoEncerramento }: Folha
     <section className="relative overflow-hidden bg-brand-900 text-papel-100">
       <FundoFotos fotos={FOTOS} />
 
+      {/* Véu de tinta do lado do texto: o banho geral da fotografia não dá
+          conta de zonas claras (a saia de quadrilha, uma luz de palco), e o
+          título é o elemento que não pode depender de qual foto está em cena. */}
+      <div
+        className="pointer-events-none absolute inset-0 bg-gradient-to-r from-tinta-950/90 via-tinta-950/70 to-tinta-950/25"
+        aria-hidden="true"
+      />
+
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.07] mix-blend-screen"
         style={{
