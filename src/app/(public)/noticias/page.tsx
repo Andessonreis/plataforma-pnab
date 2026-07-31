@@ -111,7 +111,7 @@ export default async function NoticiasPage({ searchParams }: NoticiasPageProps) 
                         ) : (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
-                            src="/images/banner/foto_site (5).png"
+                            src="/images/galeria/foto-04.png"
                             alt={featured.titulo}
                             loading="eager"
                             className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -231,7 +231,7 @@ function NoticiaCard({ noticia }: { noticia: NoticiaData }) {
         ) : (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src="/images/banner/foto_site (6).png"
+            src="/images/galeria/foto-05.png"
             alt={noticia.titulo}
             loading="lazy"
             className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"

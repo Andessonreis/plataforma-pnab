@@ -9,38 +9,72 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Identidade visual PNAB Irecê — Bandeira de Irecê (verde + dourado)
-        // Verde esmeralda moderno (primário)
+        // Identidade visual PNAB Irecê — Bandeira de Irecê (verde + dourado).
+        // Cada stop lê de uma CSS custom property com a paleta atual como
+        // fallback — permite escopos locais (ex.: .tema-secult) sobrescreverem
+        // a paleta só numa área da página sem duplicar o design system nem
+        // afetar Button/Badge/Card em outras rotas.
+        //
+        // Os valores são canais RGB (não hex) porque só assim o Tailwind
+        // consegue aplicar `<alpha-value>`: com hex dentro da var, sufixos de
+        // opacidade como `bg-brand-50/40` são silenciosamente descartados e a
+        // cor cai para a herdada.
         brand: {
-          50:  '#ecfdf5',
-          100: '#d1fae5',
-          200: '#a7f3d0',
-          300: '#6ee7b7',
-          400: '#34d399',
-          500: '#10b981',
-          600: '#059669',
-          700: '#047857',
-          800: '#065f46',
-          900: '#064e3b',
-          950: '#022c22',
+          50:  'rgb(var(--brand-50, 236 253 245) / <alpha-value>)',
+          100: 'rgb(var(--brand-100, 209 250 229) / <alpha-value>)',
+          200: 'rgb(var(--brand-200, 167 243 208) / <alpha-value>)',
+          300: 'rgb(var(--brand-300, 110 231 183) / <alpha-value>)',
+          400: 'rgb(var(--brand-400, 52 211 153) / <alpha-value>)',
+          500: 'rgb(var(--brand-500, 16 185 129) / <alpha-value>)',
+          600: 'rgb(var(--brand-600, 5 150 105) / <alpha-value>)',
+          700: 'rgb(var(--brand-700, 4 120 87) / <alpha-value>)',
+          800: 'rgb(var(--brand-800, 6 95 70) / <alpha-value>)',
+          900: 'rgb(var(--brand-900, 6 78 59) / <alpha-value>)',
+          950: 'rgb(var(--brand-950, 2 44 34) / <alpha-value>)',
         },
         // Dourado/âmbar (accent — amarelo da bandeira, tom sofisticado)
         accent: {
-          50:  '#fffbeb',
-          100: '#fef3c7',
-          200: '#fde68a',
-          300: '#fcd34d',
-          400: '#fbbf24',
-          500: '#f59e0b',
-          600: '#d97706',
-          700: '#b45309',
-          800: '#92400e',
-          900: '#78350f',
-          950: '#451a03',
+          50:  'rgb(var(--accent-50, 255 251 235) / <alpha-value>)',
+          100: 'rgb(var(--accent-100, 254 243 199) / <alpha-value>)',
+          200: 'rgb(var(--accent-200, 253 230 138) / <alpha-value>)',
+          300: 'rgb(var(--accent-300, 252 211 77) / <alpha-value>)',
+          400: 'rgb(var(--accent-400, 251 191 36) / <alpha-value>)',
+          500: 'rgb(var(--accent-500, 245 158 11) / <alpha-value>)',
+          600: 'rgb(var(--accent-600, 217 119 6) / <alpha-value>)',
+          700: 'rgb(var(--accent-700, 180 83 9) / <alpha-value>)',
+          800: 'rgb(var(--accent-800, 146 64 14) / <alpha-value>)',
+          900: 'rgb(var(--accent-900, 120 53 15) / <alpha-value>)',
+          950: 'rgb(var(--accent-950, 69 26 3) / <alpha-value>)',
+        },
+        // Identidade visual SECULT 2025 — tokens aditivos (não substituem
+        // brand/accent), usados hoje só na home dentro de .tema-secult.
+        oliva: {
+          50: '#bad87b', 100: '#b5d570', 200: '#a9cf5b', 300: '#9ac63d', 400: '#7da230',
+          500: '#688728', 600: '#587221', 700: '#475c1b', 800: '#364615', 900: '#26310e', 950: '#171e09',
+        },
+        ameixa: {
+          50: '#e3dde3', 100: '#dbd2da', 200: '#cbbec9', 300: '#b4a2b2', 400: '#977e94',
+          500: '#80677d', 600: '#6b5669', 700: '#574655', 800: '#433641', 900: '#2e252d', 950: '#1c171b',
+        },
+        agua: {
+          50: '#75eaf0', 100: '#68e8ef', 200: '#4de4ec', 300: '#29dfe8', 400: '#16bfc7',
+          500: '#129fa6', 600: '#0f868b', 700: '#0c6c71', 800: '#095356', 900: '#06393c', 950: '#042325',
+        },
+        tinta: {
+          50: '#ce7f4a', 100: '#cc7841', 200: '#c26d34', 300: '#a95f2d', 400: '#894d25',
+          500: '#72401f', 600: '#60361a', 700: '#4d2b15', 800: '#3b2110', 900: '#29170b', 950: '#190e07',
+        },
+        papel: {
+          50: '#f0e9d7', 100: '#ebe2c9', 200: '#e1d3ae', 300: '#d3bf88', 400: '#c1a558',
+          500: '#ab8f3f', 600: '#907835', 700: '#74612b', 800: '#594a21', 900: '#3e3317', 950: '#261f0e',
         },
       },
       fontFamily: {
         sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
+        // Tipografia SECULT 2025 — só usada dentro de .tema-secult (home).
+        rye: ['var(--font-rye)', 'serif'],
+        caveat: ['var(--font-caveat)', 'cursive'],
+        questrial: ['var(--font-questrial)', 'sans-serif'],
       },
       keyframes: {
         'accordion-down': {

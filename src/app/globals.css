@@ -23,6 +23,22 @@
     --color-info: #2563eb;
   }
 
+  /* Identidade visual SECULT 2025 — escopo local (dentro de .tema-secult:
+     home e rodapé). Sobrescreve os stops de brand/accent lidos por
+     Button/Badge/globals; fora desse wrapper o site segue verde/âmbar.
+
+     Valores em canais RGB, não hex: o tailwind.config envolve cada var em
+     `rgb(... / <alpha-value>)` para que sufixos de opacidade continuem
+     funcionando (`bg-brand-50/40`, `text-accent-300/20`). */
+  .tema-secult {
+    --brand-50: 253 243 239;  --brand-100: 250 229 222; --brand-200: 244 201 187; --brand-300: 237 163 139;
+    --brand-400: 227 115 77;  --brand-500: 219 81 35;   --brand-600: 184 68 29;   --brand-700: 149 55 23;
+    --brand-800: 114 42 18;   --brand-900: 79 29 12;    --brand-950: 48 18 8;
+    --accent-50: 254 251 246; --accent-100: 254 249 241; --accent-200: 249 234 203; --accent-300: 244 212 150;
+    --accent-400: 236 185 83; --accent-500: 231 165 35;  --accent-600: 201 141 22;  --accent-700: 163 114 18;
+    --accent-800: 125 87 14;  --accent-900: 86 60 9;     --accent-950: 53 37 6;
+  }
+
   /* Foco visível para acessibilidade (WCAG AA) */
   *:focus-visible {
     @apply outline-2 outline-offset-2 outline-brand-600;
@@ -114,5 +130,93 @@
   }
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Textura sutil de papel — trama diagonal em tinta translúcida, só usada
+     dentro de .tema-secult (home). Substitui o fundo chapado slate-50. */
+  .papel-textura {
+    background-image: repeating-linear-gradient(
+      135deg,
+      rgba(41, 23, 11, 0.035) 0,
+      rgba(41, 23, 11, 0.035) 1px,
+      transparent 1px,
+      transparent 5px
+    );
+  }
+
+  /* Selo circular (carimbo oficial) — duplo anel via box-shadow, sem imagem.
+     Uso: numeração do passo-a-passo e badges de destaque na home. */
+  .selo {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    border: 2px solid currentColor;
+    box-shadow:
+      0 0 0 3px var(--selo-gap, #f0e9d7),
+      0 0 0 4.5px currentColor;
+  }
+}
+/* ---------------------------------------------------------------------------
+   Entalhe — assinatura de movimento da home.
+
+   A identidade é xilogravura: a peça não "aparece", ela é cortada na matriz e
+   batida no papel. O ornamento se desenha sozinho (traço cortado) e os raios
+   entram um a um em salto de estrela, não em varredura circular — varredura lê
+   como spinner de carregamento, que é exatamente o oposto de artesanal.
+
+   Fora de @layer porque são keyframes globais reutilizados pelos ornamentos.
+--------------------------------------------------------------------------- */
+@keyframes entalhe-corte {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes entalhe-batida {
+  from {
+    opacity: 0;
+    transform: translateY(9px) scale(0.72);
+  }
+  55% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Traço que se corta. `pathLength="1"` no SVG deixa o dash independente do
+   comprimento real da curva, então a mesma regra serve círculo e espiral. */
+.entalhe-traco {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: entalhe-corte 1.05s cubic-bezier(0.62, 0.05, 0.3, 1) forwards;
+  animation-delay: calc(var(--i, 0) * 240ms);
+}
+
+/* Cada raio é uma batida seca da goiva: sai de dentro e para. `fill-box`
+   ancora a escala no próprio raio — sem isso ela usaria a origem do viewBox
+   e o raio entraria voando pelo canto. */
+.entalhe-raio {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: entalhe-batida 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: calc(680ms + var(--i, 0) * 42ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entalhe-traco,
+  .entalhe-raio {
+    animation: none;
+    stroke-dashoffset: 0;
+    opacity: 1;
+    transform: none;
   }
 }

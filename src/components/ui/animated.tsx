@@ -1,7 +1,7 @@
 'use client'
 
-import { motion, type Variants } from 'framer-motion'
-import type { ReactNode } from 'react'
+import { animate, motion, useInView, useReducedMotion, type Variants } from 'framer-motion'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 
 // ── Fade In quando entra na viewport ─────────────────────────────────────────
 
@@ -104,20 +104,63 @@ export function StaggerItem({ children, className }: StaggerItemProps) {
 // ── Número animado (count up) ────────────────────────────────────────────────
 
 interface CountUpProps {
-  value: string
+  /**
+   * Número → contagem animada de zero até ele quando entra na viewport.
+   * String → apenas a entrada, para valores sem contagem possível ("—", "100%").
+   */
+  value: number | string
+  /** Formatação de cada passo da contagem. Padrão: inteiro em pt-BR. */
+  format?: (valor: number) => string
   className?: string
 }
 
-export function CountUp({ value, className }: CountUpProps) {
+const inteiroPtBr = (valor: number) => Math.round(valor).toLocaleString('pt-BR')
+
+export function CountUp({ value, format, className }: CountUpProps) {
+  const reduzirMovimento = useReducedMotion()
+  const ref = useRef<HTMLSpanElement>(null)
+  const emTela = useInView(ref, { once: true, margin: '-50px' })
+
+  // Guardado em ref para que um `format` declarado inline no JSX de quem chama
+  // não reinicie a contagem a cada render.
+  const formatRef = useRef(format)
+  formatRef.current = format
+
+  const [texto, setTexto] = useState(() =>
+    typeof value === 'number' ? (format ?? inteiroPtBr)(0) : value,
+  )
+
+  useEffect(() => {
+    if (typeof value !== 'number') {
+      setTexto(value)
+      return
+    }
+    if (!emTela) return
+
+    const formatar = formatRef.current ?? inteiroPtBr
+    if (reduzirMovimento) {
+      setTexto(formatar(value))
+      return
+    }
+
+    const contagem = animate(0, value, {
+      duration: 1.4,
+      ease: 'easeOut',
+      onUpdate: (parcial) => setTexto(formatar(parcial)),
+    })
+    return () => contagem.stop()
+  }, [value, emTela, reduzirMovimento])
+
   return (
     <motion.span
+      ref={ref}
       className={className}
       initial={{ opacity: 0, scale: 0.5 }}
       whileInView={{ opacity: 1, scale: 1 }}
       viewport={{ once: true }}
       transition={{ duration: 0.4, ease: 'easeOut' }}
     >
-      {value}
+      {texto}
     </motion.span>
   )
 }

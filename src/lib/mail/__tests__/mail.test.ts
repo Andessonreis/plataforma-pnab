@@ -7,9 +7,9 @@ describe('Layout compartilhado', () => {
       nome: 'Teste',
       url: 'http://x',
     })
-    expect(html).toContain('/images/marca-100-anos-cultura.jpeg')
-    expect(html).toContain('/images/brasao-irece.png')
-    expect(html).toMatch(/https?:\/\/[^"]+\/images\/marca-100-anos-cultura\.jpeg/)
+    expect(html).toContain('/images/marca/marca-100-anos.jpeg')
+    expect(html).toContain('/images/marca/brasao-irece.png')
+    expect(html).toMatch(/https?:\/\/[^"]+\/images\/marca\/marca-100-anos\.jpeg/)
     expect(html).toContain('Prefeitura')
   })
 
@@ -20,8 +20,8 @@ describe('Layout compartilhado', () => {
       const { html } = await renderTemplate('protocolo_atendimento', {
         protocolo: 'X',
       })
-      expect(html).toContain('https://example.test/images/marca-100-anos-cultura.jpeg')
-      expect(html).toContain('https://example.test/images/brasao-irece.png')
+      expect(html).toContain('https://example.test/images/marca/marca-100-anos.jpeg')
+      expect(html).toContain('https://example.test/images/marca/brasao-irece.png')
     } finally {
       if (prev === undefined) delete process.env.NEXT_PUBLIC_SITE_URL
       else process.env.NEXT_PUBLIC_SITE_URL = prev
@@ -35,8 +35,8 @@ describe('Layout compartilhado', () => {
       const { html } = await renderTemplate('protocolo_atendimento', {
         protocolo: 'X',
       })
-      expect(html).toContain('https://culturaeturismo.irece.ba.gov.br/images/marca-100-anos-cultura.jpeg')
-      expect(html).toContain('https://culturaeturismo.irece.ba.gov.br/images/brasao-irece.png')
+      expect(html).toContain('https://culturaeturismo.irece.ba.gov.br/images/marca/marca-100-anos.jpeg')
+      expect(html).toContain('https://culturaeturismo.irece.ba.gov.br/images/marca/brasao-irece.png')
     } finally {
       if (prev !== undefined) process.env.NEXT_PUBLIC_SITE_URL = prev
     }

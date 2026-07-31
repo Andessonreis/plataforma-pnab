@@ -64,7 +64,7 @@ function Header({ userAreaHref = '/login' }: HeaderProps) {
             {/* Logo */}
             <Link href="/" className="shrink-0 group">
               <Image
-                src="/images/logo-irece-color.png"
+                src="/images/marca/logo-irece-color.png"
                 alt="Prefeitura de Irecê — 100 Anos — Secretaria de Cultura e Turismo"
                 width={280}
                 height={40}
