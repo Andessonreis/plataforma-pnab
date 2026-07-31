@@ -286,3 +286,33 @@
     letter-spacing: 0.22em;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Telas de acesso — escopo `.acesso`.
+
+   Aqui NÃO vale a linguagem de impresso do resto da identidade. Entrar e criar
+   conta são UI de produto, não peça de divulgação: canto vivo, textura de
+   papel e condensada em caixa alta viram ruído em cima de um campo de texto, e
+   foi exatamente o que deixou estas telas com cara de cartaz de festa.
+
+   O que a marca faz aqui é a faixa de cor à esquerda. Do lado do formulário a
+   regra é silêncio: branco, canto arredondado, campo alto, um botão sólido.
+
+   `--painel-acesso` é a cor dessa faixa, definida pelo tema aplicado na raiz
+   do grupo de rota. Trocar de paleta é trocar essa classe, nada mais.
+--------------------------------------------------------------------------- */
+@layer utilities {
+  /* 16px no campo: abaixo disso o Safari do iPhone dá zoom sozinho ao focar,
+     e o piso das skills de design para input é 1rem de qualquer forma. */
+  .acesso input,
+  .acesso select,
+  .acesso textarea {
+    min-height: 3rem;
+    font-size: 1rem;
+  }
+
+  .acesso label,
+  .acesso legend {
+    font-size: 0.875rem;
+  }
+}

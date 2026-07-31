@@ -55,8 +55,13 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
 
+          {/* Sem `aria-hidden`: ao contrário do ícone da esquerda, este lado
+              recebe controle de verdade (mostrar/ocultar senha). Esconder o
+              contêiner tirava um botão focável da árvore de acessibilidade —
+              o leitor de tela anunciava nada e o foco caía num elemento
+              invisível para ele. */}
           {rightIcon && (
-            <span className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-400" aria-hidden="true">
+            <span className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-400">
               {rightIcon}
             </span>
           )}

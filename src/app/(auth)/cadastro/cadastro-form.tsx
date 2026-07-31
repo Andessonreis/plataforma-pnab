@@ -1,534 +1,87 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { Button, Input } from '@/components/ui'
-import {
-  formatTelefoneBR,
-  unmaskTelefone,
-  formatCpfCnpj,
-  formatCep,
-  unmaskCep,
-} from '@/lib/utils/format'
+import { Aviso, Button } from '@/components/ui'
+import { useCadastro } from './use-cadastro'
+import { TrilhaPassos } from './trilha-passos'
+import { PassoIdentificacao } from './passo-identificacao'
+import { PassoContato } from './passo-contato'
+import { PassoAcesso } from './passo-acesso'
 
-type TipoProponente = 'PF' | 'PJ' | 'MEI' | 'COLETIVO'
-
-const tipoLabels: Record<TipoProponente, string> = {
-  PF: 'Pessoa Física',
-  PJ: 'Pessoa Jurídica',
-  MEI: 'MEI',
-  COLETIVO: 'Coletivo Cultural',
+/**
+ * Ficha de cadastro do proponente, em três etapas.
+ *
+ * Aqui só mora a costura: qual grupo de campos aparece, os avisos e as ações
+ * do pé. O estado está em `useCadastro`, as regras de cada etapa em
+ * `validacao`, e cada grupo de campos no seu componente.
+ *
+ * Os campos não visitados não ficam montados escondidos: um `hidden` deixaria
+ * o autopreenchimento do navegador e o leitor de tela alcançando campo de
+ * etapa que a pessoa ainda não abriu.
+ */
+/** Respeita quem pediu menos movimento no sistema. */
+function comportamentoDeRolagem(): ScrollBehavior {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
 }
 
 export function CadastroForm() {
-  const router = useRouter()
-  const [tipo, setTipo] = useState<TipoProponente>('PF')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [uploadWarning, setUploadWarning] = useState('')
-  const [declaracaoFile, setDeclaracaoFile] = useState<File | null>(null)
-  const [formData, setFormData] = useState({
-    nome: '',
-    cpfCnpj: '',
-    email: '',
-    telefone: '',
-    cep: '',
-    logradouro: '',
-    numero: '',
-    complemento: '',
-    bairro: '',
-    cidade: '',
-    uf: '',
-    password: '',
-    confirmPassword: '',
-  })
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [loadingCep, setLoadingCep] = useState(false)
-  const [loadingCnpj, setLoadingCnpj] = useState(false)
-  const [cnpjHint, setCnpjHint] = useState('')
+  const cadastro = useCadastro()
+  const { passo, noUltimoPasso, avancar, voltar, enviando, erro, avisoUpload } = cadastro
+  const inicio = useRef<HTMLDivElement>(null)
+  const alerta = useRef<HTMLDivElement>(null)
+  const primeiraRenderizacao = useRef(true)
 
-  function updateField(field: string, value: string) {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setError('')
-    setUploadWarning('')
-
-    // Validações básicas no client
-    if (formData.password.length < 8) {
-      setError('A senha deve ter no mínimo 8 caracteres.')
+  /* A etapa 2 é mais alta que a tela. Sem isto, quem vem dela para a etapa 3
+     — que é curta — chega com a página rolada e vê papel em branco. */
+  useEffect(() => {
+    if (primeiraRenderizacao.current) {
+      primeiraRenderizacao.current = false
       return
     }
+    inicio.current?.scrollIntoView({ block: 'start', behavior: comportamentoDeRolagem() })
+  }, [passo])
 
-    if (formData.password !== formData.confirmPassword) {
-      setError('As senhas não coincidem.')
-      return
-    }
-
-    if (!formData.cep || !formData.logradouro || !formData.bairro || !formData.cidade || !formData.uf) {
-      setError('Preencha todos os campos de endereço obrigatórios.')
-      return
-    }
-
-    const docLimpo = formData.cpfCnpj.replace(/\D/g, '')
-
-    if (tipo === 'PF' && docLimpo.length !== 11) {
-      setError('CPF deve ter 11 dígitos.')
-      return
-    }
-
-    if (['PJ', 'MEI'].includes(tipo) && docLimpo.length !== 14) {
-      setError('CNPJ deve ter 14 dígitos.')
-      return
-    }
-
-    // Validação da declaração do coletivo
-    if (tipo === 'COLETIVO' && !declaracaoFile) {
-      setError('Declaração do coletivo é obrigatória.')
-      return
-    }
-
-    setLoading(true)
-
-    try {
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nome: formData.nome,
-          cpfCnpj: docLimpo,
-          email: formData.email,
-          telefone: unmaskTelefone(formData.telefone),
-          cep: unmaskCep(formData.cep),
-          logradouro: formData.logradouro,
-          numero: formData.numero,
-          complemento: formData.complemento,
-          bairro: formData.bairro,
-          cidade: formData.cidade,
-          uf: formData.uf,
-          password: formData.password,
-          tipoProponente: tipo,
-        }),
-      })
-
-      const registerData = await res.json()
-
-      if (!res.ok) {
-        setError(registerData.message || 'Erro ao criar conta.')
-        return
-      }
-
-      // Upload da declaração do coletivo (etapa separada após criação do usuário)
-      if (tipo === 'COLETIVO' && declaracaoFile) {
-        const userId = registerData.userId
-
-        try {
-          const uploadForm = new FormData()
-          uploadForm.append('file', declaracaoFile)
-          uploadForm.append('userId', userId)
-
-          const uploadRes = await fetch('/api/auth/register/upload-declaracao', {
-            method: 'POST',
-            body: uploadForm,
-          })
-
-          if (!uploadRes.ok) {
-            const uploadData = await uploadRes.json()
-            setUploadWarning(
-              uploadData.message || 'Conta criada, mas não foi possível enviar a declaração. Envie posteriormente.'
-            )
-            // Não bloqueia o cadastro — segue para login com aviso
-            router.push('/login?cadastro=sucesso')
-            return
-          }
-        } catch {
-          setUploadWarning(
-            'Conta criada, mas não foi possível enviar a declaração. Envie posteriormente.'
-          )
-          router.push('/login?cadastro=sucesso')
-          return
-        }
-      }
-
-      router.push('/login?cadastro=sucesso')
-    } catch {
-      setError('Erro de conexão. Tente novamente.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function handleCnpjBlur() {
-    if (!isCnpj) return
-    const digits = formData.cpfCnpj.replace(/\D/g, '')
-    if (digits.length !== 14) return
-
-    setLoadingCnpj(true)
-    setCnpjHint('')
-
-    try {
-      const res = await fetch('/api/cnpj/lookup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cnpj: digits }),
-      })
-
-      if (res.status === 404) {
-        setCnpjHint('CNPJ não encontrado na Receita. Preencha manualmente.')
-        return
-      }
-      if (!res.ok) {
-        setCnpjHint('Não foi possível consultar agora. Preencha manualmente.')
-        return
-      }
-
-      const json = await res.json()
-      const data = json.data as {
-        razaoSocial: string
-        situacao: string
-        endereco: {
-          cep: string | null
-          logradouro: string | null
-          numero: string | null
-          complemento: string | null
-          bairro: string | null
-          municipio: string | null
-          uf: string | null
-        }
-      }
-
-      setFormData((prev) => ({
-        ...prev,
-        nome: prev.nome || data.razaoSocial || prev.nome,
-        cep: prev.cep || data.endereco.cep || prev.cep,
-        logradouro: prev.logradouro || data.endereco.logradouro || prev.logradouro,
-        numero: prev.numero || data.endereco.numero || prev.numero,
-        complemento: prev.complemento || data.endereco.complemento || prev.complemento,
-        bairro: prev.bairro || data.endereco.bairro || prev.bairro,
-        cidade: prev.cidade || data.endereco.municipio || prev.cidade,
-        uf: prev.uf || data.endereco.uf || prev.uf,
-      }))
-
-      if (data.situacao && data.situacao !== 'ATIVA') {
-        setCnpjHint(`Atenção: situação na Receita é "${data.situacao}".`)
-      }
-    } catch {
-      setCnpjHint('Não foi possível consultar agora. Preencha manualmente.')
-    } finally {
-      setLoadingCnpj(false)
-    }
-  }
-
-  async function handleCepBlur() {
-    const cepLimpo = formData.cep.replace(/\D/g, '')
-    if (cepLimpo.length !== 8) return
-
-    setLoadingCep(true)
-    try {
-      const res = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`)
-      const data = await res.json()
-      if (!data.erro) {
-        setFormData((prev) => ({
-          ...prev,
-          logradouro: data.logradouro || prev.logradouro,
-          bairro: data.bairro || prev.bairro,
-          cidade: data.localidade || prev.cidade,
-          uf: data.uf || prev.uf,
-        }))
-      }
-    } catch { /* silencioso — usuario preenche manualmente */ }
-    finally { setLoadingCep(false) }
-  }
-
-  const UF_OPTIONS = [
-    'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG',
-    'PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO',
-  ]
-
-  const isCnpj = tipo === 'PJ' || tipo === 'MEI'
+  /* O impedimento nasce no pé de uma etapa longa: `role="alert"` avisa quem usa
+     leitor de tela, e a rolagem avisa o resto. */
+  useEffect(() => {
+    if (erro) alerta.current?.scrollIntoView({ block: 'center', behavior: comportamentoDeRolagem() })
+  }, [erro])
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5" noValidate>
-      {/* Seleção do tipo */}
-      <fieldset>
-        <legend className="block text-sm font-medium text-slate-700 mb-2">
-          Tipo de proponente
-        </legend>
-        <div className="grid grid-cols-2 gap-2">
-          {(Object.entries(tipoLabels) as [TipoProponente, string][]).map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setTipo(value)}
-              className={[
-                'rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors min-h-[44px]',
-                tipo === value
-                  ? 'border-brand-600 bg-brand-50 text-brand-700'
-                  : 'border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50',
-              ].join(' ')}
-              aria-pressed={tipo === value}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </fieldset>
+    <form onSubmit={avancar} className="space-y-5" noValidate>
+      <div ref={inicio} className="scroll-mt-8">
+        <TrilhaPassos passo={passo} />
+      </div>
 
-      <Input
-        label={isCnpj ? 'Razão Social' : 'Nome completo'}
-        type="text"
-        placeholder={isCnpj ? 'Razão Social da empresa' : 'Seu nome completo'}
-        value={formData.nome}
-        onChange={(e) => updateField('nome', e.target.value)}
-        required
-        autoComplete="name"
-      />
+      {passo === 0 && <PassoIdentificacao cadastro={cadastro} />}
+      {passo === 1 && <PassoContato cadastro={cadastro} />}
+      {passo === 2 && <PassoAcesso cadastro={cadastro} />}
 
-      <Input
-        label={isCnpj ? 'CNPJ' : 'CPF'}
-        type="text"
-        inputMode="numeric"
-        placeholder={isCnpj ? '00.000.000/0000-00' : '000.000.000-00'}
-        value={formData.cpfCnpj}
-        onChange={(e) => updateField('cpfCnpj', formatCpfCnpj(e.target.value))}
-        onBlur={isCnpj ? handleCnpjBlur : undefined}
-        maxLength={isCnpj ? 18 : 14}
-        required
-        autoComplete="off"
-        hint={
-          isCnpj
-            ? loadingCnpj
-              ? 'Consultando CNPJ na Receita...'
-              : cnpjHint || undefined
-            : undefined
-        }
-      />
-
-      <Input
-        label="E-mail"
-        type="email"
-        placeholder="seu@email.com"
-        value={formData.email}
-        onChange={(e) => updateField('email', e.target.value)}
-        required
-        autoComplete="email"
-      />
-
-      <Input
-        label="Telefone"
-        type="tel"
-        inputMode="numeric"
-        placeholder="(74) 99999-0000"
-        value={formData.telefone}
-        onChange={(e) => updateField('telefone', formatTelefoneBR(e.target.value))}
-        maxLength={15}
-        required
-        autoComplete="tel"
-      />
-
-      {/* Endereço */}
-      <fieldset className="space-y-4 pt-2">
-        <legend className="block text-sm font-medium text-slate-700 mb-2">
-          Endereço
-        </legend>
-
-        <div className="grid grid-cols-3 gap-3">
-          <div className="col-span-1">
-            <Input
-              label="CEP"
-              type="text"
-              inputMode="numeric"
-              placeholder="00000-000"
-              value={formData.cep}
-              onChange={(e) => updateField('cep', formatCep(e.target.value))}
-              onBlur={handleCepBlur}
-              maxLength={9}
-              required
-              hint={loadingCep ? 'Buscando...' : undefined}
-            />
-          </div>
-          <div className="col-span-2">
-            <Input
-              label="Logradouro"
-              type="text"
-              placeholder="Rua, Avenida, etc."
-              value={formData.logradouro}
-              onChange={(e) => updateField('logradouro', e.target.value)}
-              required
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-3">
-          <Input
-            label="Número"
-            type="text"
-            placeholder="123"
-            value={formData.numero}
-            onChange={(e) => updateField('numero', e.target.value)}
-          />
-          <div className="col-span-2">
-            <Input
-              label="Complemento"
-              type="text"
-              placeholder="Apto, Sala, etc."
-              value={formData.complemento}
-              onChange={(e) => updateField('complemento', e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-3">
-          <Input
-            label="Bairro"
-            type="text"
-            placeholder="Bairro"
-            value={formData.bairro}
-            onChange={(e) => updateField('bairro', e.target.value)}
-            required
-          />
-          <Input
-            label="Cidade"
-            type="text"
-            placeholder="Cidade"
-            value={formData.cidade}
-            onChange={(e) => updateField('cidade', e.target.value)}
-            required
-          />
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">UF</label>
-            <select
-              value={formData.uf}
-              onChange={(e) => updateField('uf', e.target.value)}
-              required
-              className="w-full min-h-[44px] rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus-visible:outline-none"
-            >
-              <option value="">UF</option>
-              {UF_OPTIONS.map((uf) => (
-                <option key={uf} value={uf}>{uf}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </fieldset>
-
-      {/* Declaração do coletivo — exibido apenas para COLETIVO */}
-      {tipo === 'COLETIVO' && (
-        <div className="w-full">
-          <label
-            htmlFor="declaracao-coletivo"
-            className="block text-sm font-medium text-slate-700 mb-1.5"
-          >
-            Declaração do Coletivo (PDF)
-            <span className="text-red-500 ml-0.5" aria-hidden="true">*</span>
-          </label>
-          <input
-            id="declaracao-coletivo"
-            type="file"
-            accept=".pdf"
-            onChange={(e) => {
-              const file = e.target.files?.[0] ?? null
-              setDeclaracaoFile(file)
-            }}
-            className={[
-              'block w-full rounded-lg border px-3 py-2.5 text-sm text-slate-900',
-              'transition-colors',
-              'focus:outline-none focus:ring-2 focus:ring-offset-0',
-              'min-h-[44px]',
-              'border-slate-300 focus:border-brand-500 focus:ring-brand-200',
-              'file:mr-3 file:rounded-md file:border-0 file:bg-brand-50 file:px-3 file:py-1.5',
-              'file:text-sm file:font-medium file:text-brand-700 file:cursor-pointer',
-              'hover:file:bg-brand-100',
-            ].join(' ')}
-          />
-          <p className="mt-1.5 text-sm text-slate-500">
-            Documento que comprova a existência e representação do coletivo.
-          </p>
+      {(erro || avisoUpload) && (
+        <div ref={alerta} className="space-y-5">
+          {erro && <Aviso tom="erro">{erro}</Aviso>}
+          {avisoUpload && <Aviso tom="atencao">{avisoUpload}</Aviso>}
         </div>
       )}
 
-      <Input
-        label="Senha"
-        type={showPassword ? 'text' : 'password'}
-        placeholder="Mínimo 8 caracteres"
-        value={formData.password}
-        onChange={(e) => updateField('password', e.target.value)}
-        required
-        autoComplete="new-password"
-        hint="Mínimo de 8 caracteres"
-        rightIcon={
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="text-slate-400 hover:text-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded min-h-[44px] min-w-[44px] flex items-center justify-center -mr-2"
-            aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-          >
-            {showPassword ? (
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12c1.292 4.338 5.31 7.5 10.066 7.5.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
-              </svg>
-            ) : (
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-              </svg>
-            )}
-          </button>
-        }
-      />
+      <div className="flex flex-col-reverse gap-3 sm:flex-row">
+        {passo > 0 && (
+          <Button type="button" variant="outline" size="lg" onClick={voltar} className="sm:w-auto">
+            Voltar
+          </Button>
+        )}
+        <Button type="submit" loading={enviando} size="lg" className="flex-1">
+          {noUltimoPasso ? 'Criar conta' : 'Continuar'}
+        </Button>
+      </div>
 
-      <Input
-        label="Confirmar senha"
-        type={showConfirmPassword ? 'text' : 'password'}
-        placeholder="Repita a senha"
-        value={formData.confirmPassword}
-        onChange={(e) => updateField('confirmPassword', e.target.value)}
-        required
-        autoComplete="new-password"
-        rightIcon={
-          <button
-            type="button"
-            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            className="text-slate-400 hover:text-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded min-h-[44px] min-w-[44px] flex items-center justify-center -mr-2"
-            aria-label={showConfirmPassword ? 'Ocultar senha' : 'Mostrar senha'}
-          >
-            {showConfirmPassword ? (
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12c1.292 4.338 5.31 7.5 10.066 7.5.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
-              </svg>
-            ) : (
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-              </svg>
-            )}
-          </button>
-        }
-      />
-
-      {error && (
-        <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700" role="alert">
-          {error}
-        </div>
-      )}
-
-      {uploadWarning && (
-        <div className="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-700" role="status">
-          {uploadWarning}
-        </div>
-      )}
-
-      <Button type="submit" loading={loading} className="w-full" size="lg">
-        Criar conta
-      </Button>
-
-      <p className="text-center text-sm text-slate-600">
+      <p className="border-t border-slate-200 pt-5 text-sm text-slate-500">
         Já tem conta?{' '}
-        <Link href="/login" className="text-brand-600 hover:text-brand-700 font-medium">
+        <Link
+          href="/login"
+          className="font-semibold text-brand-700 underline underline-offset-4 hover:text-brand-800"
+        >
           Entrar
         </Link>
       </p>

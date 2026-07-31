@@ -4,6 +4,10 @@ export type { ButtonProps } from './button'
 export { Input } from './input'
 export type { InputProps } from './input'
 
+export { CampoSenha } from './campo-senha'
+
+export { Aviso } from './aviso'
+
 export { CurrencyInput, formatCurrencyBRL } from './currency-input'
 export type { CurrencyInputProps } from './currency-input'
 
