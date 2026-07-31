@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Button, Input } from '@/components/ui'
+import { ProtocoloEmitido } from './protocolo-emitido'
 
 interface ContactFormProps {
   editais: { id: string; titulo: string }[]
@@ -89,35 +90,8 @@ export function ContactForm({ editais }: ContactFormProps) {
     }
   }
 
-  // Mensagem de sucesso
   if (protocolo) {
-    return (
-      <div className="rounded-xl bg-brand-50 border border-brand-200 p-8 text-center">
-        <svg className="mx-auto h-12 w-12 text-brand-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-        </svg>
-        <h3 className="mt-4 text-lg font-semibold text-brand-800">
-          Mensagem enviada com sucesso!
-        </h3>
-        <p className="mt-2 text-sm text-brand-700">
-          Seu número de protocolo é:
-        </p>
-        <p className="mt-2 text-2xl font-bold text-brand-900 font-mono tracking-wider">
-          {protocolo}
-        </p>
-        <p className="mt-4 text-sm text-brand-600">
-          Guarde este número para acompanhar o atendimento. Você também receberá uma
-          confirmação no e-mail informado.
-        </p>
-        <button
-          type="button"
-          onClick={() => setProtocolo('')}
-          className="mt-6 inline-flex items-center justify-center rounded-lg border-2 border-brand-600 text-brand-700 px-6 py-2.5 text-sm font-medium hover:bg-brand-100 transition-colors min-h-[44px]"
-        >
-          Enviar nova mensagem
-        </button>
-      </div>
-    )
+    return <ProtocoloEmitido protocolo={protocolo} aoEscreverOutra={() => setProtocolo('')} />
   }
 
   return (

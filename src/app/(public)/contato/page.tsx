@@ -1,158 +1,80 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { prisma } from '@/lib/db'
-import { PageHeader } from '@/components/ui'
-import {
-  IconMail,
-  IconMapPin,
-  IconClock,
-  IconArrowRight,
-  IconQuestion,
-} from '@/components/ui/icons'
-import { FadeIn } from '@/components/ui/animated'
+import { FolhaDeRosto } from '@/components/ui/folha-de-rosto'
+import { IconArrowRight, IconQuestion } from '@/components/ui/icons'
 import { ContactForm } from './contact-form'
+import { FaixaAtendimento } from './faixa-atendimento'
 
 export const metadata: Metadata = {
-  title: 'Contato e Atendimento — Portal PNAB Irecê',
+  title: 'Falar com a Secretaria — Portal PNAB Irecê',
   description:
-    'Entre em contato com a Secretaria de Arte e Cultura de Irecê. Envie sua mensagem e receba um protocolo para acompanhamento.',
+    'Envie sua mensagem para a Secretaria de Cultura e Turismo de Irecê e receba um protocolo para acompanhamento.',
 }
+
+const FOTOS = [
+  '/images/galeria/foto-04.png', // fogueira do São João
+  '/images/cidade/panoramica-irece.jpg', // a cidade ao entardecer
+  '/images/galeria/foto-03.png', // arraiá no coreto
+]
 
 export default async function ContatoPage() {
   const editais = await prisma.edital.findMany({
-    where: {
-      status: { not: 'RASCUNHO' },
-    },
+    where: { status: { not: 'RASCUNHO' } },
     orderBy: { createdAt: 'desc' },
-    select: {
-      id: true,
-      titulo: true,
-    },
+    select: { id: true, titulo: true },
   })
 
   return (
-    <>
-      <PageHeader
-        title="Contato e Atendimento"
-        subtitle="Envie sua mensagem para a Secretaria de Arte e Cultura. Você receberá um número de protocolo para acompanhamento."
-        breadcrumbs={[
-          { label: 'Início', href: '/' },
-          { label: 'Contato' },
-        ]}
+    <div className="tema-secult font-questrial">
+      <FolhaDeRosto
+        fotos={FOTOS}
+        trilha="Contato"
+        chamada="Estamos ouvindo"
+        titulo="Falar com a Secretaria"
+        apoio="Toda mensagem enviada por aqui gera um número de protocolo, e é por ele que você acompanha a resposta."
       />
 
-      {/* Conteúdo */}
-      <section className="bg-slate-50 py-6 sm:py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-            {/* Formulário (2/3) */}
-            <div className="lg:col-span-2">
-              <FadeIn delay={0.1}>
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 sm:p-8">
-                  <div className="flex items-start gap-3 mb-6">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-50 text-brand-600 shrink-0">
-                      <IconMail className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-semibold text-slate-900 pt-0.5">
-                        Envie sua mensagem
-                      </h2>
-                      <p className="text-sm text-slate-500 mt-0.5">
-                        Preencha os campos abaixo. Campos com * são obrigatórios.
-                      </p>
-                    </div>
-                  </div>
-                  <ContactForm editais={editais} />
-                </div>
-              </FadeIn>
-            </div>
+      <section className="papel-textura bg-papel-50 pb-16 pt-10">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+          {/* O atalho para as dúvidas vem antes do formulário: depois de
+              escrever a mensagem, ninguém volta para conferir se a resposta
+              já existia. */}
+          <Link
+            href="/faq"
+            className="group mb-10 flex items-start gap-4 border-l-4 border-accent-500 bg-papel-100/70 p-5 transition-colors hover:bg-papel-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+          >
+            <IconQuestion className="mt-0.5 h-5 w-5 shrink-0 text-brand-700" aria-hidden="true" />
+            <span>
+              <span className="block font-rye text-lg leading-snug tracking-wide text-tinta-900">
+                Sua pergunta pode já ter resposta
+              </span>
+              <span className="mt-1 block text-sm leading-relaxed text-tinta-600">
+                Prazos, documentos e recursos são o que mais perguntam. Vale conferir antes de
+                escrever.
+              </span>
+              <span className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] text-brand-700">
+                Ver dúvidas frequentes
+                <IconArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+              </span>
+            </span>
+          </Link>
 
-            {/* Sidebar (1/3) */}
-            <aside className="lg:col-span-1">
-              <FadeIn delay={0.2} direction="right">
-                <div className="sticky top-6 space-y-5 sm:space-y-6">
-                  {/* Informações de contato */}
-                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 sm:p-6">
-                    <h3 className="text-base font-semibold text-slate-900 mb-5">
-                      Secretaria de Arte e Cultura
-                    </h3>
+          <div className="border-t-2 border-tinta-900 pt-8">
+            <h2 className="font-rye text-2xl leading-tight tracking-wide text-tinta-900">
+              Escreva sua mensagem
+            </h2>
+            <p className="mb-8 mt-2 text-sm leading-relaxed text-tinta-600">
+              Campos marcados com asterisco são obrigatórios. Se a mensagem for sobre um edital
+              específico, informar qual ajuda a resposta a chegar mais rápido.
+            </p>
 
-                    <div className="space-y-4">
-                      <div className="flex items-start gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
-                          <IconMail className="h-4 w-4" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-slate-900">E-mail</p>
-                          <a
-                            href="mailto:cultura@irece.ba.gov.br"
-                            className="text-sm text-brand-600 hover:text-brand-700 transition-colors"
-                          >
-                            cultura@irece.ba.gov.br
-                          </a>
-                        </div>
-                      </div>
-
-
-                      <div className="flex items-start gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
-                          <IconMapPin className="h-4 w-4" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-slate-900">Endereço</p>
-                          <p className="text-sm text-slate-600 leading-relaxed">
-                            Prefeitura Municipal de Irecê<br />
-                            Praça Teotônio Marques Dourado, s/n<br />
-                            Centro — Irecê/BA<br />
-                            CEP: 44900-000
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-start gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
-                          <IconClock className="h-4 w-4" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-slate-900">Horário de Atendimento</p>
-                          <p className="text-sm text-slate-600">
-                            Segunda a sexta-feira<br />
-                            08h às 12h e 14h às 17h
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* FAQ rápido */}
-                  <div className="bg-accent-50 rounded-xl border border-accent-200 p-5 sm:p-6">
-                    <div className="flex items-start gap-3 mb-3">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-100 text-accent-600">
-                        <IconQuestion className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <h3 className="text-base font-semibold text-slate-900">
-                          Antes de entrar em contato
-                        </h3>
-                        <p className="text-sm text-slate-600 mt-1">
-                          Confira se sua dúvida já foi respondida na nossa página de perguntas frequentes.
-                        </p>
-                      </div>
-                    </div>
-                    <Link
-                      href="/faq"
-                      className="inline-flex items-center text-sm font-medium text-accent-700 hover:text-accent-800 transition-colors mt-1"
-                    >
-                      Ver Perguntas Frequentes
-                      <IconArrowRight className="ml-1.5 h-4 w-4" />
-                    </Link>
-                  </div>
-                </div>
-              </FadeIn>
-            </aside>
+            <ContactForm editais={editais} />
           </div>
         </div>
       </section>
-    </>
+
+      <FaixaAtendimento />
+    </div>
   )
 }
