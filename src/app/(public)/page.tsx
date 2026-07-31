@@ -75,7 +75,6 @@ const SLIDE_INSTITUCIONAL: SlideDestaque = {
     valorNumero: 400,
     valorUnidade: 'mil',
     valorSufixo: 'em recursos',
-    fotos: FOTOS_ABERTURA,
   },
 }
 
@@ -182,7 +181,7 @@ export default async function HomePage() {
 
   return (
     <div className={`${rye.variable} ${caveat.variable} ${questrial.variable} tema-secult font-questrial`}>
-      <Abertura slides={slides} editais={editais} />
+      <Abertura slides={slides} editais={editais} fotos={FOTOS_ABERTURA} />
       <FaixaNumeros numeros={numeros} />
       <PassosInscricao />
 

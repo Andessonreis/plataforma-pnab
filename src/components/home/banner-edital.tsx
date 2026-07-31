@@ -3,8 +3,6 @@
 import Image from 'next/image'
 import { motion, useReducedMotion, type MotionProps } from 'framer-motion'
 import { CountUp } from '@/components/ui/animated'
-import { FundoFotos } from './fundo-fotos'
-import { SolEspiral } from './ornamentos'
 import { PalavrasRotativas } from './palavras-rotativas'
 
 export interface BannerEditalProps {
@@ -21,8 +19,6 @@ export interface BannerEditalProps {
   valorNumero: number
   valorUnidade: string
   valorSufixo: string
-  /** Fotos que correm atrás da peça. Vazio deixa só o fundo chapado. */
-  fotos?: string[]
 }
 
 /**
@@ -45,7 +41,7 @@ function batida(atraso: number, parado: boolean): MotionProps {
 }
 
 /**
- * Peça de divulgação dos editais, montada em componente em vez de imagem.
+ * Peça de divulgação dos editais, impressa sobre a fotografia da faixa.
  *
  * A arte anterior era um JPEG com todo o texto embutido: não era lida por
  * leitor de tela, perdia nitidez ao escalar e só podia ser atualizada
@@ -53,11 +49,13 @@ function batida(atraso: number, parado: boolean): MotionProps {
  * paleta SECULT — a arte antiga usava laranja e magenta de outra campanha,
  * que destoavam do restante da página.
  *
- * O movimento segue uma metáfora só — imprimir: o sol é entalhado na matriz
- * (ver `SolEspiral`), os blocos são batidos no papel e o valor conta a partir
- * de zero. Nada gira em laço nem esmaece: giro infinito é vocabulário de
- * spinner, não de xilogravura. Como o componente é remontado a cada volta do
- * carrossel, a impressão acontece de novo sem controle de estado externo.
+ * Não tem fundo próprio: o papel é a fotografia que a `Abertura` põe atrás da
+ * faixa inteira. Dar um fundo a esta peça criava um quadro dentro do quadro.
+ *
+ * O movimento segue a mesma metáfora da faixa — imprimir: os blocos são
+ * batidos no papel e o valor conta a partir de zero. Nada gira em laço nem
+ * esmaece. Como o componente é remontado a cada volta do carrossel, a
+ * impressão acontece de novo sem controle de estado externo.
  *
  * O selo da PNAB é marca federal e entra como imagem, sem alteração.
  */
@@ -71,34 +69,18 @@ export function BannerEdital({
   valorNumero,
   valorUnidade,
   valorSufixo,
-  fotos = [],
 }: BannerEditalProps) {
   const parado = useReducedMotion() === true
 
   return (
-    <div className="relative flex h-full flex-col justify-between overflow-hidden bg-brand-600 p-5 sm:p-7">
-      <FundoFotos fotos={fotos} />
-
-      <div
-        className="pointer-events-none absolute inset-0 opacity-25 mix-blend-overlay"
-        style={{
-          backgroundImage: 'url(/images/secult/mapa-irece.png)',
-          backgroundSize: 'auto 100%',
-          backgroundRepeat: 'repeat-x',
-        }}
-        aria-hidden="true"
-      />
-      {/* Sangra pelo canto de propósito: sol nascendo na quina, e não um
-          círculo flutuando no meio da folga. Fica fora da área de texto. */}
-      <SolEspiral className="pointer-events-none absolute -left-9 -top-7 h-44 w-44 text-accent-300/25" />
-
-      <motion.div {...batida(0.1, parado)} className="relative flex justify-end">
+    <div className="relative flex h-full flex-col justify-between py-1">
+      <motion.div {...batida(0.1, parado)} className="relative flex justify-start">
         <Image
           src="/images/marca/selo-pnab.png"
           alt="Política Nacional Aldir Blanc — PNAB Cultura Irecê"
           width={612}
           height={294}
-          className="h-auto w-[46%] max-w-[230px] rounded-sm"
+          className="h-auto w-[52%] max-w-[248px] rounded-sm"
           priority
         />
       </motion.div>

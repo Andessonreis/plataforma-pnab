@@ -16,14 +16,15 @@ const PERMANENCIA_MS = 6500
 const TRAVESSIA_S = 1.8
 
 /**
- * Fotografias da cultura de Irecê correndo atrás da peça.
+ * Fotografias da cultura de Irecê no fundo da faixa de abertura.
  *
  * As fotos passam por um banho de tinta terracota em `multiply` antes de
  * chegar ao olho: sem isso cada uma traz sua própria temperatura — o azul das
  * saias de quadrilha, o neon do arraiá — e o banner viraria uma colagem. Com o
  * banho, todas viram a mesma tinta e a peça continua sendo uma peça só.
  *
- * O degradê por cima ancora o pé, onde ficam o bloco de texto e a assinatura.
+ * O degradê por cima segura a leitura do que é impresso na faixa — a chamada
+ * à esquerda e o painel de editais à direita — sem apagar a fotografia.
  * São decorativas (`aria-hidden`): quem lê por leitor de tela recebe a mesma
  * mensagem pelo texto do banner, e anunciar "foto de festa" a cada 6s seria
  * ruído. Quem pede menos movimento fica com a primeira foto, parada.
@@ -53,15 +54,15 @@ export function FundoFotos({ fotos }: FundoFotosProps) {
             src={fotos[indice]}
             alt=""
             fill
-            sizes="(max-width: 640px) 100vw, 50vw"
+            sizes="100vw"
             className="object-cover"
             priority={indice === 0}
           />
         </motion.div>
       </AnimatePresence>
 
-      <div className="absolute inset-0 bg-brand-600/45 mix-blend-multiply" />
-      <div className="absolute inset-0 bg-gradient-to-t from-tinta-950/75 via-transparent to-tinta-950/25" />
+      <div className="absolute inset-0 bg-brand-800/50 mix-blend-multiply" />
+      <div className="absolute inset-0 bg-gradient-to-t from-tinta-950/80 via-tinta-950/40 to-tinta-950/65" />
     </div>
   )
 }
