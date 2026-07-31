@@ -41,19 +41,20 @@ export const FAIXA_ESCURA: CorFaixa[] = ['terracota', 'oliva', 'turquesa', 'amei
  * campos chapados de cor encostados, e é a troca de campo que separa um
  * assunto do outro.
  *
- * A cartela fica num trilho à esquerda, e não em cima do texto: assim a faixa
- * usa a largura que tem, em vez de empilhar tudo no meio.
+ * A cartela fica em cima e o conteúdo ocupa a largura inteira. Eu havia posto
+ * a cartela num trilho à esquerda, o que reservava uma coluna de quinze
+ * caracteres pela altura toda da seção: num cronograma de dezoito marcos,
+ * aquilo era uma faixa vazia de mais de mil pixels de altura. Trocar um vazio
+ * horizontal por um vertical não é resolver.
  */
 export function FaixaSecao({ id, cartela, cor, corCartela, children }: FaixaSecaoProps) {
   return (
     <section className={FUNDOS[cor]}>
-      <div className="mx-auto grid max-w-7xl gap-x-10 gap-y-6 px-4 py-14 sm:px-6 lg:grid-cols-[15rem_1fr] lg:px-8 lg:py-16">
-        <div className="lg:pt-1">
-          <Cartela id={id} cor={corCartela ?? CARTELA_EM_FUNDO_ESCURO[cor] ?? 'tinta'}>
-            {cartela}
-          </Cartela>
-        </div>
-        <div className="min-w-0">{children}</div>
+      <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-16">
+        <Cartela id={id} cor={corCartela ?? CARTELA_EM_FUNDO_ESCURO[cor] ?? 'tinta'}>
+          {cartela}
+        </Cartela>
+        <div className="mt-8">{children}</div>
       </div>
     </section>
   )
