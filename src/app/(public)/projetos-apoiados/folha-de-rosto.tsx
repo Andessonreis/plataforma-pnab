@@ -9,7 +9,7 @@ interface FolhaDeRostoProps {
 }
 
 const FOTOS = [
-  '/images/galeria/foto-01.png', // quadrilha infantil
+  '/images/cidade/panoramica-irece.jpg', // a cidade ao entardecer
   '/images/galeria/foto-04.png', // fogueira do São João
   '/images/galeria/foto-02.png', // pórtico Minha Feliz Cidade
 ]

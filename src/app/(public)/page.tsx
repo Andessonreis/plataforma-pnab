@@ -32,7 +32,7 @@ export const metadata: Metadata = {
  */
 const FOTOS_ABERTURA = [
   '/images/galeria/foto-04.png', // fogueira cenográfica do São João de Irecê
-  '/images/galeria/foto-01.png', // quadrilha infantil
+  '/images/cidade/panoramica-irece.jpg', // a cidade ao entardecer
   '/images/galeria/foto-03.png', // arraiá no coreto
   '/images/galeria/foto-05.png', // bandeirinhas e praça cheia
 ]
