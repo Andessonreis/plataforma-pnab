@@ -12,7 +12,7 @@ interface FolhaDeRostoProps {
 const FOTOS = [
   '/images/galeria/foto-05.png', // bandeirinhas e praça cheia
   '/images/galeria/foto-03.png', // arraiá no coreto
-  '/images/galeria/foto-01.png', // quadrilha infantil
+  '/images/cidade/panoramica-irece.jpg', // a cidade ao entardecer
 ]
 
 /**

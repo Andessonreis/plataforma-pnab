@@ -5,7 +5,6 @@ import { AbasStatus, ABAS, type ChaveAba } from './abas-status'
 import { consultarEditais } from './consulta'
 import { DossieEdital } from './dossie-edital'
 import { FolhaDeRosto } from './folha-de-rosto'
-import { LinhaEdital } from './linha-edital'
 
 export const metadata: Metadata = {
   title: 'Editais',
@@ -81,13 +80,9 @@ export default async function EditaisPage({
               <h2 className="font-rye text-2xl tracking-wide text-tinta-900">
                 {abaAtiva === 'encerrados' ? 'Editais encerrados' : 'Demais editais'}
               </h2>
-              <p className="mt-1 text-sm text-tinta-600">
-                Fora do prazo de inscrição, mantidos públicos para consulta.
-              </p>
-
-              <ul className="mt-5 divide-y divide-tinta-900/10 border-y border-tinta-900/10">
+              <ul className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
                 {demais.map((edital) => (
-                  <LinhaEdital key={edital.id} edital={edital} />
+                  <DossieEdital key={edital.id} edital={edital} />
                 ))}
               </ul>
 

@@ -2,24 +2,28 @@ import Link from 'next/link'
 import { IconArrowRight } from '@/components/ui/icons'
 import { IconePrazo, IconeRecursos } from '@/components/ui/ornamentos/icones'
 import { CarimboStatus } from './carimbo-status'
-import type { EditalListado } from './linha-edital'
+import type { EditalListado } from './tipos'
 
 interface DossieEditalProps {
   edital: EditalListado
 }
 
 /**
- * Edital aberto, em bloco de destaque.
+ * Edital em bloco, o mesmo tratamento para abertos e encerrados.
  *
- * Quem chega nesta página quer saber onde ainda dá para se inscrever. Os
- * editais abertos ganham área, prazo e valor legíveis de longe; os demais
- * viram consulta. Não há ordem entre eles, e por isso não há numeração: dois
- * editais abertos são igualmente urgentes, e numerá-los inventava uma fila.
+ * Não há numeração: dois editais são igualmente relevantes entre si, e o
+ * ordinal inventava uma fila que não existe. O que separa os grupos é a
+ * situação, dita pelo carimbo e pelo título da seção, não a ordem.
  *
  * A contagem de dias fica em corpo grande porque é o dado que muda a decisão
- * da pessoa hoje. A data completa vem abaixo, para quem precisa se organizar.
+ * de quem ainda pode se inscrever. A data completa vem abaixo, para quem
+ * precisa se organizar — e é o que sobra nos que já fecharam.
  */
 export function DossieEdital({ edital }: DossieEditalProps) {
+  // "A definir" só faz sentido em edital que ainda vai abrir prazo; no que já
+  // encerrou, prometia uma data que nunca virá.
+  const mostraPrazo = edital.aberto || edital.diasRestantes !== null
+
   return (
     <li className="h-full">
       <Link
@@ -43,6 +47,7 @@ export function DossieEdital({ edital }: DossieEditalProps) {
         )}
 
         <dl className="mt-6 grid grid-cols-2 gap-4 border-t-2 border-dashed border-tinta-900/15 pt-5">
+          {mostraPrazo && (
           <div className="flex gap-3">
             <IconePrazo className="mt-0.5 h-6 w-6 shrink-0 text-brand-700" />
             <div className="min-w-0">
@@ -65,6 +70,7 @@ export function DossieEdital({ edital }: DossieEditalProps) {
               </dd>
             </div>
           </div>
+          )}
 
           <div className="flex gap-3">
             <IconeRecursos className="mt-0.5 h-6 w-6 shrink-0 text-brand-700" />
@@ -80,7 +86,7 @@ export function DossieEdital({ edital }: DossieEditalProps) {
         </dl>
 
         <span className="mt-6 inline-flex min-h-[44px] items-center justify-center gap-2 bg-accent-500 px-5 text-xs font-bold uppercase tracking-[0.14em] text-tinta-950 transition-colors group-hover:bg-accent-400">
-          Ver edital e inscrever
+          {edital.aberto ? 'Ver edital e inscrever' : 'Ver edital'}
           <IconArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
         </span>
       </Link>

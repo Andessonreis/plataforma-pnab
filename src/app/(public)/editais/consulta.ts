@@ -4,7 +4,7 @@ import { getStatusDisplay, OPEN_STATUSES, CLOSED_STATUSES } from '@/lib/utils/ed
 import { formatCurrency, formatDate } from '@/lib/utils/format'
 import { getNextDeadline } from '@/lib/utils/cronograma'
 import type { ChaveAba } from './abas-status'
-import type { EditalListado } from './linha-edital'
+import type { EditalListado } from './tipos'
 
 /** Só os encerrados paginam: os abertos são poucos e cabem todos na abertura. */
 export const PAGE_SIZE = 12
