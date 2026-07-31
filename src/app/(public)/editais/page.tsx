@@ -46,6 +46,10 @@ export default async function EditaisPage({
     paginaAtual,
   )
 
+  // `abertos` vem sempre preenchido para alimentar o resumo da abertura; a aba
+  // Encerrados apenas não os lista.
+  const emCartaz = abaAtiva === 'encerrados' ? [] : abertos
+
   return (
     <div className="tema-secult font-questrial">
       <FolhaDeRosto
@@ -58,17 +62,17 @@ export default async function EditaisPage({
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <AbasStatus ativa={abaAtiva} />
 
-          {abertos.length > 0 && (
+          {emCartaz.length > 0 && (
             <div className="pt-10">
               <h2 className="font-rye text-2xl tracking-wide text-tinta-900">
-                {abertos.length === 1 ? 'Inscrição aberta' : 'Inscrições abertas'}
+                {emCartaz.length === 1 ? 'Inscrição aberta' : 'Inscrições abertas'}
               </h2>
               <p className="mt-1 text-sm text-tinta-600">
                 Editais recebendo propostas agora. Sem ordem de preferência entre eles.
               </p>
 
               <ul className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-                {abertos.map((edital) => (
+                {emCartaz.map((edital) => (
                   <DossieEdital key={edital.id} edital={edital} />
                 ))}
               </ul>
@@ -97,7 +101,7 @@ export default async function EditaisPage({
             </div>
           )}
 
-          {abertos.length === 0 && demais.length === 0 && (
+          {emCartaz.length === 0 && demais.length === 0 && (
             <div className="py-20">
               <EmptyState
                 icon={<IconDocument className="h-8 w-8 text-tinta-400" />}

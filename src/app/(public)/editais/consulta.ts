@@ -61,7 +61,6 @@ export async function consultarEditais(
   aba: ChaveAba,
   pagina: number,
 ): Promise<ResultadoEditais> {
-  const mostraAbertos = aba !== 'encerrados'
   const whereDemais = {
     status:
       aba === 'encerrados'
@@ -70,12 +69,12 @@ export async function consultarEditais(
   }
 
   const [abertosRaw, demaisRaw, totalDemais, publicados] = await Promise.all([
-    mostraAbertos
-      ? prisma.edital.findMany({
-          where: { status: { in: OPEN_STATUSES } },
-          orderBy: [{ createdAt: 'desc' }],
-        })
-      : Promise.resolve([]),
+    // Sempre consultados, mesmo na aba Encerrados: o resumo da abertura conta
+    // os abertos do portal inteiro, não os da aba. A aba decide o que exibir.
+    prisma.edital.findMany({
+      where: { status: { in: OPEN_STATUSES } },
+      orderBy: [{ createdAt: 'desc' }],
+    }),
     aba === 'abertos'
       ? Promise.resolve([])
       : prisma.edital.findMany({
