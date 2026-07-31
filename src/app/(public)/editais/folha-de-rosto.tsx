@@ -1,27 +1,39 @@
 import Link from 'next/link'
-import { SolEspiral } from '@/components/ui/ornamentos'
+import { FundoFotos } from '@/components/ui/fundo-fotos'
+import { IconeEdital, IconePrazo } from '@/components/ui/ornamentos/icones'
 
 interface FolhaDeRostoProps {
-  total: number
+  publicados: number
   abertos: number
+  /** Menor prazo entre os editais abertos, para a chamada de urgência. */
+  proximoEncerramento: { titulo: string; dias: number } | null
 }
 
+const FOTOS = [
+  '/images/galeria/foto-05.png', // bandeirinhas e praça cheia
+  '/images/galeria/foto-03.png', // arraiá no coreto
+  '/images/galeria/foto-01.png', // quadrilha infantil
+]
+
 /**
- * Abertura da seção como folha de rosto de publicação oficial.
+ * Abertura da seção sobre fotografia, como a da home.
  *
- * O cabeçalho anterior era o mesmo de qualquer página interna: título, uma
- * linha de apoio e a trilha de navegação. Aqui a faixa carrega o que a pessoa
- * veio saber antes de rolar — quantos editais existem e quantos estão abertos
- * agora — porque essa é a pergunta que traz alguém a esta página.
+ * Editais é a razão pela qual o portal existe, e a faixa estava chapada
+ * enquanto a home abria com imagem — a página mais importante parecia a menos
+ * cuidada. A ordem das fotos difere da home de propósito, para que quem
+ * navega de uma para a outra não veja a mesma abertura duas vezes.
  *
- * O traçado do mapa de Irecê entra como textura de marca e a serrilha fecha a
- * faixa no lugar de uma borda reta.
+ * A faixa carrega o que decide a visita: quantos editais estão abertos e
+ * quanto tempo resta no mais próximo de fechar. Contagem de dias, e não data,
+ * porque é o que faz a pessoa agir hoje.
  */
-export function FolhaDeRosto({ total, abertos }: FolhaDeRostoProps) {
+export function FolhaDeRosto({ publicados, abertos, proximoEncerramento }: FolhaDeRostoProps) {
   return (
     <section className="relative overflow-hidden bg-brand-900 text-papel-100">
+      <FundoFotos fotos={FOTOS} />
+
       <div
-        className="pointer-events-none absolute inset-0 opacity-[0.09] mix-blend-screen"
+        className="pointer-events-none absolute inset-0 opacity-[0.07] mix-blend-screen"
         style={{
           backgroundImage: 'url(/images/secult/mapa-irece.png)',
           backgroundSize: 'auto 100%',
@@ -29,45 +41,53 @@ export function FolhaDeRosto({ total, abertos }: FolhaDeRostoProps) {
         }}
         aria-hidden="true"
       />
-      <SolEspiral className="pointer-events-none absolute -right-12 -top-12 h-52 w-52 text-accent-300/20" />
 
-      <div className="relative mx-auto max-w-7xl px-4 pb-10 pt-8 sm:px-6 sm:pb-12 sm:pt-10 lg:px-8">
-        <nav aria-label="Trilha de navegação" className="mb-6 text-xs tracking-wide text-papel-200/70">
+      <div className="relative mx-auto max-w-7xl px-4 pb-12 pt-8 sm:px-6 sm:pb-14 sm:pt-10 lg:px-8">
+        <nav aria-label="Trilha de navegação" className="mb-8 text-xs tracking-wide text-papel-200/80">
           <Link href="/" className="underline-offset-4 hover:text-accent-300 hover:underline">
             Início
           </Link>
           <span className="px-2" aria-hidden="true">
             /
           </span>
-          <span className="text-papel-100">Editais</span>
+          <span className="text-papel-50">Editais</span>
         </nav>
 
-        <div className="grid gap-8 lg:grid-cols-[1.5fr_1fr] lg:items-end">
+        <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr] lg:items-end">
           <div>
             <p className="mb-1 -rotate-1 font-caveat text-2xl text-accent-300">Fomento à cultura</p>
-            <h1 className="font-rye text-3xl leading-tight tracking-wide text-papel-50 sm:text-4xl">
+            <h1 className="font-rye text-3xl leading-tight tracking-wide text-papel-50 sm:text-5xl">
               Editais da PNAB Irecê
             </h1>
-            <p className="mt-3 max-w-xl text-sm leading-relaxed text-papel-200/85">
+            <p className="mt-4 max-w-xl text-sm leading-relaxed text-papel-100/90">
               Chamamentos públicos da Política Nacional Aldir Blanc no município. Cada edital traz
               prazo, valor e a íntegra do documento para leitura.
             </p>
           </div>
 
-          <dl className="flex gap-8 border-t border-papel-100/20 pt-5 lg:justify-end lg:border-t-0 lg:pt-0">
-            <div>
-              <dt className="text-xs font-bold uppercase tracking-[0.16em] text-papel-200/70">
-                Publicados
-              </dt>
-              <dd className="font-rye text-3xl leading-none text-papel-50">{total}</dd>
+          <div className="flex flex-col gap-4 rounded-sm bg-tinta-950/85 p-5">
+            <div className="flex items-center gap-4">
+              <IconeEdital className="h-8 w-8 shrink-0 text-accent-400" />
+              <p className="text-sm text-papel-100">
+                <span className="font-rye text-2xl leading-none text-accent-300">{abertos}</span>{' '}
+                {abertos === 1 ? 'edital aberto' : 'editais abertos'} de {publicados} publicados
+              </p>
             </div>
-            <div className="border-l border-papel-100/20 pl-8">
-              <dt className="text-xs font-bold uppercase tracking-[0.16em] text-accent-300">
-                Abertos agora
-              </dt>
-              <dd className="font-rye text-3xl leading-none text-accent-300">{abertos}</dd>
-            </div>
-          </dl>
+
+            {proximoEncerramento && (
+              <div className="flex items-center gap-4 border-t border-papel-100/15 pt-4">
+                <IconePrazo className="h-8 w-8 shrink-0 text-accent-400" />
+                <p className="text-sm leading-snug text-papel-100">
+                  O mais próximo de fechar encerra em{' '}
+                  <span className="font-rye text-lg leading-none text-accent-300">
+                    {proximoEncerramento.dias === 0
+                      ? 'algumas horas'
+                      : `${proximoEncerramento.dias} ${proximoEncerramento.dias === 1 ? 'dia' : 'dias'}`}
+                  </span>
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

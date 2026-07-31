@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { IconArrowRight } from '@/components/ui/icons'
 import { BannerEdital } from './banner-edital'
-import { useRotacao } from './use-rotacao'
+import { useRotacao } from '@/components/ui/use-rotacao'
 import type { SlideDestaque } from './types'
 
 interface CarrosselArtesProps {

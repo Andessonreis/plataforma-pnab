@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { useRotacao } from './use-rotacao'
+import { useRotacao } from '@/components/ui/use-rotacao'
 
 interface FundoFotosProps {
   /** Caminhos em `/public`. A ordem é a da exibição. */

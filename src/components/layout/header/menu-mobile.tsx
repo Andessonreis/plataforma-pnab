@@ -4,13 +4,11 @@ import { useEffect, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { IconArrowRight } from '@/components/ui/icons'
 import { SolEspiral } from '@/components/ui/ornamentos'
 import { SECOES, secaoAtiva } from './links'
 
 interface MenuMobileProps {
   pathname: string
-  userAreaHref: string
   aoFechar: () => void
 }
 
@@ -26,7 +24,7 @@ interface MenuMobileProps {
  * e Esc fecha — o painel cobre a página inteira e prende a navegação por
  * teclado se não fizer isso.
  */
-export function MenuMobile({ pathname, userAreaHref, aoFechar }: MenuMobileProps) {
+export function MenuMobile({ pathname, aoFechar }: MenuMobileProps) {
   const painel = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -109,14 +107,6 @@ export function MenuMobile({ pathname, userAreaHref, aoFechar }: MenuMobileProps
           })}
         </ul>
 
-        <Link
-          href={userAreaHref}
-          onClick={aoFechar}
-          className="mt-8 inline-flex min-h-[52px] items-center justify-center gap-2 rounded-sm bg-accent-500 px-5 text-sm font-bold uppercase tracking-[0.14em] text-tinta-950 transition-colors hover:bg-accent-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-papel-100"
-        >
-          Área do proponente
-          <IconArrowRight className="h-4 w-4" />
-        </Link>
       </div>
     </motion.div>
   )

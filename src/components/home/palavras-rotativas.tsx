@@ -1,7 +1,7 @@
 'use client'
 
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { useRotacao } from './use-rotacao'
+import { useRotacao } from '@/components/ui/use-rotacao'
 
 interface PalavrasRotativasProps {
   palavras: string[]

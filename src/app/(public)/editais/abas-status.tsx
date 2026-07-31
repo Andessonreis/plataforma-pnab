@@ -10,7 +10,6 @@ export type ChaveAba = (typeof ABAS)[number]['chave']
 
 interface AbasStatusProps {
   ativa: ChaveAba
-  totalVisivel: number
 }
 
 /**
@@ -24,7 +23,7 @@ interface AbasStatusProps {
  * São links, não botões: o filtro está na URL, então cada aba é endereçável,
  * compartilhável e volta pelo histórico do navegador.
  */
-export function AbasStatus({ ativa, totalVisivel }: AbasStatusProps) {
+export function AbasStatus({ ativa }: AbasStatusProps) {
   return (
     <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b border-tinta-900/15">
       <nav aria-label="Filtrar editais por situação" className="flex items-end">
@@ -47,9 +46,6 @@ export function AbasStatus({ ativa, totalVisivel }: AbasStatusProps) {
         })}
       </nav>
 
-      <p className="pb-3 pr-1 text-xs uppercase tracking-[0.14em] text-tinta-500">
-        {totalVisivel} {totalVisivel === 1 ? 'edital' : 'editais'}
-      </p>
     </div>
   )
 }

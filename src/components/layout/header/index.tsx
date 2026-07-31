@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation'
 import { AnimatePresence } from 'framer-motion'
 import { AccessibilityControls } from '../accessibility-controls'
 import { ReguaSecoes } from './regua-secoes'
+import { BotaoInscricao } from './botao-inscricao'
 import { MenuMobile } from './menu-mobile'
 
 interface HeaderProps {
@@ -95,12 +96,7 @@ export function Header({ userAreaHref = '/login' }: HeaderProps) {
               </Link>
 
               <div className="flex items-center gap-2">
-                <Link
-                  href={userAreaHref}
-                  className="hidden min-h-[44px] items-center rounded-sm bg-brand-700 px-5 text-xs font-bold uppercase tracking-[0.14em] text-papel-50 transition-colors hover:bg-brand-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500 sm:inline-flex"
-                >
-                  Área do proponente
-                </Link>
+                <BotaoInscricao href={userAreaHref} />
 
                 <button
                   type="button"
@@ -114,11 +110,14 @@ export function Header({ userAreaHref = '/login' }: HeaderProps) {
                     <span className="block h-0.5 w-5 bg-current" />
                     <span className="block h-0.5 w-3 bg-current" />
                   </span>
-                  Seções
+                  <span className="hidden sm:inline">Seções</span>
+                  <span className="sr-only sm:hidden">Abrir seções</span>
                 </button>
               </div>
             </div>
           </div>
+
+          <BotaoInscricao href={userAreaHref} faixa />
 
           {/* Recolhido, a marca acompanha a régua como titulação corrida. */}
           <div className="relative">
@@ -145,11 +144,7 @@ export function Header({ userAreaHref = '/login' }: HeaderProps) {
 
       <AnimatePresence>
         {menuAberto && (
-          <MenuMobile
-            pathname={pathname}
-            userAreaHref={userAreaHref}
-            aoFechar={() => setMenuAberto(false)}
-          />
+          <MenuMobile pathname={pathname} aoFechar={() => setMenuAberto(false)} />
         )}
       </AnimatePresence>
     </>
