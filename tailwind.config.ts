@@ -87,9 +87,8 @@ const config: Config = {
       },
       fontFamily: {
         sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
-        // Tipografia SECULT 2025 — só usada dentro de .tema-secult (home).
-        rye: ['var(--font-rye)', 'serif'],
-        caveat: ['var(--font-caveat)', 'cursive'],
+        // Tipografia SECULT 2025, usada dentro de .tema-secult.
+        display: ['var(--font-display)', 'Impact', 'sans-serif'],
         questrial: ['var(--font-questrial)', 'sans-serif'],
       },
       keyframes: {

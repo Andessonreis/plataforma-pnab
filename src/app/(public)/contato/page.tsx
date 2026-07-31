@@ -46,7 +46,7 @@ export default async function ContatoPage() {
           >
             <IconQuestion className="mt-0.5 h-5 w-5 shrink-0 text-brand-700" aria-hidden="true" />
             <span>
-              <span className="block font-rye text-lg leading-snug tracking-wide text-tinta-900">
+              <span className="block titulo text-lg leading-snug tracking-wide text-tinta-900">
                 Sua pergunta pode já ter resposta
               </span>
               <span className="mt-1 block text-sm leading-relaxed text-tinta-600">
@@ -61,7 +61,7 @@ export default async function ContatoPage() {
           </Link>
 
           <div className="border-t-2 border-tinta-900 pt-8">
-            <h2 className="font-rye text-2xl leading-tight tracking-wide text-tinta-900">
+            <h2 className="titulo text-2xl leading-tight tracking-wide text-tinta-900">
               Escreva sua mensagem
             </h2>
             <p className="mb-8 mt-2 text-sm leading-relaxed text-tinta-600">

@@ -22,11 +22,11 @@ interface RegistroProjetoProps {
 export function RegistroProjeto({ projeto }: RegistroProjetoProps) {
   return (
     <li className="grid gap-x-6 gap-y-3 px-4 py-6 sm:grid-cols-[10rem_1fr] sm:px-5">
-      <p className="font-rye text-xl leading-none text-brand-700 sm:text-right">{projeto.valor}</p>
+      <p className="titulo text-xl leading-none text-brand-700 sm:text-right">{projeto.valor}</p>
 
       <div className="min-w-0 sm:border-l sm:border-tinta-900/10 sm:pl-6">
         <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
-          <h4 className="min-w-0 font-rye text-lg leading-snug tracking-wide text-tinta-900">
+          <h4 className="min-w-0 titulo text-lg leading-snug tracking-wide text-tinta-900">
             {projeto.nome}
           </h4>
           <Carimbo tom={projeto.situacao.tom}>{projeto.situacao.label}</Carimbo>

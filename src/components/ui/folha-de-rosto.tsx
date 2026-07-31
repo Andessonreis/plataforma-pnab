@@ -54,8 +54,8 @@ export function FolhaDeRosto({
           <span className="text-papel-50">{trilha}</span>
         </nav>
 
-        <p className="mb-1 -rotate-1 font-caveat text-2xl text-accent-300">{chamada}</p>
-        <h1 className="font-rye text-3xl leading-tight tracking-wide text-papel-50 sm:text-5xl">
+        <p className="mb-1 rotulo text-xs text-accent-300">{chamada}</p>
+        <h1 className="titulo text-3xl leading-tight tracking-wide text-papel-50 sm:text-5xl">
           {titulo}
         </h1>
         {apoio && (

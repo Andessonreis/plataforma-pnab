@@ -18,7 +18,7 @@ export function ProtocoloEmitido({ protocolo, aoEscreverOutra }: ProtocoloEmitid
     <div className="border-2 border-tinta-900 bg-papel-100/70 p-8 text-center">
       <IconCheck className="mx-auto h-10 w-10 text-oliva-700" aria-hidden="true" />
 
-      <h3 className="mt-4 font-rye text-xl leading-snug tracking-wide text-tinta-900">
+      <h3 className="mt-4 titulo text-xl leading-snug tracking-wide text-tinta-900">
         Mensagem enviada
       </h3>
 

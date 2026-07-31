@@ -33,7 +33,7 @@ export function Cartela({ children, id, cor = 'tinta', className = '' }: Cartela
   return (
     <h2
       id={id}
-      className={`cartela inline-flex scroll-mt-32 items-center ${CORES[cor]} px-6 py-3 font-rye text-xl leading-none tracking-wide text-papel-50 sm:text-2xl ${className}`}
+      className={`cartela inline-flex scroll-mt-32 items-center ${CORES[cor]} px-6 py-3 titulo text-xl leading-none tracking-wide text-papel-50 sm:text-2xl ${className}`}
     >
       {children}
     </h2>

@@ -63,7 +63,7 @@ export function CronogramaEdital({ itens, slug, agora }: CronogramaEditalProps) 
                   }`}
                   aria-hidden="true"
                 >
-                  <span className="font-rye text-xl">{data.dia}</span>
+                  <span className="titulo text-xl">{data.dia}</span>
                   <span className="mt-1 text-[0.625rem] font-bold uppercase tracking-[0.14em]">
                     {data.mes}
                   </span>
@@ -73,7 +73,7 @@ export function CronogramaEdital({ itens, slug, agora }: CronogramaEditalProps) 
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                   <h3
-                    className={`font-rye text-lg leading-snug tracking-wide ${
+                    className={`titulo text-lg leading-snug tracking-wide ${
                       cumprido ? 'text-tinta-600' : 'text-tinta-900'
                     }`}
                   >

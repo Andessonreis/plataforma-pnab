@@ -25,7 +25,7 @@ function Footer() {
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
             <div className="shrink-0">
-              <h2 className="font-rye text-sm tracking-wide text-papel-50">
+              <h2 className="titulo text-sm tracking-wide text-papel-50">
                 Receba novidades sobre editais
               </h2>
               <p className="mt-0.5 text-xs text-papel-200/60">

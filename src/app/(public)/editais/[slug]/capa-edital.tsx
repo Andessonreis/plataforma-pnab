@@ -41,7 +41,7 @@ function Medida({
         <dt className="text-[0.6875rem] font-bold uppercase tracking-[0.16em] text-papel-200/80">
           {rotulo}
         </dt>
-        <dd className="font-rye text-lg leading-tight text-accent-300">{valor}</dd>
+        <dd className="titulo text-lg leading-tight text-accent-300">{valor}</dd>
       </div>
     </div>
   )

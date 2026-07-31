@@ -60,7 +60,7 @@ export function QuadroVagas({ categorias, cotas }: QuadroVagasProps) {
           <tbody className="divide-y divide-tinta-900/15">
             {categorias.map((categoria) => (
               <tr key={categoria.nome}>
-                <th scope="row" className="py-3 pr-4 text-left font-rye text-base font-normal tracking-wide text-tinta-900">
+                <th scope="row" className="py-3 pr-4 text-left titulo text-base font-normal tracking-wide text-tinta-900">
                   {categoria.nome}
                 </th>
                 <td className="py-3 pr-4 tabular-nums text-tinta-700">
@@ -74,7 +74,7 @@ export function QuadroVagas({ categorias, cotas }: QuadroVagasProps) {
                 <td className="py-3 pr-4 text-right tabular-nums text-tinta-700">
                   {categoria.valorPorProjeto != null ? formatCurrency(categoria.valorPorProjeto) : '—'}
                 </td>
-                <td className="py-3 text-right font-rye text-base text-brand-700">
+                <td className="py-3 text-right titulo text-base text-brand-700">
                   {formatCurrency(categoria.valorTotalCategoria)}
                 </td>
               </tr>

@@ -1,15 +1,18 @@
 import { Suspense } from 'react'
-import { Rye, Caveat, Questrial } from 'next/font/google'
+import { Anton, Questrial } from 'next/font/google'
 import type { UserRole } from '@prisma/client'
 import { auth } from '@/lib/auth'
 import { Header, Footer, CookieBanner } from '@/components/layout'
 import { ActiveBanners } from '@/components/layout'
 
-// Tipografia SECULT 2025 — substitutas gratuitas de Sunbeam Stamp e Ananias,
-// que são comerciais. Declaradas aqui, e não numa página, porque cabeçalho e
-// rodapé também são da identidade e vivem fora de qualquer page.
-const rye = Rye({ subsets: ['latin'], weight: '400', variable: '--font-rye' })
-const caveat = Caveat({ subsets: ['latin'], weight: ['400', '700'], variable: '--font-caveat' })
+// Tipografia SECULT 2025. A principal da identidade é a Sunbeam Stamp, uma
+// condensada pesada de caixa alta, comercial; Anton é a substituta gratuita de
+// mesma classe. Questrial é a auxiliar e vem da própria especificação.
+//
+// Não há manuscrita na identidade: a secundária é a Ananias, uma geométrica
+// desenhada à mão em caixa alta. Enquanto não houver licença, a secundária
+// também sai em Anton, com corpo e espaçamento próprios.
+const display = Anton({ subsets: ['latin'], weight: '400', variable: '--font-display' })
 const questrial = Questrial({ subsets: ['latin'], weight: '400', variable: '--font-questrial' })
 
 const ROLES_ADMIN: UserRole[] = ['ADMIN', 'ATENDIMENTO', 'HABILITADOR']
@@ -27,7 +30,7 @@ export default async function PublicLayout({ children }: { children: React.React
   const userAreaHref = userAreaHrefFromRole(session?.user?.role)
 
   return (
-    <div className={`${rye.variable} ${caveat.variable} ${questrial.variable} flex min-h-screen flex-col`}>
+    <div className={`${display.variable} ${questrial.variable} flex min-h-screen flex-col`}>
       <Header userAreaHref={userAreaHref} />
       <Suspense fallback={null}>
         <div className="tema-secult font-questrial">

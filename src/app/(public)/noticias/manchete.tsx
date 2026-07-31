@@ -41,7 +41,7 @@ export function Manchete({ noticia }: MancheteProps) {
           )}
 
           <h2
-            className={`mt-2 font-rye leading-tight tracking-wide text-tinta-900 transition-colors group-hover:text-brand-700 ${
+            className={`mt-2 titulo leading-tight tracking-wide text-tinta-900 transition-colors group-hover:text-brand-700 ${
               temFoto ? 'text-3xl sm:text-4xl' : 'text-3xl sm:text-5xl'
             }`}
           >

@@ -16,7 +16,7 @@ export function ColunaMarca() {
           aria-hidden="true"
         />
         <div>
-          <p className="font-rye text-base leading-tight tracking-wide text-papel-50 transition-colors group-hover:text-accent-300">
+          <p className="titulo text-base leading-tight tracking-wide text-papel-50 transition-colors group-hover:text-accent-300">
             Portal PNAB
           </p>
           <p className="text-xs leading-tight text-papel-200/60">Irecê/BA</p>

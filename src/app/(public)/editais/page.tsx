@@ -64,7 +64,7 @@ export default async function EditaisPage({
 
           {emCartaz.length > 0 && (
             <div className="pt-10">
-              <h2 className="font-rye text-2xl tracking-wide text-tinta-900">
+              <h2 className="titulo text-2xl tracking-wide text-tinta-900">
                 {emCartaz.length === 1 ? 'Inscrição aberta' : 'Inscrições abertas'}
               </h2>
               <p className="mt-1 text-sm text-tinta-600">
@@ -81,7 +81,7 @@ export default async function EditaisPage({
 
           {demais.length > 0 && (
             <div className="pt-14">
-              <h2 className="font-rye text-2xl tracking-wide text-tinta-900">
+              <h2 className="titulo text-2xl tracking-wide text-tinta-900">
                 {abaAtiva === 'encerrados' ? 'Editais encerrados' : 'Demais editais'}
               </h2>
               <ul className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-3">

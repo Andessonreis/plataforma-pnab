@@ -50,7 +50,7 @@ export default async function NoticiasPage({ searchParams }: NoticiasPageProps) 
               {demais.length > 0 && (
                 <div className={manchete ? 'pt-14' : 'pt-10'}>
                   {manchete && (
-                    <h2 className="mb-2 font-rye text-2xl tracking-wide text-tinta-900">
+                    <h2 className="mb-2 titulo text-2xl tracking-wide text-tinta-900">
                       Mais notícias
                     </h2>
                   )}

@@ -30,7 +30,7 @@ export function DuvidasEdital({ duvidas }: DuvidasEditalProps) {
       <div className="mt-6 divide-y divide-tinta-900/15 border-y border-tinta-900/15">
         {duvidas.map((duvida) => (
           <details key={duvida.id} className="group py-1">
-            <summary className="flex cursor-pointer list-none items-start gap-4 py-4 font-rye text-lg leading-snug tracking-wide text-tinta-900 transition-colors marker:content-none hover:text-brand-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500">
+            <summary className="flex cursor-pointer list-none items-start gap-4 py-4 titulo text-lg leading-snug tracking-wide text-tinta-900 transition-colors marker:content-none hover:text-brand-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500">
               <span
                 className="mt-1 shrink-0 font-questrial text-xl leading-none text-accent-600 transition-transform group-open:rotate-45"
                 aria-hidden="true"

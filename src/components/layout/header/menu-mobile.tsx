@@ -95,7 +95,7 @@ export function MenuMobile({ pathname, aoFechar }: MenuMobileProps) {
                     {String(i + 1).padStart(2, '0')}
                   </span>
                   <span
-                    className={`font-rye text-2xl leading-tight tracking-wide ${
+                    className={`titulo text-2xl leading-tight tracking-wide ${
                       ativa ? 'text-accent-300' : 'text-papel-50'
                     }`}
                   >

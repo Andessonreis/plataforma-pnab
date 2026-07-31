@@ -265,3 +265,24 @@
     line-height: 1;
   }
 }
+
+@layer components {
+  /* Tipografia da identidade. A principal é a Sunbeam Stamp, condensada pesada
+     de caixa alta; Anton é a substituta gratuita de mesma classe. A caixa alta
+     faz parte da fonte, não é escolha de cada uso — em toda peça da Secretaria
+     ela aparece assim. */
+  .titulo {
+    font-family: var(--font-display), Impact, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.005em;
+    line-height: 1.05;
+  }
+
+  /* Rótulo curto acima de um título. Ocupa o lugar da manuscrita que eu havia
+     introduzido e que não existe na identidade. */
+  .rotulo {
+    font-family: var(--font-display), Impact, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+  }
+}

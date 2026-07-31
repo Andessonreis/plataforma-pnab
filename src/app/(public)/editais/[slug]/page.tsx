@@ -72,7 +72,7 @@ export default async function EditalPage({ params }: Props) {
       <SumarioEdital partes={edital.partes} versaoAcessivelHref={edital.versaoAcessivelHref} />
 
       <section className="papel-textura bg-papel-50 pb-16 pt-12">
-        <div className="mx-auto flex max-w-5xl flex-col gap-14 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col gap-14 px-4 sm:px-6 lg:px-8">
           {edital.resumo && (
             <TextoEdital id="resumo" titulo="Do que se trata" texto={edital.resumo} cor="terracota" />
           )}
@@ -112,9 +112,9 @@ export default async function EditalPage({ params }: Props) {
           momento em que a decisão de se inscrever é tomada. */}
       {edital.inscricao && (
         <section className="bg-tinta-950 text-papel-100">
-          <div className="mx-auto flex max-w-5xl flex-col items-start gap-6 px-4 py-12 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+          <div className="mx-auto flex max-w-7xl flex-col items-start gap-6 px-4 py-12 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
             <div>
-              <h2 className="font-rye text-2xl leading-tight tracking-wide text-papel-50">
+              <h2 className="titulo text-2xl leading-tight tracking-wide text-papel-50">
                 Inscrições abertas
               </h2>
               <p className="mt-2 max-w-xl text-sm leading-relaxed text-papel-200/85">

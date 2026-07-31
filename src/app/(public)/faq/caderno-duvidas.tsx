@@ -103,7 +103,7 @@ export function CadernoDuvidas({ cadernos }: CadernoDuvidasProps) {
         {filtrados.map((caderno) => (
           <section key={caderno.id} id={caderno.id} className="mt-12 scroll-mt-32 first:mt-10">
             <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 border-b-2 border-tinta-900 pb-3">
-              <h2 className="font-rye text-2xl leading-tight tracking-wide text-tinta-900">
+              <h2 className="titulo text-2xl leading-tight tracking-wide text-tinta-900">
                 {caderno.titulo}
               </h2>
               {caderno.editalSlug && (
@@ -120,7 +120,7 @@ export function CadernoDuvidas({ cadernos }: CadernoDuvidasProps) {
             <div className="divide-y divide-tinta-900/15">
               {caderno.duvidas.map((duvida) => (
                 <details key={duvida.id} className="group py-1" open={buscando}>
-                  <summary className="flex cursor-pointer list-none items-start gap-4 py-4 font-rye text-lg leading-snug tracking-wide text-tinta-900 transition-colors marker:content-none hover:text-brand-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500">
+                  <summary className="flex cursor-pointer list-none items-start gap-4 py-4 titulo text-lg leading-snug tracking-wide text-tinta-900 transition-colors marker:content-none hover:text-brand-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500">
                     <span
                       className="mt-1 shrink-0 font-questrial text-xl leading-none text-accent-600 transition-transform group-open:rotate-45"
                       aria-hidden="true"

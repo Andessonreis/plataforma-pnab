@@ -19,8 +19,8 @@ export function PainelEditais({ editais }: PainelEditaisProps) {
     <div className="flex h-full flex-col">
       <div className="mb-4 flex items-baseline justify-between gap-3">
         <div>
-          <p className="font-caveat text-2xl leading-none text-accent-300">Oportunidades</p>
-          <h2 className="font-rye text-xl tracking-wide text-papel-50 sm:text-2xl">
+          <p className="rotulo text-xs leading-none text-accent-300">Oportunidades</p>
+          <h2 className="titulo text-xl tracking-wide text-papel-50 sm:text-2xl">
             Editais publicados
           </h2>
         </div>

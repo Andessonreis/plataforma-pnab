@@ -34,7 +34,7 @@ export function FolhaDeRosto({ publicados, abertos, proximoEncerramento }: Folha
         <div className="flex items-center gap-4">
           <IconeEdital className="h-8 w-8 shrink-0 text-accent-400" />
           <p className="text-sm text-papel-100">
-            <span className="font-rye text-2xl leading-none text-accent-300">{abertos}</span>{' '}
+            <span className="titulo text-2xl leading-none text-accent-300">{abertos}</span>{' '}
             {abertos === 1 ? 'edital aberto' : 'editais abertos'} de {publicados} publicados
           </p>
         </div>
@@ -44,7 +44,7 @@ export function FolhaDeRosto({ publicados, abertos, proximoEncerramento }: Folha
             <IconePrazo className="h-8 w-8 shrink-0 text-accent-400" />
             <p className="text-sm leading-snug text-papel-100">
               O mais próximo de fechar encerra em{' '}
-              <span className="font-rye text-lg leading-none text-accent-300">
+              <span className="titulo text-lg leading-none text-accent-300">
                 {proximoEncerramento.dias === 0
                   ? 'algumas horas'
                   : `${proximoEncerramento.dias} ${proximoEncerramento.dias === 1 ? 'dia' : 'dias'}`}

@@ -67,7 +67,7 @@ export function SecaoServicos() {
                   <servico.Icon className="h-6 w-6" />
                 </div>
 
-                <h2 className="font-rye text-xl tracking-wide text-tinta-900">{servico.titulo}</h2>
+                <h2 className="titulo text-xl tracking-wide text-tinta-900">{servico.titulo}</h2>
                 <p className="mt-0.5 text-sm text-tinta-600">{servico.chamada}</p>
                 <p className="mt-3 flex-1 leading-relaxed text-tinta-700">{servico.descricao}</p>
 

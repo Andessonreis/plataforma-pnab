@@ -96,14 +96,14 @@ export function BannerEdital({
           <div>
             <p className="text-lg leading-tight text-papel-50 sm:text-xl">
               {chamadaInicio}{' '}
-              <strong className="font-rye tracking-wide text-accent-300">{chamadaDestaque}</strong>{' '}
+              <strong className="titulo tracking-wide text-accent-300">{chamadaDestaque}</strong>{' '}
               {chamadaFim}
             </p>
             <p className="mt-2 flex flex-wrap items-baseline gap-x-2 text-sm text-papel-200/85">
               {linguagensRotulo}
               <PalavrasRotativas
                 palavras={linguagens}
-                className="font-rye text-base text-accent-300 sm:text-lg"
+                className="titulo text-base text-accent-300 sm:text-lg"
               />
             </p>
           </div>
@@ -112,7 +112,7 @@ export function BannerEdital({
             <p className="text-xs font-bold uppercase tracking-widest text-accent-300">
               {valorPrefixo}
             </p>
-            <p className="font-rye text-2xl leading-none text-papel-50 sm:text-3xl">
+            <p className="titulo text-2xl leading-none text-papel-50 sm:text-3xl">
               R$ <CountUp value={valorNumero} className="inline-block" /> {valorUnidade}
             </p>
             <p className="mt-0.5 text-xs font-bold uppercase tracking-widest text-papel-200">

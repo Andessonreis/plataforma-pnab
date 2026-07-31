@@ -25,7 +25,7 @@ function Medida({ rotulo, valor, destaque = false }: { rotulo: string; valor: st
         {rotulo}
       </dt>
       <dd
-        className={`font-rye leading-none ${
+        className={`titulo leading-none ${
           destaque ? 'text-4xl text-accent-300 sm:text-5xl' : 'text-2xl text-papel-50'
         }`}
       >

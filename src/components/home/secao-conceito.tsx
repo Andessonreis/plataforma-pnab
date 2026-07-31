@@ -64,15 +64,15 @@ export function SecaoConceito() {
                 aria-hidden="true"
               />
               <div>
-                <p className="font-rye text-lg leading-tight tracking-wide text-papel-50">
+                <p className="titulo text-lg leading-tight tracking-wide text-papel-50">
                   Secretaria de Cultura e Turismo
                 </p>
                 <p className="text-sm text-papel-200/70">Prefeitura de Irecê</p>
               </div>
             </div>
 
-            <p className="mb-1 -rotate-1 font-caveat text-2xl text-accent-300">Nosso conceito</p>
-            <h2 className="mb-5 font-rye text-2xl leading-tight tracking-wide text-papel-50 sm:text-3xl">
+            <p className="mb-1 rotulo text-xs text-accent-300">Nosso conceito</p>
+            <h2 className="mb-5 titulo text-2xl leading-tight tracking-wide text-papel-50 sm:text-3xl">
               Uma terra que fala
             </h2>
 
@@ -82,7 +82,7 @@ export function SecaoConceito() {
               </p>
             ))}
 
-            <p className="border-l-4 border-accent-500 pl-4 font-caveat text-2xl leading-snug text-accent-200">
+            <p className="border-l-4 border-accent-500 pl-4 rotulo text-xs leading-snug text-accent-200">
               Aqui, os mandacarus têm voz, as árvores secas recitam versos, e o sol não nasce
               apenas — ele estreia.
             </p>

@@ -31,7 +31,7 @@ export function EntradaNoticia({ noticia }: EntradaNoticiaProps) {
             </time>
           )}
 
-          <h3 className="mt-1.5 font-rye text-lg leading-snug tracking-wide text-tinta-900 transition-colors group-hover:text-brand-700">
+          <h3 className="mt-1.5 titulo text-lg leading-snug tracking-wide text-tinta-900 transition-colors group-hover:text-brand-700">
             {noticia.titulo}
           </h3>
 

@@ -32,7 +32,7 @@ export function DossieEdital({ edital }: DossieEditalProps) {
       >
         <CarimboStatus status={edital.status} label={edital.statusLabel} className="mb-4 self-start" />
 
-        <h3 className="font-rye text-xl leading-snug tracking-wide text-tinta-900 transition-colors group-hover:text-brand-700 sm:text-2xl">
+        <h3 className="titulo text-xl leading-snug tracking-wide text-tinta-900 transition-colors group-hover:text-brand-700 sm:text-2xl">
           {edital.titulo}
         </h3>
 
@@ -57,7 +57,7 @@ export function DossieEdital({ edital }: DossieEditalProps) {
               <dd>
                 {edital.diasRestantes !== null ? (
                   <>
-                    <span className="font-rye text-lg leading-tight text-tinta-900">
+                    <span className="titulo text-lg leading-tight text-tinta-900">
                       {edital.diasRestantes === 0
                         ? 'Encerra hoje'
                         : `${edital.diasRestantes} ${edital.diasRestantes === 1 ? 'dia' : 'dias'}`}
@@ -78,7 +78,7 @@ export function DossieEdital({ edital }: DossieEditalProps) {
               <dt className="text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-tinta-500">
                 Recursos
               </dt>
-              <dd className="font-rye text-lg leading-tight text-brand-700">
+              <dd className="titulo text-lg leading-tight text-brand-700">
                 {edital.valor ?? 'A definir'}
               </dd>
             </div>

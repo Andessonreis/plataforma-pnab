@@ -20,7 +20,7 @@ export function FaixaNumeros({ numeros }: FaixaNumerosProps) {
         >
           {numeros.map((item) => (
             <StaggerItem key={item.rotulo} className="text-center">
-              <CountUp value={item.valor} className="font-rye text-2xl text-brand-700 sm:text-3xl" />
+              <CountUp value={item.valor} className="titulo text-2xl text-brand-700 sm:text-3xl" />
               <p className="mt-1 text-xs text-tinta-700 sm:text-sm">{item.rotulo}</p>
             </StaggerItem>
           ))}

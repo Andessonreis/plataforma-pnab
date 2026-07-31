@@ -60,7 +60,7 @@ export default async function ProjetosApoiadosPage({ searchParams }: Props) {
               {prestacao.grupos.map((grupo) => (
                 <div key={grupo.slug}>
                   <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-                    <h2 className="font-rye text-2xl leading-tight tracking-wide text-tinta-900">
+                    <h2 className="titulo text-2xl leading-tight tracking-wide text-tinta-900">
                       <Link
                         href={`/editais/${grupo.slug}`}
                         className="underline-offset-4 transition-colors hover:text-brand-700 hover:underline"

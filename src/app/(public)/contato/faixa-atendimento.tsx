@@ -13,7 +13,7 @@ export function FaixaAtendimento() {
   return (
     <section className="bg-tinta-950 text-papel-100">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <h2 className="font-rye text-2xl leading-tight tracking-wide text-papel-50">
+        <h2 className="titulo text-2xl leading-tight tracking-wide text-papel-50">
           Secretaria de Cultura e Turismo
         </h2>
 

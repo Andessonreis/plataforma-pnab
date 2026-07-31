@@ -64,8 +64,8 @@ export function PassosInscricao() {
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <FadeIn className="mb-7">
-          <p className="mb-0.5 -rotate-1 font-caveat text-2xl text-brand-700">Como funciona</p>
-          <h2 className="font-rye text-2xl tracking-wide text-tinta-900 sm:text-3xl">
+          <p className="mb-0.5 rotulo text-xs text-brand-700">Como funciona</p>
+          <h2 className="titulo text-2xl tracking-wide text-tinta-900 sm:text-3xl">
             Inscreva-se em 4 passos
           </h2>
         </FadeIn>
@@ -84,7 +84,7 @@ export function PassosInscricao() {
             {PASSOS.map((passo) => (
               <StaggerItem key={passo.numero} className="group relative">
                 <div
-                  className={`selo relative z-10 mb-3 h-14 w-14 font-rye text-lg transition-transform duration-300 group-hover:scale-105 ${passo.cor}`}
+                  className={`selo relative z-10 mb-3 h-14 w-14 titulo text-lg transition-transform duration-300 group-hover:scale-105 ${passo.cor}`}
                   style={{ '--selo-gap': passo.vaoSelo } as CSSProperties}
                 >
                   {passo.numero}
