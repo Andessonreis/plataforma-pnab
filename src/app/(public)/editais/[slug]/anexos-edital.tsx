@@ -31,7 +31,7 @@ export function AnexosEdital({ arquivos }: AnexosEditalProps) {
 
   return (
     <section>
-      <Cartela id="anexos">Documentos do edital</Cartela>
+      <Cartela id="anexos" cor="ameixa">Documentos do edital</Cartela>
 
       <ul className="mt-6 divide-y divide-tinta-900/15 border-y border-tinta-900/15">
         {arquivos.map((arquivo) => (

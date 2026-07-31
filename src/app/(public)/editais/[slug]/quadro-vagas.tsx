@@ -25,7 +25,7 @@ export function QuadroVagas({ categorias, cotas }: QuadroVagasProps) {
 
   return (
     <section>
-      <Cartela id="vagas">Vagas e valores</Cartela>
+      <Cartela id="vagas" cor="terracota">Vagas e valores</Cartela>
 
       <div className="mt-6 overflow-x-auto">
         <table className="w-full min-w-[36rem] text-sm">

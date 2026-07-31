@@ -40,7 +40,7 @@ export function CronogramaEdital({ itens, slug, agora }: CronogramaEditalProps) 
 
   return (
     <section>
-      <Cartela id="cronograma">Cronograma</Cartela>
+      <Cartela id="cronograma" cor="oliva">Cronograma</Cartela>
 
       <ol className="mt-6 divide-y divide-tinta-900/15 border-y border-tinta-900/15">
         {itens.map((item, indice) => {

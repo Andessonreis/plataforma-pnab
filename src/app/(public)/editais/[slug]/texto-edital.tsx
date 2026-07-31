@@ -1,9 +1,10 @@
-import { Cartela } from '@/components/ui/cartela'
+import { Cartela, type CorCartela } from '@/components/ui/cartela'
 
 interface TextoEditalProps {
   id: string
   titulo: string
   texto: string
+  cor?: CorCartela
 }
 
 /**
@@ -13,10 +14,12 @@ interface TextoEditalProps {
  * renderização preserva as quebras e limita a medida de leitura. Sem isso, um
  * parágrafo de regras atravessava a largura inteira da página.
  */
-export function TextoEdital({ id, titulo, texto }: TextoEditalProps) {
+export function TextoEdital({ id, titulo, texto, cor }: TextoEditalProps) {
   return (
     <section>
-      <Cartela id={id}>{titulo}</Cartela>
+      <Cartela id={id} cor={cor}>
+        {titulo}
+      </Cartela>
       <p className="mt-6 max-w-3xl whitespace-pre-line text-base leading-relaxed text-tinta-700">
         {texto}
       </p>

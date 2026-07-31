@@ -25,7 +25,7 @@ export function DuvidasEdital({ duvidas }: DuvidasEditalProps) {
 
   return (
     <section>
-      <Cartela id="duvidas">Dúvidas deste edital</Cartela>
+      <Cartela id="duvidas" cor="turquesa">Dúvidas deste edital</Cartela>
 
       <div className="mt-6 divide-y divide-tinta-900/15 border-y border-tinta-900/15">
         {duvidas.map((duvida) => (

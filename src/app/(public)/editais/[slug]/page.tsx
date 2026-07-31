@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
  * mais cartões — CTA, informações rápidas, próxima data, versão acessível,
  * resultados e link de volta —, e as informações apareciam duas e três vezes.
  * O que a lateral tinha de útil (pular para uma parte, se inscrever) virou o
- * sumário fixo e a chamada no fim; o resto era repetição do que já estava no
+ * sumário do documento e a chamada no fim; o resto era repetição do que já estava no
  * corpo.
  */
 export default async function EditalPage({ params }: Props) {
@@ -74,7 +74,7 @@ export default async function EditalPage({ params }: Props) {
       <section className="papel-textura bg-papel-50 pb-16 pt-12">
         <div className="mx-auto flex max-w-5xl flex-col gap-14 px-4 sm:px-6 lg:px-8">
           {edital.resumo && (
-            <TextoEdital id="resumo" titulo="Do que se trata" texto={edital.resumo} />
+            <TextoEdital id="resumo" titulo="Do que se trata" texto={edital.resumo} cor="terracota" />
           )}
 
           <CronogramaEdital itens={edital.cronograma} slug={edital.slug} agora={new Date()} />
@@ -86,11 +86,12 @@ export default async function EditalPage({ params }: Props) {
               id="elegibilidade"
               titulo="Quem pode se inscrever"
               texto={edital.regrasElegibilidade}
+              cor="turquesa"
             />
           )}
 
           {edital.acoesAfirmativas && (
-            <TextoEdital id="acoes" titulo="Ações afirmativas" texto={edital.acoesAfirmativas} />
+            <TextoEdital id="acoes" titulo="Ações afirmativas" texto={edital.acoesAfirmativas} cor="ameixa" />
           )}
 
           <AnexosEdital arquivos={edital.arquivos} />

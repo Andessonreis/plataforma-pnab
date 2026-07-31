@@ -12,16 +12,18 @@ interface SumarioEditalProps {
 }
 
 /**
- * Sumário do documento, em faixa fixa abaixo do cabeçalho.
+ * Sumário do documento, em faixa logo abaixo da capa.
  *
  * No lugar da barra lateral de cartões, que ocupava um terço da página com
  * caixas de aviso e atalhos repetidos. Um edital é documento longo: o que a
  * lateral tinha de útil era permitir pular para o cronograma ou para os
- * anexos, e é só isso que a faixa faz — de largura inteira, sempre à mão, sem
- * roubar espaço da leitura.
+ * anexos, e é só isso que a faixa faz, de largura inteira e sem roubar
+ * espaço da leitura.
  *
- * Rola na horizontal no telefone em vez de quebrar em duas linhas: a faixa é
- * grudada no topo e uma segunda linha comeria a tela toda.
+ * Não é grudada no topo. Presa, o deslocamento dela não acompanhava o
+ * cabeçalho, que encolhe ao rolar: sobrava uma faixa de conteúdo visível acima
+ * da barra e o texto passava por baixo dela, cortado no meio. Um sumário fica
+ * no começo do documento, que é onde se decide por onde começar a ler.
  */
 export function SumarioEdital({ partes, versaoAcessivelHref }: SumarioEditalProps) {
   if (partes.length === 0) return null
@@ -29,7 +31,7 @@ export function SumarioEdital({ partes, versaoAcessivelHref }: SumarioEditalProp
   return (
     <nav
       aria-label="Partes do edital"
-      className="sticky top-[7.5rem] z-30 border-b border-tinta-900/15 bg-papel-50/95 backdrop-blur lg:top-[8.75rem]"
+      className="border-b-2 border-tinta-900 bg-papel-100"
     >
       <div className="mx-auto flex max-w-7xl items-center gap-6 px-4 sm:px-6 lg:px-8">
         <ul className="scrollbar-hide flex flex-1 gap-1 overflow-x-auto">
