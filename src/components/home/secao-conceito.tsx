@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import { FadeIn } from '@/components/ui/animated'
-import { Casario } from './ornamentos'
+import { Casario } from '@/components/ui/ornamentos'
 
 /** Texto institucional da Secretaria, tal como definido na identidade visual. */
 const MANIFESTO = [

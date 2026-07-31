@@ -1,6 +1,6 @@
 import { CarrosselArtes } from './carrossel-artes'
 import { FundoFotos } from './fundo-fotos'
-import { SolEspiral } from './ornamentos'
+import { SolEspiral } from '@/components/ui/ornamentos'
 import { PainelEditais } from './painel-editais'
 import type { SlideDestaque, EditalResumo } from './types'
 

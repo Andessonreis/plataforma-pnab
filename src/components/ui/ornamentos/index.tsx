@@ -10,6 +10,8 @@ import type { CSSProperties } from 'react'
 
 interface OrnamentoProps {
   className?: string
+  /** Permite ajustar a cor do filete via `--filete` em quem aplica. */
+  style?: CSSProperties
 }
 
 const RAIOS = 12
@@ -129,6 +131,31 @@ export function Casario({ className = '' }: OrnamentoProps) {
       })}
       {/* calçada */}
       <rect x="0" y={base} width="260" height="5" fill="currentColor" />
+    </svg>
+  )
+}
+
+/**
+ * Bandeirola — a forma própria da identidade SECULT.
+ *
+ * Aparece em toda a comunicação da Secretaria como recipiente de chamada:
+ * retângulo com rasgo em V no pé e um filete recuado acompanhando o contorno.
+ * Aqui ela marca o que está ativo ou vigente, no lugar do sublinhado e da
+ * pílula coloridos, que não pertencem a essa linguagem.
+ *
+ * O corpo usa `currentColor`; o filete lê `--filete` (papel, como no impresso)
+ * para que a peça funcione tanto sobre tinta quanto sobre papel.
+ */
+export function Bandeirola({ className = '', style }: OrnamentoProps) {
+  return (
+    <svg viewBox="0 0 24 32" className={className} style={style} role="presentation" aria-hidden="true">
+      <path d="M1 0h22v20.5L12 31 1 20.5Z" fill="currentColor" />
+      <path
+        d="M4.6 0h14.8v17.9L12 25.6 4.6 17.9Z"
+        fill="none"
+        stroke="var(--filete, #ebe2c9)"
+        strokeWidth="1.5"
+      />
     </svg>
   )
 }

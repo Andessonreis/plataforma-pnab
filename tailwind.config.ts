@@ -64,6 +64,22 @@ const config: Config = {
           50: '#ce7f4a', 100: '#cc7841', 200: '#c26d34', 300: '#a95f2d', 400: '#894d25',
           500: '#72401f', 600: '#60361a', 700: '#4d2b15', 800: '#3b2110', 900: '#29170b', 950: '#190e07',
         },
+        // Cores institucionais restantes da SECULT 2025. Cada uma carrega um
+        // conceito atribuído pela identidade, então são usadas por significado
+        // e não por decoração: oliva = esperança e agricultura, turquesa =
+        // conhecimento e acolhimento, ameixa = criatividade e diversidade.
+        oliva: {
+          50: '#f2f4ea', 100: '#e2e7d0', 200: '#c6d1a3', 300: '#a3b673', 400: '#7f9a49',
+          500: '#647c31', 600: '#556a26', 700: '#475c1b', 800: '#374716', 900: '#293511', 950: '#161d09',
+        },
+        turquesa: {
+          50: '#eafafb', 100: '#c9f1f3', 200: '#93e3e8', 300: '#57ced6', 400: '#26b3bd',
+          500: '#129fa6', 600: '#0d7f86', 700: '#0e666c', 800: '#115257', 900: '#12454a', 950: '#052c30',
+        },
+        ameixa: {
+          50: '#f6f3f6', 100: '#eae4ea', 200: '#d6cbd6', 300: '#b8a8b8', 400: '#948094',
+          500: '#786578', 600: '#635163', 700: '#574655', 800: '#483b47', 900: '#3d343d', 950: '#241e24',
+        },
         papel: {
           50: '#f0e9d7', 100: '#ebe2c9', 200: '#e1d3ae', 300: '#d3bf88', 400: '#c1a558',
           500: '#ab8f3f', 600: '#907835', 700: '#74612b', 800: '#594a21', 900: '#3e3317', 950: '#261f0e',

@@ -1,20 +1,19 @@
 import type { Metadata } from 'next'
 import type { EditalStatus } from '@prisma/client'
 import { prisma } from '@/lib/db'
-import { Badge, Button, Card, PageHeader, FilterTabs, EmptyState, Pagination } from '@/components/ui'
-import { IconCalendar, IconCurrency, IconDocument } from '@/components/ui/icons'
+import { EmptyState, Pagination } from '@/components/ui'
+import { IconDocument } from '@/components/ui/icons'
 import { getStatusDisplay, OPEN_STATUSES, CLOSED_STATUSES } from '@/lib/utils/edital-status'
 import { formatCurrency, formatDate } from '@/lib/utils/format'
 import { getNextDeadline } from '@/lib/utils/cronograma'
+import { AbasStatus, ABAS, type ChaveAba } from './abas-status'
+import { FolhaDeRosto } from './folha-de-rosto'
+import { LinhaEdital, type EditalListado } from './linha-edital'
 
 export const metadata: Metadata = {
   title: 'Editais',
   description: 'Consulte os editais de fomento à cultura da PNAB em Irecê/BA.',
 }
-
-// ── Tipos ─────────────────────────────────────────────────────────────────────
-
-type FilterTab = 'todos' | 'abertos' | 'encerrados'
 
 interface SearchParams {
   status?: string
@@ -23,38 +22,24 @@ interface SearchParams {
 
 const PAGE_SIZE = 9
 
-// ── Helpers ────────────────────────────────────────────────────────────────────
-
-function getStatusFilter(tab: FilterTab): EditalStatus[] | undefined {
-  switch (tab) {
-    case 'abertos':
-      return OPEN_STATUSES
-    case 'encerrados':
-      return CLOSED_STATUSES
-    default:
-      return undefined
-  }
+/** `undefined` deixa o filtro de fora e traz tudo que não é rascunho. */
+function statusDaAba(aba: ChaveAba): EditalStatus[] | undefined {
+  if (aba === 'abertos') return OPEN_STATUSES
+  if (aba === 'encerrados') return CLOSED_STATUSES
+  return undefined
 }
 
-function truncate(text: string, maxLength: number): string {
-  if (text.length <= maxLength) return text
-  const truncated = text.slice(0, maxLength)
-  const lastSpace = truncated.lastIndexOf(' ')
-  return (lastSpace > 0 ? truncated.slice(0, lastSpace) : truncated) + '...'
+/** Corta no último espaço para não terminar no meio de uma palavra. */
+function resumir(texto: string, limite: number): string {
+  if (texto.length <= limite) return texto
+  const corte = texto.slice(0, limite)
+  const ultimoEspaco = corte.lastIndexOf(' ')
+  return (ultimoEspaco > 0 ? corte.slice(0, ultimoEspaco) : corte) + '...'
 }
 
-function isEncerrado(status: EditalStatus): boolean {
-  return CLOSED_STATUSES.includes(status)
+function urlDaAba(aba: ChaveAba): string {
+  return aba === 'todos' ? '/editais' : `/editais?status=${aba}`
 }
-
-function getStatusBorderClass(status: EditalStatus): string {
-  if (status === 'INSCRICOES_ABERTAS') return 'border-l-4 border-l-brand-500'
-  if (status === 'PUBLICADO') return 'border-l-4 border-l-accent-500'
-  if (isEncerrado(status)) return 'border-l-4 border-l-slate-300'
-  return ''
-}
-
-// ── Componente principal ──────────────────────────────────────────────────────
 
 export default async function EditaisPage({
   searchParams,
@@ -63,167 +48,97 @@ export default async function EditaisPage({
 }) {
   const params = await searchParams
 
-  const activeTab = (['todos', 'abertos', 'encerrados'] as FilterTab[]).includes(
-    params.status as FilterTab,
-  )
-    ? (params.status as FilterTab)
+  const chaves = ABAS.map((a) => a.chave) as readonly string[]
+  const abaAtiva: ChaveAba = chaves.includes(params.status ?? '')
+    ? (params.status as ChaveAba)
     : 'todos'
 
-  const currentPage = Math.max(1, Number(params.page) || 1)
-
-  const statusFilter = getStatusFilter(activeTab)
+  const paginaAtual = Math.max(1, Number(params.page) || 1)
+  const filtro = statusDaAba(abaAtiva)
   const where = {
-    status: statusFilter
-      ? { in: statusFilter }
-      : { not: 'RASCUNHO' as EditalStatus },
+    status: filtro ? { in: filtro } : { not: 'RASCUNHO' as EditalStatus },
   }
 
-  const [editais, total] = await Promise.all([
+  const [editais, total, publicados, abertos] = await Promise.all([
     prisma.edital.findMany({
       where,
       orderBy: [{ createdAt: 'desc' }],
-      skip: (currentPage - 1) * PAGE_SIZE,
+      skip: (paginaAtual - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
     }),
     prisma.edital.count({ where }),
+    prisma.edital.count({ where: { status: { not: 'RASCUNHO' as EditalStatus } } }),
+    prisma.edital.count({ where: { status: { in: OPEN_STATUSES } } }),
   ])
 
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  const totalPaginas = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
-  const tabs = [
-    { key: 'todos', label: 'Todos', href: '/editais' },
-    { key: 'abertos', label: 'Abertos', href: '/editais?status=abertos' },
-    { key: 'encerrados', label: 'Encerrados', href: '/editais?status=encerrados' },
-  ]
+  const listados: EditalListado[] = editais.map((edital, i) => {
+    const display = getStatusDisplay(edital.status)
+    const prazo = getNextDeadline(edital.cronograma)
+    return {
+      id: edital.id,
+      slug: edital.slug,
+      ordinal: (paginaAtual - 1) * PAGE_SIZE + i + 1,
+      titulo: edital.titulo,
+      resumo: edital.resumo ? resumir(edital.resumo, 190) : null,
+      categorias: edital.categorias.slice(0, 3),
+      status: edital.status,
+      statusLabel: display.label,
+      encerrado: CLOSED_STATUSES.includes(edital.status),
+      prazoRotulo: prazo?.label ?? null,
+      prazoData: prazo ? formatDate(prazo.dataHora) : null,
+      valor: edital.valorTotal ? formatCurrency(edital.valorTotal) : null,
+    }
+  })
 
   return (
-    <>
-      <PageHeader
-        title="Editais"
-        subtitle="Consulte os editais de fomento à cultura da Política Nacional Aldir Blanc no município de Irecê/BA."
-        breadcrumbs={[
-          { label: 'Início', href: '/' },
-          { label: 'Editais' },
-        ]}
-      />
+    <div className="tema-secult font-questrial">
+      <FolhaDeRosto total={publicados} abertos={abertos} />
 
-      {/* Conteúdo */}
-      <section className="bg-slate-50 py-6 sm:py-14">
+      <section className="bg-papel-50 papel-textura pb-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
-            <FilterTabs
-              tabs={tabs}
-              activeKey={activeTab}
-              ariaLabel="Filtrar editais por status"
-            />
-            <p className="text-sm text-slate-500">
-              {total} {total === 1 ? 'edital encontrado' : 'editais encontrados'}
-            </p>
-          </div>
+          <AbasStatus ativa={abaAtiva} totalVisivel={total} />
 
-          {editais.length > 0 ? (
+          {listados.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {editais.map((edital) => {
-                  const statusDisplay = getStatusDisplay(edital.status)
-                  const nextDeadline = getNextDeadline(edital.cronograma)
-                  const encerrado = isEncerrado(edital.status)
+              <ul className="divide-y divide-tinta-900/10">
+                {listados.map((edital) => (
+                  <LinhaEdital key={edital.id} edital={edital} />
+                ))}
+              </ul>
 
-                  return (
-                    <Card
-                      key={edital.id}
-                      hover
-                      padding="md"
-                      className={[
-                        'flex flex-col hover:-translate-y-0.5 transition-all duration-200',
-                        getStatusBorderClass(edital.status),
-                        encerrado ? 'opacity-75 hover:opacity-100' : '',
-                      ].join(' ')}
-                    >
-                      <div className="flex items-start justify-between gap-2 mb-3">
-                        <div className="flex flex-wrap gap-1.5">
-                          {edital.categorias.slice(0, 3).map((cat) => (
-                            <span
-                              key={cat}
-                              className="inline-block rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600"
-                            >
-                              {cat}
-                            </span>
-                          ))}
-                        </div>
-                        <Badge variant={statusDisplay.badgeVariant} dot>
-                          {statusDisplay.label}
-                        </Badge>
-                      </div>
-
-                      <h2 className="text-lg font-semibold text-slate-900 mb-2 line-clamp-2">
-                        {edital.titulo}
-                      </h2>
-
-                      {edital.resumo && (
-                        <p className="text-sm text-slate-600 leading-relaxed mb-4 line-clamp-3">
-                          {truncate(edital.resumo, 150)}
-                        </p>
-                      )}
-
-                      <div className="mt-auto pt-4 space-y-2 text-sm text-slate-600">
-                        {nextDeadline && (
-                          <p className="flex items-center gap-2">
-                            <IconCalendar className="h-4 w-4 text-slate-400 shrink-0" />
-                            <span>
-                              <span className="font-medium">{nextDeadline.label}:</span>{' '}
-                              {formatDate(nextDeadline.dataHora)}
-                            </span>
-                          </p>
-                        )}
-
-                        {edital.valorTotal && (
-                          <p className="flex items-center gap-2">
-                            <IconCurrency className="h-4 w-4 text-slate-400 shrink-0" />
-                            <span>{formatCurrency(edital.valorTotal)}</span>
-                          </p>
-                        )}
-                      </div>
-
-                      <Button href={`/editais/${edital.slug}`} variant="outline" className="mt-4 w-full">
-                        Ver detalhes
-                      </Button>
-                    </Card>
-                  )
-                })}
-              </div>
-
-              {totalPages > 1 && (
+              {totalPaginas > 1 && (
                 <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  baseUrl={buildBaseUrl(activeTab)}
+                  currentPage={paginaAtual}
+                  totalPages={totalPaginas}
+                  baseUrl={urlDaAba(abaAtiva)}
                   className="mt-10"
                 />
               )}
             </>
           ) : (
-            <EmptyState
-              icon={<IconDocument className="h-8 w-8 text-slate-400" />}
-              title="Nenhum edital encontrado"
-              description={
-                activeTab === 'abertos'
-                  ? 'Não há editais com inscrições abertas no momento. Volte em breve!'
-                  : activeTab === 'encerrados'
-                    ? 'Não há editais encerrados para exibir.'
-                    : 'Nenhum edital publicado até o momento. Fique atento às novidades!'
-              }
-              action={activeTab !== 'todos' ? { label: 'Ver todos os editais', href: '/editais' } : undefined}
-            />
+            <div className="py-16">
+              <EmptyState
+                icon={<IconDocument className="h-8 w-8 text-tinta-400" />}
+                title="Nenhum edital nesta pilha"
+                description={
+                  abaAtiva === 'abertos'
+                    ? 'Não há editais com inscrições abertas neste momento. Os próximos serão anunciados aqui e nos canais da Secretaria.'
+                    : abaAtiva === 'encerrados'
+                      ? 'Ainda não há editais encerrados para consulta.'
+                      : 'Nenhum edital publicado até agora.'
+                }
+                action={
+                  abaAtiva !== 'todos'
+                    ? { label: 'Ver todos os editais', href: '/editais' }
+                    : undefined
+                }
+              />
+            </div>
           )}
         </div>
       </section>
-    </>
+    </div>
   )
-}
-
-// ── Utilitários ──────────────────────────────────────────────────────────────
-
-function buildBaseUrl(tab: FilterTab): string {
-  return tab === 'todos' ? '/editais' : `/editais?status=${tab}`
 }

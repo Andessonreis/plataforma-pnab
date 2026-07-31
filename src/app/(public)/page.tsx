@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import { Rye, Caveat, Questrial } from 'next/font/google'
 import { prisma } from '@/lib/db'
 import { Abertura } from '@/components/home/abertura'
 import { FaixaNumeros } from '@/components/home/faixa-numeros'
@@ -12,12 +11,6 @@ import type { BadgeVariant } from '@/components/ui/badge'
 import { getStatusDisplay } from '@/lib/utils/edital-status'
 import { formatCurrency, formatDate } from '@/lib/utils/format'
 import { getNextDeadline } from '@/lib/utils/cronograma'
-
-// Tipografia SECULT 2025 — substitutas gratuitas de Sunbeam Stamp e Ananias,
-// que são comerciais. Escopadas na home via `.tema-secult`.
-const rye = Rye({ subsets: ['latin'], weight: '400', variable: '--font-rye' })
-const caveat = Caveat({ subsets: ['latin'], weight: ['400', '700'], variable: '--font-caveat' })
-const questrial = Questrial({ subsets: ['latin'], weight: '400', variable: '--font-questrial' })
 
 export const metadata: Metadata = {
   title: 'Início',
@@ -180,7 +173,7 @@ export default async function HomePage() {
   ]
 
   return (
-    <div className={`${rye.variable} ${caveat.variable} ${questrial.variable} tema-secult font-questrial`}>
+    <div className="tema-secult font-questrial">
       <Abertura slides={slides} editais={editais} fotos={FOTOS_ABERTURA} />
       <FaixaNumeros numeros={numeros} />
       <PassosInscricao />
