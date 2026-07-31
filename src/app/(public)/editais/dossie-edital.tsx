@@ -46,7 +46,7 @@ export function DossieEdital({ edital }: DossieEditalProps) {
           </p>
         )}
 
-        <dl className="mt-6 grid grid-cols-2 gap-4 border-t-2 border-dashed border-tinta-900/15 pt-5">
+        <dl className="mb-6 mt-6 grid grid-cols-2 gap-4 border-t-2 border-dashed border-tinta-900/15 pt-5">
           {mostraPrazo && (
           <div className="flex gap-3">
             <IconePrazo className="mt-0.5 h-6 w-6 shrink-0 text-brand-700" />
@@ -85,7 +85,7 @@ export function DossieEdital({ edital }: DossieEditalProps) {
           </div>
         </dl>
 
-        <span className="mt-6 inline-flex min-h-[44px] items-center justify-center gap-2 bg-accent-500 px-5 text-xs font-bold uppercase tracking-[0.14em] text-tinta-950 transition-colors group-hover:bg-accent-400">
+        <span className="mt-auto inline-flex min-h-[48px] items-center justify-center gap-2 bg-accent-500 px-5 text-xs font-bold uppercase tracking-[0.14em] text-tinta-950 transition-colors group-hover:bg-accent-400">
           {edital.aberto ? 'Ver edital e inscrever' : 'Ver edital'}
           <IconArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
         </span>
