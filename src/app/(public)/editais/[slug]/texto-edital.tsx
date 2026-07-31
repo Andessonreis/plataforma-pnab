@@ -1,28 +1,24 @@
-import { Cartela, type CorCartela } from '@/components/ui/cartela'
-
 interface TextoEditalProps {
-  id: string
-  titulo: string
   texto: string
-  cor?: CorCartela
+  /** Sobre faixa de cor, o texto claro; sobre papel, o de tinta. */
+  escuro?: boolean
 }
 
 /**
  * Bloco de texto corrido do edital: resumo, elegibilidade, ações afirmativas.
  *
  * O conteúdo vem do admin como texto simples com quebras de linha, então a
- * renderização preserva as quebras e limita a medida de leitura. Sem isso, um
- * parágrafo de regras atravessava a largura inteira da página.
+ * renderização preserva as quebras e limita a medida de leitura — sem isso um
+ * parágrafo de regras atravessa a faixa inteira e fica ilegível.
  */
-export function TextoEdital({ id, titulo, texto, cor }: TextoEditalProps) {
+export function TextoEdital({ texto, escuro = false }: TextoEditalProps) {
   return (
-    <section>
-      <Cartela id={id} cor={cor}>
-        {titulo}
-      </Cartela>
-      <p className="mt-6 max-w-3xl whitespace-pre-line text-base leading-relaxed text-tinta-700">
-        {texto}
-      </p>
-    </section>
+    <p
+      className={`max-w-3xl whitespace-pre-line text-base leading-relaxed ${
+        escuro ? 'text-papel-100/90' : 'text-tinta-700'
+      }`}
+    >
+      {texto}
+    </p>
   )
 }

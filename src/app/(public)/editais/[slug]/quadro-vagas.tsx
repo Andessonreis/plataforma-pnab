@@ -1,4 +1,3 @@
-import { Cartela } from '@/components/ui/cartela'
 import { formatCurrency } from '@/lib/utils/format'
 import type { CategoriaConfig } from '@/types/categoria-config'
 
@@ -24,10 +23,8 @@ export function QuadroVagas({ categorias, cotas }: QuadroVagasProps) {
   if (categorias.length === 0) return null
 
   return (
-    <section>
-      <Cartela id="vagas" cor="terracota">Vagas e valores</Cartela>
-
-      <div className="mt-6 overflow-x-auto">
+    <>
+      <div className="overflow-x-auto">
         <table className="w-full min-w-[36rem] text-sm">
           <caption className="sr-only">
             Vagas por categoria, cotas, valor por projeto e valor total de cada categoria
@@ -82,6 +79,6 @@ export function QuadroVagas({ categorias, cotas }: QuadroVagasProps) {
           </tbody>
         </table>
       </div>
-    </section>
+    </>
   )
 }

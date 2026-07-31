@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { Varal } from '@/components/ui/varal'
 import { NewsletterForm } from '../newsletter-form'
+import { AssinaturaSecult } from '@/components/ui/assinatura-secult'
 import { ColunaMarca } from './coluna-marca'
 import { ColunaLinks } from './coluna-links'
 import { Selos } from './selos'
@@ -36,6 +37,12 @@ function Footer() {
               <NewsletterForm />
             </div>
           </div>
+        </div>
+      </div>
+
+      <div className="border-b border-papel-100/12">
+        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+          <AssinaturaSecult escuro />
         </div>
       </div>
 

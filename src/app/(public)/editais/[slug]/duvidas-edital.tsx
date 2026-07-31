@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { Cartela } from '@/components/ui/cartela'
 import { IconArrowRight } from '@/components/ui/icons'
 
 interface DuvidaEdital {
@@ -24,10 +23,8 @@ export function DuvidasEdital({ duvidas }: DuvidasEditalProps) {
   if (duvidas.length === 0) return null
 
   return (
-    <section>
-      <Cartela id="duvidas" cor="turquesa">Dúvidas deste edital</Cartela>
-
-      <div className="mt-6 divide-y divide-tinta-900/15 border-y border-tinta-900/15">
+    <>
+      <div className="divide-y divide-tinta-900/15 border-y border-tinta-900/15">
         {duvidas.map((duvida) => (
           <details key={duvida.id} className="group py-1">
             <summary className="flex cursor-pointer list-none items-start gap-4 py-4 titulo text-lg leading-snug tracking-wide text-tinta-900 transition-colors marker:content-none hover:text-brand-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500">
@@ -53,6 +50,6 @@ export function DuvidasEdital({ duvidas }: DuvidasEditalProps) {
         Ver todas as dúvidas do portal
         <IconArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
       </Link>
-    </section>
+    </>
   )
 }

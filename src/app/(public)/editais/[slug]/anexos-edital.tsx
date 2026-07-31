@@ -1,4 +1,3 @@
-import { Cartela } from '@/components/ui/cartela'
 import { IconAccessible, IconDownload } from '@/components/ui/icons'
 import { IconeEdital } from '@/components/ui/ornamentos/icones'
 
@@ -30,10 +29,8 @@ export function AnexosEdital({ arquivos }: AnexosEditalProps) {
   if (arquivos.length === 0) return null
 
   return (
-    <section>
-      <Cartela id="anexos" cor="ameixa">Documentos do edital</Cartela>
-
-      <ul className="mt-6 divide-y divide-tinta-900/15 border-y border-tinta-900/15">
+    <>
+      <ul className="divide-y divide-tinta-900/15 border-y border-tinta-900/15">
         {arquivos.map((arquivo) => (
           <li key={arquivo.id}>
             <a
@@ -67,6 +64,6 @@ export function AnexosEdital({ arquivos }: AnexosEditalProps) {
           </li>
         ))}
       </ul>
-    </section>
+    </>
   )
 }
