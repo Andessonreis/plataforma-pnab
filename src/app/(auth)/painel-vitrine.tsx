@@ -30,8 +30,14 @@ export function PainelVitrine() {
             grande o bastante para o recorte ainda cobrir a caixa inteira.
             Abaixo de `lg` o painel não é renderizado, então ali pede o menor
             arquivo possível em vez de baixar uma foto que ninguém vê. */}
+        {/* A panorâmica da cidade, e não uma foto de evento: o PNAB financia
+            música, teatro, dança, artesanato e audiovisual, então eleger uma
+            linguagem só na porta de entrada representa mal o resto. Também é a
+            única do acervo sem nenhuma pessoa identificável — as fotos de
+            festa trazem crianças em primeiro plano, e usar imagem de menor num
+            portal público pede autorização dos responsáveis. */}
         <Image
-          src="/images/galeria/foto-01.png"
+          src="/images/cidade/panoramica-irece.jpg"
           alt=""
           fill
           sizes="(min-width: 1024px) 100vw, 1px"
