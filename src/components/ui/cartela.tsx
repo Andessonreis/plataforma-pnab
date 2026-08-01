@@ -1,12 +1,24 @@
 /** Cores institucionais, na ordem em que a identidade as aplica no símbolo. */
 export type CorCartela = 'tinta' | 'oliva' | 'ameixa' | 'turquesa' | 'terracota'
 
-const CORES: Record<CorCartela, string> = {
+/** Exportado para que outras peças da identidade (ex.: as faixas das telas de
+ *  acesso) usem a mesma tradução de cor institucional para classe de fundo. */
+export const CORES_CARTELA: Record<CorCartela, string> = {
   tinta: 'bg-tinta-900',
   oliva: 'bg-oliva-700',
   ameixa: 'bg-ameixa-700',
   turquesa: 'bg-turquesa-700',
   terracota: 'bg-brand-700',
+}
+
+/** As mesmas cores como tinta de traço — para peças que herdam por
+ *  `currentColor`, como a serrilha que costura duas faixas. */
+export const CORES_TRACO_CARTELA: Record<CorCartela, string> = {
+  tinta: 'text-tinta-900',
+  oliva: 'text-oliva-700',
+  ameixa: 'text-ameixa-700',
+  turquesa: 'text-turquesa-700',
+  terracota: 'text-brand-700',
 }
 
 interface CartelaProps {
@@ -33,7 +45,7 @@ export function Cartela({ children, id, cor = 'tinta', className = '' }: Cartela
   return (
     <h2
       id={id}
-      className={`cartela inline-flex scroll-mt-32 items-center ${CORES[cor]} px-6 py-3 titulo text-xl leading-none tracking-wide text-papel-50 sm:text-2xl ${className}`}
+      className={`cartela inline-flex scroll-mt-32 items-center ${CORES_CARTELA[cor]} px-6 py-3 titulo text-xl leading-none tracking-wide text-papel-50 sm:text-2xl ${className}`}
     >
       {children}
     </h2>

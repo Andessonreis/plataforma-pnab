@@ -68,3 +68,8 @@ docs/
 prisma/*.db
 .omc/
 CLAUDE.md
+
+# Documentos de trabalho do edital (PDF/DOCX). São material de origem, não
+# código: pesam ~9MB e mudam a cada revisão da Secretaria.
+/edital_corrigido/
+/novo_edital_100%/
