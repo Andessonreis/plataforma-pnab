@@ -8,9 +8,6 @@
 
 import type { CSSProperties } from 'react'
 
-/** Motivos figurativos do sertão — mandacaru, sanfona, ave, umbuzeiro, lua. */
-export { Mandacaru, Sanfona, AveEmVoo, Umbuzeiro, LuaCortada } from './sertao'
-
 interface OrnamentoProps {
   className?: string
   /** Permite ajustar a cor do filete via `--filete` em quem aplica. */

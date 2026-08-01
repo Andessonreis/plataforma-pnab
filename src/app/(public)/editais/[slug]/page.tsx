@@ -9,6 +9,7 @@ import { CapaEdital } from './capa-edital'
 import { consultarEdital } from './consulta'
 import { CronogramaEdital } from './cronograma-edital'
 import { DuvidasEdital } from './duvidas-edital'
+import { FaixaResultado } from './faixa-resultado'
 import { QuadroVagas } from './quadro-vagas'
 import { SumarioEdital } from './sumario-edital'
 import { TextoEdital } from './texto-edital'
@@ -70,7 +71,13 @@ export default async function EditalPage({ params }: Props) {
         pdfUrl={edital.pdfUrl}
       />
 
-      <SumarioEdital partes={edital.partes} versaoAcessivelHref={edital.versaoAcessivelHref} />
+      <SumarioEdital
+        partes={edital.partes}
+        versaoAcessivelHref={edital.versaoAcessivelHref}
+        resultado={edital.resultado}
+      />
+
+      {edital.resultado && <FaixaResultado resultado={edital.resultado} />}
 
       {edital.resumo && (
         <FaixaSecao id="resumo" cartela="Do que se trata" cor="terracota">
