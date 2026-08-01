@@ -6,6 +6,7 @@ import {
   IconClipboard,
   IconFileText,
   IconCheck,
+  IconChevronDown,
 } from '@/components/ui/icons'
 
 /**
@@ -81,19 +82,30 @@ export function PassosInscricao() {
             staggerDelay={0.12}
             delay={0.1}
           >
-            {PASSOS.map((passo) => (
+            {PASSOS.map((passo, indice) => (
               <StaggerItem key={passo.numero} className="group relative">
-                <div
-                  className={`selo relative z-10 mb-3 h-14 w-14 titulo text-lg transition-transform duration-300 group-hover:scale-105 ${passo.cor}`}
-                  style={{ '--selo-gap': passo.vaoSelo } as CSSProperties}
-                >
-                  {passo.numero}
+                <div className="flex justify-center sm:block">
+                  <div
+                    className={`selo relative z-10 mb-3 h-14 w-14 titulo text-lg transition-transform duration-300 group-hover:scale-105 ${passo.cor}`}
+                    style={{ '--selo-gap': passo.vaoSelo } as CSSProperties}
+                  >
+                    {passo.numero}
+                  </div>
                 </div>
-                <h3 className="flex items-center gap-1.5 text-lg font-semibold text-tinta-900">
+                <h3 className="flex items-center justify-center gap-1.5 text-lg font-semibold text-tinta-900 sm:justify-start">
                   <passo.Icon className={`h-4 w-4 shrink-0 ${passo.cor}`} />
                   {passo.titulo}
                 </h3>
-                <p className="mt-1 text-sm leading-relaxed text-tinta-700">{passo.descricao}</p>
+                <p className="mt-1 text-center text-sm leading-relaxed text-tinta-700 sm:text-left">
+                  {passo.descricao}
+                </p>
+
+                {indice < PASSOS.length - 1 && (
+                  <IconChevronDown
+                    className="mx-auto mt-4 h-5 w-5 text-tinta-900/30 sm:hidden"
+                    aria-hidden="true"
+                  />
+                )}
               </StaggerItem>
             ))}
           </StaggerContainer>

@@ -1,5 +1,4 @@
 import { prisma } from '@/lib/db'
-import { maskName } from '@/lib/utils/mask'
 import { resultadoPublicado, type ResultadoPublicado } from '../../resultado-publicado'
 
 /** Situações que já entram na lista pública de classificação. */
@@ -17,7 +16,6 @@ export type SituacaoClassificada = (typeof SITUACOES_CLASSIFICADAS)[number]
 export interface LinhaClassificacao {
   id: string
   posicao: number
-  /** Já mascarado (LGPD) — a página nunca recebe o nome inteiro. */
   proponente: string
   categoria: string | null
   nota: string | null
@@ -78,7 +76,7 @@ export async function consultarResultado(slug: string): Promise<ResultadoEdital 
     linhas: inscricoes.map((i, indice) => ({
       id: i.id,
       posicao: i.posicao ?? indice + 1,
-      proponente: maskName(i.proponente.nome),
+      proponente: i.proponente.nome.toUpperCase(),
       categoria: i.categoria,
       nota: i.notaFinal ? Number(i.notaFinal).toFixed(2) : null,
       situacao: i.status as SituacaoClassificada,
