@@ -47,15 +47,12 @@ const config: Config = {
           950: 'rgb(var(--accent-950, 69 26 3) / <alpha-value>)',
         },
         // Identidade visual SECULT 2025 — tokens aditivos (não substituem
-        // brand/accent), usados hoje só na home dentro de .tema-secult.
-        oliva: {
-          50: '#bad87b', 100: '#b5d570', 200: '#a9cf5b', 300: '#9ac63d', 400: '#7da230',
-          500: '#688728', 600: '#587221', 700: '#475c1b', 800: '#364615', 900: '#26310e', 950: '#171e09',
-        },
-        ameixa: {
-          50: '#e3dde3', 100: '#dbd2da', 200: '#cbbec9', 300: '#b4a2b2', 400: '#977e94',
-          500: '#80677d', 600: '#6b5669', 700: '#574655', 800: '#433641', 900: '#2e252d', 950: '#1c171b',
-        },
+        // brand/accent).
+        //
+        // `oliva` e `ameixa` estavam declaradas duas vezes neste objeto. A
+        // segunda ocorrência vence em literal de objeto, então a primeira era
+        // letra morta: o Tailwind já gerava as escalas de baixo. Ficaram só as
+        // que valem, o que não muda um pixel do que é renderizado hoje.
         agua: {
           50: '#75eaf0', 100: '#68e8ef', 200: '#4de4ec', 300: '#29dfe8', 400: '#16bfc7',
           500: '#129fa6', 600: '#0f868b', 700: '#0c6c71', 800: '#095356', 900: '#06393c', 950: '#042325',

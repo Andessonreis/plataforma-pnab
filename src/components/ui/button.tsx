@@ -2,7 +2,7 @@ import { forwardRef, type ButtonHTMLAttributes } from 'react'
 import Link from 'next/link'
 
 type Variant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger'
-type Size = 'sm' | 'md' | 'lg'
+type Size = 'sm' | 'md' | 'lg' | 'icon'
 
 interface ButtonBaseProps {
   variant?: Variant
@@ -31,6 +31,9 @@ const sizeStyles: Record<Size, string> = {
   sm: 'text-sm px-3 py-1.5 rounded-md',
   md: 'text-sm px-4 py-2.5 rounded-lg',
   lg: 'text-base px-6 py-3 rounded-lg',
+  // Botão só de ícone: sem padding horizontal próprio, quem usa define o lado
+  // pela classe. O gatilho da barra lateral já pedia este tamanho.
+  icon: 'p-0 rounded-lg',
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(

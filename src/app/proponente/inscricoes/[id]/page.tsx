@@ -400,7 +400,7 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
                               </Badge>
                             </div>
                             <p className="text-[11px] text-slate-600 italic whitespace-pre-wrap break-words">
-                              "{resp.justificativa}"
+                              &ldquo;{resp.justificativa}&rdquo;
                             </p>
                           </div>
                         ))}
