@@ -7,6 +7,7 @@ import type { CronogramaDisplayItem } from '@/types/cronograma'
 import type { CategoriaConfig } from '@/types/categoria-config'
 import type { TomCarimbo } from '@/components/ui/carimbo'
 import type { ArquivoEdital } from './anexos-edital'
+import { resultadoPublicado, type ResultadoPublicado } from '../resultado-publicado'
 import type { ParteDoEdital } from './sumario-edital'
 
 export interface EditalAberto {
@@ -33,6 +34,8 @@ export interface EditalAberto {
   /** `null` quando não há inscrição a oferecer. O destino muda com a sessão. */
   inscricao: { href: string; rotulo: string } | null
   partes: ParteDoEdital[]
+  /** `null` enquanto a classificação não é pública. */
+  resultado: ResultadoPublicado | null
   ehRascunhoEmPrevia: boolean
 }
 
@@ -149,6 +152,7 @@ export async function consultarEdital(slug: string): Promise<EditalAberto | null
     versaoAcessivelHref: edital.conteudoAcessivel ? `/editais/${slug}/acessivel` : null,
     inscricao,
     partes,
+    resultado: resultadoPublicado(edital.status, slug),
     ehRascunhoEmPrevia: isAdmin && edital.status === 'RASCUNHO',
   }
 }

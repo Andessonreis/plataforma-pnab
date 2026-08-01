@@ -9,6 +9,8 @@ export interface ParteDoEdital {
 interface SumarioEditalProps {
   partes: ParteDoEdital[]
   versaoAcessivelHref: string | null
+  /** Rótulo e destino da classificação, quando já é pública. */
+  resultado: { href: string; titulo: string } | null
 }
 
 /**
@@ -25,8 +27,8 @@ interface SumarioEditalProps {
  * da barra e o texto passava por baixo dela, cortado no meio. Um sumário fica
  * no começo do documento, que é onde se decide por onde começar a ler.
  */
-export function SumarioEdital({ partes, versaoAcessivelHref }: SumarioEditalProps) {
-  if (partes.length === 0) return null
+export function SumarioEdital({ partes, versaoAcessivelHref, resultado }: SumarioEditalProps) {
+  if (partes.length === 0 && !resultado) return null
 
   return (
     <nav
@@ -46,6 +48,18 @@ export function SumarioEdital({ partes, versaoAcessivelHref }: SumarioEditalProp
             </li>
           ))}
         </ul>
+
+        {/* Fora da lista de âncoras: é outra página, não um trecho desta.
+            Vem carimbado em tinta para não se perder entre os atalhos — é o
+            que mais se procura depois que o prazo fecha. */}
+        {resultado && (
+          <Link
+            href={resultado.href}
+            className="inline-flex min-h-[44px] shrink-0 items-center gap-1.5 bg-tinta-900 px-3.5 text-xs font-bold uppercase tracking-[0.14em] text-papel-50 transition-colors hover:bg-tinta-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+          >
+            {resultado.titulo}
+          </Link>
+        )}
 
         {versaoAcessivelHref && (
           <Link
