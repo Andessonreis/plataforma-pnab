@@ -109,11 +109,20 @@ export async function consultarNoticiario(pagina: number): Promise<Noticiario> {
   const manchete = naPrimeira && noticias[0] ? paraListagem(noticias[0], 260) : null
   const demais = (naPrimeira ? noticias.slice(1) : noticias).map((n) => paraListagem(n, 150))
 
+  // A “última publicação” é global (do noticiário todo), não da página atual.
+  const ultimaData = naPrimeira
+    ? noticias[0]?.publicadoEm ?? null
+    : (await prisma.noticia.findFirst({
+        where,
+        orderBy: { publicadoEm: 'desc' },
+        select: { publicadoEm: true },
+      }))?.publicadoEm ?? null
+
   return {
     manchete,
     demais,
     total,
     totalPaginas: Math.max(1, Math.ceil(total / PAGE_SIZE)),
-    ultimaPublicacao: noticias[0]?.publicadoEm ? porExtenso(noticias[0].publicadoEm) : null,
+    ultimaPublicacao: ultimaData ? porExtenso(ultimaData) : null,
   }
 }
