@@ -6,9 +6,9 @@ import { prisma } from '@/lib/db'
  * Só usamos pra agrupar erros "iguais" no ErrorLog.
  */
 function fnv1a64(input: string): string {
-  let h = 14695981039346656037n
-  const prime = 1099511628211n
-  const mask = 0xffffffffffffffffn
+  let h = BigInt('14695981039346656037')
+  const prime = BigInt('1099511628211')
+  const mask = BigInt('0xffffffffffffffff')
   for (let i = 0; i < input.length; i++) {
     h ^= BigInt(input.charCodeAt(i))
     h = (h * prime) & mask

@@ -333,7 +333,7 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
                       ) : (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          src="/images/banner/foto_site (6).png"
+                          src="/images/galeria/foto-05.png"
                           alt={item.titulo}
                           loading="lazy"
                           className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"

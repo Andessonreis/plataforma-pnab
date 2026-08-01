@@ -1,21 +1,18 @@
 import type { Metadata } from 'next'
+import { PaginaAcesso } from '../pagina-acesso'
 import { ForgotPasswordForm } from './forgot-password-form'
 
 export const metadata: Metadata = {
-  title: 'Recuperar Senha',
+  title: 'Recuperar senha',
 }
 
 export default function ForgotPasswordPage() {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8">
-      <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">Recuperar senha</h1>
-        <p className="mt-2 text-sm text-slate-600">
-          Informe seu CPF/CNPJ para receber as instruções de recuperação por e-mail.
-        </p>
-      </div>
-
+    <PaginaAcesso
+      titulo="Recuperar senha"
+      descricao="Informe seu CPF ou CNPJ e enviamos as instruções para o e-mail cadastrado."
+    >
       <ForgotPasswordForm />
-    </div>
+    </PaginaAcesso>
   )
 }

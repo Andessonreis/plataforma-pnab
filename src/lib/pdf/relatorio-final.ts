@@ -104,7 +104,7 @@ function addTimbreHeader(doc: PDFKit.PDFDocument, data: RelatorioFinalData): voi
   const startY = MARGINS.top - 15
 
   // Brasão (carregado do filesystem)
-  const brasaoPath = path.join(process.cwd(), 'public/images/brasao-irece.png')
+  const brasaoPath = path.join(process.cwd(), 'public/images/marca/brasao-irece.png')
   let brasaoWidth = 0
   try {
     const brasaoData = fs.readFileSync(brasaoPath)

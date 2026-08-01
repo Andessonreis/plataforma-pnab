@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
+import { PaginaAcesso } from '../../pagina-acesso'
 import { ResetPasswordForm } from './reset-password-form'
 
 export const metadata: Metadata = {
-  title: 'Redefinir Senha',
+  title: 'Redefinir senha',
 }
 
 interface ResetPasswordPageProps {
@@ -14,15 +15,8 @@ export default async function ResetPasswordPage({ searchParams }: ResetPasswordP
   const token = params.token ?? ''
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8">
-      <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">Redefinir senha</h1>
-        <p className="mt-2 text-sm text-slate-600">
-          Escolha uma nova senha para sua conta.
-        </p>
-      </div>
-
+    <PaginaAcesso titulo="Redefinir senha" descricao="Escolha uma nova senha para sua conta.">
       <ResetPasswordForm token={token} />
-    </div>
+    </PaginaAcesso>
   )
 }

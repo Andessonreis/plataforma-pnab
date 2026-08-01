@@ -12,9 +12,17 @@ vi.mock('next/server', async () => {
   }
 })
 
-// Mock auth como wrapper que chama o callback
-vi.mock('@/lib/auth', () => ({
-  auth: vi.fn((handler: (req: unknown) => unknown) => handler),
+// O middleware monta o próprio NextAuth (`const { auth } = NextAuth(config)`),
+// não importa `@/lib/auth`. O mock apontava para o módulo errado desde que o
+// middleware foi refatorado, então o next-auth real era instanciado no import
+// e derrubava os quinze casos antes de qualquer asserção rodar.
+//
+// Aqui `auth` só devolve o callback recebido, que é o que o teste precisa:
+// o alvo destes casos é a tabela de RBAC, não a sessão.
+vi.mock('next-auth', () => ({
+  default: vi.fn(() => ({
+    auth: (handler: (req: unknown) => unknown) => handler,
+  })),
 }))
 
 import { NextResponse } from 'next/server'

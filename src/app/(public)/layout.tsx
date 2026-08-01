@@ -3,6 +3,7 @@ import type { UserRole } from '@prisma/client'
 import { auth } from '@/lib/auth'
 import { Header, Footer, CookieBanner } from '@/components/layout'
 import { ActiveBanners } from '@/components/layout'
+import { variaveisDeFonte } from '../fontes'
 
 const ROLES_ADMIN: UserRole[] = ['ADMIN', 'ATENDIMENTO', 'HABILITADOR']
 
@@ -19,10 +20,12 @@ export default async function PublicLayout({ children }: { children: React.React
   const userAreaHref = userAreaHrefFromRole(session?.user?.role)
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className={`${variaveisDeFonte} flex min-h-screen flex-col`}>
       <Header userAreaHref={userAreaHref} />
       <Suspense fallback={null}>
-        <ActiveBanners />
+        <div className="tema-secult font-questrial">
+          <ActiveBanners />
+        </div>
       </Suspense>
       <main className="flex-1">{children}</main>
       <Footer />

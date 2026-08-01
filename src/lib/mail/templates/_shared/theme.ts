@@ -13,6 +13,11 @@ export const colors = {
   warning: '#fef3c7',
   warningBorder: '#f59e0b',
   warningText: '#92400e',
+  // Par do warning para desfecho favorável (recurso deferido). O template de
+  // recurso já pedia estes três; faltavam aqui, então ele não compilava.
+  success: '#ecfdf5',
+  successBorder: '#059669',
+  successText: '#065f46',
 } as const
 
 export const fonts = {

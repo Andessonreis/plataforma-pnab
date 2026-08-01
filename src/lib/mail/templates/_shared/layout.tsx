@@ -30,13 +30,13 @@ function getMarcaUrl(): string {
   // fundo preto embutido nos pixels. Imune à inversão de cores dos
   // clients de email porque o fundo é parte da imagem.
   const base = getAssetBase()
-  return base.startsWith('cid:') ? 'cid:marca-100-anos' : `${base}/marca-100-anos-cultura.jpeg`
+  return base.startsWith('cid:') ? 'cid:marca-100-anos' : `${base}/marca/marca-100-anos.jpeg`
 }
 
 function getBrasaoUrl(): string {
   // Brasão oficial de Irecê — selo minimalista (32px) na faixa verde.
   const base = getAssetBase()
-  return base.startsWith('cid:') ? 'cid:brasao-irece' : `${base}/brasao-irece.png`
+  return base.startsWith('cid:') ? 'cid:brasao-irece' : `${base}/marca/brasao-irece.png`
 }
 
 export function Layout({ preview, children }: LayoutProps) {

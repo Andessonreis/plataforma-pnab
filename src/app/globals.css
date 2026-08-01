@@ -23,6 +23,22 @@
     --color-info: #2563eb;
   }
 
+  /* Identidade visual SECULT 2025 — escopo local (dentro de .tema-secult:
+     home e rodapé). Sobrescreve os stops de brand/accent lidos por
+     Button/Badge/globals; fora desse wrapper o site segue verde/âmbar.
+
+     Valores em canais RGB, não hex: o tailwind.config envolve cada var em
+     `rgb(... / <alpha-value>)` para que sufixos de opacidade continuem
+     funcionando (`bg-brand-50/40`, `text-accent-300/20`). */
+  .tema-secult {
+    --brand-50: 253 243 239;  --brand-100: 250 229 222; --brand-200: 244 201 187; --brand-300: 237 163 139;
+    --brand-400: 227 115 77;  --brand-500: 219 81 35;   --brand-600: 184 68 29;   --brand-700: 149 55 23;
+    --brand-800: 114 42 18;   --brand-900: 79 29 12;    --brand-950: 48 18 8;
+    --accent-50: 254 251 246; --accent-100: 254 249 241; --accent-200: 249 234 203; --accent-300: 244 212 150;
+    --accent-400: 236 185 83; --accent-500: 231 165 35;  --accent-600: 201 141 22;  --accent-700: 163 114 18;
+    --accent-800: 125 87 14;  --accent-900: 86 60 9;     --accent-950: 53 37 6;
+  }
+
   /* Foco visível para acessibilidade (WCAG AA) */
   *:focus-visible {
     @apply outline-2 outline-offset-2 outline-brand-600;
@@ -114,5 +130,189 @@
   }
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Textura sutil de papel — trama diagonal em tinta translúcida, só usada
+     dentro de .tema-secult (home). Substitui o fundo chapado slate-50. */
+  .papel-textura {
+    background-image: repeating-linear-gradient(
+      135deg,
+      rgba(41, 23, 11, 0.035) 0,
+      rgba(41, 23, 11, 0.035) 1px,
+      transparent 1px,
+      transparent 5px
+    );
+  }
+
+  /* Selo circular (carimbo oficial) — duplo anel via box-shadow, sem imagem.
+     Uso: numeração do passo-a-passo e badges de destaque na home. */
+  .selo {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    border: 2px solid currentColor;
+    box-shadow:
+      0 0 0 3px var(--selo-gap, #f0e9d7),
+      0 0 0 4.5px currentColor;
+  }
+}
+/* ---------------------------------------------------------------------------
+   Entalhe — assinatura de movimento da home.
+
+   A identidade é xilogravura: a peça não "aparece", ela é cortada na matriz e
+   batida no papel. O ornamento se desenha sozinho (traço cortado) e os raios
+   entram um a um em salto de estrela, não em varredura circular — varredura lê
+   como spinner de carregamento, que é exatamente o oposto de artesanal.
+
+   Fora de @layer porque são keyframes globais reutilizados pelos ornamentos.
+--------------------------------------------------------------------------- */
+@keyframes entalhe-corte {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes entalhe-batida {
+  from {
+    opacity: 0;
+    transform: translateY(9px) scale(0.72);
+  }
+  55% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Traço que se corta. `pathLength="1"` no SVG deixa o dash independente do
+   comprimento real da curva, então a mesma regra serve círculo e espiral. */
+.entalhe-traco {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: entalhe-corte 1.05s cubic-bezier(0.62, 0.05, 0.3, 1) forwards;
+  animation-delay: calc(var(--i, 0) * 240ms);
+}
+
+/* Cada raio é uma batida seca da goiva: sai de dentro e para. `fill-box`
+   ancora a escala no próprio raio — sem isso ela usaria a origem do viewBox
+   e o raio entraria voando pelo canto. */
+.entalhe-raio {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: entalhe-batida 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: calc(680ms + var(--i, 0) * 42ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entalhe-traco,
+  .entalhe-raio {
+    animation: none;
+    stroke-dashoffset: 0;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@layer utilities {
+  /* Serrilha — o recorte de bandeirinha da identidade, usado como aresta de
+     seção no lugar de uma borda reta. Feita com gradiente repetido: um SVG
+     repetido na largura da tela custaria uma requisição e não herda cor. */
+  .serrilha {
+    height: 7px;
+    background-image:
+      linear-gradient(135deg, currentColor 25%, transparent 25%),
+      linear-gradient(225deg, currentColor 25%, transparent 25%);
+    background-size: 14px 14px;
+    background-repeat: repeat-x;
+  }
+}
+
+@layer components {
+  /* Cartela — a moldura de canto entalhado que a Secretaria usa como recipiente
+     de chamada nas peças. O corte octogonal vem de `clip-path`; o filete
+     interno, de uma sombra inset, que acompanha o recorte sem precisar de um
+     segundo elemento. */
+  .cartela {
+    clip-path: polygon(
+      0.75rem 0,
+      calc(100% - 0.75rem) 0,
+      100% 0.75rem,
+      100% calc(100% - 0.75rem),
+      calc(100% - 0.75rem) 100%,
+      0.75rem 100%,
+      0 calc(100% - 0.75rem),
+      0 0.75rem
+    );
+    box-shadow: inset 0 0 0 1.5px var(--cartela-filete, #ebe2c9);
+  }
+
+  /* Caixa de data do impresso: dia em corpo grande, mês em caixa alta, dentro
+     de um fio fino. Usada nos marcos do cronograma. */
+  .caixa-data {
+    display: grid;
+    place-items: center;
+    min-width: 3.75rem;
+    border: 1.5px solid currentColor;
+    padding: 0.375rem 0.5rem;
+    line-height: 1;
+  }
+}
+
+@layer components {
+  /* Tipografia da identidade. A principal é a Sunbeam Stamp, condensada pesada
+     de caixa alta; Anton é a substituta gratuita de mesma classe. A caixa alta
+     faz parte da fonte, não é escolha de cada uso — em toda peça da Secretaria
+     ela aparece assim. */
+  .titulo {
+    font-family: var(--font-display), Impact, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.005em;
+    line-height: 1.05;
+  }
+
+  /* Rótulo curto acima de um título. Ocupa o lugar da manuscrita que eu havia
+     introduzido e que não existe na identidade. */
+  .rotulo {
+    font-family: var(--font-display), Impact, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Telas de acesso — escopo `.acesso`.
+
+   Aqui NÃO vale a linguagem de impresso do resto da identidade. Entrar e criar
+   conta são UI de produto, não peça de divulgação: canto vivo, textura de
+   papel e condensada em caixa alta viram ruído em cima de um campo de texto, e
+   foi exatamente o que deixou estas telas com cara de cartaz de festa.
+
+   O que a marca faz aqui é a faixa de cor à esquerda. Do lado do formulário a
+   regra é silêncio: branco, canto arredondado, campo alto, um botão sólido.
+
+   `--painel-acesso` é a cor dessa faixa, definida pelo tema aplicado na raiz
+   do grupo de rota. Trocar de paleta é trocar essa classe, nada mais.
+--------------------------------------------------------------------------- */
+@layer utilities {
+  /* 16px no campo: abaixo disso o Safari do iPhone dá zoom sozinho ao focar,
+     e o piso das skills de design para input é 1rem de qualquer forma. */
+  .acesso input,
+  .acesso select,
+  .acesso textarea {
+    min-height: 3rem;
+    font-size: 1rem;
+  }
+
+  .acesso label,
+  .acesso legend {
+    font-size: 0.875rem;
   }
 }
