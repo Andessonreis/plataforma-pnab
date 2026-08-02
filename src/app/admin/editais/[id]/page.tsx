@@ -3,15 +3,28 @@ import Link from 'next/link'
 import { auth } from '@/lib/auth'
 import { redirect, notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { EditalForm } from '../edital-form'
-import { AcessivelEditor } from './acessivel-editor'
 import type { EditalStatus } from '@prisma/client'
-import type { CronogramaItem } from '@/types/cronograma'
-import { migrateLegacyCronograma } from '@/lib/utils/cronograma'
+import {
+  Badge,
+  StatCard,
+  FadeIn,
+  StaggerContainer,
+  StaggerItem,
+  IconArrowLeft,
+  IconEdit,
+  IconExternalLink,
+  IconUsers,
+  IconCurrency,
+  IconTicket,
+  IconTag,
+} from '@/components/ui'
+import { editalStatusLabel, editalStatusVariant } from '@/lib/status-maps'
+import { formatCurrency } from '@/lib/utils/format'
+import { GerarListasModal } from '../gerar-listas-modal'
 import { RelatorioFinalButton } from './relatorio-final-button'
 import { AvancarFasePanel } from './avancar-fase-panel'
-import type { CriterioAvaliacao } from '@/lib/avaliacao-criterios'
-import type { CampoFormulario } from '@/types/campo-formulario'
+import { EditalFaseStepper } from './edital-fase-stepper'
+import { InscritosRecentes } from './inscritos-recentes'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -19,126 +32,165 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params
-  const edital = await prisma.edital.findUnique({
-    where: { id },
-    select: { titulo: true },
-  })
-  return { title: `Editar: ${edital?.titulo ?? id} — Portal PNAB Irecê` }
+  const edital = await prisma.edital.findUnique({ where: { id }, select: { titulo: true } })
+  return { title: `${edital?.titulo ?? id} — Portal PNAB Irecê` }
 }
 
-interface TipoAnexo {
-  tipo: string
-  label: string
-  obrigatorio: boolean
-}
-
-export default async function EditarEditalPage({ params }: Props) {
+export default async function EditalOverviewPage({ params }: Props) {
   const session = await auth()
   if (!session || session.user.role !== 'ADMIN') redirect('/')
 
   const { id } = await params
-  const edital = await prisma.edital.findUnique({ where: { id } })
+  const edital = await prisma.edital.findUnique({
+    where: { id },
+    include: { _count: { select: { inscricoes: true } } },
+  })
 
   if (!edital) notFound()
 
-  // Buscar membros da equipe do edital
-  const membrosEdital = await prisma.editalMembro.findMany({
-    where: { editalId: id },
-    include: { user: { select: { id: true, nome: true, email: true } } },
-  })
-  const avaliadores = membrosEdital
-    .filter((m) => m.funcao === 'AVALIADOR')
-    .map((m) => ({ id: m.user.id, nome: m.user.nome, email: m.user.email }))
-  const habilitadores = membrosEdital
-    .filter((m) => m.funcao === 'HABILITADOR')
-    .map((m) => ({ id: m.user.id, nome: m.user.nome, email: m.user.email }))
+  const [inscritosRecentes, inscritosEnviadosOuMais] = await Promise.all([
+    prisma.inscricao.findMany({
+      where: { editalId: id },
+      orderBy: { createdAt: 'desc' },
+      take: 6,
+      select: {
+        id: true,
+        numero: true,
+        categoria: true,
+        status: true,
+        createdAt: true,
+        proponente: { select: { nome: true } },
+      },
+    }),
+    prisma.inscricao.count({ where: { editalId: id, status: { not: 'RASCUNHO' } } }),
+  ])
 
-  // Migra cronograma legado para formato novo (se necessário)
-  const cronograma = migrateLegacyCronograma(edital.cronograma) as CronogramaItem[]
-  const camposFormulario = (Array.isArray(edital.camposFormulario) ? edital.camposFormulario : []) as unknown as CampoFormulario[]
-  const etapasCustomizadas = (Array.isArray(edital.etapasCustomizadas) ? edital.etapasCustomizadas : []) as unknown as import('@/types/etapa-customizada').EtapaCustomizada[]
+  const status = edital.status as EditalStatus
+  const vagasLabel =
+    edital.vagasContemplados != null
+      ? `${edital.vagasContemplados}${edital.vagasSuplentes ? ` + ${edital.vagasSuplentes} suplentes` : ''}`
+      : 'Ilimitado'
+
+  const statusFinal: (typeof status)[] = ['RESULTADO_FINAL', 'ENCERRADO']
+
+  const stats = [
+    {
+      label: 'Inscritos',
+      value: edital._count.inscricoes,
+      sub: `${inscritosEnviadosOuMais} enviada(s)`,
+      color: 'bg-brand-50',
+      iconColor: 'text-brand-600',
+      icon: <IconUsers className="h-6 w-6" />,
+      href: `/admin/inscricoes?editalId=${edital.id}`,
+    },
+    {
+      label: 'Valor Total',
+      value: formatCurrency(edital.valorTotal),
+      sub: `${edital.categorias.length} categoria(s)`,
+      color: 'bg-green-50',
+      iconColor: 'text-green-600',
+      icon: <IconCurrency className="h-6 w-6" />,
+    },
+    {
+      label: 'Vagas',
+      value: vagasLabel,
+      sub: 'contemplados',
+      color: 'bg-amber-50',
+      iconColor: 'text-amber-600',
+      icon: <IconTicket className="h-6 w-6" />,
+    },
+    {
+      label: 'Categorias',
+      value: edital.categorias.length,
+      sub: edital.categorias.slice(0, 2).join(', ') || 'nenhuma',
+      color: 'bg-blue-50',
+      iconColor: 'text-blue-600',
+      icon: <IconTag className="h-6 w-6" />,
+    },
+  ]
 
   return (
     <section>
-      <div className="mb-6">
-        <Link
-          href="/admin/editais"
-          className="text-sm text-brand-600 hover:text-brand-700 font-medium flex items-center gap-1 mb-2"
-        >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-          Voltar para Editais
-        </Link>
-        <h1 className="text-2xl font-bold text-slate-900">Editar Edital</h1>
-        <p className="text-slate-600 mt-1">{edital.titulo}</p>
-      </div>
+      <FadeIn>
+        <div className="mb-6">
+          <Link
+            href="/admin/editais"
+            className="text-sm text-brand-600 hover:text-brand-700 font-medium flex items-center gap-1 mb-3"
+          >
+            <IconArrowLeft className="h-4 w-4" />
+            Voltar para Editais
+          </Link>
 
-      <EditalForm
-        initialData={{
-          id: edital.id,
-          titulo: edital.titulo,
-          resumo: edital.resumo ?? '',
-          ano: edital.ano,
-          valorTotal: edital.valorTotal ? String(edital.valorTotal) : '',
-          categorias: edital.categorias,
-          categoriasConfig: (Array.isArray(edital.categoriasConfig)
-            ? edital.categoriasConfig : null) as unknown as import('@/types/categoria-config').CategoriaConfig[] | null,
-          acoesAfirmativas: edital.acoesAfirmativas ?? '',
-          regrasElegibilidade: edital.regrasElegibilidade ?? '',
-          cronograma,
-          camposFormulario,
-          etapasCustomizadas,
-          status: edital.status as EditalStatus,
-          vagasContemplados: edital.vagasContemplados,
-          vagasSuplentes: edital.vagasSuplentes,
-          criteriosAvaliacao: (Array.isArray(edital.criteriosAvaliacao)
-            ? edital.criteriosAvaliacao : []) as CriterioAvaliacao[],
-          formulaAvaliacao: (edital.formulaAvaliacao as string) ?? '',
-          tiposAnexo: (Array.isArray(edital.tiposAnexo)
-            ? edital.tiposAnexo : null) as TipoAnexo[] | null,
-          notaMinima: edital.notaMinima ? Number(edital.notaMinima) : null,
-          tiposProponentePermitidos: edital.tiposProponentePermitidos ?? [],
-          initialAvaliadores: avaliadores,
-          initialHabilitadores: habilitadores,
-        }}
-      />
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                <Badge variant={editalStatusVariant[status]}>{editalStatusLabel[status]}</Badge>
+                <span className="text-sm text-slate-500">{edital.ano}</span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 leading-tight">{edital.titulo}</h1>
+              {edital.resumo && <p className="text-slate-600 mt-1.5 max-w-2xl">{edital.resumo}</p>}
+            </div>
 
-      {/* Seção de Conteúdo Acessível */}
-      <div className="mt-8">
-        <AcessivelEditor
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <Link
+                href={`/editais/${edital.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3.5 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+              >
+                <IconExternalLink className="h-4 w-4" />
+                Ver página pública
+              </Link>
+              <Link
+                href={`/admin/editais/${edital.id}/editar`}
+                className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-3.5 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-700"
+              >
+                <IconEdit className="h-4 w-4" />
+                Editar
+              </Link>
+            </div>
+          </div>
+        </div>
+      </FadeIn>
+
+      <StaggerContainer className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+        {stats.map((stat) => (
+          <StaggerItem key={stat.label}>
+            <StatCard {...stat} />
+          </StaggerItem>
+        ))}
+      </StaggerContainer>
+
+      <FadeIn delay={0.15}>
+        <div className="mb-6 sm:mb-8 rounded-xl border border-slate-200 bg-white p-4 sm:p-6">
+          <h2 className="text-sm font-semibold text-slate-700 mb-4">Andamento do Edital</h2>
+          <EditalFaseStepper statusAtual={status} />
+        </div>
+      </FadeIn>
+
+      <FadeIn delay={0.2}>
+        <div className="flex flex-wrap gap-3 mb-6 sm:mb-8">
+          <Link
+            href={`/admin/editais/${edital.id}/resultados`}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+          >
+            Ver Resultados
+          </Link>
+          <GerarListasModal editalId={edital.id} editalTitulo={edital.titulo} editalStatus={status} />
+          {statusFinal.includes(status) && <RelatorioFinalButton editalId={edital.id} />}
+        </div>
+      </FadeIn>
+
+      <FadeIn delay={0.25}>
+        <InscritosRecentes
           editalId={edital.id}
-          initialContent={edital.conteudoAcessivel ?? ''}
-          editalSlug={edital.slug}
+          total={edital._count.inscricoes}
+          inscritos={inscritosRecentes.map((i) => ({ ...i, status: i.status }))}
         />
-      </div>
+      </FadeIn>
 
-      {/* Links para Resultados e Listas */}
-      <div className="mt-6 flex gap-3">
-        <Link
-          href={`/admin/editais/${edital.id}/resultados`}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
-        >
-          Ver Resultados
-        </Link>
-        <Link
-          href={`/admin/editais/${edital.id}/listas`}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-brand-300 bg-brand-50 text-sm font-medium text-brand-700 hover:bg-brand-100 transition-colors"
-        >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          Gerar Listas
-        </Link>
-        {(['RESULTADO_FINAL', 'ENCERRADO'] as EditalStatus[]).includes(edital.status as EditalStatus) && (
-          <RelatorioFinalButton editalId={edital.id} />
-        )}
-      </div>
-
-      {/* Painel de avanço manual de fase — uso excepcional, fica no fim
-          pra não distrair do fluxo normal de edição. */}
       <div className="mt-10">
-        <AvancarFasePanel editalId={edital.id} statusAtual={edital.status as EditalStatus} />
+        <AvancarFasePanel editalId={edital.id} statusAtual={status} />
       </div>
     </section>
   )

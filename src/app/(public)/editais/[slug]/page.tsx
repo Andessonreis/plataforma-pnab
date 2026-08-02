@@ -53,7 +53,7 @@ export default async function EditalPage({ params }: Props) {
       {edital.ehRascunhoEmPrevia && (
         <p className="bg-accent-500 px-4 py-2.5 text-center text-sm font-semibold text-tinta-950">
           Pré-visualização de rascunho, ainda não visível ao público.{' '}
-          <Link href={`/admin/editais/${edital.id}`} className="underline underline-offset-4">
+          <Link href={`/admin/editais/${edital.id}/editar`} className="underline underline-offset-4">
             Editar edital
           </Link>
         </p>

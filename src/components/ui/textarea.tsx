@@ -1,28 +1,30 @@
 'use client'
 
-import { forwardRef, type TextareaHTMLAttributes } from 'react'
+import { forwardRef, type ReactNode, type TextareaHTMLAttributes } from 'react'
 
 interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   label: string
   error?: string
   hint?: string
+  /** Ação opcional exibida ao lado do label (ex.: botão "Usar modelo padrão"). */
+  headerAction?: ReactNode
 }
 
 const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ label, error, hint, id, className = '', ...props }, ref) => {
+  ({ label, error, hint, headerAction, id, className = '', ...props }, ref) => {
     const textareaId = id || label.toLowerCase().replace(/\s+/g, '-')
     const errorId = `${textareaId}-error`
     const hintId = `${textareaId}-hint`
 
     return (
       <div className="w-full">
-        <label
-          htmlFor={textareaId}
-          className="block text-sm font-medium text-slate-700 mb-1.5"
-        >
-          {label}
-          {props.required && <span className="text-red-500 ml-0.5" aria-hidden="true">*</span>}
-        </label>
+        <div className="flex items-center justify-between gap-2 mb-1.5">
+          <label htmlFor={textareaId} className="block text-sm font-medium text-slate-700">
+            {label}
+            {props.required && <span className="text-red-500 ml-0.5" aria-hidden="true">*</span>}
+          </label>
+          {headerAction}
+        </div>
 
         <textarea
           ref={ref}

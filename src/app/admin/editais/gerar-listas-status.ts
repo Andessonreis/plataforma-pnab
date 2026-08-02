@@ -1,0 +1,47 @@
+import type { InscricaoStatus, EditalStatus } from '@prisma/client'
+
+export const STATUS_OPTIONS: InscricaoStatus[] = [
+  'ENVIADA',
+  'HABILITADA',
+  'INABILITADA',
+  'EM_AVALIACAO',
+  'RESULTADO_PRELIMINAR',
+  'RECURSO_ABERTO',
+  'RESULTADO_FINAL',
+  'CONTEMPLADA',
+  'NAO_CONTEMPLADA',
+  'SUPLENTE',
+]
+
+export const ALL_PHASES = '__ALL__'
+
+const EDITAL_PHASE_ORDER: Record<EditalStatus, number> = {
+  RASCUNHO: 0,
+  PUBLICADO: 1,
+  INSCRICOES_ABERTAS: 2,
+  INSCRICOES_ENCERRADAS: 3,
+  HABILITACAO: 4,
+  AVALIACAO: 5,
+  RESULTADO_PRELIMINAR: 6,
+  RECURSO: 7,
+  RESULTADO_FINAL: 8,
+  ENCERRADO: 9,
+}
+
+const MIN_EDITAL_PHASE: Record<InscricaoStatus, EditalStatus> = {
+  RASCUNHO: 'INSCRICOES_ABERTAS',
+  ENVIADA: 'INSCRICOES_ABERTAS',
+  HABILITADA: 'HABILITACAO',
+  INABILITADA: 'HABILITACAO',
+  EM_AVALIACAO: 'AVALIACAO',
+  RESULTADO_PRELIMINAR: 'RESULTADO_PRELIMINAR',
+  RECURSO_ABERTO: 'RECURSO',
+  RESULTADO_FINAL: 'RESULTADO_FINAL',
+  CONTEMPLADA: 'RESULTADO_FINAL',
+  NAO_CONTEMPLADA: 'RESULTADO_FINAL',
+  SUPLENTE: 'RESULTADO_FINAL',
+}
+
+export function isPhaseReached(inscricaoStatus: InscricaoStatus, editalStatus: EditalStatus): boolean {
+  return EDITAL_PHASE_ORDER[editalStatus] >= EDITAL_PHASE_ORDER[MIN_EDITAL_PHASE[inscricaoStatus]]
+}

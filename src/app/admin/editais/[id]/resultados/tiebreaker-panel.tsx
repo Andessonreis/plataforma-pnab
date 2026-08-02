@@ -1,24 +1,11 @@
 'use client'
 
-import { useState, useCallback } from 'react'
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from '@dnd-kit/core'
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-  useSortable,
-} from '@dnd-kit/sortable'
+import { useState } from 'react'
+import { DndContext, closestCenter } from '@dnd-kit/core'
+import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Button } from '@/components/ui'
+import { useSortableList } from '@/hooks/use-sortable-list'
 
 interface InscricaoItem {
   inscricaoId: string
@@ -28,6 +15,11 @@ interface InscricaoItem {
   notaFinal: number | null
   posicao: number | null
   status: string
+}
+
+/** InscricaoItem com `id` alinhado a `inscricaoId`, exigido pelo hook useSortableList */
+interface SortableInscricaoItem extends InscricaoItem {
+  id: string
 }
 
 interface TiebreakerPanelProps {
@@ -42,7 +34,7 @@ interface TieGroup {
   items: InscricaoItem[]
 }
 
-function SortableItem({ item, index }: { item: InscricaoItem; index: number }) {
+function SortableItem({ item, index }: { item: SortableInscricaoItem; index: number }) {
   const {
     attributes,
     listeners,
@@ -50,7 +42,7 @@ function SortableItem({ item, index }: { item: InscricaoItem; index: number }) {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: item.inscricaoId })
+  } = useSortable({ id: item.id })
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -129,26 +121,17 @@ export function TiebreakerPanel({ editalId, inscricoes }: TiebreakerPanelProps) 
 }
 
 function TieGroupPanel({ group, editalId }: { group: TieGroup; editalId: string }) {
-  const [items, setItems] = useState(group.items)
+  const [items, setItems] = useState<SortableInscricaoItem[]>(() =>
+    group.items.map((item) => ({ ...item, id: item.inscricaoId })),
+  )
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  )
-
-  const handleDragEnd = useCallback((event: DragEndEvent) => {
-    const { active, over } = event
-    if (!over || active.id === over.id) return
-    setItems((prev) => {
-      const oldIndex = prev.findIndex(i => i.inscricaoId === active.id)
-      const newIndex = prev.findIndex(i => i.inscricaoId === over.id)
-      return arrayMove(prev, oldIndex, newIndex)
-    })
+  const { sensors, handleDragEnd } = useSortableList(items, (next) => {
+    setItems(next)
     setSaved(false)
-  }, [])
+  })
 
   const handleSave = async () => {
     setSaving(true)
@@ -191,10 +174,10 @@ function TieGroupPanel({ group, editalId }: { group: TieGroup; editalId: string 
       </div>
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={items.map(i => i.inscricaoId)} strategy={verticalListSortingStrategy}>
+        <SortableContext items={items.map(i => i.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-2">
             {items.map((item, index) => (
-              <SortableItem key={item.inscricaoId} item={item} index={index} />
+              <SortableItem key={item.id} item={item} index={index} />
             ))}
           </div>
         </SortableContext>

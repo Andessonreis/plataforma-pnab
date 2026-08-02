@@ -1,28 +1,16 @@
 'use client'
 
 import { useState, useMemo, useCallback } from 'react'
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from '@dnd-kit/core'
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable'
+import { DndContext, closestCenter } from '@dnd-kit/core'
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import type { EditalStatus } from '@prisma/client'
 import type { CronogramaFormItem, CronogramaValidationWarning } from '@/types/cronograma'
 import { CRONOGRAMA_FASES_FORMULARIO } from '@/types/cronograma'
 import { editalCronogramaLabel } from '@/lib/status-maps'
-import { generateFormItemId, validateCronogramaOrder } from '@/lib/utils/cronograma'
-import { Button } from '@/components/ui'
+import { generateFormItemId } from '@/lib/utils/cronograma'
+import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui'
 import { CronogramaSortableItem } from './cronograma-sortable-item'
+import { useSortableList } from '@/hooks/use-sortable-list'
 
 interface CronogramaEditorProps {
   items: CronogramaFormItem[]
@@ -35,14 +23,7 @@ export function CronogramaEditor({ items, onChange, warnings }: CronogramaEditor
   const [addFaseOpen, setAddFaseOpen] = useState(false)
   const [showResetModal, setShowResetModal] = useState(false)
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 5 },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  )
+  const { sensors, handleDragEnd } = useSortableList(items, onChange)
 
   // Fases já presentes no cronograma
   const fasesPresentes = useMemo(() => {
@@ -57,20 +38,6 @@ export function CronogramaEditor({ items, onChange, warnings }: CronogramaEditor
   const fasesDisponiveis = useMemo(
     () => CRONOGRAMA_FASES_FORMULARIO.filter((f) => !fasesPresentes.has(f)),
     [fasesPresentes],
-  )
-
-  const handleDragEnd = useCallback(
-    (event: DragEndEvent) => {
-      const { active, over } = event
-      if (!over || active.id === over.id) return
-
-      const oldIndex = items.findIndex((i) => i.id === active.id)
-      const newIndex = items.findIndex((i) => i.id === over.id)
-      if (oldIndex === -1 || newIndex === -1) return
-
-      onChange(arrayMove(items, oldIndex, newIndex))
-    },
-    [items, onChange],
   )
 
   const handleUpdate = useCallback(
@@ -256,48 +223,32 @@ export function CronogramaEditor({ items, onChange, warnings }: CronogramaEditor
       )}
 
       {/* Modal de confirmação para resetar */}
-      {showResetModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-          onClick={() => setShowResetModal(false)}
-          aria-modal="true"
-          role="dialog"
-          aria-labelledby="reset-modal-title"
-        >
-          <div
-            className="mx-4 w-full max-w-md rounded-lg bg-white p-6 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 id="reset-modal-title" className="text-lg font-semibold text-slate-900">
-              Resetar cronograma
-            </h3>
-            <p className="mt-2 text-sm text-slate-600">
+      <Dialog open={showResetModal} onOpenChange={setShowResetModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Resetar cronograma</DialogTitle>
+            <DialogDescription>
               Isso substituirá todas as etapas atuais pelo cronograma padrão. As datas preenchidas serão perdidas.
-            </p>
-            <div className="mt-5 flex justify-end gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setShowResetModal(false)}
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="button"
-                variant="danger"
-                size="sm"
-                onClick={() => {
-                  loadTemplate()
-                  setShowResetModal(false)
-                }}
-              >
-                Resetar
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" size="sm" onClick={() => setShowResetModal(false)}>
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              size="sm"
+              onClick={() => {
+                loadTemplate()
+                setShowResetModal(false)
+              }}
+            >
+              Resetar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

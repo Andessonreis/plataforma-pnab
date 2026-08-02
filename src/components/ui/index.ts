@@ -8,6 +8,9 @@ export { CampoSenha } from './campo-senha'
 
 export { Aviso } from './aviso'
 
+export { InlineFeedback } from './inline-feedback'
+export type { InlineFeedbackProps } from './inline-feedback'
+
 export { CurrencyInput, formatCurrencyBRL } from './currency-input'
 export type { CurrencyInputProps } from './currency-input'
 
@@ -27,6 +30,23 @@ export { Pagination } from './pagination'
 export type { PaginationProps } from './pagination'
 
 export { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from './accordion'
+
+export {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogOverlay,
+  DialogPortal,
+  DialogTitle,
+  DialogTrigger,
+} from './dialog'
+
+export { Tabs, TabsList, TabsTrigger, TabsContent } from './tabs'
+
+export { ToggleGroup, ToggleGroupItem } from './toggle-group'
 
 export { PageHeader } from './page-header'
 export type { PageHeaderProps } from './page-header'
@@ -91,4 +111,6 @@ export {
   IconSlides,
   IconSettings,
   IconTag,
+  IconEdit,
+  IconExternalLink,
 } from './icons'

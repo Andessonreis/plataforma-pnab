@@ -40,10 +40,13 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
   const { id } = await params
   const sp = await searchParams
   const voltouDaAvaliacao = sp.from === 'avaliacao' && !!sp.editalId
+  const voltouDoEdital = sp.from === 'edital' && !!sp.editalId
   const backHref = voltouDaAvaliacao
     ? `/admin/avaliacao?editalId=${sp.editalId}${sp.aba ? `&aba=${sp.aba}` : ''}`
-    : '/admin/inscricoes'
-  const backLabel = voltouDaAvaliacao ? 'Voltar para avaliação' : 'Voltar'
+    : voltouDoEdital
+      ? `/admin/editais/${sp.editalId}`
+      : '/admin/inscricoes'
+  const backLabel = voltouDaAvaliacao ? 'Voltar para avaliação' : voltouDoEdital ? 'Voltar para o edital' : 'Voltar'
   const userRole = session.user.role
   const isAvaliador = userRole === 'AVALIADOR'
   const isAdmin = userRole === 'ADMIN'

@@ -48,3 +48,18 @@ export function generateTipoSlug(label: string): string {
     .replace(/[^A-Z0-9_]/g, '')
     .replace(/^_+|_+$/g, '')
 }
+
+/**
+ * Gera identificador snake_case a partir de um label, para usar como `nome`
+ * t\u00e9cnico de campo de formul\u00e1rio. Ex: "Nome do Projeto" \u2192 "nome_do_projeto".
+ */
+export function generateFieldName(label: string): string {
+  const slug = label
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 48)
+  return slug || `campo_${Date.now().toString(36).slice(-4)}`
+}

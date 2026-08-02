@@ -61,40 +61,43 @@ export function CronogramaSortableItem({
       ].join(' ')}
     >
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-        {/* Handle de arrastar */}
-        <button
-          type="button"
-          className="shrink-0 cursor-grab active:cursor-grabbing rounded p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 min-h-[44px] min-w-[44px] flex items-center justify-center touch-none"
-          aria-label={`Reordenar ${label}`}
-          {...attributes}
-          {...listeners}
-          aria-roledescription="item arrastável"
-        >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-            <circle cx="5" cy="3" r="1.5" />
-            <circle cx="11" cy="3" r="1.5" />
-            <circle cx="5" cy="8" r="1.5" />
-            <circle cx="11" cy="8" r="1.5" />
-            <circle cx="5" cy="13" r="1.5" />
-            <circle cx="11" cy="13" r="1.5" />
-          </svg>
-        </button>
+        {/* Linha mobile: handle + label (em sm: vira parte do flex-row via display:contents) */}
+        <div className="flex items-center gap-3 sm:contents">
+          {/* Handle de arrastar */}
+          <button
+            type="button"
+            className="shrink-0 cursor-grab active:cursor-grabbing rounded p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 min-h-[44px] min-w-[44px] flex items-center justify-center touch-none"
+            aria-label={`Reordenar ${label}`}
+            {...attributes}
+            {...listeners}
+            aria-roledescription="item arrastável"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+              <circle cx="5" cy="3" r="1.5" />
+              <circle cx="11" cy="3" r="1.5" />
+              <circle cx="5" cy="8" r="1.5" />
+              <circle cx="11" cy="8" r="1.5" />
+              <circle cx="5" cy="13" r="1.5" />
+              <circle cx="11" cy="13" r="1.5" />
+            </svg>
+          </button>
 
-        {/* Label */}
-        {item.tipo === 'fase' ? (
-          <span className="text-sm font-medium text-slate-700 sm:w-56 shrink-0">
-            {label}
-          </span>
-        ) : (
-          <input
-            type="text"
-            value={item.label}
-            onChange={(e) => onUpdate(item.id, 'label', e.target.value)}
-            placeholder="Nome da etapa..."
-            aria-label="Nome da etapa personalizada"
-            className="text-sm font-medium text-slate-700 sm:w-56 shrink-0 rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-offset-0 focus:border-brand-500 focus:ring-brand-200"
-          />
-        )}
+          {/* Label */}
+          {item.tipo === 'fase' ? (
+            <span className="min-w-0 flex-1 text-sm font-medium text-slate-700 sm:w-56 sm:flex-none sm:shrink-0">
+              {label}
+            </span>
+          ) : (
+            <input
+              type="text"
+              value={item.label}
+              onChange={(e) => onUpdate(item.id, 'label', e.target.value)}
+              placeholder="Nome da etapa..."
+              aria-label="Nome da etapa personalizada"
+              className="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-0 focus:border-brand-500 focus:ring-brand-200 sm:w-56 sm:flex-none sm:shrink-0"
+            />
+          )}
+        </div>
 
         {/* Data/hora */}
         <div className="flex-1">
@@ -126,7 +129,7 @@ export function CronogramaSortableItem({
           type="button"
           onClick={() => onRemove(item.id)}
           aria-label={`Remover ${label}`}
-          className="shrink-0 rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500"
+          className="w-full sm:w-auto shrink-0 rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500"
         >
           Remover
         </button>
