@@ -8,7 +8,7 @@ import { SecaoServicos } from '@/components/home/secao-servicos'
 import { Varal } from '@/components/ui/varal'
 import type { SlideDestaque, EditalResumo } from '@/components/home/types'
 import type { BadgeVariant } from '@/components/ui/badge'
-import { getStatusDisplay } from '@/lib/utils/edital-status'
+import { getStatusDisplay, OPEN_STATUSES } from '@/lib/utils/edital-status'
 import { formatCurrency, formatDate } from '@/lib/utils/format'
 import { getNextDeadline } from '@/lib/utils/cronograma'
 
@@ -85,7 +85,9 @@ export default async function HomePage() {
       }),
       prisma.projetoApoiado.count({ where: { publicado: true } }),
       prisma.edital.findMany({
-        where: { status: { not: 'RASCUNHO' } },
+        // Banner exibe só editais em aberto — encerrados não entram nem
+        // pra completar as 3 vagas.
+        where: { status: { in: OPEN_STATUSES } },
         orderBy: { createdAt: 'desc' },
         // Busca além dos 3 exibidos para conseguir promover os que estão com
         // inscrições abertas antes de cortar a lista.
@@ -131,9 +133,9 @@ export default async function HomePage() {
   ]
 
   // O painel de abertura anuncia oportunidades, então editais recebendo
-  // inscrição vêm primeiro; encerrados só entram para completar as 3 vagas.
+  // inscrição vêm antes dos apenas publicados.
   const prioridadeStatus = (status: string) =>
-    status === 'INSCRICOES_ABERTAS' ? 0 : status === 'PUBLICADO' ? 1 : 2
+    status === 'INSCRICOES_ABERTAS' ? 0 : 1
 
   const editais: EditalResumo[] = [...editaisDestaque]
     .sort((a, b) => prioridadeStatus(a.status) - prioridadeStatus(b.status))
