@@ -54,6 +54,29 @@ export async function deleteFile(bucket: string, path: string): Promise<void> {
 }
 
 /**
+ * Baixa os bytes de um arquivo diretamente (service role — ignora privacidade do bucket).
+ * Preferível a `getSignedUrl` + fetch quando o processamento é 100% server-side
+ * (ex.: mesclar anexos em um PDF), pois evita o round-trip HTTP extra.
+ */
+export async function downloadFile(bucket: string, path: string): Promise<Buffer> {
+  const { data, error } = await supabase.storage.from(bucket).download(path)
+  if (error || !data) throw new Error(`Download falhou: ${error?.message}`)
+  return Buffer.from(await data.arrayBuffer())
+}
+
+/**
+ * Extrai o path dentro do bucket a partir de uma URL pública gerada por `uploadFile`
+ * (formato `.../storage/v1/object/public/<bucket>/<path>`).
+ * Retorna `null` se a URL não seguir esse formato (ex.: link externo de vídeo).
+ */
+export function extractStoragePath(bucket: string, url: string): string | null {
+  const marker = `/object/public/${bucket}/`
+  const idx = url.indexOf(marker)
+  if (idx === -1) return null
+  return decodeURIComponent(url.slice(idx + marker.length))
+}
+
+/**
  * Gera uma URL assinada para acesso temporário a arquivos privados.
  * Usar para o bucket 'propostas' (anexos sensíveis).
  */

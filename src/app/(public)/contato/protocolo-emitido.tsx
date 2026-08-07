@@ -1,3 +1,6 @@
+'use client'
+
+import { useEffect, useRef } from 'react'
 import { IconCheck } from '@/components/ui/icons'
 
 interface ProtocoloEmitidoProps {
@@ -12,13 +15,27 @@ interface ProtocoloEmitidoProps {
  * vem em corpo grande e em fonte de largura fixa: é um código que será lido
  * em voz alta, copiado ou anotado à mão, e dígito ambíguo aqui vira mensagem
  * perdida.
+ *
+ * O heading recebe foco programático ao montar: quem usa leitor de tela
+ * precisa ser avisado de que o envio aconteceu, não só quem enxerga a troca
+ * do formulário pelo comprovante.
  */
 export function ProtocoloEmitido({ protocolo, aoEscreverOutra }: ProtocoloEmitidoProps) {
+  const titulo = useRef<HTMLHeadingElement>(null)
+
+  useEffect(() => {
+    titulo.current?.focus()
+  }, [])
+
   return (
     <div className="border-2 border-tinta-900 bg-papel-100/70 p-8 text-center">
       <IconCheck className="mx-auto h-10 w-10 text-oliva-700" aria-hidden="true" />
 
-      <h3 className="mt-4 titulo text-xl leading-snug tracking-wide text-tinta-900">
+      <h3
+        ref={titulo}
+        tabIndex={-1}
+        className="mt-4 titulo text-xl leading-snug tracking-wide text-tinta-900 focus:outline-none"
+      >
         Mensagem enviada
       </h3>
 

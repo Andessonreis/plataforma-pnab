@@ -6,6 +6,9 @@ import type { EditalListado } from './tipos'
 
 interface DossieEditalProps {
   edital: EditalListado
+  /** Mostra o ano do ciclo junto do carimbo — útil no arquivo, onde o
+   *  agrupamento por ano cria a expectativa de ver o rótulo em cada cartão. */
+  mostrarAno?: boolean
 }
 
 /**
@@ -19,7 +22,7 @@ interface DossieEditalProps {
  * de quem ainda pode se inscrever. A data completa vem abaixo, para quem
  * precisa se organizar — e é o que sobra nos que já fecharam.
  */
-export function DossieEdital({ edital }: DossieEditalProps) {
+export function DossieEdital({ edital, mostrarAno = false }: DossieEditalProps) {
   // "A definir" só faz sentido em edital que ainda vai abrir prazo; no que já
   // encerrou, prometia uma data que nunca virá.
   const mostraPrazo = edital.aberto || edital.diasRestantes !== null
@@ -30,7 +33,14 @@ export function DossieEdital({ edital }: DossieEditalProps) {
         href={`/editais/${edital.slug}`}
         className="group flex h-full flex-col border-2 border-tinta-900/15 bg-papel-50 p-6 transition-all hover:-translate-y-0.5 hover:border-tinta-900/30 hover:shadow-[5px_5px_0_0_theme(colors.tinta.900/0.12)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
       >
-        <CarimboStatus status={edital.status} label={edital.statusLabel} className="mb-4 self-start" />
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <CarimboStatus status={edital.status} label={edital.statusLabel} />
+          {mostrarAno && (
+            <span className="rotulo shrink-0 pt-1 text-[0.6875rem] text-tinta-500">
+              {edital.ano}
+            </span>
+          )}
+        </div>
 
         <h3 className="titulo text-xl leading-snug tracking-wide text-tinta-900 transition-colors group-hover:text-brand-700 sm:text-2xl">
           {edital.titulo}

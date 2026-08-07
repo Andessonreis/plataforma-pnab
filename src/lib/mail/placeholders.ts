@@ -61,6 +61,16 @@ export const TEMPLATE_META: Record<EmailTemplate, TemplateMeta> = {
       { key: 'protocolo', description: 'Número do protocolo gerado pra esse atendimento específico.', sample: 'PROT-2026-12345', required: true },
     ],
   },
+  atendimento_respondido: {
+    label: 'Resposta de atendimento',
+    description: 'Enviado ao autor do atendimento quando a equipe responde.',
+    placeholders: [
+      { key: 'nomeContato', description: 'Nome de quem abriu o atendimento.', sample: 'Ana Souza', required: true },
+      { key: 'protocolo', description: 'Número do protocolo do atendimento respondido.', sample: 'PROT-2026-12345', required: true },
+      { key: 'assunto', description: 'Assunto original do atendimento.', sample: 'Dúvida sobre documentação', required: true },
+      { key: 'resposta', description: 'Texto da resposta da equipe.', sample: 'Segue esclarecimento sobre sua dúvida...', required: true },
+    ],
+  },
   notificacao_prazo: {
     label: 'Lembrete de prazo',
     description: 'Lembretes diversos (prazo de inscrição, anexo faltando, etc).',
@@ -91,9 +101,12 @@ export const TEMPLATE_META: Record<EmailTemplate, TemplateMeta> = {
     label: 'Recurso analisado',
     description: 'Enviado ao proponente quando o recurso é decidido.',
     placeholders: [
+      { key: 'nome', description: 'Nome do proponente destinatário.', sample: 'Ana Souza', required: true },
+      { key: 'numero', description: 'Número da inscrição específica do destinatário.', sample: 'INS-2026-001', required: true },
       { key: 'edital', description: 'Título do edital onde o recurso foi interposto.', sample: 'Edital PNAB Música 2026', required: true },
       { key: 'decisao', description: 'Decisão do recurso (DEFERIDO ou INDEFERIDO) — varia por destinatário.', sample: 'DEFERIDO', required: true },
-      { key: 'url', description: 'Link da área do proponente pra ver os detalhes.', sample: 'https://culturaeturismo.irece.ba.gov.br/proponente', required: true },
+      { key: 'justificativa', description: 'Justificativa da decisão, quando houver.', sample: 'Documentação regularizada no prazo.' },
+      { key: 'url', description: 'Link da inscrição na área do proponente pra ver os detalhes.', sample: 'https://culturaeturismo.irece.ba.gov.br/proponente/inscricoes/abc', required: true },
     ],
   },
   habilitacao: {

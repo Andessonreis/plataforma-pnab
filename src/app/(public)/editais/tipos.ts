@@ -5,6 +5,8 @@ export interface EditalListado {
   id: string
   slug: string
   titulo: string
+  /** Ano do ciclo do edital — separa os grupos do arquivo cronológico. */
+  ano: number
   resumo: string | null
   categorias: string[]
   status: EditalStatus

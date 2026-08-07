@@ -15,6 +15,28 @@ jobs:
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
 
     steps:
+      - name: Checkout do commit validado pelo CI
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          fetch-depth: 0
+
+      # A VPS não tem acesso ao repo privado — ela clona do mirror público
+      # Andessonreis/plataforma-pnab. Sem sincronizar aqui, o deploy abaixo
+      # roda "git merge --ff-only" contra um fork desatualizado e não pega
+      # os commits recém-mergeados.
+      - name: Sincroniza fork público (a VPS clona de lá, não do repo privado)
+        continue-on-error: true
+        env:
+          FORK_PUSH_TOKEN: ${{ secrets.FORK_PUSH_TOKEN }}
+        run: |
+          if [ -z "$FORK_PUSH_TOKEN" ]; then
+            echo "::warning::FORK_PUSH_TOKEN não configurado — pulando sync do fork. Configure o secret pra automatizar de vez."
+            exit 0
+          fi
+          git remote add fork "https://Andessonreis:${FORK_PUSH_TOKEN}@github.com/Andessonreis/plataforma-pnab.git"
+          git push fork HEAD:main
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
         with:

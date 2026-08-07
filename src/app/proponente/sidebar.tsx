@@ -3,50 +3,17 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LogoutButton } from '@/components/logout-button'
-import {
-  IconHome,
-  IconClipboard,
-  IconUser,
-  IconClose,
-  IconChatBubble,
-  UserAvatar,
-} from '@/components/ui'
+import { IconClose, UserAvatar } from '@/components/ui'
+import { navItems, isNavItemActive } from './nav-items'
+import { NavLink, fecharSidebarMobile } from './nav-link'
 
 interface ProponenteSidebarProps {
   userName: string
   userAvatarUrl?: string | null
 }
 
-const navItems = [
-  {
-    label: 'Dashboard',
-    href: '/proponente',
-    icon: <IconHome className="h-5 w-5" />,
-  },
-  {
-    label: 'Minhas Inscrições',
-    href: '/proponente/inscricoes',
-    icon: <IconClipboard className="h-5 w-5" />,
-  },
-  {
-    label: 'Notificações',
-    href: '/proponente/notificacoes',
-    icon: <IconChatBubble className="h-5 w-5" />,
-  },
-  {
-    label: 'Meu Perfil',
-    href: '/proponente/perfil',
-    icon: <IconUser className="h-5 w-5" />,
-  },
-]
-
 export function ProponenteSidebar({ userName, userAvatarUrl }: ProponenteSidebarProps) {
   const pathname = usePathname()
-
-  function isActive(href: string) {
-    if (href === '/proponente') return pathname === '/proponente'
-    return pathname.startsWith(href)
-  }
 
   return (
     <>
@@ -55,27 +22,29 @@ export function ProponenteSidebar({ userName, userAvatarUrl }: ProponenteSidebar
       {/* Overlay mobile */}
       <label
         htmlFor="sidebar-toggle"
-        className="fixed inset-0 z-40 bg-black/50 hidden peer-checked:block lg:!hidden"
+        className="fixed inset-0 z-40 bg-slate-900/40 hidden peer-checked:block lg:!hidden"
         aria-hidden="true"
       />
 
-      {/* Sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-white transform -translate-x-full peer-checked:translate-x-0 lg:translate-x-0 transition-transform duration-200 ease-in-out flex flex-col">
-        {/* Faixa topo */}
-        <div className="h-1 bg-gradient-to-r from-brand-500 to-brand-600 shrink-0" />
-
-        {/* Cabeçalho */}
-        <div className="flex items-center gap-3 px-4 py-5 border-b border-slate-800">
-          <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-bold text-xs shadow-sm">
+      {/* Sidebar — âncora escura da identidade (tinta-900, um degrau mais claro
+          que o tinta-950 da faixa "bem-vindo" abaixo do topbar) pra área logada
+          se reconhecer como o mesmo produto da home em vez de um SaaS genérico
+          à parte. Tom diferente do hero + fio dourado é o que separa as duas
+          faixas escuras — sem isso elas se fundem num bloco só, sem leitura de
+          onde uma área acaba e a outra começa. Área de trabalho continua clara. */}
+      <aside className="fixed inset-y-0 left-0 z-50 w-64 border-r border-accent-500/20 bg-tinta-900 transform -translate-x-full peer-checked:translate-x-0 lg:translate-x-0 transition-transform duration-200 ease-in-out flex flex-col">
+        {/* Cabeçalho — identidade do portal */}
+        <div className="flex items-center gap-3 px-4 py-5 border-b border-papel-100/10">
+          <div className="h-10 w-10 rounded-lg bg-accent-500 flex items-center justify-center text-tinta-950 font-bold text-xs shrink-0">
             PNAB
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold truncate">Portal PNAB</p>
-            <p className="text-xs text-slate-400 truncate">{userName}</p>
+            <p className="text-sm font-semibold text-papel-50 truncate">Portal PNAB</p>
+            <p className="text-xs text-papel-100/50 truncate">Área do proponente</p>
           </div>
           <label
             htmlFor="sidebar-toggle"
-            className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg hover:bg-slate-800 lg:hidden cursor-pointer"
+            className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg text-papel-100/60 hover:bg-papel-100/10 lg:hidden cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
             aria-label="Fechar menu"
           >
             <IconClose className="h-5 w-5" />
@@ -83,40 +52,28 @@ export function ProponenteSidebar({ userName, userAvatarUrl }: ProponenteSidebar
         </div>
 
         {/* Navegação */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto scrollbar-hide" aria-label="Menu do proponente">
+        <nav id="tour-menu" className="flex-1 px-3 py-4 space-y-1 overflow-y-auto" aria-label="Menu do proponente">
           {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={[
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 min-h-[44px]',
-                isActive(item.href)
-                  ? 'bg-white/10 text-white border-l-2 border-brand-400'
-                  : 'text-slate-400 hover:bg-white/5 hover:text-slate-200',
-              ].join(' ')}
-              aria-current={isActive(item.href) ? 'page' : undefined}
-            >
-              {item.icon}
-              {item.label}
-            </Link>
+            <NavLink key={item.href} item={item} active={isNavItemActive(item.href, pathname)} />
           ))}
         </nav>
 
-        {/* Rodapé — usuário + sair */}
-        <div className="border-t border-slate-800">
+        {/* Rodapé — identidade do usuário + sair */}
+        <div className="border-t border-papel-100/10">
           <Link
             href="/proponente/perfil"
-            className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors"
+            onClick={fecharSidebarMobile}
+            className="flex items-center gap-3 px-4 py-3 hover:bg-papel-100/5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
           >
             <UserAvatar nome={userName} src={userAvatarUrl} size={36} />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-slate-100 truncate">{userName}</p>
-              <p className="text-xs text-slate-400">Editar perfil</p>
+              <p className="text-sm font-medium text-papel-50 truncate">{userName}</p>
+              <p className="text-xs text-papel-100/50">Editar perfil</p>
             </div>
           </Link>
           <div className="px-3 pb-4">
             <LogoutButton
-              className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-all duration-150 min-h-[44px]"
+              className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-papel-100/60 hover:text-red-400 transition-colors duration-150 min-h-[44px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
             />
           </div>
         </div>

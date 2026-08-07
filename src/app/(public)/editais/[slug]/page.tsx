@@ -4,15 +4,15 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { FaixaSecao } from '@/components/ui/faixa-secao'
 import { IconArrowLeft, IconArrowRight } from '@/components/ui/icons'
-import { AnexosEdital } from './anexos-edital'
+import { BarraInscricaoFixa } from './barra-inscricao-fixa'
 import { CapaEdital } from './capa-edital'
 import { consultarEdital } from './consulta'
 import { CronogramaEdital } from './cronograma-edital'
-import { DuvidasEdital } from './duvidas-edital'
+import { DocumentoNav } from './document-nav'
 import { FaixaResultado } from './faixa-resultado'
 import { QuadroVagas } from './quadro-vagas'
-import { SumarioEdital } from './sumario-edital'
-import { TextoEdital } from './texto-edital'
+import { ZonaDocumentosDuvidas } from './zona-documentos-duvidas'
+import { ZonaSobreEdital } from './zona-sobre-edital'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -33,14 +33,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 /**
- * O edital como documento, em faixas de cor de ponta a ponta.
+ * O edital como documento: shell fixo (capa + navegação) e corpo em zonas.
  *
- * A página era dois terços de cartões brancos e um terço de barra lateral, e
- * passou a ser uma coluna de texto centralizada sobre creme — que deixava um
- * terço de vazio de cada lado e a mesma cor do começo ao fim. As peças da
- * Secretaria são campos chapados de cor encostados, e é a troca de campo que
- * separa um assunto do outro: aqui cada parte do edital ganha o seu,
- * percorrendo a paleta institucional.
+ * Cada campo do banco virava sua própria faixa de cor de ponta a ponta — um
+ * edital com os sete campos preenchidos empilhava sete faixas saturadas
+ * seguidas, e o comprimento do documento crescia 1:1 com o número de faixas.
+ * Aqui o corpo é agrupado por intenção de leitura (zonas I a IV, sempre as
+ * mesmas quatro), e é o conteúdo dentro de cada zona que absorve a variação
+ * de 3 a 15+ blocos, não o número de campos de cor.
  */
 export default async function EditalPage({ params }: Props) {
   const { slug } = await params
@@ -70,61 +70,40 @@ export default async function EditalPage({ params }: Props) {
         inscricao={edital.inscricao}
         pdfUrl={edital.pdfUrl}
       />
+      <div id="fim-capa" aria-hidden="true" className="h-px" />
 
-      <SumarioEdital
+      <DocumentoNav
         partes={edital.partes}
         versaoAcessivelHref={edital.versaoAcessivelHref}
         resultado={edital.resultado}
+        inscricao={edital.inscricao}
       />
 
       {edital.resultado && <FaixaResultado resultado={edital.resultado} />}
 
-      {edital.resumo && (
-        <FaixaSecao id="resumo" cartela="Do que se trata" cor="terracota">
-          <TextoEdital texto={edital.resumo} escuro />
-        </FaixaSecao>
-      )}
+      {/* Zona I — sobre o edital: resumo, elegibilidade, ações afirmativas. */}
+      <ZonaSobreEdital
+        resumo={edital.resumo}
+        regrasElegibilidade={edital.regrasElegibilidade}
+        acoesAfirmativas={edital.acoesAfirmativas}
+      />
 
+      {/* Zona II — cronograma. */}
       {edital.cronograma.length > 0 && (
         <FaixaSecao id="cronograma" cartela="Cronograma" cor="tinta" corCartela="oliva">
           <CronogramaEdital itens={edital.cronograma} slug={edital.slug} agora={new Date()} escuro />
         </FaixaSecao>
       )}
 
+      {/* Zona III — vagas e valores. */}
       {edital.categoriasConfig.length > 0 && (
         <FaixaSecao id="vagas" cartela="Vagas e valores" cor="papel-forte" corCartela="terracota">
           <QuadroVagas categorias={edital.categoriasConfig} cotas={edital.cotas} />
         </FaixaSecao>
       )}
 
-      {edital.regrasElegibilidade && (
-        <FaixaSecao id="elegibilidade" cartela="Quem pode se inscrever" cor="turquesa">
-          <TextoEdital texto={edital.regrasElegibilidade} escuro />
-        </FaixaSecao>
-      )}
-
-      {edital.acoesAfirmativas && (
-        <FaixaSecao id="acoes" cartela="Ações afirmativas" cor="ameixa">
-          <TextoEdital texto={edital.acoesAfirmativas} escuro />
-        </FaixaSecao>
-      )}
-
-      {edital.arquivos.length > 0 && (
-        <FaixaSecao id="anexos" cartela="Documentos do edital" cor="papel" corCartela="ameixa">
-          <AnexosEdital arquivos={edital.arquivos} />
-        </FaixaSecao>
-      )}
-
-      {edital.duvidas.length > 0 && (
-        <FaixaSecao
-          id="duvidas"
-          cartela="Dúvidas deste edital"
-          cor="papel-forte"
-          corCartela="turquesa"
-        >
-          <DuvidasEdital duvidas={edital.duvidas} />
-        </FaixaSecao>
-      )}
+      {/* Zona IV — documentos e dúvidas, lado a lado no desktop. */}
+      <ZonaDocumentosDuvidas arquivos={edital.arquivos} duvidas={edital.duvidas} />
 
       {/* A chamada volta no fim: quem leu o edital inteiro chega aqui, e é o
           momento em que a decisão de se inscrever é tomada. */}
@@ -159,6 +138,8 @@ export default async function EditalPage({ params }: Props) {
           </Link>
         </div>
       </div>
+
+      {edital.inscricao && <BarraInscricaoFixa inscricao={edital.inscricao} />}
     </div>
   )
 }

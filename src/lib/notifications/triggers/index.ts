@@ -3,6 +3,9 @@ import type { TriggerDefinition } from '../types'
 import { rascunhoPendenteExecutor } from './rascunho-pendente'
 import { editalPublicadoExecutor } from './edital-publicado'
 import { inscricaoInabilitadaExecutor } from './inscricao-inabilitada'
+import { anexosFaltandoExecutor } from './anexos-faltando'
+import { editalPrazoEncerrandoExecutor } from './edital-prazo-encerrando'
+import { recursoPrazoEncerrandoExecutor } from './recurso-prazo-encerrando'
 
 /**
  * Registry central dos triggers de regras automáticas.
@@ -44,8 +47,9 @@ export const TRIGGER_REGISTRY: Record<NotificationRuleTrigger, TriggerDefinition
     trigger: 'INSCRICAO_ANEXOS_FALTANDO',
     label: 'Inscrição com anexos faltando',
     descricao: 'Notifica proponentes cuja inscrição enviada tem anexos pendentes.',
-    implementado: false,
+    implementado: true,
     periodico: true,
+    executor: anexosFaltandoExecutor,
   },
   RESULTADO_PUBLICADO: {
     trigger: 'RESULTADO_PUBLICADO',
@@ -67,6 +71,22 @@ export const TRIGGER_REGISTRY: Record<NotificationRuleTrigger, TriggerDefinition
     descricao: 'Notifica usuários cadastrados que nunca se inscreveram em nenhum edital.',
     implementado: false,
     periodico: true,
+  },
+  EDITAL_PRAZO_ENCERRANDO: {
+    trigger: 'EDITAL_PRAZO_ENCERRANDO',
+    label: 'Inscrições do edital encerrando em X horas',
+    descricao: 'Notifica proponentes com rascunho ativo quando o prazo de inscrição do edital está próximo do fim.',
+    implementado: true,
+    periodico: true,
+    executor: editalPrazoEncerrandoExecutor,
+  },
+  RECURSO_PRAZO_ENCERRANDO: {
+    trigger: 'RECURSO_PRAZO_ENCERRANDO',
+    label: 'Janela de recurso encerrando em X horas',
+    descricao: 'Notifica proponentes elegíveis a recurso (habilitação ou resultado preliminar) quando a janela está prestes a fechar.',
+    implementado: true,
+    periodico: true,
+    executor: recursoPrazoEncerrandoExecutor,
   },
 }
 

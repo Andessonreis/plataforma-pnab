@@ -12,7 +12,7 @@ interface CampoDeclaracaoProps {
 export function CampoDeclaracao({ aoEscolher }: CampoDeclaracaoProps) {
   return (
     <div className="w-full">
-      <label htmlFor="declaracao-coletivo" className="mb-1.5 block font-medium text-slate-700">
+      <label htmlFor="declaracao-coletivo" className="mb-1.5 block font-medium text-tinta-800">
         Declaração do coletivo (PDF)
         <span className="ml-0.5 text-red-500" aria-hidden="true">
           *
@@ -25,13 +25,13 @@ export function CampoDeclaracao({ aoEscolher }: CampoDeclaracaoProps) {
         aria-describedby="declaracao-coletivo-hint"
         onChange={(e) => aoEscolher(e.target.files?.[0] ?? null)}
         className={[
-          'block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-600',
+          'block w-full rounded-lg border border-tinta-900/15 px-3 py-2.5 text-sm text-tinta-700',
           'transition-colors focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200',
-          'file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-slate-100 file:px-3',
-          'file:py-1.5 file:text-sm file:font-medium file:text-slate-700 hover:file:bg-slate-200',
+          'file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-papel-100 file:px-3',
+          'file:py-1.5 file:text-sm file:font-medium file:text-tinta-800 hover:file:bg-papel-200',
         ].join(' ')}
       />
-      <p id="declaracao-coletivo-hint" className="mt-1.5 text-sm text-slate-500">
+      <p id="declaracao-coletivo-hint" className="mt-1.5 text-sm text-tinta-700">
         Documento que comprova a existência e representação do coletivo.
       </p>
     </div>

@@ -1,7 +1,7 @@
 import { Queue } from 'bullmq'
 import { redis } from '@/lib/redis'
 import type { EmailTemplate } from '@/lib/mail'
-import type { NotificationChannel } from '@prisma/client'
+import type { NotificationChannel, NotificationRuleTrigger } from '@prisma/client'
 
 // ─── Tipos de jobs ────────────────────────────────────────────────────────────
 
@@ -31,6 +31,8 @@ export interface NotificationDispatchJobData {
 export interface NotificationDeliveryJobData {
   campaignId: string
   userId: string
+  /** Trigger da regra que originou a campanha — `null` pra campanhas manuais. */
+  ruleTrigger: NotificationRuleTrigger | null
   titulo: string
   corpo: string
   link: string | null

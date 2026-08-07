@@ -1,5 +1,6 @@
 import { formatCurrency } from '@/lib/utils/format'
 import type { CategoriaConfig } from '@/types/categoria-config'
+import { CampoValorCard } from './campo-valor-card'
 
 interface QuadroVagasProps {
   categorias: CategoriaConfig[]
@@ -10,21 +11,18 @@ interface QuadroVagasProps {
 /**
  * Quadro de vagas e valores por categoria.
  *
- * Continua sendo tabela, e de propósito: são números comparáveis entre linhas
- * e colunas, e é para isso que a tabela existe — trocá-la por cartões
- * quebraria a comparação, que é a única razão de a pessoa olhar este quadro.
- *
- * O que muda é o tratamento: fios finos no lugar da moldura de cartão, valores
- * alinhados à direita e em corpo tabular, e a categoria como cabeçalho de
- * linha (`th scope="row"`), que é o que faz um leitor de tela anunciar a
- * categoria ao ler cada célula.
+ * Em telas largas continua tabela, e de propósito: são números comparáveis
+ * entre linhas e colunas, e é para isso que a tabela existe. Abaixo de `sm`
+ * ela não cabe sem rolagem forçada — o número de colunas varia com a
+ * quantidade de cotas do edital — então os mesmos dados reaparecem como um
+ * cartão por categoria, sem perder nenhum campo.
  */
 export function QuadroVagas({ categorias, cotas }: QuadroVagasProps) {
   if (categorias.length === 0) return null
 
   return (
     <>
-      <div className="overflow-x-auto">
+      <div className="hidden overflow-x-auto sm:block">
         <table className="w-full min-w-[36rem] text-sm">
           <caption className="sr-only">
             Vagas por categoria, cotas, valor por projeto e valor total de cada categoria
@@ -78,6 +76,28 @@ export function QuadroVagas({ categorias, cotas }: QuadroVagasProps) {
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div className="grid gap-4 sm:hidden">
+        {categorias.map((categoria) => (
+          <CampoValorCard
+            key={categoria.nome}
+            titulo={categoria.nome}
+            pares={[
+              { rotulo: 'Ampla concorrência', valor: categoria.vagasAmplaConcorrencia ?? '—' },
+              ...cotas.map((cota) => ({
+                rotulo: cota,
+                valor: categoria.cotas.find((c) => c.label === cota)?.vagas ?? '—',
+              })),
+              {
+                rotulo: 'Por projeto',
+                valor:
+                  categoria.valorPorProjeto != null ? formatCurrency(categoria.valorPorProjeto) : '—',
+              },
+              { rotulo: 'Total da categoria', valor: formatCurrency(categoria.valorTotalCategoria) },
+            ]}
+          />
+        ))}
       </div>
     </>
   )

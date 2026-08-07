@@ -64,6 +64,8 @@ export const ruleSchema = contentSchema.extend({
     'RESULTADO_PUBLICADO',
     'ATENDIMENTO_RESPONDIDO',
     'USER_SEM_INSCRICAO',
+    'EDITAL_PRAZO_ENCERRANDO',
+    'RECURSO_PRAZO_ENCERRANDO',
   ]),
   config: z.record(z.string(), z.unknown()).default({}),
   canais: canaisSchema,

@@ -1,3 +1,4 @@
+import { CampoValorCard } from '../campo-valor-card'
 import type { LinhaClassificacao, SituacaoClassificada } from './consulta'
 
 interface TabelaClassificacaoProps {
@@ -31,14 +32,15 @@ const CARIMBO_SITUACAO: Record<SituacaoClassificada, string> = {
  * corpo grande — quem abre esta página está procurando um nome ou uma posição,
  * e as duas coisas precisam ser encontráveis sem ler a linha inteira.
  *
- * No telefone a tabela rola na horizontal dentro do próprio quadro em vez de
- * empurrar a página: a ordem das colunas é a leitura (posição, quem, quanto),
- * e quebrá-la em cartões perderia a comparação entre as linhas, que é o que a
- * lista serve para fazer.
+ * Abaixo de `sm` a tabela não cabe sem rolagem forçada, e a ordem das
+ * colunas (posição, quem, quanto) é justamente a leitura que se perderia
+ * num scroll escondido — por isso vira um cartão por proposta, com a
+ * mesma marcação de contemplada na borda.
  */
 export function TabelaClassificacao({ linhas, porPontuacao }: TabelaClassificacaoProps) {
   return (
-    <div className="overflow-x-auto border-2 border-tinta-900 bg-papel-50">
+    <>
+    <div className="hidden overflow-x-auto border-2 border-tinta-900 bg-papel-50 sm:block">
       <table className="w-full min-w-[38rem] border-collapse text-left">
         <caption className="sr-only">
           Classificação das propostas, da maior para a menor pontuação
@@ -97,5 +99,24 @@ export function TabelaClassificacao({ linhas, porPontuacao }: TabelaClassificaca
         </tbody>
       </table>
     </div>
+
+    <div className="grid gap-3 sm:hidden">
+      {linhas.map((linha) => (
+        <CampoValorCard
+          key={linha.id}
+          titulo={`${linha.posicao}º · ${linha.proponente}`}
+          destaque={linha.situacao === 'CONTEMPLADA'}
+          pares={[
+            { rotulo: 'Categoria', valor: linha.categoria ?? '—' },
+            {
+              rotulo: porPontuacao ? 'Pontuação' : 'Nota',
+              valor: linha.nota ? `${linha.nota}${porPontuacao ? ' pts' : ''}` : '—',
+            },
+            { rotulo: 'Situação', valor: ROTULO_SITUACAO[linha.situacao] },
+          ]}
+        />
+      ))}
+    </div>
+    </>
   )
 }

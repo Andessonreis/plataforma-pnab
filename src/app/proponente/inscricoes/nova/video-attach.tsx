@@ -1,17 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { Button, Input } from '@/components/ui'
+import { Button, InlineFeedback } from '@/components/ui'
 import { IconDocument } from '@/components/ui/icons'
-import {
-  validateVideoFile,
-  describeVideoValidationError,
-  MAX_VIDEO_SIZE_MB,
-  VIDEO_MIME_LABEL,
-} from '@/lib/upload/anexo-config'
+import { validateVideoFile, describeVideoValidationError } from '@/lib/upload/anexo-config'
 import type { Anexo } from '@/types/anexo'
-
-type Modo = 'arquivo' | 'link'
+import { VideoAttachTabs, type Modo } from './video-attach-tabs'
+import { VideoAttachInputs } from './video-attach-inputs'
 
 interface VideoAttachProps {
   tipo: string
@@ -41,7 +36,7 @@ export function VideoAttach({
     return (
       <div className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
         <div className="flex items-center gap-3 min-w-0">
-          <IconDocument className="h-5 w-5 text-slate-400 shrink-0" />
+          <IconDocument className="h-5 w-5 text-slate-500 shrink-0" />
           <div className="min-w-0">
             <p className="text-sm font-medium text-slate-900 truncate">{attached.titulo}</p>
             <p className="text-xs text-slate-500 truncate">{attached.url}</p>
@@ -50,7 +45,7 @@ export function VideoAttach({
         <button
           type="button"
           onClick={() => onRemove(attached.id)}
-          className="text-red-500 hover:text-red-700 text-sm font-medium shrink-0 ml-3 min-h-[44px] px-2"
+          className="inline-flex min-h-[44px] items-center text-red-600 hover:text-red-700 text-sm font-medium shrink-0 ml-3 px-2 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
           aria-label={`Remover ${attached.titulo}`}
         >
           Remover
@@ -93,68 +88,10 @@ export function VideoAttach({
 
   return (
     <div className="space-y-3">
-      {localError && (
-        <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700" role="alert">
-          {localError}
-        </div>
-      )}
+      {localError && <InlineFeedback type="error" message={localError} />}
 
-      <div className="flex gap-2" role="tablist" aria-label="Como enviar o vídeo">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={modo === 'arquivo'}
-          onClick={() => setModo('arquivo')}
-          className={`rounded-md px-3 py-1.5 text-sm font-medium min-h-[44px] transition-colors ${
-            modo === 'arquivo' ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-          }`}
-        >
-          Enviar arquivo
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={modo === 'link'}
-          onClick={() => setModo('link')}
-          className={`rounded-md px-3 py-1.5 text-sm font-medium min-h-[44px] transition-colors ${
-            modo === 'link' ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-          }`}
-        >
-          Colar link do vídeo
-        </button>
-      </div>
-
-      {modo === 'arquivo' ? (
-        <div className="relative rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center">
-          <IconDocument className="h-8 w-8 text-slate-400 mx-auto mb-2" />
-          <p className="text-sm text-slate-600">
-            {file ? (
-              <span className="font-medium text-brand-700">{file.name}</span>
-            ) : (
-              <>Clique para selecionar o vídeo</>
-            )}
-          </p>
-          <p className="text-xs text-slate-400 mt-1">
-            {VIDEO_MIME_LABEL} — máx. {MAX_VIDEO_SIZE_MB}MB.
-          </p>
-          <input
-            type="file"
-            accept=".mp4,.webm,.mov"
-            onChange={handleFileChange}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            aria-label="Selecionar arquivo de vídeo"
-          />
-        </div>
-      ) : (
-        <Input
-          label="Link do vídeo"
-          type="url"
-          value={link}
-          onChange={(e) => setLink(e.target.value)}
-          placeholder="https://drive.google.com/... ou https://youtube.com/..."
-          hint="Cole o link de compartilhamento do Google Drive, YouTube ou outro serviço de vídeo. O link precisa estar acessível para visualização."
-        />
-      )}
+      <VideoAttachTabs modo={modo} onChange={setModo} />
+      <VideoAttachInputs modo={modo} file={file} link={link} onFileChange={handleFileChange} onLinkChange={setLink} />
 
       <Button
         onClick={handleEnviar}

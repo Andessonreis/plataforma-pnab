@@ -9,6 +9,13 @@ import { PassoIdentificacao } from './passo-identificacao'
 import { PassoContato } from './passo-contato'
 import { PassoAcesso } from './passo-acesso'
 
+/** Landmark estável de cada etapa — id previsível, gancho reservado para o tour guiado futuro. */
+const ETAPAS = [
+  { id: 'cadastro-etapa-identificacao', titulo: 'Identificação' },
+  { id: 'cadastro-etapa-contato', titulo: 'Contato' },
+  { id: 'cadastro-etapa-acesso', titulo: 'Acesso' },
+] as const
+
 /**
  * Ficha de cadastro do proponente, em três etapas.
  *
@@ -54,9 +61,33 @@ export function CadastroForm() {
         <TrilhaPassos passo={passo} />
       </div>
 
-      {passo === 0 && <PassoIdentificacao cadastro={cadastro} />}
-      {passo === 1 && <PassoContato cadastro={cadastro} />}
-      {passo === 2 && <PassoAcesso cadastro={cadastro} />}
+      {/* O `h2` de cada etapa é redundante para quem enxerga — o título já vem
+          de `TrilhaPassos` — mas dá o par heading+landmark estável que a tela
+          não tinha, e reserva `data-tour` para o tour guiado futuro. */}
+      {passo === 0 && (
+        <section id={ETAPAS[0].id} aria-labelledby={`${ETAPAS[0].id}-titulo`} className="space-y-5">
+          <h2 id={`${ETAPAS[0].id}-titulo`} className="sr-only">
+            {ETAPAS[0].titulo}
+          </h2>
+          <PassoIdentificacao cadastro={cadastro} />
+        </section>
+      )}
+      {passo === 1 && (
+        <section id={ETAPAS[1].id} aria-labelledby={`${ETAPAS[1].id}-titulo`} className="space-y-5">
+          <h2 id={`${ETAPAS[1].id}-titulo`} className="sr-only">
+            {ETAPAS[1].titulo}
+          </h2>
+          <PassoContato cadastro={cadastro} />
+        </section>
+      )}
+      {passo === 2 && (
+        <section id={ETAPAS[2].id} aria-labelledby={`${ETAPAS[2].id}-titulo`} className="space-y-5">
+          <h2 id={`${ETAPAS[2].id}-titulo`} className="sr-only">
+            {ETAPAS[2].titulo}
+          </h2>
+          <PassoAcesso cadastro={cadastro} />
+        </section>
+      )}
 
       {(erro || avisoUpload) && (
         <div ref={alerta} className="space-y-5">
@@ -65,7 +96,19 @@ export function CadastroForm() {
         </div>
       )}
 
-      <div className="flex flex-col-reverse gap-3 sm:flex-row">
+      {/* Fixa no rodapé abaixo de `sm`: a etapa de contato tem 9 campos, e sem
+          isto quem está no celular rola a etapa inteira antes de ver o botão
+          de avançar. Em telas maiores o cartão é curto e o problema não
+          existe, então acima de `sm` a barra volta a ficar no fluxo normal. */}
+      <div
+        data-tour="cadastro-acoes"
+        className={[
+          'sticky bottom-0 -mx-6 flex flex-col-reverse gap-3 border-t-2 border-tinta-900/10',
+          'bg-white/95 px-6 py-4 backdrop-blur [padding-bottom:max(1rem,env(safe-area-inset-bottom))]',
+          'sm:static sm:mx-0 sm:flex-row sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none',
+          'sm:[padding-bottom:0]',
+        ].join(' ')}
+      >
         {passo > 0 && (
           <Button type="button" variant="outline" size="lg" onClick={voltar} className="sm:w-auto">
             Voltar
@@ -76,7 +119,7 @@ export function CadastroForm() {
         </Button>
       </div>
 
-      <p className="border-t border-slate-200 pt-5 text-sm text-slate-500">
+      <p className="border-t-2 border-tinta-900/10 pt-5 text-sm text-tinta-700">
         Já tem conta?{' '}
         <Link
           href="/login"

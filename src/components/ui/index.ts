@@ -62,6 +62,9 @@ export type { FilterTabsProps } from './filter-tabs'
 
 export { FadeIn, StaggerContainer, StaggerItem, CountUp, AnnouncementBanner, ScaleHover } from './animated'
 
+export { FaixaNumeros } from './faixa-numeros'
+export type { NumeroDestaque } from './faixa-numeros'
+
 export { ImageUpload } from './image-upload'
 export type { ImageUploadProps } from './image-upload'
 

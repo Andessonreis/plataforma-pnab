@@ -6,6 +6,11 @@ import { ColunaLinks } from './coluna-links'
 import { Selos } from './selos'
 import { linksNavegacao, linksProponente, linksLegais } from './links'
 
+interface FooterProps {
+  /** Varal de bandeirinhas no topo do rodapé. Default true — desative em áreas logadas/produto. */
+  showVaral?: boolean
+}
+
 /**
  * Rodapé institucional do portal.
  *
@@ -13,13 +18,13 @@ import { linksNavegacao, linksProponente, linksLegais } from './links'
  * assinatura do site, e o marrom-tinta funciona como fecho neutro tanto sob a
  * home quanto sob as páginas que ainda usam a paleta antiga.
  */
-function Footer() {
+function Footer({ showVaral = true }: FooterProps) {
   const anoAtual = new Date().getFullYear()
 
   return (
     <footer className="tema-secult bg-tinta-950 text-papel-200 font-questrial" role="contentinfo">
       {/* Varal da identidade visual, no lugar da antiga faixa de gradiente */}
-      <Varal />
+      {showVaral && <Varal />}
 
       <div className="border-b border-papel-100/[0.08]">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">

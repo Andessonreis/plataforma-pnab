@@ -12,6 +12,9 @@ interface FolhaDeRostoProps {
   apoio?: string
   /** Resumo próprio da seção: contagens, prazo, data da última publicação. */
   children?: React.ReactNode
+  /** Variante reduzida — cabeçalho de sub-rota (resultados, versão acessível),
+   *  que precisa da mesma identidade sem repetir o peso da capa principal. */
+  compacto?: boolean
 }
 
 /**
@@ -33,6 +36,7 @@ export function FolhaDeRosto({
   titulo,
   apoio,
   children,
+  compacto = false,
 }: FolhaDeRostoProps) {
   return (
     <section className="relative overflow-hidden bg-brand-900 text-papel-100">
@@ -43,7 +47,11 @@ export function FolhaDeRosto({
         aria-hidden="true"
       />
 
-      <div className="relative mx-auto max-w-7xl px-4 pb-12 pt-8 sm:px-6 sm:pb-14 sm:pt-10 lg:px-8">
+      <div
+        className={`relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 ${
+          compacto ? 'pb-8 pt-6 sm:pb-9 sm:pt-7' : 'pb-12 pt-8 sm:pb-14 sm:pt-10'
+        }`}
+      >
         <nav aria-label="Trilha de navegação" className="mb-8 text-xs tracking-wide text-papel-200/80">
           <Link href="/" className="underline-offset-4 hover:text-accent-300 hover:underline">
             Início
@@ -55,7 +63,11 @@ export function FolhaDeRosto({
         </nav>
 
         <p className="mb-1 rotulo text-xs text-accent-300">{chamada}</p>
-        <h1 className="titulo text-3xl leading-tight tracking-wide text-papel-50 sm:text-5xl">
+        <h1
+          className={`titulo leading-tight tracking-wide text-papel-50 ${
+            compacto ? 'text-2xl sm:text-4xl' : 'text-3xl sm:text-5xl'
+          }`}
+        >
           {titulo}
         </h1>
         {apoio && (

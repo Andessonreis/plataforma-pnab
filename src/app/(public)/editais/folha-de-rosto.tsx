@@ -1,12 +1,13 @@
 import { FolhaDeRosto as Faixa } from '@/components/ui/folha-de-rosto'
-import { IconeEdital, IconePrazo } from '@/components/ui/ornamentos/icones'
+import { IconePrazo } from '@/components/ui/ornamentos/icones'
 
 interface FolhaDeRostoProps {
-  publicados: number
-  abertos: number
   /** Menor prazo entre os editais abertos, para a chamada de urgência. */
   proximoEncerramento: { titulo: string; dias: number } | null
 }
+
+/** Dias restantes a partir dos quais o prazo mais próximo vira chamada na capa. */
+const LIMITE_URGENCIA_DIAS = 7
 
 const FOTOS = [
   '/images/galeria/foto-05.png', // bandeirinhas e praça cheia
@@ -17,11 +18,14 @@ const FOTOS = [
 /**
  * Abertura da seção de editais.
  *
- * A faixa carrega o que decide a visita: quantos editais estão abertos e
- * quanto tempo resta no mais próximo de fechar. Contagem de dias, e não data,
- * porque é o que faz a pessoa agir hoje.
+ * As contagens de abertos/publicados saíram daqui para a faixa de expediente
+ * logo abaixo — a capa não é lugar de placar, é lugar de abertura de
+ * capítulo. O que resta na capa é só a urgência real: um chip de uma linha
+ * quando o prazo mais próximo já está apertado, e nada quando não está.
  */
-export function FolhaDeRosto({ publicados, abertos, proximoEncerramento }: FolhaDeRostoProps) {
+export function FolhaDeRosto({ proximoEncerramento }: FolhaDeRostoProps) {
+  const urgente = proximoEncerramento !== null && proximoEncerramento.dias <= LIMITE_URGENCIA_DIAS
+
   return (
     <Faixa
       fotos={FOTOS}
@@ -30,29 +34,15 @@ export function FolhaDeRosto({ publicados, abertos, proximoEncerramento }: Folha
       titulo="Editais da PNAB Irecê"
       apoio="Chamamentos públicos da Política Nacional Aldir Blanc no município. Cada edital traz prazo, valor e a íntegra do documento para leitura."
     >
-      <div className="mt-8 flex max-w-xl flex-col gap-4 rounded-sm bg-tinta-950/85 p-5">
-        <div className="flex items-center gap-4">
-          <IconeEdital className="h-8 w-8 shrink-0 text-accent-400" />
-          <p className="text-sm text-papel-100">
-            <span className="titulo text-2xl leading-none text-accent-300">{abertos}</span>{' '}
-            {abertos === 1 ? 'edital aberto' : 'editais abertos'} de {publicados} publicados
-          </p>
-        </div>
-
-        {proximoEncerramento && (
-          <div className="flex items-center gap-4 border-t border-papel-100/15 pt-4">
-            <IconePrazo className="h-8 w-8 shrink-0 text-accent-400" />
-            <p className="text-sm leading-snug text-papel-100">
-              O mais próximo de fechar encerra em{' '}
-              <span className="titulo text-lg leading-none text-accent-300">
-                {proximoEncerramento.dias === 0
-                  ? 'algumas horas'
-                  : `${proximoEncerramento.dias} ${proximoEncerramento.dias === 1 ? 'dia' : 'dias'}`}
-              </span>
-            </p>
-          </div>
-        )}
-      </div>
+      {urgente && (
+        <p className="mt-6 inline-flex items-center gap-2 border border-accent-400/60 bg-tinta-950/70 px-3.5 py-2 text-xs font-bold uppercase tracking-[0.12em] text-accent-300">
+          <IconePrazo className="h-4 w-4 shrink-0" aria-hidden="true" />
+          {proximoEncerramento!.titulo} fecha em{' '}
+          {proximoEncerramento!.dias === 0
+            ? 'algumas horas'
+            : `${proximoEncerramento!.dias} ${proximoEncerramento!.dias === 1 ? 'dia' : 'dias'}`}
+        </p>
+      )}
     </Faixa>
   )
 }

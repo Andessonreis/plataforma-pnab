@@ -55,10 +55,32 @@ export interface InscricaoInabilitadaConfig {
   inscricaoId?: string
 }
 
+export interface AnexosFaltandoConfig {
+  /** Limita a estes editais (vazio = todos) */
+  editalIds?: string[]
+}
+
+export interface EditalPrazoEncerrandoConfig {
+  /** Quantas horas antes do encerramento das inscrições avisar (padrão: 48) */
+  horas?: number
+  /** Limita a estes editais (vazio = todos) */
+  editalIds?: string[]
+}
+
+export interface RecursoPrazoEncerrandoConfig {
+  /** Quantas horas antes do fim da janela de recurso avisar (padrão: 24) */
+  horas?: number
+  /** Limita a estes editais (vazio = todos) */
+  editalIds?: string[]
+}
+
 export type TriggerConfig =
   | RascunhoPendenteConfig
   | EditalPublicadoConfig
   | InscricaoInabilitadaConfig
+  | AnexosFaltandoConfig
+  | EditalPrazoEncerrandoConfig
+  | RecursoPrazoEncerrandoConfig
   | Record<string, never>
 
 // ── Resultado de um trigger ─────────────────────────────────────────────────

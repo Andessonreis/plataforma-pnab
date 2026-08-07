@@ -5,6 +5,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { Prisma } from '@prisma/client'
 import type { UserRole } from '@prisma/client'
+import { enqueueEmail } from '@/lib/queue'
 
 export const runtime = 'nodejs'
 
@@ -143,6 +144,23 @@ export async function PATCH(
       where: { id },
       data: updateData,
     })
+
+    if (data.resposta) {
+      try {
+        await enqueueEmail({
+          to: updated.emailContato,
+          template: 'atendimento_respondido',
+          data: {
+            nomeContato: updated.nomeContato,
+            protocolo: updated.protocolo,
+            assunto: updated.assunto,
+            resposta: data.resposta.texto,
+          },
+        })
+      } catch (err) {
+        console.error({ requestId, message: 'Falha ao enfileirar e-mail de resposta de atendimento', err })
+      }
+    }
 
     const res = NextResponse.json({ data: updated })
     res.headers.set('X-Request-Id', requestId)

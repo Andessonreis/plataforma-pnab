@@ -21,8 +21,8 @@ export function SeletorTipo({ valor, aoEscolher }: SeletorTipoProps) {
   const opcoes = Object.entries(ROTULOS_TIPO) as [TipoProponente, string][]
 
   return (
-    <fieldset>
-      <legend className="mb-2 block font-medium text-slate-700">Tipo de proponente</legend>
+    <fieldset data-tour="cadastro-tipo-proponente">
+      <legend className="mb-2 block font-medium text-tinta-800">Tipo de proponente</legend>
       <div className="grid grid-cols-2 gap-2.5">
         {opcoes.map(([tipo, rotulo]) => {
           const selecionado = valor === tipo
@@ -35,7 +35,7 @@ export function SeletorTipo({ valor, aoEscolher }: SeletorTipoProps) {
                 'focus-within:outline-offset-2 focus-within:outline-brand-600',
                 selecionado
                   ? 'border-brand-600 bg-brand-50 font-medium text-brand-800 ring-1 ring-brand-600'
-                  : 'border-slate-300 text-slate-600 hover:border-slate-400 hover:bg-slate-50',
+                  : 'border-tinta-900/15 text-tinta-700 hover:border-tinta-900/30 hover:bg-papel-50',
               ].join(' ')}
             >
               <input
@@ -50,7 +50,7 @@ export function SeletorTipo({ valor, aoEscolher }: SeletorTipoProps) {
                 aria-hidden="true"
                 className={[
                   'flex h-4 w-4 shrink-0 items-center justify-center rounded-full border',
-                  selecionado ? 'border-[5px] border-brand-600' : 'border-slate-400',
+                  selecionado ? 'border-[5px] border-brand-600' : 'border-tinta-900/30',
                 ].join(' ')}
               />
               {rotulo}

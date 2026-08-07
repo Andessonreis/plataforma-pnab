@@ -25,8 +25,8 @@ const OPCOES_UF = UFS.map((uf) => ({ value: uf, label: uf }))
  */
 export function CamposEndereco({ dados, aoAlterar, aoSairDoCep, buscandoCep }: CamposEnderecoProps) {
   return (
-    <fieldset className="space-y-4 border-t border-slate-200 pt-5">
-      <legend className="mb-2.5 block font-medium text-slate-700">Endereço</legend>
+    <fieldset className="space-y-4 border-t-2 border-tinta-900/10 pt-5">
+      <legend className="mb-2.5 block font-medium text-tinta-800">Endereço</legend>
 
       {/* CEP e número lado a lado: são os dois campos que a pessoa realmente
           digita — o resto o ViaCEP costuma trazer pronto. */}
