@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { generateProjetoCompleto } from '@/lib/pdf/projeto-completo'
+import { mesclarAnexosNoPdf } from '@/lib/pdf/dossie-completo'
 
 export const runtime = 'nodejs'
 
@@ -45,7 +46,7 @@ export async function GET(
           select: { titulo: true, ano: true, camposFormulario: true },
         },
         anexos: {
-          select: { titulo: true, tipo: true, valido: true },
+          select: { titulo: true, tipo: true, valido: true, url: true },
         },
       },
     })
@@ -80,7 +81,7 @@ export async function GET(
       ? (inscricao.edital.camposFormulario as Array<{ nome: string; label: string; tipo: string }>)
       : []
 
-    const pdfBuffer = await generateProjetoCompleto({
+    let pdfBuffer = await generateProjetoCompleto({
       numero: inscricao.numero,
       status: inscricao.status,
       proponente: {
@@ -97,6 +98,16 @@ export async function GET(
       submittedAt: inscricao.submittedAt ?? inscricao.createdAt,
     })
 
+    // Modo "dossiê completo" — mescla os arquivos de anexo reais no PDF.
+    // Restrito a ADMIN: é um relatório de arquivamento da Secretaria, mais
+    // pesado (baixa cada anexo do storage), não o comprovante de rotina do proponente.
+    const completo = req.nextUrl.searchParams.get('completo') === '1'
+    let filename = `projeto-${inscricao.numero}.pdf`
+    if (completo && isAdmin) {
+      pdfBuffer = await mesclarAnexosNoPdf(pdfBuffer, inscricao.anexos)
+      filename = `dossie-completo-${inscricao.numero}.pdf`
+    }
+
     console.log({
       requestId,
       method: 'GET',
@@ -109,7 +120,7 @@ export async function GET(
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="projeto-${inscricao.numero}.pdf"`,
+        'Content-Disposition': `attachment; filename="${filename}"`,
         'X-Request-Id': requestId,
         'Cache-Control': 'no-store',
       },

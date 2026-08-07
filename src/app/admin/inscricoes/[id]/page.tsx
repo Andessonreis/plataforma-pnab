@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { auth } from '@/lib/auth'
 import { redirect, notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { Card, Badge } from '@/components/ui'
+import { Card, Badge, IconDocument, IconClipboard } from '@/components/ui'
 import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
 import { CRITERIOS_AVALIACAO_PADRAO, type CriterioAvaliacao } from '@/lib/avaliacao-criterios'
 import type { InscricaoStatus } from '@prisma/client'
@@ -382,6 +382,38 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
               )}
             </dl>
           </Card>
+
+          {/* Documentos — PDFs pra arquivar/repassar. Só pra inscrições já enviadas. */}
+          {isStaff && inscricao.status !== 'RASCUNHO' && (
+            <Card padding="sm" className="sm:p-6">
+              <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Documentos</h2>
+              <div className="space-y-2">
+                <a
+                  href={`/api/proponente/inscricoes/${inscricao.id}/projeto-pdf`}
+                  className="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-lg border border-slate-300 text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors min-h-[44px]"
+                  download
+                >
+                  <IconDocument className="h-4 w-4" />
+                  Exportar Inscrição (PDF)
+                </a>
+                {isAdmin && (
+                  <a
+                    href={`/api/proponente/inscricoes/${inscricao.id}/projeto-pdf?completo=1`}
+                    className="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-lg border border-brand-300 bg-brand-50 text-brand-700 text-sm font-medium hover:bg-brand-100 transition-colors min-h-[44px]"
+                    download
+                  >
+                    <IconClipboard className="h-4 w-4" />
+                    Dossiê Completo (com anexos)
+                  </a>
+                )}
+              </div>
+              {isAdmin && (
+                <p className="text-xs text-slate-500 mt-2.5">
+                  O dossiê completo mescla os documentos anexados de verdade num único PDF — pode demorar alguns segundos.
+                </p>
+              )}
+            </Card>
+          )}
 
           {/* Distribuição de avaliadores — ADMIN, somente leitura (atribuição não ocorre nesta tela) */}
           {isAdmin && inscricao.avaliacoes.length > 0 && (

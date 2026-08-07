@@ -90,6 +90,8 @@ enum NotificationRuleTrigger {
   RESULTADO_PUBLICADO
   ATENDIMENTO_RESPONDIDO
   USER_SEM_INSCRICAO
+  EDITAL_PRAZO_ENCERRANDO
+  RECURSO_PRAZO_ENCERRANDO
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

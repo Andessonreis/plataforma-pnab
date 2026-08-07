@@ -9,6 +9,20 @@ import {
 } from '@/lib/queue'
 import { resolveAudience } from '@/lib/notifications/audience'
 import type { AudienceFilter } from '@/lib/notifications/types'
+import type { NotificationRuleTrigger } from '@prisma/client'
+
+const SITE_URL_FALLBACK = process.env.NEXT_PUBLIC_SITE_URL || 'https://culturaeturismo.irece.ba.gov.br'
+
+// Regras cuja natureza é "lembrete de ação pendente" — usam o template
+// notificacao_prazo em vez do genérico. Ex.: EDITAL_PUBLICADO é um anúncio,
+// não um lembrete, então fica de fora e segue em notificacao_generica.
+const TRIGGERS_LEMBRETE_PRAZO = new Set<NotificationRuleTrigger>([
+  'INSCRICAO_RASCUNHO_PENDENTE',
+  'USER_SEM_INSCRICAO',
+  'INSCRICAO_ANEXOS_FALTANDO',
+  'EDITAL_PRAZO_ENCERRANDO',
+  'RECURSO_PRAZO_ENCERRANDO',
+])
 
 // ─── Worker: dispatch-campaign ──────────────────────────────────────────────
 // Resolve a audiência da campanha e enfileira 1 job de delivery por usuário.
@@ -20,6 +34,7 @@ export const notificationDispatchWorker = new Worker<NotificationDispatchJobData
 
     const campaign = await prisma.notificationCampaign.findUnique({
       where: { id: campaignId },
+      include: { rule: { select: { trigger: true } } },
     })
 
     if (!campaign) {
@@ -58,6 +73,7 @@ export const notificationDispatchWorker = new Worker<NotificationDispatchJobData
       await enqueueNotificationDelivery({
         campaignId,
         userId,
+        ruleTrigger: campaign.rule?.trigger ?? null,
         titulo: campaign.assunto,
         corpo: campaign.corpo,
         link: campaign.link,
@@ -98,7 +114,7 @@ notificationDispatchWorker.on('failed', async (job, err) => {
 export const notificationDeliveryWorker = new Worker<NotificationDeliveryJobData>(
   'notification-delivery',
   async (job) => {
-    const { campaignId, userId, titulo, corpo, link, ctaLabel, canais } = job.data
+    const { campaignId, userId, ruleTrigger, titulo, corpo, link, ctaLabel, canais } = job.data
 
     const emailEnabled = process.env.NOTIFICATION_EMAIL_ENABLED === 'true'
     const shouldSendEmail = canais.includes('EMAIL') && emailEnabled
@@ -142,18 +158,33 @@ export const notificationDeliveryWorker = new Worker<NotificationDeliveryJobData
           return
         }
 
-        await enqueueEmail({
-          to: user.email,
-          subject: titulo,
-          template: 'notificacao_generica',
-          data: {
-            nome: user.nome ?? '',
-            titulo,
-            corpo,
-            link: link ?? '',
-            ctaLabel: ctaLabel ?? '',
-          },
-        })
+        if (ruleTrigger && TRIGGERS_LEMBRETE_PRAZO.has(ruleTrigger)) {
+          // Regras de "lembrete de ação pendente" usam o template dedicado —
+          // mais enxuto que o corpo HTML livre das campanhas manuais. Outras
+          // regras (ex.: edital publicado) continuam em notificacao_generica.
+          await enqueueEmail({
+            to: user.email,
+            subject: titulo,
+            template: 'notificacao_prazo',
+            data: {
+              mensagem: corpo.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(),
+              url: link || SITE_URL_FALLBACK,
+            },
+          })
+        } else {
+          await enqueueEmail({
+            to: user.email,
+            subject: titulo,
+            template: 'notificacao_generica',
+            data: {
+              nome: user.nome ?? '',
+              titulo,
+              corpo,
+              link: link ?? '',
+              ctaLabel: ctaLabel ?? '',
+            },
+          })
+        }
 
         await prisma.notification.update({
           where: { id: notif.id },

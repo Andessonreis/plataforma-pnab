@@ -18,6 +18,27 @@ interface TriggerOption {
   periodico: boolean
 }
 
+// Triggers cujo config aceita `horas` (janela de antecedência do aviso),
+// cada um com o rótulo/dica específico exibido no formulário.
+const HORAS_INPUT_POR_TRIGGER: Record<string, { label: string; hint: string; padrao: number }> = {
+  INSCRICAO_RASCUNHO_PENDENTE: {
+    label: 'Horas em rascunho antes de notificar',
+    hint: 'Padrão: 24h. Inscrições com updatedAt mais antigo que isso disparam a regra.',
+    padrao: 24,
+  },
+  EDITAL_PRAZO_ENCERRANDO: {
+    label: 'Horas antes do encerramento das inscrições',
+    hint: 'Padrão: 48h. Avisa proponentes com rascunho quando o prazo do edital estiver próximo.',
+    padrao: 48,
+  },
+  RECURSO_PRAZO_ENCERRANDO: {
+    label: 'Horas antes do fim da janela de recurso',
+    hint: 'Padrão: 24h. Avisa proponentes elegíveis a recurso quando a janela estiver prestes a fechar.',
+    padrao: 24,
+  },
+}
+const TRIGGERS_COM_HORAS = Object.keys(HORAS_INPUT_POR_TRIGGER)
+
 interface RuleFormProps {
   editais: EditalOption[]
   triggers: TriggerOption[]
@@ -91,7 +112,15 @@ export function RuleForm({ editais, triggers, initialData, ruleId }: RuleFormPro
   }
 
   const selectedTrigger = triggers.find((t) => t.trigger === trigger)
-  const showHorasInput = trigger === 'INSCRICAO_RASCUNHO_PENDENTE'
+  const showHorasInput = TRIGGERS_COM_HORAS.includes(trigger)
+  const horasInputConfig = HORAS_INPUT_POR_TRIGGER[trigger]
+
+  function handleTriggerChange(novoTrigger: string) {
+    setTrigger(novoTrigger)
+    if (!isEdit) {
+      setHoras(HORAS_INPUT_POR_TRIGGER[novoTrigger]?.padrao ?? 24)
+    }
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -220,7 +249,7 @@ export function RuleForm({ editais, triggers, initialData, ruleId }: RuleFormPro
                 name="trigger"
                 value={t.trigger}
                 checked={trigger === t.trigger}
-                onChange={(e) => setTrigger(e.target.value)}
+                onChange={(e) => handleTriggerChange(e.target.value)}
                 disabled={!t.implementado}
                 className="mt-1 h-4 w-4 text-brand-600 focus:ring-brand-500"
               />
@@ -240,12 +269,12 @@ export function RuleForm({ editais, triggers, initialData, ruleId }: RuleFormPro
         {showHorasInput && (
           <div className="mt-5 pt-5 border-t border-slate-100">
             <Input
-              label="Horas em rascunho antes de notificar"
+              label={horasInputConfig?.label ?? 'Horas antes de notificar'}
               type="number"
               min={1}
               value={String(horas)}
               onChange={(e) => setHoras(Number(e.target.value))}
-              hint="Padrão: 24h. Inscrições com updatedAt mais antigo que isso disparam a regra."
+              hint={horasInputConfig?.hint}
             />
           </div>
         )}

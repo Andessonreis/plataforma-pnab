@@ -1,7 +1,61 @@
 import { prisma } from '@/lib/db'
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
 import { respostaRecursoLiberada } from '@/lib/edital/fase'
+import { enqueueEmail } from '@/lib/queue'
 import { ServiceError } from './errors'
+
+const SITE_URL_FALLBACK = 'https://culturaeturismo.irece.ba.gov.br'
+
+function siteBaseUrl(): string {
+  return (process.env.NEXT_PUBLIC_SITE_URL || SITE_URL_FALLBACK).replace(/\/$/, '')
+}
+
+/** Notifica os admins ativos que um novo recurso foi interposto. */
+async function notifyEquipeRecursoSubmetido(inscricaoId: string, editalTitulo: string, fase: string) {
+  const admins = await prisma.user.findMany({
+    where: { role: 'ADMIN', ativo: true },
+    select: { email: true },
+  })
+  if (admins.length === 0) return
+
+  const url = `${siteBaseUrl()}/admin/inscricoes/${inscricaoId}`
+  await Promise.all(
+    admins.map((admin) =>
+      enqueueEmail({
+        to: admin.email,
+        template: 'recurso_submetido',
+        data: { edital: editalTitulo, fase, url },
+      }),
+    ),
+  )
+}
+
+/** Notifica o proponente do resultado do recurso. */
+async function notifyProponenteRecursoDecidido(inscricaoId: string, decisao: string, justificativa: string) {
+  const inscricao = await prisma.inscricao.findUnique({
+    where: { id: inscricaoId },
+    select: {
+      numero: true,
+      proponente: { select: { nome: true, email: true } },
+      edital: { select: { titulo: true } },
+    },
+  })
+  if (!inscricao) return
+
+  const url = `${siteBaseUrl()}/proponente/inscricoes/${inscricaoId}`
+  await enqueueEmail({
+    to: inscricao.proponente.email,
+    template: 'recurso_decidido',
+    data: {
+      nome: inscricao.proponente.nome,
+      numero: inscricao.numero,
+      edital: inscricao.edital.titulo,
+      decisao,
+      justificativa,
+      url,
+    },
+  })
+}
 
 const STATUS_ALLOWS_RECURSO: Record<string, string[]> = {
   INABILITADA: ['HABILITACAO'],
@@ -38,6 +92,12 @@ async function aplicarDecisao(
     where: { id: inscricaoId },
     data: { status: statusAposDecisao(fase, decisao) },
   })
+
+  try {
+    await notifyProponenteRecursoDecidido(inscricaoId, decisao, justificativa)
+  } catch (err) {
+    console.error({ message: 'Falha ao enfileirar e-mail de recurso decidido', inscricaoId, err })
+  }
 }
 
 export async function submitRecurso(
@@ -48,7 +108,7 @@ export async function submitRecurso(
 ) {
   const inscricao = await prisma.inscricao.findUnique({
     where: { id: inscricaoId },
-    select: { proponenteId: true, status: true, editalId: true },
+    select: { proponenteId: true, status: true, editalId: true, edital: { select: { titulo: true } } },
   })
 
   if (!inscricao) throw new ServiceError('NOT_FOUND', 'Inscrição não encontrada.')
@@ -86,6 +146,12 @@ export async function submitRecurso(
     details: { inscricaoId, fase: data.fase },
     ip,
   })
+
+  try {
+    await notifyEquipeRecursoSubmetido(inscricaoId, inscricao.edital.titulo, data.fase)
+  } catch (err) {
+    console.error({ message: 'Falha ao enfileirar e-mail de recurso submetido', inscricaoId, err })
+  }
 
   return recurso
 }

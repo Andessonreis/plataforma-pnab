@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db'
 import { rateLimit } from '@/lib/rate-limit'
 import { RATE_LIMITS } from '@/lib/rate-limit/config'
 import { generateUniqueProtocolo } from '@/lib/atendimento/protocolo'
+import { enqueueEmail } from '@/lib/queue'
 
 export const runtime = 'nodejs'
 
@@ -60,6 +61,16 @@ export async function POST(req: NextRequest) {
         historico: [],
       },
     })
+
+    try {
+      await enqueueEmail({
+        to: data.emailContato,
+        template: 'protocolo_atendimento',
+        data: { protocolo },
+      })
+    } catch (err) {
+      console.error({ requestId, message: 'Falha ao enfileirar e-mail de protocolo', err })
+    }
 
     const res = NextResponse.json(
       { protocolo, message: 'Mensagem enviada com sucesso.', requestId },

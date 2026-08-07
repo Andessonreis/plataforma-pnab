@@ -3,6 +3,11 @@
 
 import type { ComponentType } from 'react'
 import {
+  AtendimentoRespondido,
+  atendimentoRespondidoSubject,
+  type AtendimentoRespondidoData,
+} from './atendimento-respondido'
+import {
   BoasVindas,
   boasVindasSubject,
   type BoasVindasData,
@@ -69,6 +74,7 @@ export type EmailTemplate =
   | 'resultado_preliminar'
   | 'resultado_final'
   | 'protocolo_atendimento'
+  | 'atendimento_respondido'
   | 'notificacao_prazo'
   | 'recuperacao_senha'
   | 'recurso_submetido'
@@ -83,6 +89,7 @@ export interface TemplateDataMap {
   resultado_preliminar: ResultadoPreliminarData
   resultado_final: ResultadoFinalData
   protocolo_atendimento: ProtocoloAtendimentoData
+  atendimento_respondido: AtendimentoRespondidoData
   notificacao_prazo: NotificacaoPrazoData
   recuperacao_senha: RecuperacaoSenhaData
   recurso_submetido: RecursoSubmetidoData
@@ -119,6 +126,10 @@ export const templateRegistry: Registry = {
   protocolo_atendimento: {
     Component: ProtocoloAtendimento,
     defaultSubject: protocoloAtendimentoSubject,
+  },
+  atendimento_respondido: {
+    Component: AtendimentoRespondido,
+    defaultSubject: atendimentoRespondidoSubject,
   },
   notificacao_prazo: {
     Component: NotificacaoPrazo,
