@@ -64,6 +64,7 @@
     "bullmq": "^5.38.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "driver.js": "^1.8.0",
     "framer-motion": "^12.38.0",
     "input-otp": "^1.4.2",
     "ioredis": "^5.4.2",

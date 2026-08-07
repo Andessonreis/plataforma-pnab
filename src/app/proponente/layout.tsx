@@ -1,9 +1,9 @@
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { ProponenteSidebar } from './sidebar'
+import { MobileMenuButton } from './mobile-menu-button'
+import { ProponenteFooter } from './proponente-footer'
 import { prisma } from '@/lib/db'
-import { IconMenu, UserAvatar } from '@/components/ui'
-import { NotificationBell } from '@/components/layout'
 
 export default async function ProponenteLayout({ children }: { children: React.ReactNode }) {
   const session = await auth()
@@ -19,32 +19,28 @@ export default async function ProponenteLayout({ children }: { children: React.R
   const avatarUrl = user?.avatarUrl ?? null
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    // .tema-secult resolve as CSS vars --brand-*/--accent-* pra cor real da
+    // identidade SECULT (terracota/dourado). papel-textura é a mesma trama
+    // diagonal sutil da home, no lugar do cinza chapado genérico de SaaS.
+    <div className="tema-secult papel-textura font-questrial flex min-h-screen bg-papel-50">
       <ProponenteSidebar userName={nome} userAvatarUrl={avatarUrl} />
 
-      <div className="flex-1 min-w-0 lg:ml-64">
-        {/* Barra superior */}
-        <header className="lg:sticky lg:top-0 z-30 flex items-center justify-between bg-white/95 backdrop-blur-sm border-b border-slate-200 shadow-sm px-4 py-2 lg:px-6 lg:py-3">
-          <label
-            htmlFor="sidebar-toggle"
-            className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg text-slate-600 hover:bg-slate-100 lg:hidden cursor-pointer"
-            aria-label="Abrir menu"
-          >
-            <IconMenu className="h-6 w-6" />
-          </label>
+      {/* flex-col + min-h-screen aqui (não só no wrapper externo): com pouco
+          conteúdo (ex.: filtro sem resultado) essa coluna ficava mais curta
+          que a viewport, e o rodapé subia deixando vazio embaixo enquanto a
+          sidebar fixa continuava até o fim da tela. main cresce (flex-1) e
+          empurra o rodapé pro fim de verdade. */}
+      <div className="relative flex min-h-screen flex-1 min-w-0 flex-col lg:ml-64">
+        <MobileMenuButton />
 
-          <div className="flex items-center gap-2 sm:gap-3 ml-auto">
-            <NotificationBell listLink="/proponente/notificacoes" />
-            <span className="text-sm text-slate-600 hidden sm:block">
-              {nome}
-            </span>
-            <UserAvatar nome={nome} src={avatarUrl} size={32} className="ring-2 ring-brand-100" />
-          </div>
-        </header>
-
-        <main className="p-4 pb-24 lg:p-6 lg:pb-8">
+        {/* pt-20 no mobile: abre espaço pro botão hamburguer flutuante
+            (fixed left-3 top-3, ~56px de altura) não cobrir o título da
+            página em telas sem hero próprio (dashboard tem espaço embutido). */}
+        <main className="flex-1 p-4 pt-20 pb-24 lg:p-6 lg:pb-8">
           {children}
         </main>
+
+        <ProponenteFooter />
       </div>
     </div>
   )

@@ -5,6 +5,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { IconArrowLeft } from '@/components/ui/icons'
 import InscricaoForm from '../../nova/inscricao-form'
+import { aplicarDadosPessoaisDoCadastro } from '../../nova/dados-pessoais-cadastro'
 import type { CampoFormulario } from '@/types/campo-formulario'
 
 export const metadata: Metadata = {
@@ -77,10 +78,12 @@ export default async function EditarInscricaoPage({ params }: Props) {
     redirect('/proponente/inscricoes')
   }
 
-  // Buscar tipo de proponente do usuário
+  // Dados do usuário: tipo de proponente + nome/telefone/e-mail pra completar
+  // campos que o rascunho ainda não tem (ex.: salvo antes de chegar na etapa
+  // "Dados do Projeto" — sem isso, reabrir pra editar mostrava tudo vazio).
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { tipoProponente: true },
+    select: { tipoProponente: true, nome: true, email: true, telefone: true },
   })
 
   if (inscricao.status !== 'RASCUNHO') {
@@ -91,9 +94,10 @@ export default async function EditarInscricaoPage({ params }: Props) {
     ? inscricao.edital.camposFormulario
     : []
 
-  const campos = (inscricao.campos && typeof inscricao.campos === 'object')
+  const camposSalvos = (inscricao.campos && typeof inscricao.campos === 'object')
     ? inscricao.campos as Record<string, unknown>
     : {}
+  const campos = aplicarDadosPessoaisDoCadastro(camposSalvos, camposFormulario, user)
 
   return (
     <div className="space-y-6">
@@ -101,13 +105,13 @@ export default async function EditarInscricaoPage({ params }: Props) {
       <div>
         <Link
           href={`/proponente/inscricoes/${id}`}
-          className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 mb-4"
+          className="inline-flex items-center gap-1 text-sm text-brand-600 hover:text-brand-700 font-medium mb-2 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
         >
           <IconArrowLeft className="h-4 w-4" />
           Voltar para detalhes
         </Link>
-        <h1 className="text-2xl font-bold text-slate-900">Editar Inscrição</h1>
-        <p className="text-sm text-slate-500 mt-1">
+        <h1 className="text-2xl font-bold text-slate-900 break-words">Editar Inscrição</h1>
+        <p className="text-sm text-slate-500 mt-1 break-words">
           {inscricao.numero} — {inscricao.edital.titulo}
         </p>
       </div>

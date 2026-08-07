@@ -57,7 +57,7 @@ function NewsletterForm() {
           value={nome}
           onChange={(e) => setNome(e.target.value)}
           required
-          className="flex-1 rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/20 h-9"
+          className="min-w-0 flex-1 rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/20 h-9"
           aria-label="Nome para newsletter"
         />
         <input
@@ -66,7 +66,7 @@ function NewsletterForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="flex-1 rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/20 h-9"
+          className="min-w-0 flex-1 rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/20 h-9"
           aria-label="E-mail para newsletter"
         />
         <button

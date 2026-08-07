@@ -1,0 +1,100 @@
+/*
+  driver.js monta o popover direto no <body>, fora da árvore React — por
+  isso as cores aqui são valores fixos da identidade (tailwind.config), não
+  var(--brand-*) — essas variáveis só existem dentro do escopo .tema-secult,
+  que não é ancestral real no DOM desse portal.
+*/
+
+.tour-secult.driver-popover {
+  background: #f0e9d7; /* papel-50 */
+  border: 2px solid #190e07; /* tinta-950 */
+  border-radius: 0;
+  box-shadow: 4px 4px 0 rgba(25, 14, 7, 0.25);
+  padding: 20px;
+  font-family: var(--font-questrial), sans-serif;
+  max-width: 320px;
+}
+
+.tour-secult .driver-popover-title {
+  font-family: var(--font-display), Impact, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  font-size: 1.05rem;
+  color: #190e07;
+  padding: 0;
+  margin-bottom: 8px;
+}
+
+.tour-secult .driver-popover-description {
+  color: #4d2b15; /* tinta-700 */
+  font-size: 0.875rem;
+  line-height: 1.5;
+  padding: 0;
+}
+
+.tour-secult .driver-popover-arrow-side-bottom.driver-popover-arrow {
+  border-bottom-color: #190e07;
+}
+.tour-secult .driver-popover-arrow-side-top.driver-popover-arrow {
+  border-top-color: #190e07;
+}
+.tour-secult .driver-popover-arrow-side-left.driver-popover-arrow {
+  border-left-color: #190e07;
+}
+.tour-secult .driver-popover-arrow-side-right.driver-popover-arrow {
+  border-right-color: #190e07;
+}
+
+.tour-secult .driver-popover-footer {
+  margin-top: 16px;
+}
+
+.tour-secult .driver-popover-progress-text {
+  color: #4d2b15;
+  font-size: 0.75rem;
+}
+
+.tour-secult .driver-popover-navigation-btns {
+  gap: 8px;
+}
+
+.tour-secult .driver-popover-footer-btn,
+.tour-secult-pular {
+  font-family: var(--font-display), Impact, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  padding: 8px 14px;
+  border-radius: 0;
+  border: 2px solid #190e07;
+  background: transparent;
+  color: #190e07;
+  text-shadow: none;
+  transition: opacity 0.15s;
+}
+
+.tour-secult .driver-popover-footer-btn:hover,
+.tour-secult-pular:hover {
+  opacity: 0.75;
+  background: transparent;
+}
+
+.tour-secult .driver-popover-next-btn {
+  background: #e7a523; /* accent-500 */
+  border-color: #190e07;
+  color: #190e07;
+  font-weight: 700;
+}
+
+.tour-secult-pular {
+  margin-right: auto;
+  opacity: 0.6;
+}
+
+.tour-secult .driver-popover-close-btn {
+  color: #190e07;
+}
+
+.driver-active-element {
+  border-radius: 8px;
+}
