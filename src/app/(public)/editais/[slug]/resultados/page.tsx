@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { FolhaDeRosto } from '@/components/ui/folha-de-rosto'
 import { FaixaSecao } from '@/components/ui/faixa-secao'
 import { IconArrowLeft } from '@/components/ui/icons'
 import { consultarResultado } from './consulta'
@@ -25,13 +26,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
+const FOTOS = [
+  '/images/galeria/foto-03.png', // arraiá no coreto
+  '/images/cidade/panoramica-irece.jpg', // a cidade ao entardecer
+]
+
 /**
- * A classificação do edital, na mesma linguagem do documento.
+ * A classificação do edital, na mesma capa e navegação do documento.
  *
- * A página tinha ficado para trás da repaginação: cabeçalho genérico com
- * migalhas, fundo cinza de aplicativo e tabela de sistema, enquanto o edital ao
- * lado virou faixas de cor de ponta a ponta. Como é a página que o proponente
- * mais procura depois do prazo, destoar dela era o pior lugar para destoar.
+ * A página reimplementava um cabeçalho escuro à parte, sem `FundoFotos` nem
+ * migalha de fato — três produtos visuais para o mesmo edital. Aqui é a
+ * mesma `FolhaDeRosto` da página principal, em variante compacta: é a
+ * página que o proponente mais procura depois que o prazo fecha, e era a
+ * que mais destoava do documento a que pertence.
  */
 export default async function PaginaResultados({ params }: Props) {
   const { slug } = await params
@@ -41,27 +48,26 @@ export default async function PaginaResultados({ params }: Props) {
 
   return (
     <div className="tema-secult font-questrial">
-      <section className="bg-tinta-950 text-papel-100">
-        <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
-          <Link
-            href={`/editais/${slug}`}
-            className="rotulo inline-flex min-h-[44px] items-center gap-2 text-[0.7rem] text-papel-100/75 transition-colors hover:text-papel-50"
-          >
-            <IconArrowLeft className="h-4 w-4" />
-            {dados.titulo}
-          </Link>
-
-          <h1 className="titulo mt-4 text-4xl leading-tight text-papel-50 sm:text-5xl">
-            {dados.resultado?.titulo ?? 'Resultados'}
-          </h1>
-
-          <p className="mt-3 max-w-2xl text-[0.95rem] leading-relaxed text-papel-100/80">
-            {dados.resultado
-              ? `${dados.linhas.length} ${dados.linhas.length === 1 ? 'proposta classificada' : 'propostas classificadas'} · Edital de ${dados.ano}`
-              : 'A classificação deste edital ainda não foi divulgada.'}
-          </p>
-        </div>
-      </section>
+      <FolhaDeRosto
+        fotos={FOTOS}
+        trilha="Resultados"
+        chamada={`Edital de ${dados.ano}`}
+        titulo={dados.resultado?.titulo ?? 'Resultados'}
+        apoio={
+          dados.resultado
+            ? `${dados.linhas.length} ${dados.linhas.length === 1 ? 'proposta classificada' : 'propostas classificadas'}.`
+            : 'A classificação deste edital ainda não foi divulgada.'
+        }
+        compacto
+      >
+        <Link
+          href={`/editais/${slug}`}
+          className="mt-5 inline-flex min-h-[44px] items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-accent-300 underline-offset-4 hover:underline"
+        >
+          <IconArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+          {dados.titulo}
+        </Link>
+      </FolhaDeRosto>
 
       {!dados.resultado ? (
         <FaixaSecao id="aguardando" cartela="Ainda não publicado" cor="papel" corCartela="tinta">

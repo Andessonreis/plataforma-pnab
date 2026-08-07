@@ -1,4 +1,6 @@
+import type { CSSProperties } from 'react'
 import Image from 'next/image'
+import { Casario } from '@/components/ui/ornamentos'
 
 const SELOS = ['PNAB', 'WCAG AA', '100% digital']
 
@@ -62,16 +64,26 @@ export function PainelVitrine() {
           município.
         </p>
 
-        <ul className="mt-7 flex flex-wrap gap-2">
+        {/* `.selo` é o carimbo de anel duplo da identidade — mesma peça da
+            numeração de `PassosInscricao` e dos ícones de `SecaoServicos`.
+            `--selo-gap` acompanha o fundo (`tinta-950`) para o vão do anel
+            ler como carimbo sobre tinta, e não como borda dupla achatada. */}
+        <ul className="mt-7 flex flex-wrap gap-3">
           {SELOS.map((selo) => (
             <li
               key={selo}
-              className="rounded-full bg-white/10 px-3 py-1.5 text-[0.8125rem] font-medium text-white/90"
+              className="selo h-11 px-3.5 text-[0.8125rem] font-medium text-papel-100"
+              style={{ '--selo-gap': '#190e07' } as CSSProperties}
             >
               {selo}
             </li>
           ))}
         </ul>
+
+        {/* Assinatura da vitrine — mesmo papel que cumpre em `SecaoConceito`:
+            fecha o bloco de texto institucional com o motivo autoral do
+            casario sertanejo, no lugar de terminar em gradiente puro. */}
+        <Casario className="mt-8 h-12 w-auto text-white/20" />
       </div>
     </aside>
   )

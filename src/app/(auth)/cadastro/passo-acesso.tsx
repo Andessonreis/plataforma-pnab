@@ -42,7 +42,7 @@ export function PassoAcesso({ cadastro }: { cadastro: Cadastro }) {
         <Exigencia atendida={conferem}>As duas senhas são iguais</Exigencia>
       </ul>
 
-      <p className="border-t border-slate-200 pt-5 text-sm leading-relaxed text-slate-500">
+      <p className="border-t-2 border-tinta-900/10 pt-5 text-sm leading-relaxed text-tinta-700">
         Seus dados são usados apenas para a análise das inscrições da PNAB e ficam sob a guarda da
         Secretaria de Cultura e Turismo de Irecê, conforme a Lei Geral de Proteção de Dados.
       </p>
@@ -52,7 +52,7 @@ export function PassoAcesso({ cadastro }: { cadastro: Cadastro }) {
 
 function Exigencia({ atendida, children }: { atendida: boolean; children: string }) {
   return (
-    <li className={`flex items-center gap-2 ${atendida ? 'text-emerald-700' : 'text-slate-500'}`}>
+    <li className={`flex items-center gap-2 ${atendida ? 'text-emerald-700' : 'text-tinta-600'}`}>
       <span aria-hidden="true" className="font-semibold">
         {atendida ? '✓' : '·'}
       </span>

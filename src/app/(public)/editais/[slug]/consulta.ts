@@ -8,7 +8,7 @@ import type { CategoriaConfig } from '@/types/categoria-config'
 import type { TomCarimbo } from '@/components/ui/carimbo'
 import type { ArquivoEdital } from './anexos-edital'
 import { resultadoPublicado, type ResultadoPublicado } from '../resultado-publicado'
-import type { ParteDoEdital } from './sumario-edital'
+import type { ParteDoEdital } from './document-nav'
 
 export interface EditalAberto {
   id: string

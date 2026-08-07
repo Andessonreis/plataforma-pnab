@@ -9,7 +9,13 @@ interface FaixaNumerosProps {
   numeros: NumeroDestaque[]
 }
 
-/** Faixa de indicadores do portal, logo abaixo da abertura. */
+/**
+ * Faixa de indicadores do portal, logo abaixo da abertura.
+ *
+ * Compartilhada entre a home e a listagem de editais: as duas abrem com uma
+ * faixa fotográfica e precisam do mesmo placar institucional logo depois,
+ * antes de qualquer filtro ou lista.
+ */
 export function FaixaNumeros({ numeros }: FaixaNumerosProps) {
   return (
     <section className="border-b-2 border-tinta-900/10 bg-papel-50">

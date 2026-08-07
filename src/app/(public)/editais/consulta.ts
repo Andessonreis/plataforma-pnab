@@ -27,6 +27,7 @@ function paraListagem(edital: EditalPrisma): EditalListado {
     id: edital.id,
     slug: edital.slug,
     titulo: edital.titulo,
+    ano: edital.ano,
     resumo: edital.resumo ? resumir(edital.resumo, 170) : null,
     categorias: edital.categorias.slice(0, 3),
     status: edital.status,
@@ -46,6 +47,8 @@ export interface ResultadoEditais {
   demais: EditalListado[]
   totalPaginas: number
   publicados: number
+  /** Total de encerrados no portal inteiro, independente da aba — para a faixa de expediente. */
+  encerrados: number
   /** Menor prazo entre os abertos, para a chamada de urgência da abertura. */
   proximo: { titulo: string; dias: number } | null
 }
@@ -68,7 +71,7 @@ export async function consultarEditais(
         : { notIn: [...OPEN_STATUSES, 'RASCUNHO' as EditalStatus] },
   }
 
-  const [abertosRaw, demaisRaw, totalDemais, publicados] = await Promise.all([
+  const [abertosRaw, demaisRaw, totalDemais, publicados, encerrados] = await Promise.all([
     // Sempre consultados, mesmo na aba Encerrados: o resumo da abertura conta
     // os abertos do portal inteiro, não os da aba. A aba decide o que exibir.
     prisma.edital.findMany({
@@ -85,6 +88,8 @@ export async function consultarEditais(
         }),
     aba === 'abertos' ? Promise.resolve(0) : prisma.edital.count({ where: whereDemais }),
     prisma.edital.count({ where: { status: { not: 'RASCUNHO' as EditalStatus } } }),
+    // Independente da aba, para a faixa de expediente logo abaixo da capa.
+    prisma.edital.count({ where: { status: { in: CLOSED_STATUSES } } }),
   ])
 
   const abertos = abertosRaw.map(paraListagem)
@@ -98,6 +103,7 @@ export async function consultarEditais(
     demais: demaisRaw.map(paraListagem),
     totalPaginas: Math.max(1, Math.ceil(totalDemais / PAGE_SIZE)),
     publicados,
+    encerrados,
     proximo: maisProximo ? { titulo: maisProximo.titulo, dias: maisProximo.diasRestantes! } : null,
   }
 }

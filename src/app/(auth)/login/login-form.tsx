@@ -8,6 +8,7 @@ import { Aviso, Button, CampoSenha, Input } from '@/components/ui'
 import { IconUser, IconLock } from '@/components/ui/icons'
 import { formatCpfCnpj } from '@/lib/utils/format'
 import { LinkVoltar } from '../link-voltar'
+import { ID_TITULO_ACESSO } from '../pagina-acesso'
 
 /** Destino inicial de cada perfil depois de entrar. */
 function destinoPorPerfil(role: string | undefined): string {
@@ -53,7 +54,7 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+    <form onSubmit={handleSubmit} className="space-y-5" aria-labelledby={ID_TITULO_ACESSO} noValidate>
       {cadastroConcluido && (
         <Aviso tom="sucesso">Cadastro concluído. Entre com o CPF/CNPJ e a senha que você criou.</Aviso>
       )}
@@ -92,19 +93,20 @@ export function LoginForm() {
       <div className="flex flex-wrap items-center justify-between gap-x-4 text-sm">
         <Link
           href="/cadastro"
+          data-tour="login-criar-conta"
           className="inline-flex min-h-[44px] items-center font-medium text-brand-700 hover:text-brand-800 hover:underline"
         >
           Criar conta
         </Link>
         <Link
           href="/recuperar-senha"
-          className="inline-flex min-h-[44px] items-center text-slate-500 hover:text-slate-700 hover:underline"
+          className="inline-flex min-h-[44px] items-center text-tinta-700 hover:text-tinta-950 hover:underline"
         >
           Esqueci minha senha
         </Link>
       </div>
 
-      <div className="flex justify-center border-t border-slate-200 pt-5">
+      <div className="flex justify-center border-t-2 border-tinta-900/10 pt-5">
         <LinkVoltar href="/">Voltar ao portal</LinkVoltar>
       </div>
     </form>

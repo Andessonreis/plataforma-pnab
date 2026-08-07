@@ -17,7 +17,7 @@ export function LinkVoltar({ href, children }: LinkVoltarProps) {
   return (
     <Link
       href={href}
-      className="inline-flex min-h-[44px] items-center gap-2 text-sm text-slate-500 transition-colors hover:text-slate-800"
+      className="inline-flex min-h-[44px] items-center gap-2 text-sm text-tinta-700 transition-colors hover:text-tinta-950"
     >
       <IconArrowLeft className="h-4 w-4" />
       {children}

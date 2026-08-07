@@ -121,6 +121,46 @@
   .section-label {
     @apply text-xs font-semibold uppercase tracking-wider;
   }
+
+  /* Leitura acessível — escala tipográfica ampliada para /editais/[slug]/acessivel,
+     sobre os mesmos tokens de cor do tema SECULT (não um esquema à parte). Corpo
+     maior e medida de coluna mais estreita são o que a página existe para
+     oferecer; a identidade continua sendo a mesma do resto do edital. */
+  .leitura-acessivel {
+    @apply text-tinta-800;
+    font-size: 1.0625rem;
+  }
+  .leitura-acessivel h2 {
+    @apply titulo mt-8 mb-4 text-2xl tracking-wide text-tinta-900 first:mt-0;
+  }
+  .leitura-acessivel h3 {
+    @apply mb-2 mt-6 text-xl font-bold text-tinta-900;
+  }
+  .leitura-acessivel p {
+    @apply mb-4 leading-relaxed;
+  }
+  .leitura-acessivel ul,
+  .leitura-acessivel ol {
+    @apply mb-4 space-y-2 pl-6;
+  }
+  .leitura-acessivel ul {
+    @apply list-disc;
+  }
+  .leitura-acessivel ol {
+    @apply list-decimal;
+  }
+  .leitura-acessivel a {
+    @apply font-medium text-brand-700 underline underline-offset-2;
+  }
+  .leitura-acessivel table {
+    @apply my-4 w-full border-collapse border-2 border-tinta-900/20;
+  }
+  .leitura-acessivel th {
+    @apply border border-tinta-900/20 bg-papel-100 p-3 text-left font-bold;
+  }
+  .leitura-acessivel td {
+    @apply border border-tinta-900/20 p-3;
+  }
 }
 
 @layer utilities {
@@ -290,16 +330,17 @@
 /* ---------------------------------------------------------------------------
    Telas de acesso — escopo `.acesso`.
 
-   Aqui NÃO vale a linguagem de impresso do resto da identidade. Entrar e criar
-   conta são UI de produto, não peça de divulgação: canto vivo, textura de
-   papel e condensada em caixa alta viram ruído em cima de um campo de texto, e
-   foi exatamente o que deixou estas telas com cara de cartaz de festa.
-
-   O que a marca faz aqui é a faixa de cor à esquerda. Do lado do formulário a
-   regra é silêncio: branco, canto arredondado, campo alto, um botão sólido.
-
-   `--painel-acesso` é a cor dessa faixa, definida pelo tema aplicado na raiz
-   do grupo de rota. Trocar de paleta é trocar essa classe, nada mais.
+   O corpo do formulário continua UI de produto, não peça de divulgação: os
+   campos (`Input`/`Select`/`CampoSenha`/`Button`) seguem brancos, cantos
+   pequenos, sem textura, porque são as mesmas primitivas usadas no resto do
+   sistema logado. O que muda é a moldura ao redor deles — faixa de
+   identidade no topo, painel com borda grossa translúcida em vez de sombra de
+   elevação, fundo com a textura de papel sutil que o resto do site público já
+   usa — para que a porta de entrada da jornada do proponente cite a mesma
+   linguagem da home em vez de parecer um produto à parte. O ruído que a
+   condensada em caixa alta causava em cima de um campo de texto continua
+   evitado: `.titulo`/`.rotulo` aparecem só no título da tela e num rótulo
+   curto, nunca em rótulo de campo ou texto de botão.
 --------------------------------------------------------------------------- */
 @layer utilities {
   /* 16px no campo: abaixo disso o Safari do iPhone dá zoom sozinho ao focar,

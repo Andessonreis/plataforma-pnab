@@ -10,11 +10,20 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Button, Input } from '@/components/ui'
+import { IconCheck } from '@/components/ui/icons'
 
 interface RecursoEditalButtonProps {
   slug: string
 }
 
+/**
+ * Recurso contra o edital, aberto na janela do próprio cronograma.
+ *
+ * O rótulo do gatilho já foi "Publicação do Edital" — descrevia o marco do
+ * cronograma que abre a janela, não a ação do botão. Quem lê "recurso contra
+ * o edital" sabe o que vai encontrar ao clicar; o nome do marco fica só como
+ * contexto no cronograma, que é de onde este botão nasce.
+ */
 export function RecursoEditalButton({ slug }: RecursoEditalButtonProps) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -68,30 +77,32 @@ export function RecursoEditalButton({ slug }: RecursoEditalButtonProps) {
       <DialogTrigger asChild>
         <button
           type="button"
-          className="inline-flex items-center gap-1 text-xs font-medium text-brand-600 hover:text-brand-700 hover:underline"
+          className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] text-brand-700 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
         >
-          Publicação do Edital
+          Recurso contra o edital
         </button>
       </DialogTrigger>
 
-      <DialogContent className="bg-white sm:max-w-lg max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-h-[85vh] overflow-y-auto rounded-none border-2 border-tinta-900 bg-papel-50 shadow-[6px_6px_0_0_theme(colors.tinta.900/0.15)] sm:max-w-lg">
         {protocolo ? (
-          <div className="text-center py-4">
-            <svg className="mx-auto h-12 w-12 text-brand-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-            </svg>
-            <h3 className="mt-4 text-lg font-semibold text-brand-800">Recurso interposto com sucesso</h3>
-            <p className="mt-2 text-sm text-slate-600">Seu número de protocolo é:</p>
-            <p className="mt-2 text-2xl font-bold text-brand-900 font-mono tracking-wider">{protocolo}</p>
-            <p className="mt-4 text-sm text-slate-500">
+          <div className="py-4 text-center">
+            <IconCheck className="mx-auto h-12 w-12 text-oliva-700" aria-hidden="true" />
+            <h3 className="titulo mt-4 text-xl tracking-wide text-tinta-900">
+              Recurso interposto com sucesso
+            </h3>
+            <p className="mt-2 text-sm text-tinta-600">Seu número de protocolo é:</p>
+            <p className="titulo mt-2 text-2xl tracking-wide text-brand-700">{protocolo}</p>
+            <p className="mt-4 text-sm text-tinta-500">
               Guarde este número para acompanhar. Você também receberá uma confirmação no e-mail informado.
             </p>
           </div>
         ) : (
           <>
             <DialogHeader>
-              <DialogTitle className="text-slate-900">Publicação do Edital</DialogTitle>
-              <DialogDescription className="text-slate-600">
+              <DialogTitle className="titulo text-xl tracking-wide text-tinta-900">
+                Recurso contra o edital
+              </DialogTitle>
+              <DialogDescription className="text-tinta-600">
                 Use este formulário para contestar as regras ou termos deste edital dentro do prazo previsto no cronograma.
               </DialogDescription>
             </DialogHeader>
@@ -123,8 +134,8 @@ export function RecursoEditalButton({ slug }: RecursoEditalButtonProps) {
                 autoComplete="tel"
               />
               <div className="w-full">
-                <label htmlFor="motivo-recurso" className="block text-sm font-medium text-slate-700 mb-1.5">
-                  Motivo do recurso <span className="text-red-500 ml-0.5" aria-hidden="true">*</span>
+                <label htmlFor="motivo-recurso" className="mb-1.5 block text-sm font-medium text-tinta-700">
+                  Motivo do recurso <span className="ml-0.5 text-red-600" aria-hidden="true">*</span>
                 </label>
                 <textarea
                   id="motivo-recurso"
@@ -133,18 +144,18 @@ export function RecursoEditalButton({ slug }: RecursoEditalButtonProps) {
                   value={formData.motivo}
                   onChange={(e) => updateField('motivo', e.target.value)}
                   required
-                  className="block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-0 focus:border-brand-500 focus:ring-brand-200 resize-y min-h-[120px]"
+                  className="block min-h-[120px] w-full resize-y border border-tinta-900/30 px-3 py-2.5 text-sm text-tinta-900 placeholder:text-tinta-400 transition-colors focus:border-accent-600 focus:outline-none focus:ring-2 focus:ring-accent-300"
                 />
-                <p className="mt-1.5 text-sm text-slate-500">Mínimo de 20 caracteres</p>
+                <p className="mt-1.5 text-sm text-tinta-500">Mínimo de 20 caracteres</p>
               </div>
 
               {error && (
-                <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700" role="alert">
+                <div className="border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
                   {error}
                 </div>
               )}
 
-              <Button type="submit" loading={loading} className="w-full">
+              <Button type="submit" loading={loading} className="w-full rounded-none bg-accent-500 text-tinta-950 hover:bg-accent-400 focus-visible:ring-tinta-900">
                 Enviar recurso
               </Button>
             </form>

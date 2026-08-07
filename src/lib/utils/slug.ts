@@ -4,8 +4,10 @@
 
 /**
  * Gera slug a partir de texto, removendo acentos e caracteres especiais.
+ * Compartilhado entre slugs de conteúdo (abaixo) e âncoras de heading
+ * (`extractHeadings` em `lib/utils/markdown.tsx`).
  */
-function slugify(text: string): string {
+export function slugify(text: string): string {
   return text
     .toLowerCase()
     .normalize('NFD')

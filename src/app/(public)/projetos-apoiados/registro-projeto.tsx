@@ -1,6 +1,10 @@
 import Image from 'next/image'
 import { Carimbo } from '@/components/ui/carimbo'
-import type { ProjetoRegistrado } from './consulta'
+import { DetalheProjeto } from './detalhe-projeto'
+import type { ProjetoRegistrado } from './tipos'
+
+/** Acima disso a miniatura de 4 já não mostra tudo — o "ver mais" ganha uma galeria ampliada. */
+const MINIATURAS_VISIVEIS = 4
 
 interface RegistroProjetoProps {
   projeto: ProjetoRegistrado
@@ -20,8 +24,13 @@ interface RegistroProjetoProps {
  * e no cartão do celular ficava no rodapé.
  */
 export function RegistroProjeto({ projeto }: RegistroProjetoProps) {
+  const temMais = projeto.imagens.length > MINIATURAS_VISIVEIS || projeto.relatorios.length > 0
+
   return (
-    <li className="grid gap-x-6 gap-y-3 px-4 py-6 sm:grid-cols-[10rem_1fr] sm:px-5">
+    <li
+      id={`projeto-${projeto.id}`}
+      className="scroll-mt-32 grid gap-x-6 gap-y-3 px-4 py-6 sm:grid-cols-[10rem_1fr] sm:px-5"
+    >
       <p className="titulo text-xl leading-none text-brand-700 sm:text-right">{projeto.valor}</p>
 
       <div className="min-w-0 sm:border-l sm:border-tinta-900/10 sm:pl-6">
@@ -57,7 +66,7 @@ export function RegistroProjeto({ projeto }: RegistroProjetoProps) {
 
         {projeto.imagens.length > 0 && (
           <ul className="mt-4 flex flex-wrap gap-2">
-            {projeto.imagens.slice(0, 4).map((url) => (
+            {projeto.imagens.slice(0, MINIATURAS_VISIVEIS).map((url) => (
               <li key={url} className="relative h-20 w-28 overflow-hidden rounded-sm">
                 <Image
                   src={url}
@@ -69,6 +78,22 @@ export function RegistroProjeto({ projeto }: RegistroProjetoProps) {
               </li>
             ))}
           </ul>
+        )}
+
+        {temMais && (
+          <details className="group mt-3">
+            <summary className="inline-flex min-h-[44px] cursor-pointer list-none items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] text-brand-700 marker:content-none hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500">
+              <span aria-hidden="true" className="transition-transform group-open:rotate-45">
+                +
+              </span>
+              Ver mais sobre este projeto
+            </summary>
+            <DetalheProjeto
+              nome={projeto.nome}
+              imagens={projeto.imagens}
+              relatorios={projeto.relatorios}
+            />
+          </details>
         )}
       </div>
     </li>

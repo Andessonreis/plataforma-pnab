@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db'
+import { stripMarkdown } from '@/lib/utils/markdown'
 
 export const PAGE_SIZE = 9
 
@@ -23,37 +24,11 @@ export interface Noticiario {
   ultimaPublicacao: string | null
 }
 
-/**
- * Tira a marcação do corpo para virar chamada de capa.
- *
- * O corte anterior removia só `# * _ \``, então links, imagens e citações
- * chegavam à listagem como `[texto](url)` e `> `. Aqui a limpeza é por
- * construção do Markdown, na ordem que evita deixar resto: primeiro os
- * blocos, depois o inline.
- */
-function chamadaDoCorpo(corpo: string, limite: number): string {
-  const limpo = corpo
-    .replace(/```[\s\S]*?```/g, ' ')
-    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
-    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
-    .replace(/^\s{0,3}#{1,6}\s+/gm, '')
-    .replace(/^\s{0,3}>\s?/gm, '')
-    .replace(/^\s*[-*+]\s+/gm, '')
-    .replace(/[*_`~]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-
-  if (limpo.length <= limite) return limpo
-  const corte = limpo.slice(0, limite)
-  const ultimoEspaco = corte.lastIndexOf(' ')
-  return (ultimoEspaco > 0 ? corte.slice(0, ultimoEspaco) : corte) + '...'
-}
-
 function porExtenso(data: Date): string {
   return data.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
-type NoticiaPrisma = {
+export type NoticiaPrisma = {
   id: string
   slug: string
   titulo: string
@@ -63,12 +38,14 @@ type NoticiaPrisma = {
   publicadoEm: Date | null
 }
 
-function paraListagem(n: NoticiaPrisma, tamanhoChamada: number): NoticiaListada {
+/** Mapeia uma notícia crua do Prisma para o formato de listagem/cartão —
+ *  usado tanto na grade principal quanto nas "relacionadas" do detalhe. */
+export function noticiaParaListagem(n: NoticiaPrisma, tamanhoChamada: number): NoticiaListada {
   return {
     id: n.id,
     slug: n.slug,
     titulo: n.titulo,
-    chamada: chamadaDoCorpo(n.corpo, tamanhoChamada),
+    chamada: stripMarkdown(n.corpo, tamanhoChamada),
     tags: n.tags,
     imagemUrl: n.imagemUrl,
     publicadoEmIso: n.publicadoEm?.toISOString() ?? null,
@@ -106,8 +83,8 @@ export async function consultarNoticiario(pagina: number): Promise<Noticiario> {
   ])
 
   const naPrimeira = pagina === 1
-  const manchete = naPrimeira && noticias[0] ? paraListagem(noticias[0], 260) : null
-  const demais = (naPrimeira ? noticias.slice(1) : noticias).map((n) => paraListagem(n, 150))
+  const manchete = naPrimeira && noticias[0] ? noticiaParaListagem(noticias[0], 260) : null
+  const demais = (naPrimeira ? noticias.slice(1) : noticias).map((n) => noticiaParaListagem(n, 150))
 
   // A “última publicação” é global (do noticiário todo), não da página atual.
   const ultimaData = naPrimeira

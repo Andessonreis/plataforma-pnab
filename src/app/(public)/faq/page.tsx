@@ -47,7 +47,7 @@ export default async function FaqPage() {
         )}
       </FolhaDeRosto>
 
-      <section className="papel-textura bg-papel-50 pb-16 pt-10">
+      <div className="papel-textura bg-papel-50 pb-16 pt-10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           {cadernos.length > 0 ? (
             <CadernoDuvidas cadernos={cadernos} />
@@ -62,11 +62,11 @@ export default async function FaqPage() {
             </div>
           )}
         </div>
-      </section>
+      </div>
 
       {/* O convite para perguntar fecha a página, e não uma caixa na lateral:
           só faz sentido depois que a pessoa procurou e não achou. */}
-      <section className="bg-tinta-950 text-papel-100">
+      <section id="faq-cta" className="bg-tinta-950 text-papel-100">
         <div className="mx-auto flex max-w-7xl flex-col items-start gap-6 px-4 py-12 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <div>
             <h2 className="titulo text-2xl leading-tight tracking-wide text-papel-50">
