@@ -162,6 +162,18 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     const allowedMimes: readonly string[] = isVideoTipo ? ALLOWED_VIDEO_MIMES : ALLOWED_MIMES
     const mimeLabel = isVideoTipo ? VIDEO_MIME_LABEL : MIME_LABEL
 
+    // Inferir/normalizar MIME type quando o navegador enviar genérico ou não preenchido
+    let mimeType = uploadedFile.type
+    if (!mimeType || mimeType === 'application/octet-stream' || mimeType === 'application/x-pdf') {
+      const ext = uploadedFile.name.split('.').pop()?.toLowerCase()
+      if (ext === 'pdf') mimeType = 'application/pdf'
+      else if (ext === 'png') mimeType = 'image/png'
+      else if (ext === 'jpg' || ext === 'jpeg') mimeType = 'image/jpeg'
+      else if (ext === 'mp4') mimeType = 'video/mp4'
+      else if (ext === 'webm') mimeType = 'video/webm'
+      else if (ext === 'mov') mimeType = 'video/quicktime'
+    }
+
     // Validar tamanho
     if (uploadedFile.size > maxSizeBytes) {
       const res = NextResponse.json(
@@ -174,7 +186,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     }
 
     // Validar MIME type
-    if (!allowedMimes.includes(uploadedFile.type)) {
+    if (!allowedMimes.includes(mimeType)) {
       const res = NextResponse.json(
         { error: 'BAD_REQUEST', message: `Tipo de arquivo não permitido. Aceitos: ${mimeLabel}.`, requestId },
         { status: 400 },
@@ -186,7 +198,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
 
     // Validar magic bytes
     const buffer = Buffer.from(await uploadedFile.arrayBuffer())
-    if (!validateMagicBytes(buffer, uploadedFile.type)) {
+    if (!validateMagicBytes(buffer, mimeType)) {
       const res = NextResponse.json(
         { error: 'BAD_REQUEST', message: 'Conteúdo do arquivo não corresponde ao tipo declarado.', requestId },
         { status: 400 },
@@ -196,10 +208,10 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
       return res
     }
 
-    // Upload para Supabase
+    // Upload para Supabase com timestamp no path pra evitar colisão
     const safeName = sanitizeFilename(uploadedFile.name)
-    const storagePath = `inscricoes/${id}/${safeName}`
-    const url = await uploadFile('propostas', storagePath, buffer, uploadedFile.type)
+    const storagePath = `inscricoes/${id}/${Date.now()}_${safeName}`
+    const url = await uploadFile('propostas', storagePath, buffer, mimeType)
 
     // Criar registro no banco — com rollback do arquivo se falhar
     let anexo: { id: string; url: string; titulo: string; tipo: string; createdAt: Date }

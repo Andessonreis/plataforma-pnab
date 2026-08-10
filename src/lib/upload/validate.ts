@@ -40,6 +40,15 @@ const MAGIC_BYTES: Record<string, { signature: number[]; offset?: number }[]> = 
  * Retorna true se válido, false se a assinatura não bate.
  */
 export function validateMagicBytes(buffer: Buffer, declaredMime: string): boolean {
+  if (!buffer || buffer.length === 0) return false
+
+  // Para PDF, o cabeçalho %PDF (0x25 0x50 0x44 0x46) pode estar nos primeiros 1024 bytes (ex: com BOM/comentários de scanners)
+  if (declaredMime === 'application/pdf') {
+    const pdfMagic = Buffer.from([0x25, 0x50, 0x44, 0x46])
+    const searchSlice = buffer.subarray(0, Math.min(buffer.length, 1024))
+    return searchSlice.includes(pdfMagic)
+  }
+
   const signatures = MAGIC_BYTES[declaredMime]
   if (!signatures) {
     // MIME não mapeado — rejeita por precaução

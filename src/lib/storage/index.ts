@@ -34,10 +34,11 @@ export async function uploadFile(
   path: string,
   file: Buffer | Blob,
   contentType: string,
+  upsert = true,
 ): Promise<string> {
   const { error } = await supabase.storage
     .from(bucket)
-    .upload(path, file, { contentType, upsert: false })
+    .upload(path, file, { contentType, upsert })
 
   if (error) throw new Error(`Upload falhou: ${error.message}`)
 
