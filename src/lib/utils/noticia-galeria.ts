@@ -1,3 +1,5 @@
+import { TZ_BR } from './format'
+
 export interface GaleriaItem {
   url: string
   legenda: string
@@ -25,10 +27,15 @@ export function parseGaleria(json: unknown): GaleriaItem[] {
   })
 }
 
-/** Compara a data do item (`YYYY-MM-DD`) com hoje, no fuso local do servidor. */
+/**
+ * Compara a data do item (`YYYY-MM-DD`) com hoje, sempre no fuso de Irecê
+ * (`TZ_BR`) — nunca no fuso do processo Node. Em produção o container roda
+ * em UTC: sem fixar o fuso aqui, o servidor já vira o dia ~21h no horário
+ * local, e um card de "hoje" à noite passa a ler como "passado".
+ */
 export function statusDia(data: string | null, hoje: Date = new Date()): StatusDia {
   if (!data) return null
-  const hojeIso = hoje.toLocaleDateString('sv-SE') // YYYY-MM-DD, sem depender de timezone lib
+  const hojeIso = new Intl.DateTimeFormat('sv-SE', { timeZone: TZ_BR }).format(hoje) // YYYY-MM-DD
   if (data === hojeIso) return 'hoje'
   return data < hojeIso ? 'passado' : 'futuro'
 }
