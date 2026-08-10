@@ -44,6 +44,11 @@ RUN npx esbuild src/worker.ts --bundle --platform=node --format=cjs \
 FROM base AS runner
 WORKDIR /app
 
+# Fuso do container — reforço além do TZ_BR explícito no código (src/lib/utils/format.ts):
+# alpine não traz tzdata por padrão, e sem isso o container roda em UTC.
+RUN apk add --no-cache tzdata
+ENV TZ=America/Sao_Paulo
+
 ENV NODE_ENV=production
 
 RUN addgroup --system --gid 1001 nodejs
