@@ -55,7 +55,7 @@ describe('storage', () => {
       expect(mockFrom).toHaveBeenCalledWith('editais')
       expect(mockUpload).toHaveBeenCalledWith('edital-1.pdf', buffer, {
         contentType: 'application/pdf',
-        upsert: false,
+        upsert: true,
       })
     })
 
