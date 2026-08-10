@@ -38,11 +38,24 @@ export async function createInscricao(data: CreateInscricaoInput, userId: string
   }
 
   let inscricao!: { id: string; numero: string }
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const count = await prisma.inscricao.count({
-      where: { numero: { startsWith: `PNAB-${edital.ano}-` } },
-    })
-    const numero = `PNAB-${edital.ano}-${String(count + 1).padStart(4, '0')}`
+  const lastInscricao = await prisma.inscricao.findFirst({
+    where: { numero: { startsWith: `PNAB-${edital.ano}-` } },
+    orderBy: { numero: 'desc' },
+    select: { numero: true },
+  })
+  let lastSeq = 0
+  if (lastInscricao?.numero) {
+    const parts = lastInscricao.numero.split('-')
+    const num = parseInt(parts[parts.length - 1], 10)
+    if (!isNaN(num)) lastSeq = num
+  }
+  const count = await prisma.inscricao.count({
+    where: { numero: { startsWith: `PNAB-${edital.ano}-` } },
+  })
+  const baseSeq = Math.max(lastSeq, count)
+
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const numero = `PNAB-${edital.ano}-${String(baseSeq + 1 + attempt).padStart(4, '0')}`
 
     try {
       inscricao = await prisma.inscricao.create({
@@ -59,7 +72,7 @@ export async function createInscricao(data: CreateInscricaoInput, userId: string
       })
       break
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002' && attempt < 2) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002' && attempt < 4) {
         continue
       }
       throw e
