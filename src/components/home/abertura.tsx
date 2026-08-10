@@ -24,7 +24,7 @@ interface AberturaProps {
  */
 export function Abertura({ slides, editais, fotos }: AberturaProps) {
   return (
-    <section className="relative overflow-hidden bg-brand-900">
+    <section className="relative overflow-hidden bg-brand-700">
       <FundoFotos fotos={fotos} />
 
       <div
