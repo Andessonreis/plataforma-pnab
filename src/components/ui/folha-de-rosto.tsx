@@ -39,11 +39,11 @@ export function FolhaDeRosto({
   compacto = false,
 }: FolhaDeRostoProps) {
   return (
-    <section className="relative overflow-hidden bg-brand-900 text-papel-100">
+    <section className="relative overflow-hidden bg-brand-700 text-papel-100">
       <FundoFotos fotos={fotos} />
 
       <div
-        className="pointer-events-none absolute inset-0 bg-gradient-to-r from-tinta-950/90 via-tinta-950/70 to-tinta-950/25"
+        className="pointer-events-none absolute inset-0 bg-gradient-to-r from-tinta-950/70 via-tinta-950/50 to-tinta-950/20"
         aria-hidden="true"
       />
 

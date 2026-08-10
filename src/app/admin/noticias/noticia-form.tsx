@@ -4,6 +4,8 @@ import { useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { Input, Button, Card, Textarea, ImageUpload } from '@/components/ui'
 import { toast } from '@/hooks/use-toast'
+import type { GaleriaItem } from '@/lib/utils/noticia-galeria'
+import { GaleriaEditor } from './galeria-editor'
 
 interface NoticiaFormProps {
   initialData?: {
@@ -12,6 +14,7 @@ interface NoticiaFormProps {
     corpo: string
     tags: string[]
     imagemUrl: string
+    galeria: GaleriaItem[]
     publicado: boolean
     publicadoEm: string
   }
@@ -26,6 +29,7 @@ export function NoticiaForm({ initialData, noticiaId }: NoticiaFormProps) {
   const [corpo, setCorpo] = useState(initialData?.corpo ?? '')
   const [tagsText, setTagsText] = useState(initialData?.tags.join(', ') ?? '')
   const [imagemUrl, setImagemUrl] = useState(initialData?.imagemUrl ?? '')
+  const [galeria, setGaleria] = useState<GaleriaItem[]>(initialData?.galeria ?? [])
   const [publicado, setPublicado] = useState(initialData?.publicado ?? false)
   const [publicadoEm, setPublicadoEm] = useState(initialData?.publicadoEm ?? '')
 
@@ -47,6 +51,7 @@ export function NoticiaForm({ initialData, noticiaId }: NoticiaFormProps) {
       corpo,
       tags,
       imagemUrl: imagemUrl || null,
+      galeria: galeria.filter((item) => item.url && item.legenda),
       publicado,
       publicadoEm: publicadoEm || null,
     }
@@ -131,6 +136,18 @@ export function NoticiaForm({ initialData, noticiaId }: NoticiaFormProps) {
             pasta="noticias"
           />
         </div>
+      </Card>
+
+      {/* Programação */}
+      <Card padding="sm" className="sm:p-6">
+        <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-1">
+          Galeria / Programação
+        </h2>
+        <p className="text-xs sm:text-sm text-slate-600 mb-3 sm:mb-4">
+          Opcional. Use para coberturas com vários dias — cada item vira um card na página
+          pública, com destaque automático pro dia atual.
+        </p>
+        <GaleriaEditor itens={galeria} onChange={setGaleria} />
       </Card>
 
       {/* Publicação */}

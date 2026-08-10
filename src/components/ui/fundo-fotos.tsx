@@ -18,7 +18,7 @@ const TRAVESSIA_S = 1.8
 /**
  * Fotografias da cultura de Irecê no fundo da faixa de abertura.
  *
- * As fotos passam por um banho de tinta terracota em `multiply` antes de
+ * As fotos passam por um banho leve de tinta terracota em `multiply` antes de
  * chegar ao olho: sem isso cada uma traz sua própria temperatura — o azul das
  * saias de quadrilha, o neon do arraiá — e o banner viraria uma colagem. Com o
  * banho, todas viram a mesma tinta e a peça continua sendo uma peça só.
@@ -61,8 +61,8 @@ export function FundoFotos({ fotos }: FundoFotosProps) {
         </motion.div>
       </AnimatePresence>
 
-      <div className="absolute inset-0 bg-brand-800/50 mix-blend-multiply" />
-      <div className="absolute inset-0 bg-gradient-to-t from-tinta-950/80 via-tinta-950/40 to-tinta-950/65" />
+      <div className="absolute inset-0 bg-brand-600/35 mix-blend-multiply" />
+      <div className="absolute inset-0 bg-gradient-to-t from-tinta-950/60 via-tinta-950/25 to-tinta-950/45" />
     </div>
   )
 }

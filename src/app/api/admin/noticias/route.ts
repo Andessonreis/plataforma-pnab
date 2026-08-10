@@ -10,11 +10,18 @@ export const runtime = 'nodejs'
 
 // ── Schema de validacao ─────────────────────────────────────────────────────
 
+const galeriaItemSchema = z.object({
+  url: z.string().min(1),
+  legenda: z.string().min(1),
+  data: z.string().nullable().optional(),
+})
+
 const noticiaSchema = z.object({
   titulo: z.string().min(3, 'Título deve ter no mínimo 3 caracteres'),
   corpo: z.string().min(10, 'Corpo deve ter no mínimo 10 caracteres'),
   tags: z.array(z.string()).default([]),
   imagemUrl: z.string().nullable().optional(),
+  galeria: z.array(galeriaItemSchema).default([]),
   publicado: z.boolean().default(false),
   publicadoEm: z.string().nullable().optional(),
 })
@@ -67,6 +74,7 @@ export async function POST(req: NextRequest) {
         corpo: sanitizeContent(data.corpo),
         tags: data.tags,
         imagemUrl: data.imagemUrl ?? null,
+        galeria: data.galeria,
         publicado: data.publicado,
         publicadoEm: data.publicadoEm
           ? new Date(data.publicadoEm)
@@ -192,6 +200,7 @@ export async function PUT(req: NextRequest) {
         corpo: sanitizeContent(data.corpo),
         tags: data.tags,
         imagemUrl: data.imagemUrl ?? null,
+        galeria: data.galeria,
         publicado: data.publicado,
         publicadoEm: data.publicadoEm
           ? new Date(data.publicadoEm)

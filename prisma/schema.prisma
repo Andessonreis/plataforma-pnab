@@ -449,6 +449,10 @@ model Noticia {
   corpo       String
   tags        String[]
   imagemUrl   String?
+  /** Galeria opcional — `{ url, legenda, data }[]`. Usada em coberturas com
+   *  programação por dia (ex.: festival de vários dias); ver `GaleriaItem`
+   *  em `src/lib/utils/noticia-galeria.ts`. */
+  galeria     Json?
   publicado   Boolean   @default(false)
   publicadoEm DateTime?
   createdAt   DateTime  @default(now())

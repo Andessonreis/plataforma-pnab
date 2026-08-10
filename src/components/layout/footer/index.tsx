@@ -7,7 +7,7 @@ import { Selos } from './selos'
 import { linksNavegacao, linksProponente, linksLegais } from './links'
 
 interface FooterProps {
-  /** Varal de bandeirinhas no topo do rodapé. Default true — desative em áreas logadas/produto. */
+  /** Faixa de casario no topo do rodapé. Default true — desative em áreas logadas/produto. */
   showVaral?: boolean
 }
 
@@ -23,7 +23,7 @@ function Footer({ showVaral = true }: FooterProps) {
 
   return (
     <footer className="tema-secult bg-tinta-950 text-papel-200 font-questrial" role="contentinfo">
-      {/* Varal da identidade visual, no lugar da antiga faixa de gradiente */}
+      {/* Faixa de casario da identidade visual, no lugar da antiga faixa de gradiente */}
       {showVaral && <Varal />}
 
       <div className="border-b border-papel-100/[0.08]">

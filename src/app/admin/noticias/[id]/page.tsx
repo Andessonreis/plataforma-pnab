@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { auth } from '@/lib/auth'
 import { redirect, notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
+import { parseGaleria } from '@/lib/utils/noticia-galeria'
 import { NoticiaForm } from '../noticia-form'
 import { DeleteNoticiaButton } from './delete-button'
 
@@ -61,6 +62,7 @@ export default async function EditarNoticiaPage({ params }: Props) {
           corpo: noticia.corpo,
           tags: noticia.tags,
           imagemUrl: noticia.imagemUrl ?? '',
+          galeria: parseGaleria(noticia.galeria),
           publicado: noticia.publicado,
           publicadoEm: publicadoEmFormatted,
         }}

@@ -5,10 +5,12 @@ import { prisma } from '@/lib/db'
 import { FadeIn } from '@/components/ui/animated'
 import { IconArrowLeft, IconArrowRight } from '@/components/ui/icons'
 import { extractHeadings, stripMarkdown } from '@/lib/utils/markdown'
+import { parseGaleria } from '@/lib/utils/noticia-galeria'
 import { noticiaParaListagem } from '../consulta'
 import { EntradaNoticia } from '../entrada-noticia'
 import { CabecalhoNoticia } from './cabecalho-noticia'
 import { CorpoNoticia } from './corpo-noticia'
+import { GaleriaProgramacao } from './galeria-programacao'
 import { SumarioNoticia } from './sumario-noticia'
 
 interface NoticiaPageProps {
@@ -83,6 +85,7 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
   })
 
   const headings = extractHeadings(noticia.corpo)
+  const galeria = parseGaleria(noticia.galeria)
 
   return (
     <div className="tema-secult font-questrial">
@@ -94,6 +97,8 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
         tempoLeitura={estimarTempoLeitura(noticia.corpo)}
         imagemUrl={noticia.imagemUrl}
       />
+
+      <GaleriaProgramacao itens={galeria} />
 
       <SumarioNoticia headings={headings} />
 
