@@ -6,6 +6,9 @@ import { ServiceError } from './errors'
 import { resolveCharLimits } from '@/lib/campo-limits'
 import { filterCamposByTipo, type CampoFormulario } from '@/types/campo-formulario'
 import { invalidCotasOptIn, type CategoriaConfig } from '@/types/categoria-config'
+import { parseAuxilioInscricao, AUXILIO_INSCRICAO_CAMPO } from '@/types/auxilio-inscricao'
+import { EDITAL_SLUG_MESTRES_E_MESTRAS } from '@/lib/constants/editais-especiais'
+import { isValidCpf } from '@/lib/validators/document'
 import type { CreateInscricaoInput, UpdateInscricaoInput } from '@/lib/schemas/inscricao'
 
 export async function createInscricao(data: CreateInscricaoInput, userId: string, ip?: string) {
@@ -143,7 +146,7 @@ export async function submitInscricao(id: string, userId: string, ip?: string) {
     include: {
       edital: {
         select: {
-          id: true, titulo: true, status: true, categorias: true,
+          id: true, slug: true, titulo: true, status: true, categorias: true,
           camposFormulario: true, etapasCustomizadas: true,
         },
       },
@@ -276,6 +279,20 @@ export async function submitInscricao(id: string, userId: string, ip?: string) {
 
   if (inscricao.anexos.length === 0) {
     throw new ServiceError('BAD_REQUEST', 'Envie pelo menos um anexo antes de submeter.')
+  }
+
+  // Mestres e Mestras: se o proponente marcou que teve auxílio no preenchimento,
+  // nome e CPF de quem ajudou passam a ser obrigatórios (o auxílio em si é opcional).
+  if (inscricao.edital.slug === EDITAL_SLUG_MESTRES_E_MESTRAS) {
+    const auxilio = parseAuxilioInscricao(campos[AUXILIO_INSCRICAO_CAMPO])
+    if (auxilio.ativo) {
+      if (!auxilio.nomeAuxiliar.trim()) {
+        throw new ServiceError('BAD_REQUEST', 'Informe o nome de quem auxiliou no preenchimento da inscrição.')
+      }
+      if (!isValidCpf(auxilio.cpfAuxiliar)) {
+        throw new ServiceError('BAD_REQUEST', 'Informe um CPF válido de quem auxiliou no preenchimento da inscrição.')
+      }
+    }
   }
 
   const now = new Date()

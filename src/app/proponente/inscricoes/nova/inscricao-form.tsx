@@ -6,6 +6,8 @@ import type { Anexo } from '@/types/anexo'
 import type { CampoFormulario } from '@/types/campo-formulario'
 import type { EtapaCustomizada } from '@/types/etapa-customizada'
 import type { CategoriaConfig } from '@/types/categoria-config'
+import { parseAuxilioInscricao, AUXILIO_INSCRICAO_CAMPO } from '@/types/auxilio-inscricao'
+import { EDITAL_SLUG_MESTRES_E_MESTRAS } from '@/lib/constants/editais-especiais'
 import { useInscricaoForm } from './use-inscricao-form'
 import { StepIndicator } from './step-indicator'
 import { StepTransition } from './step-transition'
@@ -31,6 +33,7 @@ interface ArquivoEditalDownload {
 
 interface EditalInfo {
   id: string
+  slug?: string
   titulo: string
   categorias: string[]
   categoriasConfig?: CategoriaConfig[] | null
@@ -71,6 +74,9 @@ export default function InscricaoForm({
     initialCampos,
     initialAnexos,
   })
+
+  const mostrarAuxilioInscricao = edital.slug === EDITAL_SLUG_MESTRES_E_MESTRAS
+  const auxilioInscricao = parseAuxilioInscricao(f.campos[AUXILIO_INSCRICAO_CAMPO])
 
   // Direção da transição entre etapas — compara com a etapa anterior pra
   // deslizar o conteúdo da direita (avançando) ou da esquerda (voltando).
@@ -121,6 +127,9 @@ export default function InscricaoForm({
                 categoriaConfig={f.categoriaConfig}
                 cotasOptIn={f.cotasOptIn}
                 onToggleCota={f.toggleCota}
+                mostrarAuxilioInscricao={mostrarAuxilioInscricao}
+                auxilioInscricao={auxilioInscricao}
+                onAuxilioInscricaoChange={(v) => f.updateCampo(AUXILIO_INSCRICAO_CAMPO, v)}
               />
             )}
 

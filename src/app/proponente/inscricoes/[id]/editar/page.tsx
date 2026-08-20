@@ -30,6 +30,7 @@ export default async function EditarInscricaoPage({ params }: Props) {
       edital: {
         select: {
           id: true,
+          slug: true,
           titulo: true,
           categorias: true,
           categoriasConfig: true,
@@ -120,6 +121,7 @@ export default async function EditarInscricaoPage({ params }: Props) {
       <InscricaoForm
         edital={{
           id: inscricao.edital.id,
+          slug: inscricao.edital.slug,
           titulo: inscricao.edital.titulo,
           categorias: inscricao.edital.categorias,
           categoriasConfig: (Array.isArray(inscricao.edital.categoriasConfig)
