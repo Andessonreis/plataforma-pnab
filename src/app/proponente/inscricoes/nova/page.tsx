@@ -38,6 +38,7 @@ export default async function NovaInscricaoPage({ searchParams }: Props) {
     where: { id: editalId },
     select: {
       id: true,
+      slug: true,
       titulo: true,
       categorias: true,
       categoriasConfig: true,
@@ -110,6 +111,7 @@ export default async function NovaInscricaoPage({ searchParams }: Props) {
       <InscricaoForm
         edital={{
           id: edital.id,
+          slug: edital.slug,
           titulo: edital.titulo,
           categorias: edital.categorias,
           categoriasConfig: (Array.isArray(edital.categoriasConfig)

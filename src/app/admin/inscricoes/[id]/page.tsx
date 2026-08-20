@@ -8,6 +8,7 @@ import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
 import { CRITERIOS_AVALIACAO_PADRAO, type CriterioAvaliacao } from '@/lib/avaliacao-criterios'
 import type { InscricaoStatus } from '@prisma/client'
 import type { CampoFormulario } from '@/types/campo-formulario'
+import { parseAuxilioInscricao, AUXILIO_INSCRICAO_CAMPO } from '@/types/auxilio-inscricao'
 import { temAcessoEdital } from '@/lib/edital-acesso'
 import { HabilitacaoActions } from './habilitacao-actions'
 import { AvaliacaoForm } from './avaliacao-form'
@@ -126,6 +127,12 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
         ? (rawCampos as Record<string, unknown>)
         : {}
   const isStaff = isAdmin || userRole === 'HABILITADOR'
+  // Auxílio no preenchimento (Mestres e Mestras) — visível só pra equipe, nunca pro avaliador
+  // (avaliação é cega e não deve considerar quem ajudou o proponente a se inscrever).
+  const auxilioInscricao = parseAuxilioInscricao(campos[AUXILIO_INSCRICAO_CAMPO])
+  const auxilioInscricaoView = isStaff && auxilioInscricao.ativo
+    ? { nomeAuxiliar: auxilioInscricao.nomeAuxiliar, cpfAuxiliar: auxilioInscricao.cpfAuxiliar }
+    : null
   const totalAvaliadores = inscricao.avaliacoes.length
   const canHabilitar = session.user.role === 'ADMIN' || session.user.role === 'HABILITADOR'
   const isHabilitacaoStatus = inscricao.status === 'ENVIADA' || inscricao.status === 'HABILITADA' || inscricao.status === 'INABILITADA'
@@ -173,6 +180,7 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
             campos={campos}
             camposFormulario={camposFormulario}
             etapasCustomizadas={etapasOrdenadas}
+            auxilioInscricao={auxilioInscricaoView}
             anexos={
               inscricao.anexos.length > 0
                 ? {

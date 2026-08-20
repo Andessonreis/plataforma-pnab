@@ -3,6 +3,8 @@
 import { Card, Select } from '@/components/ui'
 import type { SelectOption } from '@/components/ui'
 import type { CategoriaConfig } from '@/types/categoria-config'
+import type { AuxilioInscricao } from '@/types/auxilio-inscricao'
+import { AuxilioInscricaoField } from './auxilio-inscricao-field'
 
 interface StepCategoriaProps {
   categorias: string[]
@@ -11,6 +13,10 @@ interface StepCategoriaProps {
   categoriaConfig?: CategoriaConfig
   cotasOptIn: string[]
   onToggleCota: (key: string) => void
+  /** Só o edital Mestres e Mestras habilita o bloco de auxílio no preenchimento. */
+  mostrarAuxilioInscricao?: boolean
+  auxilioInscricao?: AuxilioInscricao
+  onAuxilioInscricaoChange?: (value: AuxilioInscricao) => void
 }
 
 export function StepCategoria({
@@ -20,9 +26,16 @@ export function StepCategoria({
   categoriaConfig,
   cotasOptIn,
   onToggleCota,
+  mostrarAuxilioInscricao,
+  auxilioInscricao,
+  onAuxilioInscricaoChange,
 }: StepCategoriaProps) {
   return (
     <Card padding="lg">
+      {mostrarAuxilioInscricao && auxilioInscricao && onAuxilioInscricaoChange && (
+        <AuxilioInscricaoField value={auxilioInscricao} onChange={onAuxilioInscricaoChange} />
+      )}
+
       <h2 className="text-xl font-semibold text-slate-900 mb-1">Selecione a Categoria</h2>
       <p className="text-sm text-slate-600 mb-6">
         Escolha a categoria em que seu projeto se enquadra neste edital.

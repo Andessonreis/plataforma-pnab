@@ -31,6 +31,15 @@ interface Props {
     count: number
     node: ReactNode
   }
+  /**
+   * Mestres e Mestras: dados de quem auxiliou o proponente a preencher a inscrição.
+   * Só passar quando o proponente marcou o auxílio como ativo — a seção some sem isso.
+   * Uso interno da equipe (admin/habilitação); nunca repassar na tela do avaliador.
+   */
+  auxilioInscricao?: {
+    nomeAuxiliar: string
+    cpfAuxiliar: string
+  } | null
   /** Usa accordion (true) ou cards abertos (false). Default true. */
   collapsible?: boolean
 }
@@ -107,6 +116,7 @@ export function DadosInscricaoView({
   camposFormulario,
   etapasCustomizadas,
   anexos,
+  auxilioInscricao,
   collapsible = true,
 }: Props) {
   const etapasOrdenadas = [...etapasCustomizadas].sort((a, b) => a.ordem - b.ordem)
@@ -153,6 +163,27 @@ export function DadosInscricaoView({
           )}
         </dl>
       </WrapperBloco>
+
+      {/* Auxílio no preenchimento (só Mestres e Mestras, só quando marcado) */}
+      {auxilioInscricao && (
+        <WrapperBloco
+          collapsible={collapsible}
+          title="Auxílio no preenchimento"
+          subtitle="Inscrição preenchida com ajuda de outra pessoa"
+          defaultOpen
+        >
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div>
+              <dt className="text-sm font-medium text-slate-500">Nome de quem ajudou</dt>
+              <dd className="text-sm text-slate-900">{auxilioInscricao.nomeAuxiliar || '—'}</dd>
+            </div>
+            <div>
+              <dt className="text-sm font-medium text-slate-500">CPF de quem ajudou</dt>
+              <dd className="text-sm text-slate-900 font-mono">{auxilioInscricao.cpfAuxiliar || '—'}</dd>
+            </div>
+          </dl>
+        </WrapperBloco>
+      )}
 
       {/* Etapa "Dados do Projeto" (camposFormulario do edital) */}
       {camposDadosFiltrados.length > 0 && (
