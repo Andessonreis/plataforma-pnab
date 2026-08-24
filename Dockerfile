@@ -37,7 +37,10 @@ RUN npx prisma generate
 RUN --mount=type=cache,target=/app/.next/cache npm run build
 
 # Compila o worker BullMQ (bundla código local, mantém pacotes npm externos)
-RUN npx esbuild src/worker.ts --bundle --platform=node --format=cjs \
+# --jsx=automatic: tsconfig.json usa "jsx": "preserve" (pro pipeline do Next),
+# que o esbuild não reconhece — sem essa flag ele cai no runtime clássico
+# (React.createElement) sem importar React, quebrando todo render de e-mail.
+RUN npx esbuild src/worker.ts --bundle --platform=node --format=cjs --jsx=automatic \
     --outfile=dist/worker.cjs --packages=external --tsconfig=tsconfig.json
 
 # ── Runner (produção) ─────────────────────────────────────────────────────────
