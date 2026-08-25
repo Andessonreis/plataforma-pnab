@@ -1,8 +1,9 @@
-// Dados do formulário guiado do Anexo 01 (Declaração de Parceria) — pedido
-// específico da Secretaria pro edital Mestres e Mestras: em vez do proponente
-// digitar por cima de um texto corrido com colchetes, ele preenche campos
-// normais e a plataforma gera o PDF oficial com os mesmos colchetes preenchidos
-// (nenhuma palavra do texto original é alterada — ver src/lib/pdf/templates/declaracao-parceria.ts).
+// Dados do formulário guiado do Anexo 01 (Declaração de Parceria) — aparece em
+// qualquer edital que tenha esse anexo cadastrado (ver ANEXO_01_TITULO em
+// src/lib/pdf/templates/declaracao-parceria.ts), não é exclusivo de um edital.
+// Em vez do proponente digitar por cima de um texto corrido com colchetes, ele
+// preenche campos normais e a plataforma gera o PDF oficial com os mesmos
+// colchetes preenchidos (nenhuma palavra do texto original é alterada).
 // Persiste dentro de Inscricao.campos (chave reservada), mesmo padrão de
 // src/types/auxilio-inscricao.ts — sem exigir migration.
 

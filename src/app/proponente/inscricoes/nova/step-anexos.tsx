@@ -34,6 +34,7 @@ interface StepAnexosProps {
   onAttachVideoLink: (url: string, tipo: string, titulo: string) => Promise<boolean>
   onRemoveAnexo: (anexoId: string) => void
   mostrarDeclaracaoParceria?: boolean
+  editalId?: string
   declaracaoParceria?: DeclaracaoParceria
   onDeclaracaoParceriaChange?: (value: DeclaracaoParceria) => void
 }
@@ -52,6 +53,7 @@ export function StepAnexos({
   onAttachVideoLink,
   onRemoveAnexo,
   mostrarDeclaracaoParceria,
+  editalId,
   declaracaoParceria,
   onDeclaracaoParceriaChange,
 }: StepAnexosProps) {
@@ -65,8 +67,8 @@ export function StepAnexos({
 
       <AnexosArquivosEdital arquivos={arquivosEdital ?? []} tipoLabels={tipoLabels} />
 
-      {mostrarDeclaracaoParceria && declaracaoParceria && onDeclaracaoParceriaChange && (
-        <DeclaracaoParceriaField value={declaracaoParceria} onChange={onDeclaracaoParceriaChange} />
+      {mostrarDeclaracaoParceria && editalId && declaracaoParceria && onDeclaracaoParceriaChange && (
+        <DeclaracaoParceriaField editalId={editalId} value={declaracaoParceria} onChange={onDeclaracaoParceriaChange} />
       )}
 
       <AnexosChecklist tipos={tiposAnexo} anexos={anexos} />

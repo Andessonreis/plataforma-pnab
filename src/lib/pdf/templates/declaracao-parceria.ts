@@ -4,6 +4,11 @@ import { fillPdfTemplate, type FillField } from '../fill-template'
 
 export const DECLARACAO_PARCERIA_TEMPLATE_KEY = 'declaracao-parceria'
 
+// Título exato do arquivo MODELO_EDITAL que identifica esse anexo — qualquer
+// edital (atual ou futuro) que cadastrar um arquivo com esse título ganha o
+// formulário guiado automaticamente, sem precisar de mudança de código.
+export const ANEXO_01_TITULO = 'Anexo 01 — Declaração de Parceria'
+
 // Altura de cada espaço em branco no PDF original (Anexo 01) limita quantos
 // caracteres cabem sem sobrepor o texto vizinho — o mesmo limite físico que
 // já existe hoje pra quem preenche à mão. Acima disso, a UI orienta a usar o
