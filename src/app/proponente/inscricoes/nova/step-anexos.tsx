@@ -9,6 +9,8 @@ import { VideoAttach } from './video-attach'
 import { AnexosArquivosEdital } from './anexos-arquivos-edital'
 import { AnexosChecklist } from './anexos-checklist'
 import { AnexosListaEnviados } from './anexos-lista-enviados'
+import { DeclaracaoParceriaField } from './declaracao-parceria-field'
+import type { DeclaracaoParceria } from '@/types/declaracao-parceria'
 
 interface ArquivoEditalDownload {
   id: string
@@ -31,6 +33,9 @@ interface StepAnexosProps {
   anexoVideoComplementar: Anexo | null
   onAttachVideoLink: (url: string, tipo: string, titulo: string) => Promise<boolean>
   onRemoveAnexo: (anexoId: string) => void
+  mostrarDeclaracaoParceria?: boolean
+  declaracaoParceria?: DeclaracaoParceria
+  onDeclaracaoParceriaChange?: (value: DeclaracaoParceria) => void
 }
 
 export function StepAnexos({
@@ -46,6 +51,9 @@ export function StepAnexos({
   anexoVideoComplementar,
   onAttachVideoLink,
   onRemoveAnexo,
+  mostrarDeclaracaoParceria,
+  declaracaoParceria,
+  onDeclaracaoParceriaChange,
 }: StepAnexosProps) {
   return (
     <Card padding="lg">
@@ -56,6 +64,11 @@ export function StepAnexos({
       </p>
 
       <AnexosArquivosEdital arquivos={arquivosEdital ?? []} tipoLabels={tipoLabels} />
+
+      {mostrarDeclaracaoParceria && declaracaoParceria && onDeclaracaoParceriaChange && (
+        <DeclaracaoParceriaField value={declaracaoParceria} onChange={onDeclaracaoParceriaChange} />
+      )}
+
       <AnexosChecklist tipos={tiposAnexo} anexos={anexos} />
 
       <AnexoUpload onUpload={onUpload} uploading={uploading} tiposAnexoEdital={tiposAnexoEdital} />
