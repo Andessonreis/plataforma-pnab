@@ -11,18 +11,20 @@ import {
 import type { DeclaracaoParceria } from '@/types/declaracao-parceria'
 
 interface DeclaracaoParceriaFieldProps {
+  editalId: string
   value: DeclaracaoParceria
   onChange: (value: DeclaracaoParceria) => void
 }
 
 /**
- * Bloco exclusivo do edital Mestres e Mestras: em vez do proponente preencher
- * à mão o texto corrido do Anexo 01 (Declaração de Parceria), ele preenche
- * campos normais aqui e a plataforma gera o PDF oficial já com os colchetes
- * preenchidos — sem alterar nenhuma palavra do documento da Secretaria.
- * O modelo em branco continua disponível acima pra quem preferir preencher à mão.
+ * Aparece em qualquer edital que tenha um anexo "Anexo 01 — Declaração de
+ * Parceria" cadastrado (ver ANEXO_01_TITULO). Em vez do proponente preencher
+ * à mão o texto corrido com colchetes, ele preenche campos normais aqui e a
+ * plataforma gera o PDF oficial já preenchido — sem alterar nenhuma palavra
+ * do documento da Secretaria. O modelo em branco continua disponível acima
+ * pra quem preferir preencher à mão.
  */
-export function DeclaracaoParceriaField({ value, onChange }: DeclaracaoParceriaFieldProps) {
+export function DeclaracaoParceriaField({ editalId, value, onChange }: DeclaracaoParceriaFieldProps) {
   const [gerando, setGerando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
 
@@ -49,7 +51,7 @@ export function DeclaracaoParceriaField({ value, onChange }: DeclaracaoParceriaF
       const res = await fetch('/api/proponente/documentos-gerados', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ templateKey: DECLARACAO_PARCERIA_TEMPLATE_KEY, dados: value }),
+        body: JSON.stringify({ templateKey: DECLARACAO_PARCERIA_TEMPLATE_KEY, editalId, dados: value }),
       })
 
       if (!res.ok) {
