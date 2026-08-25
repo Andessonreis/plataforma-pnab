@@ -8,6 +8,7 @@ import type { EtapaCustomizada } from '@/types/etapa-customizada'
 import type { CategoriaConfig } from '@/types/categoria-config'
 import { parseAuxilioInscricao, AUXILIO_INSCRICAO_CAMPO } from '@/types/auxilio-inscricao'
 import { parseDeclaracaoParceria, DECLARACAO_PARCERIA_CAMPO } from '@/types/declaracao-parceria'
+import { ANEXO_01_TITULO } from '@/lib/pdf/templates/declaracao-parceria'
 import { EDITAL_SLUG_MESTRES_E_MESTRAS } from '@/lib/constants/editais-especiais'
 import { useInscricaoForm } from './use-inscricao-form'
 import { StepIndicator } from './step-indicator'
@@ -79,7 +80,7 @@ export default function InscricaoForm({
   const mostrarAuxilioInscricao = edital.slug === EDITAL_SLUG_MESTRES_E_MESTRAS
   const auxilioInscricao = parseAuxilioInscricao(f.campos[AUXILIO_INSCRICAO_CAMPO])
 
-  const mostrarDeclaracaoParceria = edital.slug === EDITAL_SLUG_MESTRES_E_MESTRAS
+  const mostrarDeclaracaoParceria = (edital.arquivos ?? []).some((a) => a.titulo === ANEXO_01_TITULO)
   const declaracaoParceria = parseDeclaracaoParceria(f.campos[DECLARACAO_PARCERIA_CAMPO])
 
   // Direção da transição entre etapas — compara com a etapa anterior pra
@@ -171,6 +172,7 @@ export default function InscricaoForm({
                 onAttachVideoLink={f.handleAttachVideoLink}
                 onRemoveAnexo={f.handleDeleteAnexo}
                 mostrarDeclaracaoParceria={mostrarDeclaracaoParceria}
+                editalId={edital.id}
                 declaracaoParceria={declaracaoParceria}
                 onDeclaracaoParceriaChange={(v) => f.updateCampo(DECLARACAO_PARCERIA_CAMPO, v)}
               />

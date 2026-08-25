@@ -4,21 +4,21 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { downloadFile, extractStoragePath } from '@/lib/storage'
 import {
+  ANEXO_01_TITULO,
   DECLARACAO_PARCERIA_TEMPLATE_KEY,
   declaracaoParceriaSchema,
   gerarDeclaracaoParceria,
 } from '@/lib/pdf/templates/declaracao-parceria'
-import { EDITAL_SLUG_MESTRES_E_MESTRAS } from '@/lib/constants/editais-especiais'
 
 export const runtime = 'nodejs'
 
-const ANEXO_01_TITULO = 'Anexo 01 — Declaração de Parceria'
-
 /**
  * Gera um documento a partir de um modelo oficial do edital + dados digitados
- * no formulário guiado (hoje só o Anexo 01 do Mestres e Mestras). Não persiste
- * nada — devolve o PDF pronto pra download; o proponente ainda precisa assinar
- * e reenviar pelo upload de anexo normal.
+ * no formulário guiado. Funciona pra qualquer edital que tenha um arquivo
+ * MODELO_EDITAL com título "Anexo 01 — Declaração de Parceria" cadastrado —
+ * não é exclusivo de um edital específico. Não persiste nada — devolve o PDF
+ * pronto pra download; o proponente ainda precisa assinar e reenviar pelo
+ * upload de anexo normal.
  */
 export async function POST(req: NextRequest) {
   const requestId = randomUUID()
@@ -45,6 +45,15 @@ export async function POST(req: NextRequest) {
       return res
     }
 
+    if (typeof body.editalId !== 'string' || !body.editalId) {
+      const res = NextResponse.json(
+        { error: 'BAD_REQUEST', message: 'editalId é obrigatório.', requestId },
+        { status: 400 },
+      )
+      res.headers.set('X-Request-Id', requestId)
+      return res
+    }
+
     const parsed = declaracaoParceriaSchema.safeParse(body.dados)
     if (!parsed.success) {
       const res = NextResponse.json(
@@ -59,21 +68,8 @@ export async function POST(req: NextRequest) {
       return res
     }
 
-    const edital = await prisma.edital.findUnique({
-      where: { slug: EDITAL_SLUG_MESTRES_E_MESTRAS },
-      select: { id: true },
-    })
-    if (!edital) {
-      const res = NextResponse.json(
-        { error: 'NOT_FOUND', message: 'Edital não encontrado.', requestId },
-        { status: 404 },
-      )
-      res.headers.set('X-Request-Id', requestId)
-      return res
-    }
-
     const arquivo = await prisma.arquivoEdital.findFirst({
-      where: { editalId: edital.id, titulo: ANEXO_01_TITULO },
+      where: { editalId: body.editalId, titulo: ANEXO_01_TITULO },
       select: { url: true },
     })
     const storagePath = arquivo ? extractStoragePath('editais', arquivo.url) : null
