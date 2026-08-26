@@ -30,7 +30,7 @@ const CATEGORIAS: { titulo: string; chaves: EmailTemplate[] }[] = [
   },
   {
     titulo: 'Equipe / interno',
-    chaves: ['equipe_habilitacao_pendente', 'recurso_submetido'],
+    chaves: ['equipe_habilitacao_pendente', 'recurso_submetido', 'relatorio_inscricoes'],
   },
   {
     titulo: 'Segurança',

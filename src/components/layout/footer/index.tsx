@@ -4,6 +4,7 @@ import { NewsletterForm } from '../newsletter-form'
 import { ColunaMarca } from './coluna-marca'
 import { ColunaLinks } from './coluna-links'
 import { Selos } from './selos'
+import { SeloCidadesInteligentes } from '@/components/marca/selo-cidades-inteligentes'
 import { linksNavegacao, linksProponente, linksLegais } from './links'
 
 interface FooterProps {
@@ -61,6 +62,12 @@ function Footer({ showVaral = true }: FooterProps) {
           </div>
 
           <Selos />
+        </div>
+      </div>
+
+      <div className="border-t border-papel-100/[0.08]">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <SeloCidadesInteligentes fundo="escuro" centralizado className="sm:items-start sm:text-left" />
         </div>
       </div>
 

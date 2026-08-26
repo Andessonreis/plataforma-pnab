@@ -4,6 +4,8 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { logAudit } from '@/lib/audit'
 import { cumulativeStatuses } from '@/lib/status-maps'
+import { formatTelefoneBR } from '@/lib/utils/format'
+import { categoriaWhere } from '@/lib/inscricoes/area-filter'
 import type { InscricaoStatus } from '@prisma/client'
 
 export const runtime = 'nodejs'
@@ -27,9 +29,12 @@ export async function GET(req: NextRequest) {
     const url = new URL(req.url)
     const editalId = url.searchParams.get('editalId') || undefined
     const status = url.searchParams.get('status') || undefined
+    const categoria = url.searchParams.get('categoria') || undefined
 
     const where: Record<string, unknown> = {}
     if (editalId) where.editalId = editalId
+    const recorteArea = categoriaWhere(categoria)
+    if (recorteArea !== undefined) where.categoria = recorteArea
     if (status) {
       const cumulative = cumulativeStatuses[status as InscricaoStatus]
       where.status = cumulative ? { in: cumulative } : status
@@ -40,7 +45,7 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: 'desc' },
       include: {
         edital: { select: { titulo: true } },
-        proponente: { select: { nome: true, cpfCnpj: true, email: true } },
+        proponente: { select: { nome: true, cpfCnpj: true, email: true, telefone: true } },
       },
     })
 
@@ -50,13 +55,14 @@ export async function GET(req: NextRequest) {
     }
 
     // Gerar CSV
-    const headers = ['Numero', 'Nome', 'CPF/CNPJ', 'Email', 'Edital', 'Status', 'Categoria', 'Nota Final', 'Enviada em']
+    const headers = ['Numero', 'Nome', 'CPF/CNPJ', 'Email', 'Telefone', 'Edital', 'Status', 'Categoria', 'Nota Final', 'Enviada em']
 
     const rows = inscricoes.map((i) => [
       csvSafe(String(i.numero ?? '')),
       `"${csvSafe(i.proponente.nome)}"`,
       csvSafe(i.proponente.cpfCnpj ?? ''),
       csvSafe(i.proponente.email),
+      csvSafe(formatTelefoneBR(i.proponente.telefone ?? '')),
       `"${csvSafe(i.edital.titulo)}"`,
       csvSafe(i.status),
       csvSafe(i.categoria ?? ''),
@@ -72,7 +78,12 @@ export async function GET(req: NextRequest) {
       userId: session.user.id,
       action: 'EXPORTACAO_CSV',
       entity: 'Inscricao',
-      details: { totalRegistros: inscricoes.length, editalId: editalId ?? 'todos', status: status ?? 'todos' },
+      details: {
+        totalRegistros: inscricoes.length,
+        editalId: editalId ?? 'todos',
+        status: status ?? 'todos',
+        categoria: categoria ?? 'todas',
+      },
       ip: req.headers.get('x-forwarded-for') ?? undefined,
     })
 

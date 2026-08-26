@@ -6,6 +6,7 @@ import { prisma } from '@/lib/db'
 import { Card, Badge, Pagination, Button, EmptyState, FadeIn, IconExport, IconClipboard } from '@/components/ui'
 import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
 import { getEditaisVisiveis } from '@/lib/edital-acesso'
+import { categoriaWhere, labelArea, SEM_AREA } from '@/lib/inscricoes/area-filter'
 import type { InscricaoStatus } from '@prisma/client'
 
 export const metadata: Metadata = {
@@ -17,6 +18,7 @@ interface Props {
     page?: string
     status?: string
     editalId?: string
+    categoria?: string
     search?: string
     aviso?: string
   }>
@@ -31,6 +33,7 @@ export default async function AdminInscricoesPage({ searchParams }: Props) {
   const pageSize = 15
   const statusFilter = params.status || undefined
   const editalIdFilter = params.editalId || undefined
+  const areaFilter = params.categoria || undefined
   const searchQuery = params.search || undefined
   const aviso = params.aviso || undefined
 
@@ -40,6 +43,8 @@ export default async function AdminInscricoesPage({ searchParams }: Props) {
   const where: Record<string, unknown> = {}
   if (statusFilter) where.status = statusFilter
   if (editalIdFilter) where.editalId = editalIdFilter
+  const recorteArea = categoriaWhere(areaFilter)
+  if (recorteArea !== undefined) where.categoria = recorteArea
   if (searchQuery) {
     where.OR = [
       { numero: { contains: searchQuery, mode: 'insensitive' } },
@@ -78,7 +83,12 @@ export default async function AdminInscricoesPage({ searchParams }: Props) {
     }
   }
 
-  const [inscricoes, total, editais] = await Promise.all([
+  // Escopo sem o recorte de área: alimenta o <select> com todas as opções
+  // visíveis pro usuário, mesmo quando uma área já está selecionada.
+  const whereSemArea: Record<string, unknown> = { ...where }
+  delete whereSemArea.categoria
+
+  const [inscricoes, total, editais, agrupadoPorArea] = await Promise.all([
     prisma.inscricao.findMany({
       where,
       orderBy: { createdAt: 'desc' },
@@ -104,7 +114,16 @@ export default async function AdminInscricoesPage({ searchParams }: Props) {
       select: { id: true, titulo: true, ano: true },
       orderBy: { createdAt: 'desc' },
     }),
+    prisma.inscricao.groupBy({
+      by: ['categoria'],
+      where: whereSemArea,
+      _count: { _all: true },
+    }),
   ])
+
+  const areas = agrupadoPorArea
+    .map((g) => ({ nome: g.categoria ?? '', total: g._count._all }))
+    .sort((a, b) => b.total - a.total || a.nome.localeCompare(b.nome, 'pt-BR'))
 
   const totalPages = Math.ceil(total / pageSize)
 
@@ -117,6 +136,7 @@ export default async function AdminInscricoesPage({ searchParams }: Props) {
   const filterParams = new URLSearchParams()
   if (statusFilter) filterParams.set('status', statusFilter)
   if (editalIdFilter) filterParams.set('editalId', editalIdFilter)
+  if (areaFilter) filterParams.set('categoria', areaFilter)
   if (searchQuery) filterParams.set('search', searchQuery)
   const baseUrl = `/admin/inscricoes${filterParams.toString() ? `?${filterParams.toString()}` : ''}`
 
@@ -157,7 +177,7 @@ export default async function AdminInscricoesPage({ searchParams }: Props) {
       {/* Filtros */}
       <Card padding="sm" className="mb-4 sm:mb-6 sm:p-6">
         <form method="get" action="/admin/inscricoes" className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label htmlFor="search" className="block text-sm font-medium text-slate-700 mb-1.5">
                 Buscar
@@ -205,6 +225,25 @@ export default async function AdminInscricoesPage({ searchParams }: Props) {
                 {allStatuses.map((status) => (
                   <option key={status} value={status}>
                     {inscricaoStatusLabel[status]}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="categoria" className="block text-sm font-medium text-slate-700 mb-1.5">
+                Área
+              </label>
+              <select
+                id="categoria"
+                name="categoria"
+                defaultValue={areaFilter}
+                className="block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-500 min-h-[44px]"
+              >
+                <option value="">Todas as áreas</option>
+                {areas.map((a) => (
+                  <option key={a.nome || SEM_AREA} value={a.nome || SEM_AREA}>
+                    {labelArea(a.nome)} ({a.total})
                   </option>
                 ))}
               </select>

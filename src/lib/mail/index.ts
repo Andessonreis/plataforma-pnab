@@ -5,11 +5,12 @@
 // (útil em testes ou pré-visualização), `renderTemplate` está disponível.
 
 import { checkAllowlist } from './allowlist'
-import { sendViaResend } from './client'
+import { sendViaResend, type EmailAttachment } from './client'
 import { renderTemplate } from './render'
 import type { EmailTemplate } from './templates'
 
 export type { EmailTemplate, TemplateDataMap } from './templates'
+export type { EmailAttachment } from './client'
 export { renderTemplate, defaultSubjectFor } from './render'
 
 // Id sentinela retornado quando o envio é descartado pela allowlist de teste.
@@ -23,6 +24,8 @@ export interface SendEmailOptions {
   /** Sobrescreve o assunto padrão do template. */
   subject?: string
   replyTo?: string
+  /** Anexos opcionais (PDF de relatório, por exemplo). */
+  attachments?: EmailAttachment[]
 }
 
 export interface SendEmailResult {
@@ -56,6 +59,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<SendEmailRes
     html,
     text,
     replyTo: options.replyTo,
+    attachments: options.attachments,
   })
   return { id: result.id }
 }
