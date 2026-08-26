@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { SeloCidadesInteligentes } from '@/components/marca/selo-cidades-inteligentes'
 
 const linksRodape = [
   { href: '/contato', label: 'Contato' },
@@ -32,6 +33,10 @@ export function ProponenteFooter() {
             </Link>
           ))}
         </nav>
+      </div>
+
+      <div className="mt-4 flex justify-center border-t border-tinta-950/5 pt-4 sm:justify-start">
+        <SeloCidadesInteligentes fundo="claro" />
       </div>
     </footer>
   )
