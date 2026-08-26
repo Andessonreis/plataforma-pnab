@@ -78,6 +78,7 @@ export const AUDIT_ACTIONS = {
   EXPORTACAO_CSV: 'EXPORTACAO_CSV',
   EXPORTACAO_LISTA_PDF: 'EXPORTACAO_LISTA_PDF',
   EXPORTACAO_RELATORIO_FINAL: 'EXPORTACAO_RELATORIO_FINAL',
+  RELATORIO_INSCRICOES_ENVIADO: 'RELATORIO_INSCRICOES_ENVIADO',
   IMPORTACAO_CONTEMPLADOS: 'IMPORTACAO_CONTEMPLADOS',
 
   // Admin — notificações
@@ -160,6 +161,7 @@ export const ACTION_LABELS: Record<string, string> = {
   EXPORTACAO_CSV: 'Exportação CSV',
   EXPORTACAO_LISTA_PDF: 'Exportação lista PDF',
   EXPORTACAO_RELATORIO_FINAL: 'Exportação relatório final',
+  RELATORIO_INSCRICOES_ENVIADO: 'Relatório de inscrições enviado por e-mail',
   IMPORTACAO_CONTEMPLADOS: 'Importação contemplados',
   NOTIFICACAO_CAMPANHA_CRIADA: 'Campanha de notificação criada',
   NOTIFICACAO_CAMPANHA_ATUALIZADA: 'Campanha de notificação atualizada',

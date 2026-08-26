@@ -1,11 +1,20 @@
 'use client'
 
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import { SEM_AREA, labelArea } from '@/lib/inscricoes/area-filter'
+
+export interface AreaOption {
+  /** Nome da área como está gravado na inscrição (''= sem área definida). */
+  nome: string
+  total: number
+}
 
 interface FilterFormProps {
   editais: { id: string; titulo: string; ano: number }[]
+  areas: AreaOption[]
   selectedEditalId?: string
   selectedStatus?: string
+  selectedArea?: string
 }
 
 const STATUS_OPTIONS = [
@@ -23,7 +32,13 @@ const STATUS_OPTIONS = [
   { value: 'SUPLENTE', label: 'Suplente' },
 ]
 
-export default function FilterForm({ editais, selectedEditalId, selectedStatus }: FilterFormProps) {
+export default function FilterForm({
+  editais,
+  areas,
+  selectedEditalId,
+  selectedStatus,
+  selectedArea,
+}: FilterFormProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -39,12 +54,12 @@ export default function FilterForm({ editais, selectedEditalId, selectedStatus }
     router.push(pathname)
   }
 
-  const hasFilters = !!selectedEditalId || !!selectedStatus
+  const hasFilters = !!selectedEditalId || !!selectedStatus || !!selectedArea
   const selectClass = 'w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500'
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div>
           <label className="block text-xs font-medium text-slate-500 mb-1" htmlFor="filter-edital">
             Edital
@@ -77,6 +92,26 @@ export default function FilterForm({ editais, selectedEditalId, selectedStatus }
             {STATUS_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
                 {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-slate-500 mb-1" htmlFor="filter-area">
+            Área
+          </label>
+          <select
+            id="filter-area"
+            value={selectedArea ?? ''}
+            onChange={(e) => update('categoria', e.target.value)}
+            className={selectClass}
+            disabled={areas.length === 0}
+          >
+            <option value="">Todas as áreas</option>
+            {areas.map((a) => (
+              <option key={a.nome || SEM_AREA} value={a.nome || SEM_AREA}>
+                {labelArea(a.nome)} ({a.total})
               </option>
             ))}
           </select>
