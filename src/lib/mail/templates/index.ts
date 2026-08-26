@@ -58,6 +58,11 @@ import {
   type RecursoSubmetidoData,
 } from './recurso-submetido'
 import {
+  RelatorioInscricoes,
+  relatorioInscricoesSubject,
+  type RelatorioInscricoesData,
+} from './relatorio-inscricoes'
+import {
   ResultadoFinal,
   resultadoFinalSubject,
   type ResultadoFinalData,
@@ -82,6 +87,7 @@ export type EmailTemplate =
   | 'habilitacao'
   | 'equipe_habilitacao_pendente'
   | 'notificacao_generica'
+  | 'relatorio_inscricoes'
 
 export interface TemplateDataMap {
   boas_vindas: BoasVindasData
@@ -97,6 +103,7 @@ export interface TemplateDataMap {
   habilitacao: HabilitacaoData
   equipe_habilitacao_pendente: EquipeHabilitacaoPendenteData
   notificacao_generica: NotificacaoGenericaData
+  relatorio_inscricoes: RelatorioInscricoesData
 }
 
 interface TemplateEntry<K extends EmailTemplate> {
@@ -158,5 +165,9 @@ export const templateRegistry: Registry = {
   notificacao_generica: {
     Component: NotificacaoGenerica,
     defaultSubject: notificacaoGenericaSubject,
+  },
+  relatorio_inscricoes: {
+    Component: RelatorioInscricoes,
+    defaultSubject: relatorioInscricoesSubject,
   },
 }

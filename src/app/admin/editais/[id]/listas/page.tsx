@@ -21,8 +21,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: `Listas: ${edital?.titulo ?? id} — Portal PNAB Irecê` }
 }
 
-/** Ordem de exibição dos status (RASCUNHO é omitido). */
+/** Ordem de exibição dos status. */
 const STATUS_ORDER: InscricaoStatus[] = [
+  'RASCUNHO',
   'ENVIADA',
   'HABILITADA',
   'INABILITADA',
@@ -56,7 +57,7 @@ export default async function ListasEditalPage({ params }: Props) {
 
   const countMap = new Map(counts.map((c) => [c.status, c._count]))
 
-  // Filtrar: somente status com count > 0 e que não seja RASCUNHO
+  // Filtrar: somente status com count > 0
   const statusCards = STATUS_ORDER.filter((s) => (countMap.get(s) ?? 0) > 0)
 
   return (

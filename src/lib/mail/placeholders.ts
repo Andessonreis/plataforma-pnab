@@ -143,6 +143,18 @@ export const TEMPLATE_META: Record<EmailTemplate, TemplateMeta> = {
       { key: 'ctaLabel', description: 'Texto do botão CTA (opcional)', sample: 'Saber mais' },
     ],
   },
+  relatorio_inscricoes: {
+    label: 'Relatório de inscrições',
+    description: 'Enviado pela equipe, sob demanda, com os PDFs de inscrições por edital em anexo.',
+    placeholders: [
+      { key: 'nome', description: 'Nome de quem recebe o relatório (membro da equipe da Secretaria).', sample: 'Malane Apolonio', required: true },
+      { key: 'statusLabel', description: 'Status filtrado no relatório — muda conforme o recorte escolhido na exportação.', sample: 'Rascunho', required: true },
+      { key: 'dataGeracao', description: 'Data em que o relatório foi gerado, já formatada em pt-BR.', sample: '26/08/2026', required: true },
+      { key: 'total', description: 'Total de inscrições somando todos os PDFs em anexo.', sample: '61', required: true },
+      { key: 'areaLabel', description: 'Área/categoria filtrada, quando o relatório for de uma área só. Vazio = todas as áreas.', sample: 'Teatro' },
+      { key: 'url', description: 'Link de volta pra tela de exportação no painel.', sample: 'https://culturaeturismo.irece.ba.gov.br/admin/inscricoes/export' },
+    ],
+  },
 }
 
 // Monta um objeto data com os valores `sample` — usado pelo preview do admin.

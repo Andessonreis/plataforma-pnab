@@ -3,6 +3,7 @@
  * Tabela paginada com header repetido, zebra striping, CPF mascarado.
  */
 import { createDocument, docToBuffer, MARGINS, CONTENT_WIDTH, COLORS, PAGE_WIDTH } from './shared'
+import { formatTelefoneBR } from '@/lib/utils/format'
 import {
   addCompactHeader,
   addInfoBlock,
@@ -20,6 +21,7 @@ export interface ListaInscricoesItem {
   nome: string
   cpfCnpj: string
   categoria: string | null
+  telefone: string | null
   notaFinal: number | null
   motivoInabilitacao: string | null
 }
@@ -52,6 +54,11 @@ const STATUS_COM_NOTA = new Set(['CONTEMPLADA', 'NAO_CONTEMPLADA', 'SUPLENTE'])
 /** Status que exibe motivo de inabilitação. */
 const STATUS_COM_MOTIVO = new Set(['INABILITADA'])
 
+// Lista de rascunhos é documento interno de contato — a Secretaria usa pra ligar
+// pra quem começou a inscrição e não concluiu. Só ela leva telefone; as demais
+// listas são oficiais e podem ser publicadas, então não expõem contato.
+const STATUS_COM_TELEFONE = new Set(['RASCUNHO'])
+
 function getColumns(status: string): ColumnDef[] {
   const base: ColumnDef[] = [
     { label: 'Nº', width: 28 },
@@ -78,6 +85,15 @@ function getColumns(status: string): ColumnDef[] {
     return [
       ...base,
       { label: 'Motivo', width: 122 },
+    ]
+  }
+
+  if (STATUS_COM_TELEFONE.has(status)) {
+    base[2].width = 150 // Nome
+    base[4].width = 65  // Categoria mais curta
+    return [
+      ...base,
+      { label: 'Telefone', width: 87 },
     ]
   }
 
@@ -212,12 +228,7 @@ export async function generateListaInscricoes(data: ListaInscricoesData): Promis
 
   // ── Aviso legal ───────────────────────────────────────────────────────
   checkPageBreak(doc, 50, ctx)
-  addLegalNotice(
-    doc,
-    'Este documento é uma lista oficial gerada pela plataforma Portal PNAB Irecê. ' +
-    'Os dados apresentados correspondem às informações registradas no sistema na data de geração. ' +
-    'Para contestações e recursos, consulte os prazos estabelecidos no edital.',
-  )
+  addLegalNotice(doc, legalNoticeFor(data.status))
 
   // ── Footer da última página ───────────────────────────────────────────
   addCompactFooter(doc, ctx.pageNum)
@@ -226,6 +237,27 @@ export async function generateListaInscricoes(data: ListaInscricoesData): Promis
 }
 
 // ─── Helpers privados ────────────────────────────────────────────────────────
+
+/**
+ * Aviso de rodapé. Rascunho não é lista oficial nem publicável: são inscrições
+ * inacabadas, e o documento leva telefone justamente pra equipe entrar em contato.
+ */
+function legalNoticeFor(status: string): string {
+  if (STATUS_COM_TELEFONE.has(status)) {
+    return (
+      'Documento interno de trabalho gerado pela plataforma Portal PNAB Irecê. ' +
+      'Relaciona inscrições iniciadas e ainda não enviadas na data de geração, com telefone ' +
+      'para contato da equipe da Secretaria. Não constitui lista oficial e não deve ser ' +
+      'publicado nem compartilhado fora da Secretaria — contém dados pessoais protegidos pela LGPD.'
+    )
+  }
+
+  return (
+    'Este documento é uma lista oficial gerada pela plataforma Portal PNAB Irecê. ' +
+    'Os dados apresentados correspondem às informações registradas no sistema na data de geração. ' +
+    'Para contestações e recursos, consulte os prazos estabelecidos no edital.'
+  )
+}
 
 /** Monta os valores de uma linha de acordo com o status. */
 function buildRowValues(item: ListaInscricoesItem, status: string): string[] {
@@ -247,6 +279,11 @@ function buildRowValues(item: ListaInscricoesItem, status: string): string[] {
 
   if (STATUS_COM_MOTIVO.has(status)) {
     return [...base, item.motivoInabilitacao ?? '—']
+  }
+
+  if (STATUS_COM_TELEFONE.has(status)) {
+    const tel = formatTelefoneBR(item.telefone ?? '')
+    return [...base, tel || '—']
   }
 
   return base

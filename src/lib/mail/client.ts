@@ -17,12 +17,19 @@ export function __resetResendClient() {
   cached = null
 }
 
+/** Anexo já materializado em memória — o Resend recebe o buffer direto. */
+export interface EmailAttachment {
+  filename: string
+  content: Buffer
+}
+
 export interface SendOptions {
   to: string | string[]
   subject: string
   html: string
   text: string
   replyTo?: string
+  attachments?: EmailAttachment[]
 }
 
 export async function sendViaResend(options: SendOptions): Promise<{ id: string }> {
@@ -39,6 +46,7 @@ export async function sendViaResend(options: SendOptions): Promise<{ id: string 
     html: options.html,
     text: options.text,
     replyTo: options.replyTo,
+    attachments: options.attachments,
   })
 
   if (error) {

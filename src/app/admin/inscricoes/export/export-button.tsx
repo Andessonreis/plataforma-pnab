@@ -15,8 +15,10 @@ export default function ExportButton({ total }: ExportButtonProps) {
     const params = new URLSearchParams()
     const editalId = searchParams.get('editalId')
     const status = searchParams.get('status')
+    const categoria = searchParams.get('categoria')
     if (editalId) params.set('editalId', editalId)
     if (status) params.set('status', status)
+    if (categoria) params.set('categoria', categoria)
     const qs = params.toString()
     return `/api/admin/inscricoes/export${qs ? `?${qs}` : ''}`
   }

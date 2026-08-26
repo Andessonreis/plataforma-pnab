@@ -6,11 +6,13 @@ import { prisma } from '@/lib/db'
 import { logAudit } from '@/lib/audit'
 import { generateListaInscricoes } from '@/lib/pdf/lista-inscricoes'
 import { inscricaoStatusLabel, cumulativeStatuses } from '@/lib/status-maps'
+import { categoriaWhere } from '@/lib/inscricoes/area-filter'
 import type { InscricaoStatus } from '@prisma/client'
 
 export const runtime = 'nodejs'
 
 const VALID_STATUSES: InscricaoStatus[] = [
+  'RASCUNHO',
   'ENVIADA',
   'HABILITADA',
   'INABILITADA',
@@ -25,6 +27,7 @@ const VALID_STATUSES: InscricaoStatus[] = [
 
 const querySchema = z.object({
   status: z.enum(VALID_STATUSES as [InscricaoStatus, ...InscricaoStatus[]]),
+  categoria: z.string().min(1).optional(),
 })
 
 /** Status com classificação por nota (ordena por notaFinal DESC). */
@@ -57,7 +60,10 @@ export async function GET(req: NextRequest, context: RouteContext) {
     // Validação de params
     const { id: editalId } = await context.params
     const url = new URL(req.url)
-    const parsed = querySchema.safeParse({ status: url.searchParams.get('status') })
+    const parsed = querySchema.safeParse({
+      status: url.searchParams.get('status'),
+      categoria: url.searchParams.get('categoria') ?? undefined,
+    })
     if (!parsed.success) {
       return NextResponse.json(
         { error: 'BAD_REQUEST', message: 'Parâmetro "status" obrigatório e deve ser um status válido.', requestId },
@@ -65,7 +71,8 @@ export async function GET(req: NextRequest, context: RouteContext) {
       )
     }
 
-    const { status } = parsed.data
+    const { status, categoria } = parsed.data
+    const recorteArea = categoriaWhere(categoria)
 
     // Buscar edital
     const edital = await prisma.edital.findUnique({
@@ -87,10 +94,14 @@ export async function GET(req: NextRequest, context: RouteContext) {
       : [{ numero: 'asc' as const }]
 
     const inscricoes = await prisma.inscricao.findMany({
-      where: { editalId, status: { in: statusFilter } },
+      where: {
+        editalId,
+        status: { in: statusFilter },
+        ...(recorteArea !== undefined ? { categoria: recorteArea } : {}),
+      },
       orderBy,
       include: {
-        proponente: { select: { nome: true, cpfCnpj: true } },
+        proponente: { select: { nome: true, cpfCnpj: true, telefone: true } },
       },
     })
 
@@ -102,6 +113,7 @@ export async function GET(req: NextRequest, context: RouteContext) {
       nome: insc.proponente.nome,
       cpfCnpj: insc.proponente.cpfCnpj ?? '',
       categoria: insc.categoria,
+      telefone: insc.proponente.telefone,
       notaFinal: insc.notaFinal ? Number(insc.notaFinal) : null,
       motivoInabilitacao: insc.motivoInabilitacao,
     }))
@@ -120,7 +132,7 @@ export async function GET(req: NextRequest, context: RouteContext) {
       action: 'EXPORTACAO_LISTA_PDF',
       entity: 'Edital',
       entityId: editalId,
-      details: { status, total: items.length, slug: edital.slug },
+      details: { status, total: items.length, slug: edital.slug, categoria: categoria ?? 'todas' },
       ip: req.headers.get('x-forwarded-for') ?? undefined,
     })
 
