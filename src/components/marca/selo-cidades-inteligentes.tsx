@@ -5,7 +5,7 @@ const NOME = 'Projeto Cidades Inteligentes Municípios'
 
 /** Proporção nativa dos arquivos em public/images/marca. */
 const ARTE = {
-  escuro: { src: '/images/marca/logo-cidades-inteligentes-white.png', width: 659, height: 187 },
+  escuro: { src: '/images/marca/logo-cidades-inteligentes-white.png', width: 649, height: 185 },
   claro: { src: '/images/marca/logo-cidades-inteligentes-color.png', width: 649, height: 185 },
 } as const
 
@@ -17,14 +17,19 @@ interface SeloCidadesInteligentesProps {
   fundo: 'claro' | 'escuro'
   /** Rótulo acima da logo. Vazio esconde a linha. */
   rotulo?: string
-  /** Altura da logo. `sm` para rodapés, `md` para blocos de destaque. */
-  tamanho?: 'sm' | 'md'
+  /** Altura da logo. `sm` para rodapés compactos, `md` para padrão, `lg`/`xl` para destaque. */
+  tamanho?: 'sm' | 'md' | 'lg' | 'xl'
   className?: string
   /** Centraliza rótulo e logo — usado no bloco da home. */
   centralizado?: boolean
 }
 
-const ALTURA = { sm: 'h-8', md: 'h-11 sm:h-12' } as const
+const ALTURA = {
+  sm: 'h-8',
+  md: 'h-10 sm:h-12',
+  lg: 'h-12 sm:h-16',
+  xl: 'h-14 sm:h-20',
+} as const
 
 /**
  * Crédito de desenvolvimento do portal. O Portal PNAB foi construído dentro do

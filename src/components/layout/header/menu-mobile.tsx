@@ -60,14 +60,32 @@ export function MenuMobile({ pathname, aoFechar }: MenuMobileProps) {
       />
 
       <div className="relative flex min-h-full flex-col px-6 pb-10 pt-5">
-        <div className="mb-8 flex items-center justify-between gap-4">
-          <Image
-            src="/images/marca/logo-irece-white.png"
-            alt="Prefeitura de Irecê — Secretaria de Cultura e Turismo"
-            width={280}
-            height={40}
-            className="h-9 w-auto object-contain"
-          />
+        <div className="mb-8 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <a
+              href="https://cidadesinteligentes.ifba.edu.br/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Projeto Cidades Inteligentes Municípios — IFBA (abre em nova aba)"
+              className="inline-flex items-center focus-visible:outline-2 focus-visible:outline-accent-400"
+            >
+              <Image
+                src="/images/marca/logo-cidades-inteligentes-white.png"
+                alt="Projeto Cidades Inteligentes Municípios — IFBA"
+                width={280}
+                height={80}
+                className="h-7 w-auto max-w-[105px] object-contain sm:h-9 sm:max-w-none"
+              />
+            </a>
+            <div className="h-5 w-px bg-papel-100/20" aria-hidden="true" />
+            <Image
+              src="/images/marca/logo-irece-white.png"
+              alt="Prefeitura de Irecê — Secretaria de Cultura e Turismo"
+              width={280}
+              height={40}
+              className="h-7 w-auto max-w-[130px] object-contain sm:h-9 sm:max-w-none"
+            />
+          </div>
           <button
             type="button"
             onClick={aoFechar}
