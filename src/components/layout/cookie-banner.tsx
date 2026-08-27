@@ -7,6 +7,20 @@ const STORAGE_KEY = 'pnab-cookie-consent'
 
 type ConsentValue = 'all' | 'essential'
 
+const BOTAO_BASE =
+  'inline-flex min-h-[44px] items-center justify-center rounded-lg px-5 text-[0.9375rem] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700'
+
+/**
+ * Consentimento de cookies.
+ *
+ * O banner é montado no layout público, fora de qualquer `.tema-secult` — e é
+ * ali que as variáveis de cor da Secretaria são definidas. Sem o tema no
+ * escopo, `brand-600` caía no fallback genérico do Tailwind e o botão
+ * principal saía verde-esmeralda, cor que não existe na identidade: a primeira
+ * coisa que o cidadão vê ao abrir o portal era o único elemento fora da marca.
+ * A classe entra aqui na raiz, e os tons passam a resolver para o terracota e
+ * o creme da SECULT.
+ */
 function CookieBanner() {
   const [visible, setVisible] = useState(false)
 
@@ -32,27 +46,24 @@ function CookieBanner() {
       role="dialog"
       aria-label="Consentimento de cookies"
       aria-describedby="cookie-banner-description"
-      className="fixed bottom-0 inset-x-0 z-50 p-4 sm:p-6"
+      className="tema-secult fixed inset-x-0 bottom-0 z-50 p-4 font-questrial sm:p-6"
     >
-      <div className="mx-auto max-w-4xl rounded-xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/10 p-4 sm:p-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6">
-          {/* Texto */}
+      <div className="mx-auto max-w-4xl border-2 border-tinta-950/15 bg-papel-50 p-5 shadow-2xl shadow-tinta-950/20 sm:p-6">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-6">
           <div className="flex-1">
-            <h2 className="text-base font-semibold text-slate-900 mb-1">
+            <h2 className="titulo mb-1.5 text-lg leading-none tracking-wide text-tinta-900">
               Uso de cookies
             </h2>
             <p
               id="cookie-banner-description"
-              className="text-sm text-slate-600 leading-relaxed"
+              className="text-[0.9375rem] leading-relaxed text-tinta-800"
             >
-              Este portal utiliza cookies essenciais para seu funcionamento
-              e cookies de desempenho para melhorar sua experiência. Ao
-              clicar em &ldquo;Aceitar todos&rdquo;, você consente com o
-              uso de todos os cookies. Você pode optar por aceitar apenas
-              os essenciais. Saiba mais em nossa{' '}
+              Este portal usa cookies essenciais para funcionar e cookies de desempenho para
+              melhorar sua experiência. Você pode aceitar todos ou seguir apenas com os
+              essenciais. Detalhes na{' '}
               <Link
                 href="/privacidade"
-                className="text-brand-600 hover:text-brand-700 underline font-medium"
+                className="font-semibold text-brand-700 underline underline-offset-4 transition-colors hover:text-brand-800"
               >
                 Política de Privacidade
               </Link>
@@ -60,19 +71,18 @@ function CookieBanner() {
             </p>
           </div>
 
-          {/* Botoes */}
-          <div className="flex flex-col sm:flex-row gap-2 sm:shrink-0">
+          <div className="flex flex-col gap-2.5 sm:shrink-0 sm:flex-row">
             <button
               type="button"
               onClick={() => handleAccept('essential')}
-              className="inline-flex items-center justify-center rounded-lg border-2 border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-colors min-h-[44px] min-w-[44px]"
+              className={`${BOTAO_BASE} border-2 border-tinta-950/25 text-tinta-900 hover:bg-tinta-950/5`}
             >
               Apenas essenciais
             </button>
             <button
               type="button"
               onClick={() => handleAccept('all')}
-              className="inline-flex items-center justify-center rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-700 transition-colors shadow-sm min-h-[44px] min-w-[44px]"
+              className={`${BOTAO_BASE} bg-brand-700 text-papel-50 hover:bg-brand-800`}
             >
               Aceitar todos
             </button>
