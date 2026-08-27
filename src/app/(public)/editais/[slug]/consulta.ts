@@ -3,8 +3,10 @@ import { auth } from '@/lib/auth'
 import { getPublicStatusDisplay } from '@/lib/utils/edital-status'
 import { formatCurrency, formatDate } from '@/lib/utils/format'
 import { parseCronogramaPublico, getNextDeadline } from '@/lib/utils/cronograma'
+import { retificacoesOrdenadas } from '@/lib/utils/retificacao'
 import type { CronogramaDisplayItem } from '@/types/cronograma'
 import type { CategoriaConfig } from '@/types/categoria-config'
+import type { Retificacao } from '@/types/retificacao'
 import type { TomCarimbo } from '@/components/ui/carimbo'
 import type { ArquivoEdital } from './anexos-edital'
 import { resultadoPublicado, type ResultadoPublicado } from '../resultado-publicado'
@@ -23,6 +25,8 @@ export interface EditalAberto {
   categoriasConfig: CategoriaConfig[]
   cotas: string[]
   cronograma: CronogramaDisplayItem[]
+  /** Atos que alteraram o edital, do mais recente ao mais antigo. Vazio na maioria. */
+  retificacoes: Retificacao[]
   arquivos: ArquivoEdital[]
   duvidas: { id: string; pergunta: string; resposta: string }[]
   situacao: { label: string; tom: TomCarimbo }
@@ -124,6 +128,7 @@ export async function consultarEdital(slug: string): Promise<EditalAberto | null
     categoriasConfig,
     cotas: [...new Set(categoriasConfig.flatMap((c) => c.cotas.map((cota) => cota.label)))],
     cronograma,
+    retificacoes: retificacoesOrdenadas(edital.retificacoes),
     arquivos: edital.arquivos.map((a) => ({
       id: a.id,
       titulo: a.titulo,

@@ -1,9 +1,9 @@
 import Link from 'next/link'
 import { IconArrowRight, IconDownload } from '@/components/ui/icons'
 import { getCronogramaItemStatus } from '@/lib/utils/cronograma'
-import { formatDateTime } from '@/lib/utils/format'
 import { isAcaoPublicacao } from '@/types/cronograma'
 import type { CronogramaDisplayItem } from '@/types/cronograma'
+import { LinhaDatasMarco } from './linha-datas-marco'
 import { RecursoEditalButton } from './recurso-edital-button'
 
 interface CronogramaEditalProps {
@@ -41,7 +41,6 @@ export function CronogramaEdital({ itens, slug, agora, escuro = false }: Cronogr
 
   const fio = escuro ? 'divide-papel-100/20 border-papel-100/20' : 'divide-tinta-900/15 border-tinta-900/15'
   const corTitulo = escuro ? 'text-papel-50' : 'text-tinta-900'
-  const corData = escuro ? 'text-papel-200/80' : 'text-tinta-600'
   const corAcao = escuro ? 'text-accent-300' : 'text-brand-700'
 
   return (
@@ -94,17 +93,7 @@ export function CronogramaEdital({ itens, slug, agora, escuro = false }: Cronogr
                   )}
                 </div>
 
-                <p className={`mt-1 text-sm tabular-nums ${corData}`}>
-                  <time dateTime={item.dataHora}>{formatDateTime(item.dataHora)}</time>
-                  {item.fimEm && (
-                    <>
-                      <span className="px-2 opacity-60" aria-hidden="true">
-                        até
-                      </span>
-                      <time dateTime={item.fimEm}>{formatDateTime(item.fimEm)}</time>
-                    </>
-                  )}
-                </p>
+                <LinhaDatasMarco item={item} escuro={escuro} />
 
                 {(cumprido || emCurso) && (
                   <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2">

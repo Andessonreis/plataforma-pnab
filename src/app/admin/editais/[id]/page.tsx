@@ -20,9 +20,11 @@ import {
 } from '@/components/ui'
 import { editalStatusLabel, editalStatusVariant } from '@/lib/status-maps'
 import { formatCurrency } from '@/lib/utils/format'
+import { marcosEditaveis, retificacoesOrdenadas } from '@/lib/utils/retificacao'
 import { GerarListasModal } from '../gerar-listas-modal'
 import { RelatorioFinalButton } from './relatorio-final-button'
 import { AvancarFasePanel } from './avancar-fase-panel'
+import { RetificacaoPanel } from './retificacao-panel'
 import { EditalFaseStepper } from './edital-fase-stepper'
 import { InscritosRecentes } from './inscritos-recentes'
 
@@ -188,6 +190,14 @@ export default async function EditalOverviewPage({ params }: Props) {
           inscritos={inscritosRecentes.map((i) => ({ ...i, status: i.status }))}
         />
       </FadeIn>
+
+      <div className="mt-10">
+        <RetificacaoPanel
+          editalId={edital.id}
+          marcos={marcosEditaveis(edital.cronograma)}
+          retificacoes={retificacoesOrdenadas(edital.retificacoes)}
+        />
+      </div>
 
       <div className="mt-10">
         <AvancarFasePanel editalId={edital.id} statusAtual={status} />

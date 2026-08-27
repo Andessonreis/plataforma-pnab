@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+import { AvisoRetificacao } from '@/components/edital/faixa-retificacao'
+import { retificacaoVigente } from '@/lib/utils/retificacao'
 import { auth } from '@/lib/auth'
 import { redirect, notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
@@ -77,7 +79,7 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
         select: {
           titulo: true, slug: true, ano: true, categorias: true, status: true,
           formulaAvaliacao: true, camposFormulario: true, etapasCustomizadas: true,
-          cronograma: true,
+          cronograma: true, retificacoes: true,
         },
       },
       proponente: {
@@ -113,6 +115,7 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
 
   const status = inscricao.status as InscricaoStatus
   const resultadoVisivel = RESULTADO_VISIVEL.includes(inscricao.edital.status)
+  const retificacaoAtual = retificacaoVigente(inscricao.edital.retificacoes)
   const mostrarSucesso = enviada === 'true' && status === 'ENVIADA'
 
   return (
@@ -131,6 +134,10 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
         editalAno={inscricao.edital.ano}
         status={status}
       />
+
+      {/* Quem já enviou a inscrição não volta à página pública do edital: se o
+          prazo mudou, é aqui que a pessoa precisa esbarrar no aviso. */}
+      {retificacaoAtual && <AvisoRetificacao retificacao={retificacaoAtual} />}
 
       <StatusTimeline steps={STATUS_TIMELINE} currentIndex={timelineIndex(status)} currentStatus={status} />
 

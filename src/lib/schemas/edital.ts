@@ -4,6 +4,15 @@ import { z } from 'zod'
 // Cronograma
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Carimbo deixado por uma retificação. Precisa estar no schema porque o zod
+// descarta chaves desconhecidas: sem ele, salvar o edital pelo formulário
+// apagaria a data anterior e a página perderia o risco sobre a data velha.
+const marcoRetificadoSchema = z.object({
+  dataHoraAnterior: z.string(),
+  fimEmAnterior: z.string().optional(),
+  retificacaoNumero: z.string(),
+})
+
 const cronogramaFaseSchema = z.object({
   tipo: z.literal('fase'),
   fase: z.enum([
@@ -12,6 +21,7 @@ const cronogramaFaseSchema = z.object({
     'RESULTADO_FINAL', 'ENCERRADO',
   ]),
   dataHora: z.string().default(''),
+  retificado: marcoRetificadoSchema.optional(),
 })
 
 const cronogramaCustomSchema = z.object({
@@ -19,6 +29,9 @@ const cronogramaCustomSchema = z.object({
   label: z.string().min(1, 'Descrição do marco é obrigatória'),
   dataHora: z.string().default(''),
   fimEm: z.string().optional(),
+  // Mantém paridade com AcaoJanela em @/types/cronograma e com as opções do
+  // seletor do admin: valor ofertado na tela e ausente aqui faz o item cair no
+  // schema legado abaixo e perder tipo, fimEm e acao no salvamento.
   acao: z.enum([
     'RECURSO_EDITAL_JANELA',
     'RECURSO_HABILITACAO_JANELA',
@@ -26,7 +39,10 @@ const cronogramaCustomSchema = z.object({
     'PUBLICACAO_INSCRITOS',
     'PUBLICACAO_HABILITADOS',
     'PUBLICACAO_HABILITADOS_POS_RECURSOS',
+    'PUBLICACAO_RESULTADO_PRELIMINAR',
+    'PUBLICACAO_RESULTADO_FINAL',
   ]).optional(),
+  retificado: marcoRetificadoSchema.optional(),
 })
 
 const cronogramaLegacySchema = z.object({
