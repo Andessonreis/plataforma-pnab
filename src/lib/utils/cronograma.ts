@@ -138,6 +138,7 @@ export function parseCronograma(raw: unknown): CronogramaDisplayItem[] {
           label: editalCronogramaLabel[item.fase as EditalStatus] ?? String(item.fase),
           dataHora: String(item.dataHora),
           fase: item.fase as EditalStatus,
+          ...(item.retificado ? { retificado: item.retificado as CronogramaDisplayItem['retificado'] } : {}),
         }
       }
       // Formato novo com tipo 'custom' — admin marcou explicitamente como item
@@ -150,6 +151,7 @@ export function parseCronograma(raw: unknown): CronogramaDisplayItem[] {
           dataHora: String(item.dataHora),
           ...(typeof item.fimEm === 'string' && item.fimEm ? { fimEm: item.fimEm } : {}),
           ...(typeof item.acao === 'string' ? { acao: item.acao as CronogramaDisplayItem['acao'] } : {}),
+          ...(item.retificado ? { retificado: item.retificado as CronogramaDisplayItem['retificado'] } : {}),
         }
       }
       // Formato legado (sem campo `tipo`) — fuzzy match preserva comportamento antigo

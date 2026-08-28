@@ -24,7 +24,7 @@ interface ReguaSecoesProps {
 export function ReguaSecoes({ pathname, compacta }: ReguaSecoesProps) {
   return (
     <nav aria-label="Seções do portal" className="hidden lg:block">
-      <ul className="mx-auto flex max-w-7xl items-stretch px-4 sm:px-6 lg:px-8">
+      <ul className="flex w-full items-stretch px-4 sm:px-6 lg:px-8 xl:px-12">
         {SECOES.map((secao) => {
           const ativa = secaoAtiva(secao.href, pathname)
           return (

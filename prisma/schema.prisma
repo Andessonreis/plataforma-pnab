@@ -267,6 +267,10 @@ model Edital {
   tiposProponentePermitidos String[]     @default([])
   // Array de marcos: [{ label: string, dataHora: string, destaque?: boolean }]
   cronograma                Json         @default("[]")
+  // Retificações publicadas no Diário Oficial que alteraram este edital:
+  // [{ numero, publicadoEm, resumo, diarioOficialUrl?, registradoEm }].
+  // A marca de qual data mudou fica no próprio item do cronograma (`retificado`).
+  retificacoes              Json         @default("[]")
   // Definição dinâmica dos campos do formulário de inscrição (etapa "Dados")
   camposFormulario          Json         @default("[]")
   // Etapas customizadas adicionais do wizard de inscrição (além de categoria/dados/anexos/revisão).

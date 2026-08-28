@@ -4,7 +4,6 @@ import { Abertura } from '@/components/home/abertura'
 import { PassosInscricao } from '@/components/home/passos-inscricao'
 import { SecaoConceito } from '@/components/home/secao-conceito'
 import { SecaoServicos } from '@/components/home/secao-servicos'
-import { Realizacao } from '@/components/home/realizacao'
 import { FaixaNumeros } from '@/components/ui'
 import { Varal } from '@/components/ui/varal'
 import type { SlideDestaque, EditalResumo } from '@/components/home/types'
@@ -185,7 +184,6 @@ export default async function HomePage() {
 
       <SecaoConceito />
       <SecaoServicos />
-      <Realizacao />
     </div>
   )
 }

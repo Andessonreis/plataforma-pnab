@@ -8,6 +8,7 @@ import { BarraInscricaoFixa } from './barra-inscricao-fixa'
 import { CapaEdital } from './capa-edital'
 import { consultarEdital } from './consulta'
 import { CronogramaEdital } from './cronograma-edital'
+import { FaixaRetificacao } from '@/components/edital/faixa-retificacao'
 import { DocumentoNav } from './document-nav'
 import { FaixaResultado } from './faixa-resultado'
 import { QuadroVagas } from './quadro-vagas'
@@ -48,6 +49,8 @@ export default async function EditalPage({ params }: Props) {
 
   if (!edital) notFound()
 
+  const [vigente] = edital.retificacoes
+
   return (
     <div className="tema-secult font-questrial">
       {edital.ehRascunhoEmPrevia && (
@@ -71,6 +74,18 @@ export default async function EditalPage({ params }: Props) {
         pdfUrl={edital.pdfUrl}
       />
       <div id="fim-capa" aria-hidden="true" className="h-px" />
+
+      {/* A retificação vem colada na capa: quem já leu o edital antes precisa
+          esbarrar no aviso antes de reencontrar as datas mais abaixo. */}
+      {vigente && (
+        <FaixaRetificacao
+          retificacao={vigente}
+          marcosAlterados={
+            edital.cronograma.filter((m) => m.retificado?.retificacaoNumero === vigente.numero).length
+          }
+          anteriores={edital.retificacoes.slice(1)}
+        />
+      )}
 
       <DocumentoNav
         partes={edital.partes}
