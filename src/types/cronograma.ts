@@ -1,4 +1,5 @@
 import type { EditalStatus } from '@prisma/client'
+import type { MarcoRetificado } from './retificacao'
 
 // ── Discriminated union: fase fixa OU item custom ───────────────────────────
 
@@ -6,6 +7,8 @@ export interface CronogramaFaseItem {
   tipo: 'fase'
   fase: EditalStatus
   dataHora: string
+  /** Presente quando uma retificação alterou a data deste marco. */
+  retificado?: MarcoRetificado
 }
 
 // Ações que items custom podem disparar/janelar.
@@ -76,6 +79,8 @@ export interface CronogramaCustomItem {
   fimEm?: string
   /** Ação opcional disparada/janelada por este item. */
   acao?: AcaoJanela
+  /** Presente quando uma retificação alterou a data deste marco. */
+  retificado?: MarcoRetificado
 }
 
 export type CronogramaItem = CronogramaFaseItem | CronogramaCustomItem
@@ -108,6 +113,8 @@ export interface CronogramaDisplayItem {
   fimEm?: string
   /** Ação associada (preservada de items custom — usada pra render de links de publicação) */
   acao?: AcaoJanela
+  /** Data anterior à retificação — a página risca esta data ao lado da nova. */
+  retificado?: MarcoRetificado
 }
 
 // ── Fases do ciclo de vida do edital (sem RASCUNHO) ─────────────────────────

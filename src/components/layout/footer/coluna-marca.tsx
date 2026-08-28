@@ -1,50 +1,53 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { IconMail, IconMapPin } from '@/components/ui/icons'
 
-/** Bloco institucional: marca da Secretaria, descrição e canais de contato. */
+/**
+ * Quem é a Secretaria e como falar com ela.
+ *
+ * O e-mail e o endereço vinham cada um dentro de um quadradinho arredondado com
+ * um ícone — dois enfeites para dizer "isto é um e-mail", coisa que o próprio
+ * endereço já diz. Sem os quadros, o e-mail pode ocupar o tamanho que merece:
+ * num portal de editais, escrever para a Secretaria é a saída de emergência de
+ * quem travou na inscrição, e era o menor texto do bloco.
+ */
 export function ColunaMarca() {
   return (
     <div className="lg:col-span-4">
-      <Link href="/" className="group mb-5 flex items-center gap-3">
+      <Link
+        href="/"
+        className="group mb-4 flex items-center gap-3 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-300"
+      >
         <Image
           src="/images/secult/simbolo-secult.png"
           alt=""
           width={659}
           height={800}
-          className="h-11 w-auto"
+          className="h-12 w-auto"
           aria-hidden="true"
         />
-        <div>
-          <p className="titulo text-base leading-tight tracking-wide text-papel-50 transition-colors group-hover:text-accent-300">
+        <span>
+          <span className="titulo block text-xl leading-none tracking-wide text-papel-50 transition-colors group-hover:text-accent-300">
             Portal PNAB
-          </p>
-          <p className="text-xs leading-tight text-papel-200/60">Irecê/BA</p>
-        </div>
+          </span>
+          <span className="mt-1 block text-sm text-papel-200/70">Irecê, Bahia</span>
+        </span>
       </Link>
 
-      <p className="mb-6 text-sm leading-relaxed text-papel-200/75">
-        Política Nacional Aldir Blanc de Fomento à Cultura. Secretaria de Cultura e Turismo de
-        Irecê/BA.
+      <p className="mb-5 max-w-sm text-[0.9375rem] leading-relaxed text-papel-200/80">
+        Política Nacional Aldir Blanc de Fomento à Cultura, executada em Irecê pela Secretaria
+        de Cultura e Turismo.
       </p>
 
-      <div className="space-y-2.5 text-sm">
+      <p className="text-[0.9375rem] leading-relaxed text-papel-200/80">
+        Dúvida sobre um edital ou problema na inscrição?
+        <br />
         <a
           href="mailto:cultura@irece.ba.gov.br"
-          className="group flex items-center gap-2.5 text-papel-200/85 transition-colors hover:text-papel-50"
+          className="mt-1 inline-block font-semibold text-papel-50 underline decoration-accent-300 decoration-2 underline-offset-4 transition-colors hover:text-accent-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-300"
         >
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-papel-100/10 transition-colors group-hover:bg-papel-100/20">
-            <IconMail className="h-3.5 w-3.5" />
-          </span>
           cultura@irece.ba.gov.br
         </a>
-        <p className="flex items-center gap-2.5 text-papel-200/60">
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-papel-100/10">
-            <IconMapPin className="h-3.5 w-3.5" />
-          </span>
-          Irecê, Bahia — Brasil
-        </p>
-      </div>
+      </p>
     </div>
   )
 }

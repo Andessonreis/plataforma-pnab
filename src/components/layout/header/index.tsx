@@ -61,7 +61,7 @@ export function Header({ userAreaHref = '/login' }: HeaderProps) {
             recolhido ? 'max-h-0 opacity-0' : 'max-h-16 opacity-100'
           }`}
         >
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12">
             <div className="flex h-9 items-center justify-between gap-3 text-xs">
               <span className="truncate font-semibold uppercase tracking-[0.16em]">
                 <span className="sm:hidden">Cultura e Turismo · Irecê/BA</span>
@@ -80,20 +80,42 @@ export function Header({ userAreaHref = '/login' }: HeaderProps) {
               recolhido ? 'lg:max-h-0 lg:opacity-0' : 'lg:max-h-28 lg:opacity-100'
             }`}
           >
-            <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8 lg:py-4">
-              <Link
-                href="/"
-                className="shrink-0 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-500"
-              >
-                <Image
-                  src="/images/marca/logo-irece-color.png"
-                  alt="Prefeitura de Irecê, 100 anos — Secretaria de Cultura e Turismo"
-                  width={280}
-                  height={40}
-                  className="h-8 w-auto object-contain sm:h-12"
-                  priority
-                />
-              </Link>
+            <div className="flex w-full items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8 xl:px-12 lg:py-4">
+              <div className="flex min-w-0 items-center gap-2.5 sm:gap-4 lg:gap-5">
+                <a
+                  href="https://cidadesinteligentes.ifba.edu.br/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="shrink-0 transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-500"
+                  aria-label="Projeto Cidades Inteligentes Municípios — IFBA (abre em nova aba)"
+                >
+                  <Image
+                    src="/images/marca/logo-cidades-inteligentes-color.png"
+                    alt="Projeto Cidades Inteligentes Municípios — IFBA"
+                    width={280}
+                    height={80}
+                    className="h-7 w-auto max-w-[110px] object-contain sm:h-11 sm:max-w-none"
+                    priority
+                  />
+                </a>
+
+                <div className="h-5 w-px bg-tinta-950/15 sm:h-8" aria-hidden="true" />
+
+                <Link
+                  href="/"
+                  className="shrink-0 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-500"
+                  aria-label="Prefeitura de Irecê — Início"
+                >
+                  <Image
+                    src="/images/marca/logo-irece-color.png"
+                    alt="Prefeitura de Irecê, 100 anos — Secretaria de Cultura e Turismo"
+                    width={280}
+                    height={40}
+                    className="h-7 w-auto max-w-[140px] object-contain sm:h-11 sm:max-w-none"
+                    priority
+                  />
+                </Link>
+              </div>
 
               <div className="flex items-center gap-2">
                 <BotaoInscricao href={userAreaHref} />

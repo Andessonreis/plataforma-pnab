@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+import { AvisoRetificacao } from '@/components/edital/faixa-retificacao'
+import { retificacaoVigente } from '@/lib/utils/retificacao'
 import { redirect } from 'next/navigation'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
@@ -48,6 +50,7 @@ export default async function NovaInscricaoPage({ searchParams }: Props) {
       tiposProponentePermitidos: true,
       status: true,
       videoHabilitado: true,
+      retificacoes: true,
       arquivos: {
         orderBy: { createdAt: 'asc' },
         select: { id: true, tipo: true, titulo: true, url: true, acessivel: true },
@@ -103,10 +106,15 @@ export default async function NovaInscricaoPage({ searchParams }: Props) {
   // (o proponente pode editar livremente) — só quando o edital define um campo
   // com esses nomes convencionados.
   const initialCampos = aplicarDadosPessoaisDoCadastro({}, camposFormulario, user)
+  const retificacaoAtual = retificacaoVigente(edital.retificacoes)
 
   return (
     <div className="space-y-6">
       <NovaInscricaoHeader editalTitulo={edital.titulo} />
+
+      {/* O prazo alterado precisa alcançar quem está começando a inscrição
+          agora, não só quem visita a página pública do edital. */}
+      {retificacaoAtual && <AvisoRetificacao retificacao={retificacaoAtual} />}
 
       <InscricaoForm
         edital={{
