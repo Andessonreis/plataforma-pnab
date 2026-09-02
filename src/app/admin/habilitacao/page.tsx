@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { requireRole } from '../require-role'
+import { getEditaisVisiveis } from '@/lib/edital-acesso'
 import { prisma } from '@/lib/db'
 import {
   Card,
@@ -63,14 +64,18 @@ interface Props {
 }
 
 export default async function AdminHabilitacaoPage({ searchParams }: Props) {
-  await requireRole('ADMIN')
+  const session = await requireRole('ADMIN', 'HABILITADOR')
+  const isHabilitador = session.user.role === 'HABILITADOR'
+  const editaisVisiveis = isHabilitador
+    ? await getEditaisVisiveis(session.user.id, 'HABILITADOR')
+    : null
 
   const params = await searchParams
   const editalIdFilter = params.editalId || undefined
 
   // Sem edital escolhido → tela de seleção, mesmo havendo só um edital.
   if (!editalIdFilter) {
-    return renderPicker()
+    return renderPicker(editaisVisiveis)
   }
 
   const abaParam = (params.aba ?? 'pendentes') as AbaKey
@@ -80,6 +85,12 @@ export default async function AdminHabilitacaoPage({ searchParams }: Props) {
   const page = Math.max(1, Number(params.page) || 1)
   const pageSize = 20
   const searchQuery = params.search?.trim() || undefined
+
+  // Edital fora da equipe do Habilitador — trata como se não existisse
+  // (mesmo destino do não encontrado, não vaza que o edital existe).
+  if (editaisVisiveis && !editaisVisiveis.includes(editalIdFilter)) {
+    redirect('/admin/habilitacao')
+  }
 
   const edital = await prisma.edital.findUnique({
     where: { id: editalIdFilter },
@@ -400,9 +411,12 @@ export default async function AdminHabilitacaoPage({ searchParams }: Props) {
 }
 
 /** Tela de seleção de edital — sempre aparece, mesmo com um edital só. */
-async function renderPicker() {
+async function renderPicker(editaisVisiveis: string[] | null) {
   const editais = await prisma.edital.findMany({
-    where: { status: { in: EDITAL_STATUS_COM_HABILITACAO } },
+    where: {
+      status: { in: EDITAL_STATUS_COM_HABILITACAO },
+      ...(editaisVisiveis ? { id: { in: editaisVisiveis } } : {}),
+    },
     select: { id: true, titulo: true, ano: true, status: true },
   })
 
