@@ -1,69 +1,30 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import type { UserRole } from '@prisma/client'
-import {
-  Card,
-  Badge,
-  Button,
-  StatCard,
-  EmptyState,
-  FadeIn,
-  StaggerContainer,
-  StaggerItem,
-  IconNews,
-  IconClipboard,
-  IconUsers,
-  IconCheck,
-  IconPlus,
-  IconExport,
-  IconInfo,
-  IconUser,
-  IconTicket,
-  IconQuestion,
-  IconChatBubble,
-  IconClock,
-  IconStar,
-  IconChart,
-} from '@/components/ui'
+import { AtendimentoDashboard } from './_dashboards/atendimento-dashboard'
+import { AvaliadorDashboard } from './_dashboards/avaliador-dashboard'
+import { AdminDashboard } from './_dashboards/admin-dashboard'
 
 export const metadata: Metadata = {
   title: 'Painel Administrativo — Portal PNAB Irecê',
 }
 
-type IconComponent = React.ComponentType<{ className?: string }>
-type BadgeVariant = 'success' | 'warning' | 'error' | 'info' | 'neutral'
-
-function getActionStyle(action: string): { Icon: IconComponent; bg: string; color: string; badge: BadgeVariant } {
-  if (action.includes('LOGIN') || action.includes('LOGOUT') || action.includes('CADASTRO')) {
-    return { Icon: IconUser, bg: 'bg-blue-50', color: 'text-blue-600', badge: 'info' }
-  }
-  if (action.includes('INSCRICAO') || action.includes('ENVIADA')) {
-    return { Icon: IconClipboard, bg: 'bg-amber-50', color: 'text-amber-600', badge: 'warning' }
-  }
-  if (action.includes('EDITAL') || action.includes('PUBLICADO')) {
-    return { Icon: IconNews, bg: 'bg-green-50', color: 'text-green-600', badge: 'success' }
-  }
-  if (action.includes('STATUS') || action.includes('ALTERADO')) {
-    return { Icon: IconCheck, bg: 'bg-purple-50', color: 'text-purple-600', badge: 'neutral' }
-  }
-  return { Icon: IconInfo, bg: 'bg-slate-100', color: 'text-slate-500', badge: 'neutral' }
+function hoje() {
+  return new Date().toLocaleDateString('pt-BR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'America/Sao_Paulo',
+  })
 }
 
-function atendimentoStatusBadge(status: string): BadgeVariant {
-  if (status === 'ABERTO') return 'warning'
-  if (status === 'EM_ATENDIMENTO') return 'info'
-  if (status === 'FECHADO') return 'success'
-  return 'neutral'
-}
-
-function atendimentoStatusLabel(status: string) {
-  if (status === 'ABERTO') return 'Aberto'
-  if (status === 'EM_ATENDIMENTO') return 'Em Atendimento'
-  if (status === 'FECHADO') return 'Fechado'
-  return status
+function inicioDeHoje() {
+  const data = new Date()
+  data.setHours(0, 0, 0, 0)
+  return data
 }
 
 export default async function AdminDashboardPage() {
@@ -71,19 +32,10 @@ export default async function AdminDashboardPage() {
   if (!session) redirect('/login')
 
   const role = session.user.role as UserRole
+  const today = hoje()
 
-  const today = new Date().toLocaleDateString('pt-BR', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'America/Sao_Paulo',
-  })
-
-  // ─── Dashboard ATENDIMENTO ───────────────────────────────────────────────
   if (role === 'ATENDIMENTO') {
-    const startOfToday = new Date()
-    startOfToday.setHours(0, 0, 0, 0)
+    const startOfToday = inicioDeHoje()
 
     const [atdAbertos, atdEmAtendimento, atdFechadosHoje, totalFaq, atdRecentes] =
       await Promise.all([
@@ -98,433 +50,32 @@ export default async function AdminDashboardPage() {
         }),
       ])
 
-    const stats = [
-      {
-        label: 'Aguardando',
-        value: atdAbertos,
-        sub: 'abertos',
-        color: 'bg-amber-50',
-        iconColor: 'text-amber-600',
-        icon: <IconTicket className="h-6 w-6" />,
-        href: '/admin/atendimentos?status=ABERTO',
-      },
-      {
-        label: 'Em Andamento',
-        value: atdEmAtendimento,
-        sub: 'em atendimento',
-        color: 'bg-blue-50',
-        iconColor: 'text-blue-600',
-        icon: <IconChatBubble className="h-6 w-6" />,
-        href: '/admin/atendimentos?status=EM_ATENDIMENTO',
-      },
-      {
-        label: 'Fechados Hoje',
-        value: atdFechadosHoje,
-        sub: 'resolvidos hoje',
-        color: 'bg-green-50',
-        iconColor: 'text-green-600',
-        icon: <IconCheck className="h-6 w-6" />,
-        href: '/admin/atendimentos?status=FECHADO',
-      },
-      {
-        label: 'FAQ Publicados',
-        value: totalFaq,
-        sub: 'itens ativos',
-        color: 'bg-brand-50',
-        iconColor: 'text-brand-600',
-        icon: <IconQuestion className="h-6 w-6" />,
-        href: '/admin/faq',
-      },
-    ]
-
     return (
-      <section>
-        <FadeIn>
-          <div className="mb-6 sm:mb-8">
-            <p className="text-sm text-slate-500 capitalize mb-1">{today}</p>
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Central de Atendimento</h1>
-            <p className="text-sm text-slate-500 mt-1">
-              Atendimentos pendentes e base de conhecimento do portal.
-            </p>
-          </div>
-        </FadeIn>
-
-        {/* KPI Cards */}
-        <StaggerContainer className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-          {stats.map((stat) => (
-            <StaggerItem key={stat.label}>
-              <StatCard {...stat} />
-            </StaggerItem>
-          ))}
-        </StaggerContainer>
-
-        {/* Ações rápidas */}
-        <FadeIn delay={0.2}>
-          <div className="flex flex-wrap gap-3 mb-6 sm:mb-8">
-            <Button href="/admin/atendimentos" size="sm">
-              <IconTicket className="h-4 w-4 mr-1.5" />
-              Ver Atendimentos
-            </Button>
-            <Button href="/admin/atendimentos?status=ABERTO" variant="outline" size="sm">
-              <IconClock className="h-4 w-4 mr-1.5" />
-              Pendentes ({atdAbertos})
-            </Button>
-            <Button href="/admin/faq" variant="ghost" size="sm">
-              <IconQuestion className="h-4 w-4 mr-1.5" />
-              Gerenciar FAQ
-            </Button>
-          </div>
-        </FadeIn>
-
-        {/* Tickets pendentes */}
-        <FadeIn delay={0.3}>
-          <Card>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base sm:text-lg font-semibold text-slate-900">
-                Atendimentos Pendentes
-              </h2>
-              <Link
-                href="/admin/atendimentos"
-                className="text-sm text-brand-600 hover:text-brand-700 font-medium"
-              >
-                Ver todos
-              </Link>
-            </div>
-
-            {atdRecentes.length === 0 ? (
-              <EmptyState
-                icon={<IconTicket className="h-8 w-8 text-slate-400" />}
-                title="Nenhum atendimento pendente"
-                description="Todos os atendimentos estão em dia."
-              />
-            ) : (
-              <>
-                {/* Mobile: cards */}
-                <div className="sm:hidden divide-y divide-slate-100 -mx-4">
-                  {atdRecentes.map((ticket) => (
-                    <Link
-                      key={ticket.id}
-                      href={`/admin/atendimentos/${ticket.id}`}
-                      className="flex items-start gap-3 px-4 py-3 hover:bg-slate-50 transition-colors"
-                    >
-                      <div className="h-8 w-8 rounded-lg bg-amber-50 flex items-center justify-center shrink-0 mt-0.5">
-                        <IconTicket className="h-4 w-4 text-amber-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <p className="text-xs font-mono text-slate-400">{ticket.protocolo}</p>
-                          <Badge variant={atendimentoStatusBadge(ticket.status)}>
-                            {atendimentoStatusLabel(ticket.status)}
-                          </Badge>
-                        </div>
-                        <p className="text-sm font-medium text-slate-900 truncate">{ticket.assunto}</p>
-                        <p className="text-xs text-slate-500 truncate">{ticket.nomeContato}</p>
-                      </div>
-                      <span className="text-[10px] text-slate-400 shrink-0 tabular-nums mt-1">
-                        {new Date(ticket.createdAt).toLocaleDateString('pt-BR', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          timeZone: 'America/Sao_Paulo',
-                        })}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-
-                {/* Desktop: lista */}
-                <div className="hidden sm:block divide-y divide-slate-100">
-                  {atdRecentes.map((ticket) => (
-                    <Link
-                      key={ticket.id}
-                      href={`/admin/atendimentos/${ticket.id}`}
-                      className="flex items-center gap-3 py-3 hover:bg-slate-50/50 transition-colors rounded-lg px-2 -mx-2"
-                    >
-                      <div className="h-8 w-8 rounded-lg bg-amber-50 flex items-center justify-center shrink-0">
-                        <IconTicket className="h-4 w-4 text-amber-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-medium text-slate-900 truncate">{ticket.assunto}</p>
-                        </div>
-                        <p className="text-xs text-slate-500 truncate">
-                          {ticket.nomeContato} · {ticket.emailContato}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-3 shrink-0">
-                        <Badge variant={atendimentoStatusBadge(ticket.status)}>
-                          {atendimentoStatusLabel(ticket.status)}
-                        </Badge>
-                        <span className="text-xs font-mono text-slate-400">{ticket.protocolo}</span>
-                        <span className="text-xs text-slate-400 tabular-nums">
-                          {new Date(ticket.createdAt).toLocaleDateString('pt-BR', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: '2-digit',
-                            timeZone: 'America/Sao_Paulo',
-                          })}
-                        </span>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </>
-            )}
-          </Card>
-        </FadeIn>
-      </section>
+      <AtendimentoDashboard
+        today={today}
+        atdAbertos={atdAbertos}
+        atdEmAtendimento={atdEmAtendimento}
+        atdFechadosHoje={atdFechadosHoje}
+        totalFaq={totalFaq}
+        atdRecentes={atdRecentes}
+      />
     )
   }
 
-  // ─── Dashboard HABILITADOR ──────────────────────────────────────────────
+  // Habilitador não tem dashboard genérico — a tela dele é a seleção de
+  // edital + fila de conferência em /admin/habilitacao (mesmo fluxo, mesmas
+  // ações, e já era o que existia pro Admin; só faltava abrir pro papel).
   if (role === 'HABILITADOR') {
-    const startOfToday = new Date()
-    startOfToday.setHours(0, 0, 0, 0)
-
-    const [
-      pendentes,
-      habilitadasHoje,
-      inabilitadasHoje,
-      totalHabilitadas,
-      totalInabilitadas,
-      inscricoesPendentes,
-      editaisEmHabilitacao,
-    ] = await Promise.all([
-      prisma.inscricao.count({ where: { status: 'ENVIADA' } }),
-      prisma.inscricao.count({ where: { status: 'HABILITADA', updatedAt: { gte: startOfToday } } }),
-      prisma.inscricao.count({ where: { status: 'INABILITADA', updatedAt: { gte: startOfToday } } }),
-      prisma.inscricao.count({ where: { status: 'HABILITADA' } }),
-      prisma.inscricao.count({ where: { status: 'INABILITADA' } }),
-      prisma.inscricao.findMany({
-        where: { status: 'ENVIADA' },
-        orderBy: { submittedAt: 'asc' },
-        take: 10,
-        include: {
-          edital: { select: { titulo: true, ano: true } },
-          proponente: { select: { nome: true, cpfCnpj: true } },
-        },
-      }),
-      prisma.edital.count({ where: { status: 'HABILITACAO' } }),
-    ])
-
-    const stats = [
-      {
-        label: 'Aguardando',
-        value: pendentes,
-        sub: 'para analisar',
-        color: 'bg-amber-50',
-        iconColor: 'text-amber-600',
-        icon: <IconClipboard className="h-6 w-6" />,
-        href: '/admin/inscricoes?status=ENVIADA',
-      },
-      {
-        label: 'Habilitadas Hoje',
-        value: habilitadasHoje,
-        sub: 'aprovadas',
-        color: 'bg-green-50',
-        iconColor: 'text-green-600',
-        icon: <IconCheck className="h-6 w-6" />,
-        href: '/admin/inscricoes?status=HABILITADA',
-      },
-      {
-        label: 'Inabilitadas Hoje',
-        value: inabilitadasHoje,
-        sub: 'com restrição',
-        color: 'bg-red-50',
-        iconColor: 'text-red-600',
-        icon: <IconInfo className="h-6 w-6" />,
-        href: '/admin/inscricoes?status=INABILITADA',
-      },
-      {
-        label: 'Editais em Triagem',
-        value: editaisEmHabilitacao,
-        sub: 'em fase de habilitação',
-        color: 'bg-brand-50',
-        iconColor: 'text-brand-600',
-        icon: <IconNews className="h-6 w-6" />,
-        href: '/admin/inscricoes',
-      },
-    ]
-
-    return (
-      <section>
-        <FadeIn>
-          <div className="mb-6 sm:mb-8">
-            <p className="text-sm text-slate-500 capitalize mb-1">{today}</p>
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Triagem Documental</h1>
-            <p className="text-sm text-slate-500 mt-1">
-              Análise e habilitação de inscrições submetidas.
-            </p>
-          </div>
-        </FadeIn>
-
-        {/* KPI Cards */}
-        <StaggerContainer className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-          {stats.map((stat) => (
-            <StaggerItem key={stat.label}>
-              <StatCard {...stat} />
-            </StaggerItem>
-          ))}
-        </StaggerContainer>
-
-        {/* Ações rápidas */}
-        <FadeIn delay={0.2}>
-          <div className="flex flex-wrap gap-3 mb-6 sm:mb-8">
-            <Button href="/admin/inscricoes?status=ENVIADA">
-              <IconClipboard className="h-4 w-4 mr-1.5" />
-              Fila de Análise ({pendentes})
-            </Button>
-            <Button href="/admin/inscricoes?status=HABILITADA" variant="outline" size="sm">
-              Habilitadas ({totalHabilitadas})
-            </Button>
-            <Button href="/admin/inscricoes?status=INABILITADA" variant="ghost" size="sm">
-              Inabilitadas ({totalInabilitadas})
-            </Button>
-          </div>
-        </FadeIn>
-
-        {/* Inscrições pendentes */}
-        <FadeIn delay={0.3}>
-          <Card>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base sm:text-lg font-semibold text-slate-900">
-                Fila de Análise
-              </h2>
-              <Link
-                href="/admin/inscricoes?status=ENVIADA"
-                className="text-sm text-brand-600 hover:text-brand-700 font-medium"
-              >
-                Ver todas
-              </Link>
-            </div>
-
-            {inscricoesPendentes.length === 0 ? (
-              <EmptyState
-                icon={<IconClipboard className="h-8 w-8 text-slate-400" />}
-                title="Nenhuma inscrição pendente"
-                description="Todas as inscrições foram analisadas."
-              />
-            ) : (
-              <>
-                {/* Mobile: cards */}
-                <div className="sm:hidden divide-y divide-slate-100 -mx-4">
-                  {inscricoesPendentes.map((ins) => (
-                    <Link
-                      key={ins.id}
-                      href={`/admin/inscricoes/${ins.id}`}
-                      className="flex items-start gap-3 px-4 py-3.5 hover:bg-slate-50 transition-colors"
-                    >
-                      <div className="h-8 w-8 rounded-lg bg-amber-50 flex items-center justify-center shrink-0 mt-0.5">
-                        <IconClipboard className="h-4 w-4 text-amber-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate-900 truncate">{ins.proponente.nome}</p>
-                        <p className="text-xs text-slate-500 truncate mb-0.5">{ins.edital.titulo}</p>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[11px] font-mono text-slate-400">{ins.numero}</span>
-                          {ins.categoria && (
-                            <span className="text-[11px] text-slate-400">· {ins.categoria}</span>
-                          )}
-                        </div>
-                      </div>
-                      <span className="text-[10px] text-slate-400 shrink-0 tabular-nums mt-1">
-                        {ins.submittedAt
-                          ? new Date(ins.submittedAt).toLocaleDateString('pt-BR', {
-                              day: '2-digit',
-                              month: '2-digit',
-                              timeZone: 'America/Sao_Paulo',
-                            })
-                          : '—'}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-
-                {/* Desktop: tabela */}
-                <div className="hidden sm:block overflow-x-auto -mx-4 sm:-mx-6">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-slate-100">
-                        <th className="text-left py-2.5 px-4 sm:px-6 font-medium text-slate-500 text-xs uppercase tracking-wide">Nº Inscrição</th>
-                        <th className="text-left py-2.5 px-4 font-medium text-slate-500 text-xs uppercase tracking-wide">Proponente</th>
-                        <th className="text-left py-2.5 px-4 font-medium text-slate-500 text-xs uppercase tracking-wide">Edital</th>
-                        <th className="text-left py-2.5 px-4 font-medium text-slate-500 text-xs uppercase tracking-wide">Categoria</th>
-                        <th className="text-left py-2.5 px-4 font-medium text-slate-500 text-xs uppercase tracking-wide">Enviada em</th>
-                        <th className="py-2.5 px-4 sm:px-6" />
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {inscricoesPendentes.map((ins) => (
-                        <tr key={ins.id} className="hover:bg-slate-50/50 transition-colors">
-                          <td className="py-3 px-4 sm:px-6 font-mono text-xs text-slate-600">{ins.numero}</td>
-                          <td className="py-3 px-4">
-                            <p className="font-medium text-slate-900">{ins.proponente.nome}</p>
-                            <p className="text-xs text-slate-400">{ins.proponente.cpfCnpj}</p>
-                          </td>
-                          <td className="py-3 px-4 text-slate-600 max-w-[200px]">
-                            <p className="truncate">{ins.edital.titulo}</p>
-                            <p className="text-xs text-slate-400">{ins.edital.ano}</p>
-                          </td>
-                          <td className="py-3 px-4 text-slate-600">{ins.categoria ?? '—'}</td>
-                          <td className="py-3 px-4 text-slate-500 tabular-nums text-xs">
-                            {ins.submittedAt
-                              ? new Date(ins.submittedAt).toLocaleDateString('pt-BR', {
-                                  day: '2-digit',
-                                  month: '2-digit',
-                                  year: 'numeric',
-                                  timeZone: 'America/Sao_Paulo',
-                                })
-                              : '—'}
-                          </td>
-                          <td className="py-3 px-4 sm:px-6 text-right">
-                            <Link
-                              href={`/admin/inscricoes/${ins.id}`}
-                              className="text-brand-600 hover:text-brand-700 font-medium text-xs"
-                            >
-                              Analisar
-                            </Link>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {pendentes > 10 && (
-                  <div className="mt-4 pt-4 border-t border-slate-100">
-                    <Link
-                      href="/admin/inscricoes?status=ENVIADA"
-                      className="text-sm text-brand-600 hover:text-brand-700 font-medium"
-                    >
-                      Ver todas as {pendentes} inscrições pendentes →
-                    </Link>
-                  </div>
-                )}
-              </>
-            )}
-          </Card>
-        </FadeIn>
-      </section>
-    )
+    redirect('/admin/habilitacao')
   }
 
-  // ─── Dashboard AVALIADOR ───────────────────────────────────────────────
   if (role === 'AVALIADOR') {
     const userId = session.user.id
-    const startOfToday = new Date()
-    startOfToday.setHours(0, 0, 0, 0)
+    const startOfToday = inicioDeHoje()
 
-    const [
-      pendentes,
-      concluidas,
-      concluidasHoje,
-      avaliacoesRecentes,
-    ] = await Promise.all([
-      prisma.avaliacao.count({
-        where: { avaliadorId: userId, finalizada: false },
-      }),
-      prisma.avaliacao.count({
-        where: { avaliadorId: userId, finalizada: true },
-      }),
+    const [pendentes, concluidas, concluidasHoje, avaliacoesRecentes] = await Promise.all([
+      prisma.avaliacao.count({ where: { avaliadorId: userId, finalizada: false } }),
+      prisma.avaliacao.count({ where: { avaliadorId: userId, finalizada: true } }),
       prisma.avaliacao.count({
         where: { avaliadorId: userId, finalizada: true, updatedAt: { gte: startOfToday } },
       }),
@@ -545,359 +96,40 @@ export default async function AdminDashboardPage() {
       }),
     ])
 
-    const total = pendentes + concluidas
-
-    const stats = [
-      {
-        label: 'Pendentes',
-        value: pendentes,
-        sub: 'para avaliar',
-        color: 'bg-amber-50',
-        iconColor: 'text-amber-600',
-        icon: <IconClipboard className="h-6 w-6" />,
-        href: '/admin/inscricoes',
-      },
-      {
-        label: 'Concluídas',
-        value: concluidas,
-        sub: 'avaliações feitas',
-        color: 'bg-green-50',
-        iconColor: 'text-green-600',
-        icon: <IconCheck className="h-6 w-6" />,
-        href: '/admin/inscricoes',
-      },
-      {
-        label: 'Hoje',
-        value: concluidasHoje,
-        sub: 'avaliadas hoje',
-        color: 'bg-blue-50',
-        iconColor: 'text-blue-600',
-        icon: <IconStar className="h-6 w-6" />,
-        href: '/admin/inscricoes',
-      },
-      {
-        label: 'Total Atribuídas',
-        value: total,
-        sub: 'inscrições designadas',
-        color: 'bg-brand-50',
-        iconColor: 'text-brand-600',
-        icon: <IconChart className="h-6 w-6" />,
-        href: '/admin/inscricoes',
-      },
-    ]
-
     return (
-      <section>
-        <FadeIn>
-          <div className="mb-6 sm:mb-8">
-            <p className="text-sm text-slate-500 capitalize mb-1">{today}</p>
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Painel de Avaliação</h1>
-            <p className="text-sm text-slate-500 mt-1">
-              Suas avaliações atribuídas e progresso de análise.
-            </p>
-          </div>
-        </FadeIn>
-
-        {/* KPI Cards */}
-        <StaggerContainer className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-          {stats.map((stat) => (
-            <StaggerItem key={stat.label}>
-              <StatCard {...stat} />
-            </StaggerItem>
-          ))}
-        </StaggerContainer>
-
-        {/* Ações rápidas */}
-        <FadeIn delay={0.2}>
-          <div className="flex flex-wrap gap-3 mb-6 sm:mb-8">
-            <Button href="/admin/inscricoes" size="sm">
-              <IconClipboard className="h-4 w-4 mr-1.5" />
-              Minhas Avaliações
-            </Button>
-            {pendentes > 0 && (
-              <Button href="/admin/inscricoes" variant="outline" size="sm">
-                <IconClock className="h-4 w-4 mr-1.5" />
-                Pendentes ({pendentes})
-              </Button>
-            )}
-          </div>
-        </FadeIn>
-
-        {/* Lista de avaliações recentes */}
-        <FadeIn delay={0.3}>
-          <Card>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base sm:text-lg font-semibold text-slate-900">
-                Avaliações Recentes
-              </h2>
-              <Link
-                href="/admin/inscricoes"
-                className="text-sm text-brand-600 hover:text-brand-700 font-medium"
-              >
-                Ver todas
-              </Link>
-            </div>
-
-            {avaliacoesRecentes.length === 0 ? (
-              <EmptyState
-                icon={<IconStar className="h-8 w-8 text-slate-400" />}
-                title="Nenhuma avaliação atribuída"
-                description="Você receberá notificação quando novas inscrições forem designadas para avaliação."
-              />
-            ) : (
-              <>
-                {/* Mobile: cards */}
-                <div className="sm:hidden divide-y divide-slate-100 -mx-4">
-                  {avaliacoesRecentes.map((av) => {
-                    const isPending = !av.finalizada
-                    return (
-                      <Link
-                        key={av.id}
-                        href={`/admin/inscricoes/${av.inscricaoId}`}
-                        className="flex items-start gap-3 px-4 py-3.5 hover:bg-slate-50 transition-colors"
-                      >
-                        <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${isPending ? 'bg-amber-50' : 'bg-green-50'}`}>
-                          {isPending
-                            ? <IconClipboard className="h-4 w-4 text-amber-600" />
-                            : <IconCheck className="h-4 w-4 text-green-600" />
-                          }
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-slate-900 truncate">
-                            {av.inscricao.proponente.nome}
-                          </p>
-                          <p className="text-xs text-slate-500 truncate">{av.inscricao.edital.titulo}</p>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-[11px] font-mono text-slate-400">{av.inscricao.numero}</span>
-                            <Badge variant={isPending ? 'warning' : 'success'}>
-                              {isPending ? 'Pendente' : `Nota: ${av.notaTotal}`}
-                            </Badge>
-                          </div>
-                        </div>
-                      </Link>
-                    )
-                  })}
-                </div>
-
-                {/* Desktop: tabela */}
-                <div className="hidden sm:block overflow-x-auto -mx-4 sm:-mx-6">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-slate-100">
-                        <th className="text-left py-2.5 px-4 sm:px-6 font-medium text-slate-500 text-xs uppercase tracking-wide">Nº Inscrição</th>
-                        <th className="text-left py-2.5 px-4 font-medium text-slate-500 text-xs uppercase tracking-wide">Proponente</th>
-                        <th className="text-left py-2.5 px-4 font-medium text-slate-500 text-xs uppercase tracking-wide">Edital</th>
-                        <th className="text-left py-2.5 px-4 font-medium text-slate-500 text-xs uppercase tracking-wide">Categoria</th>
-                        <th className="text-left py-2.5 px-4 font-medium text-slate-500 text-xs uppercase tracking-wide">Status</th>
-                        <th className="py-2.5 px-4 sm:px-6" />
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {avaliacoesRecentes.map((av) => {
-                        const isPending = !av.finalizada
-                        return (
-                          <tr key={av.id} className="hover:bg-slate-50/50 transition-colors">
-                            <td className="py-3 px-4 sm:px-6 font-mono text-xs text-slate-600">{av.inscricao.numero}</td>
-                            <td className="py-3 px-4">
-                              <p className="font-medium text-slate-900">{av.inscricao.proponente.nome}</p>
-                            </td>
-                            <td className="py-3 px-4 text-slate-600 max-w-[200px]">
-                              <p className="truncate">{av.inscricao.edital.titulo}</p>
-                              <p className="text-xs text-slate-400">{av.inscricao.edital.ano}</p>
-                            </td>
-                            <td className="py-3 px-4 text-slate-600">{av.inscricao.categoria ?? '—'}</td>
-                            <td className="py-3 px-4">
-                              <Badge variant={isPending ? 'warning' : 'success'}>
-                                {isPending ? 'Pendente' : `Nota: ${av.notaTotal}`}
-                              </Badge>
-                            </td>
-                            <td className="py-3 px-4 sm:px-6 text-right">
-                              <Link
-                                href={`/admin/inscricoes/${av.inscricaoId}`}
-                                className="text-brand-600 hover:text-brand-700 font-medium text-xs"
-                              >
-                                {isPending ? 'Avaliar' : 'Ver'}
-                              </Link>
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-
-                {total > 10 && (
-                  <div className="mt-4 pt-4 border-t border-slate-100">
-                    <Link
-                      href="/admin/inscricoes"
-                      className="text-sm text-brand-600 hover:text-brand-700 font-medium"
-                    >
-                      Ver todas as {total} avaliações →
-                    </Link>
-                  </div>
-                )}
-              </>
-            )}
-          </Card>
-        </FadeIn>
-      </section>
+      <AvaliadorDashboard
+        today={today}
+        pendentes={pendentes}
+        concluidas={concluidas}
+        concluidasHoje={concluidasHoje}
+        avaliacoesRecentes={avaliacoesRecentes}
+      />
     )
   }
 
-  // ─── Dashboard ADMIN (padrão) ────────────────────────────────────────────
-  const [
-    totalEditais,
-    editaisAbertos,
-    totalInscricoes,
-    inscricoesEnviadas,
-    totalProponentes,
-    recentLogs,
-  ] = await Promise.all([
-    prisma.edital.count(),
-    prisma.edital.count({ where: { status: 'INSCRICOES_ABERTAS' } }),
-    prisma.inscricao.count(),
-    prisma.inscricao.count({ where: { status: 'ENVIADA' } }),
-    prisma.user.count({ where: { role: 'PROPONENTE' } }),
-    prisma.auditLog.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 10,
-      include: { user: { select: { nome: true } } },
-    }),
-  ])
-
-  const stats = [
-    {
-      label: 'Editais',
-      value: totalEditais,
-      sub: `${editaisAbertos} aberto(s)`,
-      color: 'bg-blue-50',
-      iconColor: 'text-blue-600',
-      icon: <IconNews className="h-6 w-6" />,
-      href: '/admin/editais',
-    },
-    {
-      label: 'Inscrições',
-      value: totalInscricoes,
-      sub: `${inscricoesEnviadas} pendente(s)`,
-      color: 'bg-accent-50',
-      iconColor: 'text-accent-600',
-      icon: <IconClipboard className="h-6 w-6" />,
-      href: '/admin/inscricoes',
-    },
-    {
-      label: 'Proponentes',
-      value: totalProponentes,
-      sub: 'cadastrados',
-      color: 'bg-brand-50',
-      iconColor: 'text-brand-600',
-      icon: <IconUsers className="h-6 w-6" />,
-      href: '/admin/usuarios',
-    },
-    {
-      label: 'Editais Abertos',
-      value: editaisAbertos,
-      sub: 'com inscrições abertas',
-      color: 'bg-green-50',
-      iconColor: 'text-green-600',
-      icon: <IconCheck className="h-6 w-6" />,
-      href: '/admin/editais',
-    },
-  ]
+  const [totalEditais, editaisAbertos, totalInscricoes, inscricoesEnviadas, totalProponentes, recentLogs] =
+    await Promise.all([
+      prisma.edital.count(),
+      prisma.edital.count({ where: { status: 'INSCRICOES_ABERTAS' } }),
+      prisma.inscricao.count(),
+      prisma.inscricao.count({ where: { status: 'ENVIADA' } }),
+      prisma.user.count({ where: { role: 'PROPONENTE' } }),
+      prisma.auditLog.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+        include: { user: { select: { nome: true } } },
+      }),
+    ])
 
   return (
-    <section>
-      <FadeIn>
-        <div className="mb-6 sm:mb-8">
-          <p className="text-sm text-slate-500 capitalize mb-1">{today}</p>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Painel da Secretaria</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Visão geral das atividades do Portal PNAB Irecê.
-          </p>
-        </div>
-      </FadeIn>
-
-      {/* KPI Cards */}
-      <StaggerContainer className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-        {stats.map((stat) => (
-          <StaggerItem key={stat.label}>
-            <StatCard {...stat} />
-          </StaggerItem>
-        ))}
-      </StaggerContainer>
-
-      {/* Ações rápidas */}
-      <FadeIn delay={0.2}>
-        <div className="grid grid-cols-2 sm:flex gap-3 mb-6 sm:mb-8">
-          <Button href="/admin/editais/novo" className="text-sm sm:text-base">
-            <IconPlus className="h-4 w-4 mr-1.5" />
-            Novo Edital
-          </Button>
-          <Button href="/admin/inscricoes" variant="outline" className="text-sm sm:text-base">
-            Inscrições
-          </Button>
-          <Button href="/admin/inscricoes/export" variant="ghost" className="col-span-2 sm:col-span-1 text-sm sm:text-base">
-            <IconExport className="h-4 w-4 mr-1.5" />
-            Exportar CSV
-          </Button>
-        </div>
-      </FadeIn>
-
-      {/* Atividade recente */}
-      <FadeIn delay={0.3}>
-        <Card>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-slate-900">Atividade Recente</h2>
-            <Link href="/admin/logs" className="text-sm text-brand-600 hover:text-brand-700 font-medium">
-              Ver todos
-            </Link>
-          </div>
-
-          {recentLogs.length === 0 ? (
-            <EmptyState
-              icon={<IconInfo className="h-8 w-8 text-slate-400" />}
-              title="Nenhuma atividade registrada"
-              description="As ações realizadas no sistema aparecerão aqui."
-            />
-          ) : (
-            <div className="divide-y divide-slate-100 -mx-1 sm:mx-0">
-              {recentLogs.map((log) => {
-                const actionStyle = getActionStyle(log.action)
-                return (
-                  <div key={log.id} className="flex items-start gap-2.5 sm:gap-3 px-1 sm:px-3 py-2.5 sm:py-3.5 hover:bg-slate-50/50 transition-colors first:pt-0 last:pb-0">
-                    <div className={`h-7 w-7 sm:h-8 sm:w-8 rounded-md sm:rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${actionStyle.bg}`}>
-                      <actionStyle.Icon className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${actionStyle.color}`} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-baseline justify-between gap-2">
-                        <p className="text-xs sm:text-sm text-slate-800 truncate">
-                          <span className="font-medium">{log.user?.nome?.split(' ').slice(0, 2).join(' ') ?? 'Sistema'}</span>
-                        </p>
-                        <span className="text-[10px] sm:text-xs text-slate-400 shrink-0 tabular-nums">
-                          {new Date(log.createdAt).toLocaleDateString('pt-BR', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            timeZone: 'America/Sao_Paulo',
-                          })}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <Badge variant={actionStyle.badge}>{log.action.replace(/_/g, ' ')}</Badge>
-                        {log.entity && (
-                          <span className="text-[10px] sm:text-xs text-slate-400 truncate">
-                            {log.entity} #{log.entityId?.slice(0, 6)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </Card>
-      </FadeIn>
-    </section>
+    <AdminDashboard
+      today={today}
+      totalEditais={totalEditais}
+      editaisAbertos={editaisAbertos}
+      totalInscricoes={totalInscricoes}
+      inscricoesEnviadas={inscricoesEnviadas}
+      totalProponentes={totalProponentes}
+      recentLogs={recentLogs}
+    />
   )
 }

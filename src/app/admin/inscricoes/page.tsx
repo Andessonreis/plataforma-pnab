@@ -1,13 +1,16 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { Card, Badge, Pagination, Button, EmptyState, FadeIn, IconExport, IconClipboard } from '@/components/ui'
-import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
-import { getEditaisVisiveis } from '@/lib/edital-acesso'
-import { categoriaWhere, labelArea, SEM_AREA } from '@/lib/inscricoes/area-filter'
-import type { InscricaoStatus } from '@prisma/client'
+import { Card, Pagination, EmptyState, FadeIn, IconClipboard } from '@/components/ui'
+import { getRoleTheme } from '../role-theme'
+import { buildInscricoesWhere } from './_lib/build-where'
+import { CabecalhoInscricoes } from './_components/cabecalho'
+import { StatusTabs } from './_components/status-tabs'
+import { FiltrosInscricoes } from './_components/filtros'
+import { ListaMobile } from './_components/lista-mobile'
+import { TabelaDesktop } from './_components/tabela-desktop'
+import type { UserRole } from '@prisma/client'
 
 export const metadata: Metadata = {
   title: 'Inscrições — Portal PNAB Irecê',
@@ -37,51 +40,14 @@ export default async function AdminInscricoesPage({ searchParams }: Props) {
   const searchQuery = params.search || undefined
   const aviso = params.aviso || undefined
 
-  const isAvaliador = session.user.role === 'AVALIADOR'
-  const isHabilitador = session.user.role === 'HABILITADOR'
+  const role = session.user.role as UserRole
+  const theme = getRoleTheme(role)
+  const isAvaliador = role === 'AVALIADOR'
+  const isHabilitador = role === 'HABILITADOR'
 
-  const where: Record<string, unknown> = {}
-  if (statusFilter) where.status = statusFilter
-  if (editalIdFilter) where.editalId = editalIdFilter
-  const recorteArea = categoriaWhere(areaFilter)
-  if (recorteArea !== undefined) where.categoria = recorteArea
-  if (searchQuery) {
-    where.OR = [
-      { numero: { contains: searchQuery, mode: 'insensitive' } },
-      { proponente: { nome: { contains: searchQuery, mode: 'insensitive' } } },
-      { proponente: { cpfCnpj: { contains: searchQuery } } },
-    ]
-  }
-
-  // AVALIADOR vê inscrições de editais onde é membro da equipe (função AVALIADOR),
-  // em fases de avaliação em diante. Se o edital não tem equipe, todos veem (compat).
-  if (isAvaliador) {
-    const visiveis = await getEditaisVisiveis(session.user.id, 'AVALIADOR')
-    where.status = { notIn: ['RASCUNHO', 'INABILITADA'] }
-    where.edital = {
-      status: { in: ['AVALIACAO', 'RESULTADO_PRELIMINAR', 'RECURSO', 'RESULTADO_FINAL', 'ENCERRADO'] },
-    }
-    if (visiveis) {
-      if (editalIdFilter && !visiveis.includes(editalIdFilter)) {
-        where.editalId = { in: [] }
-      } else if (!editalIdFilter) {
-        where.editalId = { in: visiveis }
-      }
-    }
-  }
-
-  // HABILITADOR só vê inscrições de editais atribuídos (ou todos, se sem equipe)
-  if (isHabilitador) {
-    const visiveis = await getEditaisVisiveis(session.user.id, 'HABILITADOR')
-    if (visiveis) {
-      if (editalIdFilter && !visiveis.includes(editalIdFilter)) {
-        // Se filtrou um edital ao qual não tem acesso, zera
-        where.editalId = { in: [] }
-      } else if (!editalIdFilter) {
-        where.editalId = { in: visiveis }
-      }
-    }
-  }
+  const where = await buildInscricoesWhere(session.user.id, role, {
+    statusFilter, editalIdFilter, areaFilter, searchQuery,
+  })
 
   // Escopo sem o recorte de área: alimenta o <select> com todas as opções
   // visíveis pro usuário, mesmo quando uma área já está selecionada.
@@ -91,7 +57,11 @@ export default async function AdminInscricoesPage({ searchParams }: Props) {
   const [inscricoes, total, editais, agrupadoPorArea] = await Promise.all([
     prisma.inscricao.findMany({
       where,
-      orderBy: { createdAt: 'desc' },
+      // Agrupado por edital primeiro: numa lista com dezenas de editais, a
+      // única coisa que separava um do outro antes era o texto repetido na
+      // coluna Edital — ilegível em escala. As tabelas usam essa ordem pra
+      // renderizar um cabeçalho de grupo em vez de repetir o nome a cada linha.
+      orderBy: [{ edital: { titulo: 'asc' } }, { createdAt: 'desc' }],
       skip: (page - 1) * pageSize,
       take: pageSize,
       include: {
@@ -110,7 +80,10 @@ export default async function AdminInscricoesPage({ searchParams }: Props) {
       },
     }),
     prisma.inscricao.count({ where }),
+    // Editais já concluídos (ENCERRADO/RESULTADO_FINAL) saem do filtro — não
+    // há triagem a fazer neles, só teriam poluído a lista com opção morta.
     prisma.edital.findMany({
+      where: { status: { notIn: ['ENCERRADO', 'RESULTADO_FINAL'] } },
       select: { id: true, titulo: true, ano: true },
       orderBy: { createdAt: 'desc' },
     }),
@@ -127,144 +100,37 @@ export default async function AdminInscricoesPage({ searchParams }: Props) {
 
   const totalPages = Math.ceil(total / pageSize)
 
-  const allStatuses: InscricaoStatus[] = [
-    'RASCUNHO', 'ENVIADA', 'HABILITADA', 'INABILITADA', 'EM_AVALIACAO',
-    'RESULTADO_PRELIMINAR', 'RECURSO_ABERTO', 'RESULTADO_FINAL',
-    'CONTEMPLADA', 'NAO_CONTEMPLADA', 'SUPLENTE',
-  ]
+  // Sem status/page — os tabs de status montam o próprio href em cima disso.
+  const outrosParams = new URLSearchParams()
+  if (editalIdFilter) outrosParams.set('editalId', editalIdFilter)
+  if (areaFilter) outrosParams.set('categoria', areaFilter)
+  if (searchQuery) outrosParams.set('search', searchQuery)
 
-  const filterParams = new URLSearchParams()
+  const filterParams = new URLSearchParams(outrosParams)
   if (statusFilter) filterParams.set('status', statusFilter)
-  if (editalIdFilter) filterParams.set('editalId', editalIdFilter)
-  if (areaFilter) filterParams.set('categoria', areaFilter)
-  if (searchQuery) filterParams.set('search', searchQuery)
   const baseUrl = `/admin/inscricoes${filterParams.toString() ? `?${filterParams.toString()}` : ''}`
 
   return (
     <section>
       <FadeIn>
-        <div className="flex items-center justify-between gap-3 mb-4 sm:mb-6">
-          <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
-              {isAvaliador ? 'Minhas Avaliações' : 'Inscrições'}
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-600 mt-0.5 sm:mt-1">
-              {isAvaliador
-                ? `${total} inscrição(ões) atribuída(s) a você`
-                : `${total} inscrição(ões)`}
-            </p>
-          </div>
-          {!isAvaliador && (
-            <Button href="/admin/inscricoes/export" variant="ghost" size="sm">
-              <IconExport className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Exportar CSV</span>
-              <span className="sm:hidden">CSV</span>
-            </Button>
-          )}
-        </div>
-
-        {/* Aviso de acesso negado */}
-        {aviso === 'nao-atribuido' && (
-          <div role="alert" className="flex items-start gap-2.5 rounded-lg bg-amber-50 border border-amber-200 px-3.5 py-3 mb-4 text-sm text-amber-800">
-            <svg className="h-4 w-4 mt-0.5 shrink-0 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            Essa inscrição não foi atribuída a você. Abaixo estão suas atribuições.
-          </div>
-        )}
+        <CabecalhoInscricoes isAvaliador={isAvaliador} total={total} avisoNaoAtribuido={aviso === 'nao-atribuido'} />
       </FadeIn>
 
-      {/* Filtros */}
-      <Card padding="sm" className="mb-4 sm:mb-6 sm:p-6">
-        <form method="get" action="/admin/inscricoes" className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div>
-              <label htmlFor="search" className="block text-sm font-medium text-slate-700 mb-1.5">
-                Buscar
-              </label>
-              <input
-                id="search"
-                name="search"
-                type="text"
-                defaultValue={searchQuery}
-                placeholder="Nome, CPF ou número..."
-                className="block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-500 min-h-[44px]"
-              />
-            </div>
+      <StatusTabs activeStatus={statusFilter} outrosParams={outrosParams} ocultarRascunho={isHabilitador} />
 
-            <div>
-              <label htmlFor="editalId" className="block text-sm font-medium text-slate-700 mb-1.5">
-                Edital
-              </label>
-              <select
-                id="editalId"
-                name="editalId"
-                defaultValue={editalIdFilter}
-                className="block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-500 min-h-[44px]"
-              >
-                <option value="">Todos os editais</option>
-                {editais.map((edital) => (
-                  <option key={edital.id} value={edital.id}>
-                    {edital.titulo} ({edital.ano})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="status" className="block text-sm font-medium text-slate-700 mb-1.5">
-                Status
-              </label>
-              <select
-                id="status"
-                name="status"
-                defaultValue={statusFilter}
-                className="block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-500 min-h-[44px]"
-              >
-                <option value="">Todos os status</option>
-                {allStatuses.map((status) => (
-                  <option key={status} value={status}>
-                    {inscricaoStatusLabel[status]}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="categoria" className="block text-sm font-medium text-slate-700 mb-1.5">
-                Área
-              </label>
-              <select
-                id="categoria"
-                name="categoria"
-                defaultValue={areaFilter}
-                className="block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-500 min-h-[44px]"
-              >
-                <option value="">Todas as áreas</option>
-                {areas.map((a) => (
-                  <option key={a.nome || SEM_AREA} value={a.nome || SEM_AREA}>
-                    {labelArea(a.nome)} ({a.total})
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Button type="submit">
-              Filtrar
-            </Button>
-            <Button href="/admin/inscricoes" variant="ghost">
-              Limpar
-            </Button>
-          </div>
-        </form>
-      </Card>
+      <FiltrosInscricoes
+        searchQuery={searchQuery}
+        editalIdFilter={editalIdFilter}
+        statusFilter={statusFilter}
+        areaFilter={areaFilter}
+        editais={editais}
+        areas={areas}
+      />
 
       {inscricoes.length === 0 ? (
         <Card>
           <EmptyState
-            icon={<IconClipboard className="h-8 w-8 text-slate-400" />}
+            icon={<IconClipboard className="h-8 w-8 text-tinta-400" />}
             title={isAvaliador ? 'Nenhuma inscrição atribuída' : 'Nenhuma inscrição encontrada'}
             description={
               isAvaliador
@@ -275,157 +141,8 @@ export default async function AdminInscricoesPage({ searchParams }: Props) {
         </Card>
       ) : (
         <>
-          {/* Mobile: cards */}
-          <div className="sm:hidden space-y-3">
-            {inscricoes.map((inscricao) => {
-              const minhaAval = (inscricao as unknown as { avaliacoes?: { finalizada: boolean; notaTotal: unknown }[] }).avaliacoes?.[0]
-              return (
-                <Link
-                  key={inscricao.id}
-                  href={`/admin/inscricoes/${inscricao.id}`}
-                  className="block overflow-hidden rounded-lg border border-slate-200 bg-white p-3.5 hover:bg-slate-50 transition-colors shadow-sm"
-                >
-                  <div className="flex items-start justify-between gap-2 mb-1.5">
-                    <p className="text-sm font-medium text-slate-900 leading-snug">{inscricao.proponente.nome}</p>
-                    {isAvaliador && minhaAval ? (
-                      <span className={[
-                        'shrink-0 text-[11px] font-medium px-2 py-0.5 rounded-full',
-                        minhaAval.finalizada ? 'text-emerald-700 bg-emerald-50' : 'text-amber-700 bg-amber-50',
-                      ].join(' ')}>
-                        {minhaAval.finalizada ? `✓ ${parseFloat(String(minhaAval.notaTotal)).toFixed(1)}` : 'Rascunho'}
-                      </span>
-                    ) : !isAvaliador ? (
-                      <Badge variant={inscricaoStatusVariant[inscricao.status as InscricaoStatus]}>
-                        {inscricaoStatusLabel[inscricao.status as InscricaoStatus]}
-                      </Badge>
-                    ) : (
-                      <span className="text-[11px] text-slate-400 shrink-0">Pendente</span>
-                    )}
-                  </div>
-                  <p className="text-xs text-slate-500 leading-snug mb-2 line-clamp-1">{inscricao.edital.titulo}</p>
-                  <div className="flex items-center justify-between text-[11px] text-slate-500">
-                    <span className="font-mono">{inscricao.numero}</span>
-                    <div className="flex items-center gap-2">
-                      {!isAvaliador && (() => {
-                        const count = (inscricao as unknown as { _count?: { avaliacoes: number } })._count?.avaliacoes ?? 0
-                        return count > 0 ? (
-                          <span className="inline-flex items-center gap-0.5 text-brand-700">
-                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            {count}
-                          </span>
-                        ) : null
-                      })()}
-                      <span>
-                        {inscricao.submittedAt
-                          ? new Date(inscricao.submittedAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
-                          : '—'}
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              )
-            })}
-          </div>
-
-          {/* Desktop: tabela */}
-          <Card padding="sm" className="overflow-hidden hidden sm:block">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-slate-50">
-                    <th className="text-left py-3 px-4 font-medium text-slate-600">Número</th>
-                    <th className="text-left py-3 px-4 font-medium text-slate-600">Proponente</th>
-                    <th className="text-left py-3 px-4 font-medium text-slate-600">Edital</th>
-                    <th className="text-left py-3 px-4 font-medium text-slate-600">Categoria</th>
-                    {isAvaliador ? (
-                      <th className="text-left py-3 px-4 font-medium text-slate-600">Avaliação</th>
-                    ) : (
-                      <>
-                        <th className="text-left py-3 px-4 font-medium text-slate-600">Status</th>
-                        <th className="text-left py-3 px-4 font-medium text-slate-600">Avaliadores</th>
-                      </>
-                    )}
-                    <th className="text-left py-3 px-4 font-medium text-slate-600">Enviada em</th>
-                    <th className="text-right py-3 px-4 font-medium text-slate-600">Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {inscricoes.map((inscricao) => {
-                    const minhaAvaliacao = (inscricao as unknown as { avaliacoes?: { finalizada: boolean; notaTotal: unknown }[] }).avaliacoes?.[0]
-                    return (
-                      <tr key={inscricao.id} className="border-t border-slate-100 hover:bg-slate-50 transition-colors">
-                        <td className="py-3 px-4 font-mono text-xs">{inscricao.numero}</td>
-                        <td className="py-3 px-4">
-                          <div>
-                            <p className="font-medium text-slate-900">{inscricao.proponente.nome}</p>
-                            <p className="text-xs text-slate-500">{inscricao.proponente.cpfCnpj}</p>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-slate-600">{inscricao.edital.titulo}</td>
-                        <td className="py-3 px-4 text-slate-600">{inscricao.categoria ?? '—'}</td>
-                        {isAvaliador ? (
-                          <td className="py-3 px-4">
-                            {minhaAvaliacao ? (
-                              <span className={[
-                                'inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full',
-                                minhaAvaliacao.finalizada
-                                  ? 'text-emerald-700 bg-emerald-50'
-                                  : 'text-amber-700 bg-amber-50',
-                              ].join(' ')}>
-                                {minhaAvaliacao.finalizada ? (
-                                  <>
-                                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                                    {parseFloat(String(minhaAvaliacao.notaTotal)).toFixed(1)}
-                                  </>
-                                ) : 'Rascunho'}
-                              </span>
-                            ) : (
-                              <span className="text-xs text-slate-400">Pendente</span>
-                            )}
-                          </td>
-                        ) : (
-                          <>
-                            <td className="py-3 px-4">
-                              <Badge variant={inscricaoStatusVariant[inscricao.status as InscricaoStatus]}>
-                                {inscricaoStatusLabel[inscricao.status as InscricaoStatus]}
-                              </Badge>
-                            </td>
-                            <td className="py-3 px-4">
-                              {(() => {
-                                const count = (inscricao as unknown as { _count?: { avaliacoes: number } })._count?.avaliacoes ?? 0
-                                return count > 0 ? (
-                                  <span className="inline-flex items-center justify-center text-xs font-medium bg-brand-50 text-brand-700 rounded-full px-2 py-0.5 min-w-[24px]">
-                                    {count}
-                                  </span>
-                                ) : (
-                                  <span className="text-xs text-slate-400">—</span>
-                                )
-                              })()}
-                            </td>
-                          </>
-                        )}
-                        <td className="py-3 px-4 text-slate-500">
-                          {inscricao.submittedAt
-                            ? new Date(inscricao.submittedAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
-                            : '—'}
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          <Link
-                            href={`/admin/inscricoes/${inscricao.id}`}
-                            className="text-brand-600 hover:text-brand-700 font-medium text-xs"
-                          >
-                            {isAvaliador ? 'Avaliar' : 'Detalhes'}
-                          </Link>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </Card>
+          <ListaMobile inscricoes={inscricoes} isAvaliador={isAvaliador} />
+          <TabelaDesktop inscricoes={inscricoes} isAvaliador={isAvaliador} linkColor={theme.chipText} />
 
           <Pagination
             currentPage={page}

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect, notFound } from 'next/navigation'
 import { requireRole } from '../../require-role'
+import { getEditaisVisiveis } from '@/lib/edital-acesso'
 import { prisma } from '@/lib/db'
 import { Card, Badge, IconArrowLeft, IconShield, IconClock } from '@/components/ui'
 import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
@@ -27,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 const STATUSES_HABILITACAO: InscricaoStatus[] = ['ENVIADA', 'HABILITADA', 'INABILITADA']
 
 export default async function AdminHabilitacaoDetailPage({ params, searchParams }: Props) {
-  await requireRole('ADMIN')
+  const session = await requireRole('ADMIN', 'HABILITADOR')
 
   const { id } = await params
   const { editalId, aba } = await searchParams
@@ -64,6 +65,13 @@ export default async function AdminHabilitacaoDetailPage({ params, searchParams 
   })
 
   if (!inscricao) notFound()
+
+  // Habilitador só entra em inscrição de edital atribuído a ele — mesmo
+  // resultado do não encontrado, não vaza que o edital existe.
+  if (session.user.role === 'HABILITADOR') {
+    const visiveis = await getEditaisVisiveis(session.user.id, 'HABILITADOR')
+    if (visiveis && !visiveis.includes(inscricao.editalId)) notFound()
+  }
 
   if (!STATUSES_HABILITACAO.includes(inscricao.status as InscricaoStatus)) {
     redirect(`/admin/inscricoes/${inscricao.id}`)
