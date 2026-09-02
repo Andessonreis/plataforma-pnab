@@ -73,7 +73,7 @@ export default async function AdminHabilitacaoPage({ searchParams }: Props) {
   const params = await searchParams
   const editalIdFilter = params.editalId || undefined
 
-  // Sem edital escolhido → tela de seleção (com auto-skip quando há só um).
+  // Sem edital escolhido → tela de seleção, mesmo havendo só um edital.
   if (!editalIdFilter) {
     return renderPicker(editaisVisiveis)
   }
@@ -107,7 +107,7 @@ export default async function AdminHabilitacaoPage({ searchParams }: Props) {
     ]
   }
 
-  const [inscricoes, total, contagens, totalEditais] = await Promise.all([
+  const [inscricoes, total, contagens] = await Promise.all([
     prisma.inscricao.findMany({
       where,
       orderBy: { submittedAt: 'desc' },
@@ -124,7 +124,6 @@ export default async function AdminHabilitacaoPage({ searchParams }: Props) {
       where: { editalId: edital.id, status: { in: STATUS_HABILITACAO } },
       _count: { _all: true },
     }),
-    prisma.edital.count({ where: { status: { in: EDITAL_STATUS_COM_HABILITACAO } } }),
   ])
 
   const countMap = Object.fromEntries(contagens.map((c) => [c.status, c._count._all]))
@@ -134,7 +133,6 @@ export default async function AdminHabilitacaoPage({ searchParams }: Props) {
 
   const totalPages = Math.ceil(total / pageSize)
   const ativo = edital.status === 'HABILITACAO'
-  const podeTrocarEdital = totalEditais > 1
 
   function hrefAba(aba: AbaKey) {
     const sp = new URLSearchParams()
@@ -170,15 +168,13 @@ export default async function AdminHabilitacaoPage({ searchParams }: Props) {
       <FadeIn>
         {/* Cabeçalho institucional — escopado no edital escolhido */}
         <header className="mb-6 sm:mb-8">
-          {podeTrocarEdital && (
-            <Link
-              href="/admin/habilitacao"
-              className="inline-flex items-center gap-1 text-sm text-brand-600 hover:text-brand-700 font-medium mb-3"
-            >
-              <IconArrowLeft className="h-4 w-4" />
-              Trocar edital
-            </Link>
-          )}
+          <Link
+            href="/admin/habilitacao"
+            className="inline-flex items-center gap-1 text-sm text-brand-600 hover:text-brand-700 font-medium mb-3"
+          >
+            <IconArrowLeft className="h-4 w-4" />
+            Trocar edital
+          </Link>
 
           <div className="flex items-start gap-3 sm:gap-4">
             <div className="flex items-center justify-center h-11 w-11 sm:h-12 sm:w-12 rounded-xl bg-brand-50 text-brand-700 shrink-0 ring-1 ring-brand-100">
@@ -414,7 +410,7 @@ export default async function AdminHabilitacaoPage({ searchParams }: Props) {
   )
 }
 
-/** Tela de seleção de edital. Redireciona direto quando há só um. */
+/** Tela de seleção de edital — sempre aparece, mesmo com um edital só. */
 async function renderPicker(editaisVisiveis: string[] | null) {
   const editais = await prisma.edital.findMany({
     where: {
@@ -486,10 +482,6 @@ async function renderPicker(editaisVisiveis: string[] | null) {
         </Card>
       </section>
     )
-  }
-
-  if (cards.length === 1) {
-    redirect(`/admin/habilitacao?editalId=${cards[0].id}`)
   }
 
   return <EditalPicker editais={cards} />
