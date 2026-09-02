@@ -6,6 +6,7 @@ import { prisma } from '@/lib/db'
 import { logAudit } from '@/lib/audit'
 import { enqueueEmail } from '@/lib/queue'
 import { gateAcaoFase } from '@/lib/edital/gate'
+import { temAcessoEdital } from '@/lib/edital-acesso'
 import type { UserRole } from '@prisma/client'
 
 export const runtime = 'nodejs'
@@ -65,6 +66,7 @@ export async function PUT(
         id: true,
         numero: true,
         status: true,
+        editalId: true,
         proponente: { select: { email: true, nome: true } },
         edital: { select: { titulo: true, status: true } },
       },
@@ -78,6 +80,32 @@ export async function PUT(
       res.headers.set('X-Request-Id', requestId)
       res.headers.set('Cache-Control', 'no-store')
       return res
+    }
+
+    // ── Escopo por equipe — HABILITADOR só age em editais aos quais está atribuído ──
+    if (session.user.role === 'HABILITADOR') {
+      const temAcesso = await temAcessoEdital(session.user.id, inscricao.editalId, 'HABILITADOR')
+      if (!temAcesso) {
+        await logAudit({
+          userId: session.user.id,
+          action: 'HABILITACAO_ACESSO_NEGADO',
+          entity: 'Inscricao',
+          entityId: id,
+          details: {
+            editalId: inscricao.editalId,
+            motivo: 'Usuário não pertence à equipe de habilitação deste edital.',
+          },
+          ip: req.headers.get('x-forwarded-for') ?? undefined,
+        })
+
+        const res = NextResponse.json(
+          { error: 'FORBIDDEN', message: 'Você não está atribuído à equipe de habilitação deste edital.', requestId },
+          { status: 403 },
+        )
+        res.headers.set('X-Request-Id', requestId)
+        res.headers.set('Cache-Control', 'no-store')
+        return res
+      }
     }
 
     const body = await req.json()

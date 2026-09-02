@@ -2,6 +2,7 @@ import { prisma } from '@/lib/db'
 import { logAudit } from '@/lib/audit'
 import { enqueueEmail } from '@/lib/queue'
 import { gateAcaoFase } from '@/lib/edital/gate'
+import { temAcessoEdital } from '@/lib/edital-acesso'
 import { ServiceError } from './errors'
 import type { HabilitacaoInput } from '@/lib/schemas/habilitacao'
 import type { UserRole } from '@prisma/client'
@@ -19,12 +20,32 @@ export async function updateHabilitacao(
       id: true,
       numero: true,
       status: true,
+      editalId: true,
       proponente: { select: { email: true, nome: true } },
       edital: { select: { titulo: true, status: true } },
     },
   })
 
   if (!inscricao) throw new ServiceError('NOT_FOUND', 'Inscrição não encontrada.')
+
+  // Escopo por equipe — HABILITADOR só age em editais aos quais está atribuído
+  if (role === 'HABILITADOR') {
+    const temAcesso = await temAcessoEdital(userId, inscricao.editalId, 'HABILITADOR')
+    if (!temAcesso) {
+      await logAudit({
+        userId,
+        action: 'HABILITACAO_ACESSO_NEGADO',
+        entity: 'Inscricao',
+        entityId: inscricaoId,
+        details: {
+          editalId: inscricao.editalId,
+          motivo: 'Usuário não pertence à equipe de habilitação deste edital.',
+        },
+        ip,
+      })
+      throw new ServiceError('FORBIDDEN', 'Você não está atribuído à equipe de habilitação deste edital.')
+    }
+  }
 
   // Gate de fase do edital — bloqueia fora de HABILITACAO
   const gate = gateAcaoFase({
