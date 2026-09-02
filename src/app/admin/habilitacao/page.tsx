@@ -410,24 +410,26 @@ async function renderPicker() {
     select: { id: true, titulo: true, ano: true, status: true },
   })
 
-  const inscricoes = editais.length
-    ? await prisma.inscricao.findMany({
+  const contagens = editais.length
+    ? await prisma.inscricao.groupBy({
+        by: ['editalId', 'status'],
         where: {
           editalId: { in: editais.map((e) => e.id) },
           status: { in: STATUS_HABILITACAO },
         },
-        select: { editalId: true, status: true },
+        _count: { _all: true },
       })
     : []
 
   const tally = new Map<string, { pendentes: number; habilitadas: number; inabilitadas: number }>()
   for (const e of editais) tally.set(e.id, { pendentes: 0, habilitadas: 0, inabilitadas: 0 })
-  for (const insc of inscricoes) {
-    const t = tally.get(insc.editalId)
+  for (const c of contagens) {
+    const t = tally.get(c.editalId)
     if (!t) continue
-    if (insc.status === 'ENVIADA') t.pendentes++
-    else if (insc.status === 'HABILITADA') t.habilitadas++
-    else if (insc.status === 'INABILITADA') t.inabilitadas++
+    const n = c._count._all
+    if (c.status === 'ENVIADA') t.pendentes += n
+    else if (c.status === 'HABILITADA') t.habilitadas += n
+    else if (c.status === 'INABILITADA') t.inabilitadas += n
   }
 
   // Editais na fase ativa sempre aparecem; encerrados só quando têm histórico.
