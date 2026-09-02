@@ -27,6 +27,7 @@ const baseInscricao = {
   id: 'insc-1',
   numero: 'INS-001',
   status: 'ENVIADA',
+  editalId: 'edital-1',
   proponente: { email: 'ana@test.com', nome: 'Ana' },
   edital: { titulo: 'Edital PNAB 2025', status: 'HABILITACAO' },
 }
@@ -37,6 +38,8 @@ describe('PUT /api/admin/inscricoes/[id]/habilitacao', () => {
     mockPrisma.inscricao.update.mockResolvedValue({} as never)
     mockLogAudit.mockResolvedValue(undefined)
     mockEnqueueEmail.mockResolvedValue(undefined as never)
+    // Compat: edital sem equipe de habilitação configurada → libera geral
+    mockPrisma.editalMembro.count.mockResolvedValue(0 as never)
   })
 
   it('sem sessão → 403', async () => {
@@ -67,6 +70,42 @@ describe('PUT /api/admin/inscricoes/[id]/habilitacao', () => {
   it('role ADMIN → 200', async () => {
     mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
     mockPrisma.inscricao.findUnique.mockResolvedValue(baseInscricao as never)
+
+    const res = await PUT(makeRequest({ status: 'HABILITADA' }), makeParams())
+
+    expect(res.status).toBe(200)
+  })
+
+  it('HABILITADOR fora da equipe do edital → 403', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'HABILITADOR' } } as never)
+    mockPrisma.inscricao.findUnique.mockResolvedValue(baseInscricao as never)
+    // Edital com equipe configurada, mas u1 não está nela
+    mockPrisma.editalMembro.count.mockResolvedValue(1 as never)
+    mockPrisma.editalMembro.findUnique.mockResolvedValue(null)
+
+    const res = await PUT(makeRequest({ status: 'HABILITADA' }), makeParams())
+
+    expect(res.status).toBe(403)
+    expect(mockPrisma.inscricao.update).not.toHaveBeenCalled()
+  })
+
+  it('HABILITADOR atribuído à equipe do edital → 200', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'HABILITADOR' } } as never)
+    mockPrisma.inscricao.findUnique.mockResolvedValue(baseInscricao as never)
+    mockPrisma.editalMembro.count.mockResolvedValue(1 as never)
+    mockPrisma.editalMembro.findUnique.mockResolvedValue({ id: 'membro-1' } as never)
+
+    const res = await PUT(makeRequest({ status: 'HABILITADA' }), makeParams())
+
+    expect(res.status).toBe(200)
+  })
+
+  it('ADMIN ignora escopo de equipe do edital', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockPrisma.inscricao.findUnique.mockResolvedValue(baseInscricao as never)
+    // Equipe configurada e admin não é membro — não se aplica a ADMIN
+    mockPrisma.editalMembro.count.mockResolvedValue(1 as never)
+    mockPrisma.editalMembro.findUnique.mockResolvedValue(null)
 
     const res = await PUT(makeRequest({ status: 'HABILITADA' }), makeParams())
 

@@ -16,6 +16,7 @@ import { podeHabilitar } from '@/lib/edital/fase'
 
 interface Props {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ editalId?: string; aba?: string }>
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -25,10 +26,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 const STATUSES_HABILITACAO: InscricaoStatus[] = ['ENVIADA', 'HABILITADA', 'INABILITADA']
 
-export default async function AdminHabilitacaoDetailPage({ params }: Props) {
+export default async function AdminHabilitacaoDetailPage({ params, searchParams }: Props) {
   await requireRole('ADMIN')
 
   const { id } = await params
+  const { editalId, aba } = await searchParams
+
+  const voltarHref = (() => {
+    if (!editalId) return '/admin/habilitacao'
+    const sp = new URLSearchParams()
+    sp.set('editalId', editalId)
+    if (aba) sp.set('aba', aba)
+    return `/admin/habilitacao?${sp.toString()}`
+  })()
 
   const inscricao = await prisma.inscricao.findUnique({
     where: { id },
@@ -87,7 +97,7 @@ export default async function AdminHabilitacaoDetailPage({ params }: Props) {
     <section>
       {/* Voltar */}
       <Link
-        href="/admin/habilitacao"
+        href={voltarHref}
         className="inline-flex items-center gap-1.5 text-sm text-slate-600 hover:text-slate-900 font-medium mb-4"
       >
         <IconArrowLeft className="h-4 w-4" />
