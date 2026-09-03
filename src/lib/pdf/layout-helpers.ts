@@ -3,7 +3,16 @@
  * Todos os helpers operam sobre um PDFDocument já criado e posicionam o cursor.
  */
 import type PDFDocument from 'pdfkit'
+import fs from 'fs'
+import path from 'path'
 import { COLORS, MARGINS, CONTENT_WIDTH, PAGE_WIDTH } from './shared'
+
+// Selo do Projeto Cidades Inteligentes — mesma logo usada no rodapé do site
+// público. Todo documento oficial gerado pela plataforma leva essa marca.
+const LOGO_CIDADES_INTELIGENTES_PATH = path.join(
+  process.cwd(),
+  'public/images/marca/logo-cidades-inteligentes-color.png',
+)
 
 // ─── Constantes de layout compacto ──────────────────────────────────────────
 
@@ -41,6 +50,16 @@ export function addCompactHeader(doc: PDFKit.PDFDocument, title: string): void {
     .fontSize(15)
     .fillColor(COLORS.text)
     .text(title, MARGINS.left, startY + 14, { width: CONTENT_WIDTH, align: 'center' })
+
+  // Selo Cidades Inteligentes no canto superior direito. Falha de leitura do
+  // arquivo não pode derrubar a geração do PDF — documento sai sem o selo.
+  try {
+    const logoData = fs.readFileSync(LOGO_CIDADES_INTELIGENTES_PATH)
+    const logoHeight = 22
+    doc.image(logoData, PAGE_WIDTH - MARGINS.right - 60, startY - 4, { height: logoHeight })
+  } catch {
+    // segue sem o selo
+  }
 
   // Linha separadora fina
   const lineY = startY + 32

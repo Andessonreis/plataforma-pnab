@@ -3,6 +3,7 @@ import { redis } from '@/lib/redis'
 import { prisma } from '@/lib/db'
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
 import { notifyEquipeHabilitacaoAberta } from '@/lib/edital/notify-habilitacao-aberta'
+import { notifyEquipeInscricaoEncerrada } from '@/lib/edital/notify-inscricao-encerrada'
 import type { EditalStatus } from '@prisma/client'
 import {
   FASE_TRANSICOES,
@@ -239,6 +240,25 @@ export async function processSchedulerJob(): Promise<number> {
         } catch (err) {
           console.error(
             '[Scheduler] Falha ao notificar equipe sobre habilitação:',
+            err instanceof Error ? err.message : err,
+          )
+        }
+      }
+
+      // Encerramento do período de inscrição: manda as duas listas completas
+      // (enviadas + rascunhos) pros ADMIN, exclusivamente. Mesma lógica de
+      // engolir erro sem travar a transição em si.
+      if (match.fase === 'INSCRICOES_ENCERRADAS') {
+        try {
+          const { admins, totalEnviadas, totalRascunhos, enviado } =
+            await notifyEquipeInscricaoEncerrada(edital.id)
+          console.log(
+            `[Scheduler] Notificação encerramento: ${admins} admin(s), ` +
+            `${totalEnviadas} enviada(s), ${totalRascunhos} rascunho(s), enviado=${enviado}`,
+          )
+        } catch (err) {
+          console.error(
+            '[Scheduler] Falha ao notificar equipe sobre encerramento de inscrição:',
             err instanceof Error ? err.message : err,
           )
         }

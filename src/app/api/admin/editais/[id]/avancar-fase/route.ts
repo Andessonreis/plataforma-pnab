@@ -5,6 +5,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { logAudit } from '@/lib/audit'
 import { notifyEquipeHabilitacaoAberta } from '@/lib/edital/notify-habilitacao-aberta'
+import { notifyEquipeInscricaoEncerrada } from '@/lib/edital/notify-inscricao-encerrada'
 import type { EditalStatus } from '@prisma/client'
 
 export const runtime = 'nodejs'
@@ -103,6 +104,18 @@ export async function POST(
       } catch (err) {
         console.error(
           { requestId, msg: 'Falha ao notificar equipe sobre habilitação', err: err instanceof Error ? err.message : err },
+        )
+      }
+    }
+
+    // Listas completas (enviadas + rascunhos) pra ADMIN quando a inscrição
+    // encerra por ação manual — mesma notificação do encerramento automático.
+    if (data.proximoStatus === 'INSCRICOES_ENCERRADAS') {
+      try {
+        await notifyEquipeInscricaoEncerrada(id)
+      } catch (err) {
+        console.error(
+          { requestId, msg: 'Falha ao notificar equipe sobre encerramento de inscrição', err: err instanceof Error ? err.message : err },
         )
       }
     }

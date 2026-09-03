@@ -18,6 +18,11 @@ import {
   type ComprovanteInscricaoData,
 } from './comprovante-inscricao'
 import {
+  EditalInscricaoEncerrada,
+  editalInscricaoEncerradaSubject,
+  type EditalInscricaoEncerradaData,
+} from './edital-inscricao-encerrada'
+import {
   EquipeHabilitacaoPendente,
   equipeHabilitacaoPendenteSubject,
   type EquipeHabilitacaoPendenteData,
@@ -88,6 +93,7 @@ export type EmailTemplate =
   | 'equipe_habilitacao_pendente'
   | 'notificacao_generica'
   | 'relatorio_inscricoes'
+  | 'edital_inscricao_encerrada'
 
 export interface TemplateDataMap {
   boas_vindas: BoasVindasData
@@ -104,6 +110,7 @@ export interface TemplateDataMap {
   equipe_habilitacao_pendente: EquipeHabilitacaoPendenteData
   notificacao_generica: NotificacaoGenericaData
   relatorio_inscricoes: RelatorioInscricoesData
+  edital_inscricao_encerrada: EditalInscricaoEncerradaData
 }
 
 interface TemplateEntry<K extends EmailTemplate> {
@@ -169,5 +176,9 @@ export const templateRegistry: Registry = {
   relatorio_inscricoes: {
     Component: RelatorioInscricoes,
     defaultSubject: relatorioInscricoesSubject,
+  },
+  edital_inscricao_encerrada: {
+    Component: EditalInscricaoEncerrada,
+    defaultSubject: editalInscricaoEncerradaSubject,
   },
 }
