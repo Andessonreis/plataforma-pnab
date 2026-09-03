@@ -155,6 +155,19 @@ export const TEMPLATE_META: Record<EmailTemplate, TemplateMeta> = {
       { key: 'url', description: 'Link de volta pra tela de exportação no painel.', sample: 'https://culturaeturismo.irece.ba.gov.br/admin/inscricoes/export' },
     ],
   },
+  edital_inscricao_encerrada: {
+    label: 'Inscrição encerrada (equipe)',
+    description: 'Disparado automaticamente quando um edital sai da fase de inscrições abertas — vai pros admins ativos, com as listas de enviadas e rascunhos em anexo.',
+    placeholders: [
+      { key: 'nomeAdmin', description: 'Nome do administrador destinatário.', sample: 'Maria Silva', required: true },
+      { key: 'editalTitulo', description: 'Título do edital cuja inscrição encerrou.', sample: 'Chamamento Público — Pontos de Cultura de Irecê', required: true },
+      { key: 'editalAno', description: 'Ano do edital.', sample: '2026', required: true },
+      { key: 'totalEnviadas', description: 'Total de inscrições enviadas — seguem pra habilitação.', sample: '42', required: true },
+      { key: 'totalRascunhos', description: 'Total de rascunhos não enviados até o encerramento.', sample: '5', required: true },
+      { key: 'dataGeracao', description: 'Data de encerramento/geração das listas, já formatada em pt-BR.', sample: '02/09/2026', required: true },
+      { key: 'url', description: 'Link direto pro painel de habilitação no admin.', sample: 'https://culturaeturismo.irece.ba.gov.br/admin/habilitacao', required: true },
+    ],
+  },
 }
 
 // Monta um objeto data com os valores `sample` — usado pelo preview do admin.
