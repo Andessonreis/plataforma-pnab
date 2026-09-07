@@ -28,10 +28,13 @@ export interface ListaInscricoesItem {
 
 export interface ListaInscricoesData {
   edital: { titulo: string; ano: number }
+  categoria?: string | null
   status: string
   statusLabel: string
+  tituloDocumento?: string
   inscricoes: ListaInscricoesItem[]
   total: number
+  agruparPorCategoria?: boolean
 }
 
 // ─── Constantes de layout ────────────────────────────────────────────────────
@@ -59,49 +62,89 @@ const STATUS_COM_MOTIVO = new Set(['INABILITADA'])
 // listas são oficiais e podem ser publicadas, então não expõem contato.
 const STATUS_COM_TELEFONE = new Set(['RASCUNHO'])
 
-function getColumns(status: string): ColumnDef[] {
+function getColumns(status: string, hideCategoria = false): ColumnDef[] {
+  if (hideCategoria) {
+    if (STATUS_COM_NOTA.has(status)) {
+      return [
+        { label: 'Nº', width: 28 },
+        { label: 'Protocolo', width: 80 },
+        { label: 'Nome', width: 215 },
+        { label: 'CPF/CNPJ', width: 85 },
+        { label: 'Nota', width: 47 },
+        { label: 'Pos.', width: 40 },
+      ]
+    }
+
+    if (STATUS_COM_MOTIVO.has(status)) {
+      return [
+        { label: 'Nº', width: 28 },
+        { label: 'Protocolo', width: 80 },
+        { label: 'Nome', width: 175 },
+        { label: 'CPF/CNPJ', width: 85 },
+        { label: 'Motivo', width: 127 },
+      ]
+    }
+
+    if (STATUS_COM_TELEFONE.has(status)) {
+      return [
+        { label: 'Nº', width: 28 },
+        { label: 'Protocolo', width: 80 },
+        { label: 'Nome', width: 210 },
+        { label: 'CPF/CNPJ', width: 85 },
+        { label: 'Telefone', width: 92.28 },
+      ]
+    }
+
+    return [
+      { label: 'Nº', width: 28 },
+      { label: 'Protocolo', width: 80 },
+      { label: 'Nome', width: 295 },
+      { label: 'CPF/CNPJ', width: 92.28 },
+    ]
+  }
+
   const base: ColumnDef[] = [
-    { label: 'Nº', width: 28 },
-    { label: 'Protocolo', width: 80 },
-    { label: 'Nome', width: 155 },
-    { label: 'CPF/CNPJ', width: 85 },
+    { label: 'Nº', width: 24 },
+    { label: 'Protocolo', width: 74 },
+    { label: 'Nome', width: 150 },
+    { label: 'CPF/CNPJ', width: 68 },
     { label: 'Categoria', width: 80 },
   ]
 
   if (STATUS_COM_NOTA.has(status)) {
     // Ajustar larguras para caber nota e posição
-    base[2].width = 120 // Nome mais curto
-    base[4].width = 70  // Categoria mais curta
+    base[2].width = 120 // Nome
+    base[4].width = 135 // Categoria
     return [
       ...base,
-      { label: 'Nota', width: 45 },
-      { label: 'Pos.', width: 38 },
+      { label: 'Nota', width: 42 },
+      { label: 'Pos.', width: 36 },
     ]
   }
 
   if (STATUS_COM_MOTIVO.has(status)) {
-    base[2].width = 120 // Nome mais curto
-    base[4].width = 60  // Categoria mais curta
+    base[2].width = 115 // Nome
+    base[4].width = 108 // Categoria
     return [
       ...base,
-      { label: 'Motivo', width: 122 },
+      { label: 'Motivo', width: 110 },
     ]
   }
 
   if (STATUS_COM_TELEFONE.has(status)) {
-    base[2].width = 150 // Nome
-    base[4].width = 65  // Categoria mais curta
+    base[2].width = 135 // Nome
+    base[4].width = 122.28 // Categoria
     return [
       ...base,
-      { label: 'Telefone', width: 87 },
+      { label: 'Telefone', width: 74 },
     ]
   }
 
-  // Colunas base — redistribuir espaço
+  // Colunas base — redistribuir espaço para Categoria
   const totalBase = base.reduce((acc, c) => acc + c.width, 0)
   const remaining = CONTENT_WIDTH - totalBase
   if (remaining > 0) {
-    base[2].width += remaining // Nome fica com espaço extra
+    base[4].width += remaining // Categoria fica com espaço extra (179.28pt total)
   }
 
   return base
@@ -113,12 +156,20 @@ interface PageContext {
   pageNum: number
 }
 
-function checkPageBreak(doc: PDFKit.PDFDocument, requiredHeight: number, ctx: PageContext): void {
+function checkPageBreak(
+  doc: PDFKit.PDFDocument,
+  requiredHeight: number,
+  ctx: PageContext,
+  columns?: ColumnDef[],
+): void {
   if (doc.y + requiredHeight > SAFE_BOTTOM) {
     addCompactFooter(doc, ctx.pageNum)
     doc.addPage()
     ctx.pageNum++
     doc.y = MARGINS.top
+    if (columns) {
+      addTableHeader(doc, columns)
+    }
   }
 }
 
@@ -151,17 +202,36 @@ function addTableHeader(doc: PDFKit.PDFDocument, columns: ColumnDef[]): void {
   doc.y = y + HEADER_ROW_HEIGHT + 1
 }
 
-/** Renderiza uma linha de dados da tabela. */
+/** Calcula a altura da linha com base no maior conteúdo de célula. */
+function calculateRowHeight(
+  doc: PDFKit.PDFDocument,
+  columns: ColumnDef[],
+  values: string[],
+): number {
+  doc.font('Helvetica').fontSize(7.5)
+  let maxTextHeight = 10
+  for (let i = 0; i < columns.length; i++) {
+    const text = values[i] ?? '—'
+    const h = doc.heightOfString(text, { width: columns[i].width - 6 })
+    if (h > maxTextHeight) {
+      maxTextHeight = h
+    }
+  }
+  return Math.max(ROW_HEIGHT, Math.ceil(maxTextHeight) + 8)
+}
+
+/** Renderiza uma linha de dados da tabela com altura adaptável. */
 function addTableRow(
   doc: PDFKit.PDFDocument,
   columns: ColumnDef[],
   values: string[],
   striped: boolean,
+  rowHeight: number,
 ): void {
   const y = doc.y
 
   if (striped) {
-    doc.rect(MARGINS.left, y, CONTENT_WIDTH, ROW_HEIGHT).fill('#f8fafc')
+    doc.rect(MARGINS.left, y, CONTENT_WIDTH, rowHeight).fill('#f8fafc')
   }
 
   let x = MARGINS.left
@@ -172,13 +242,11 @@ function addTableRow(
       .fillColor(COLORS.text)
       .text(values[i] ?? '—', x + 3, y + 4, {
         width: columns[i].width - 6,
-        ellipsis: true,
-        lineBreak: false,
       })
     x += columns[i].width
   }
 
-  doc.y = y + ROW_HEIGHT
+  doc.y = y + rowHeight
 }
 
 // ─── Geração do PDF ──────────────────────────────────────────────────────────
@@ -186,12 +254,145 @@ function addTableRow(
 export async function generateListaInscricoes(data: ListaInscricoesData): Promise<Buffer> {
   const doc = createDocument()
   const ctx: PageContext = { pageNum: 1 }
-  const columns = getColumns(data.status)
 
-  // ── Header ──────────────────────────────────────────────────────────────
-  addCompactHeader(doc, `Lista de ${data.statusLabel}`)
+  // ── Header básico comum ──────────────────────────────────────────────────
+  const tituloHeader =
+    data.tituloDocumento ??
+    (data.status === 'ENVIADA'
+      ? 'Relação de Inscritos'
+      : data.status === 'RASCUNHO'
+        ? 'Relação de Inscrições em Rascunho'
+        : `Relação de Inscrições — ${data.statusLabel}`)
+  addCompactHeader(doc, tituloHeader)
 
-  // ── Info do Edital ──────────────────────────────────────────────────────
+  // ── Caso 1: Agrupado por área/categoria ─────────────────────────────────
+  if (data.agruparPorCategoria) {
+    const columns = getColumns(data.status, true)
+    const groups = new Map<string, ListaInscricoesItem[]>()
+    for (const item of data.inscricoes) {
+      const cat = item.categoria || 'Sem Categoria Definida'
+      const list = groups.get(cat) ?? []
+      list.push(item)
+      groups.set(cat, list)
+    }
+
+    const sortedCategories = Array.from(groups.keys()).sort()
+
+    addInfoBlock(doc, [
+      { label: 'Edital', value: data.edital.titulo },
+      { label: 'Ano', value: String(data.edital.ano) },
+      {
+        label: 'Total geral',
+        value: `${data.total} inscrição(ões) distribuídas em ${sortedCategories.length} áreas`,
+      },
+    ])
+    addDivider(doc)
+
+    // Se houver mais de uma categoria, exibe o quadro resumo
+    if (sortedCategories.length > 1) {
+      doc.y += 2
+      doc
+        .font('Helvetica-Bold')
+        .fontSize(8.5)
+        .fillColor(COLORS.brandDark)
+        .text('DISTRIBUIÇÃO POR ÁREA / CATEGORIA', MARGINS.left)
+      doc.y += 4
+
+      const colSummaryWidth = CONTENT_WIDTH / 2 - 5
+      const startSummaryY = doc.y
+
+      for (let c = 0; c < sortedCategories.length; c++) {
+        const cat = sortedCategories[c]
+        const qtd = groups.get(cat)!.length
+        const isRightCol = c >= Math.ceil(sortedCategories.length / 2)
+        const colX = isRightCol ? MARGINS.left + colSummaryWidth + 10 : MARGINS.left
+        const lineIndex = isRightCol ? c - Math.ceil(sortedCategories.length / 2) : c
+        const itemY = startSummaryY + lineIndex * 12
+
+        doc.font('Helvetica').fontSize(7.5).fillColor(COLORS.text)
+        doc.text(`• ${cat}:`, colX, itemY, { continued: true, width: colSummaryWidth - 25 })
+        doc.font('Helvetica-Bold').text(` ${qtd}`)
+      }
+
+      const maxLines = Math.ceil(sortedCategories.length / 2)
+      doc.y = startSummaryY + maxLines * 12 + 10
+      addDivider(doc)
+    }
+
+    // Renderiza cada grupo de categoria
+    for (const cat of sortedCategories) {
+      const catItems = groups.get(cat)!
+      checkPageBreak(doc, 50, ctx)
+
+      addCompactSection(doc, `${cat} (${catItems.length})`)
+      addTableHeader(doc, columns)
+
+      for (let i = 0; i < catItems.length; i++) {
+        const item = catItems[i]
+        const values = buildRowValues({ ...item, posicao: i + 1 }, data.status, true)
+        const rowHeight = calculateRowHeight(doc, columns, values)
+
+        checkPageBreak(doc, rowHeight + 2, ctx, columns)
+        addTableRow(doc, columns, values, i % 2 === 0, rowHeight)
+      }
+
+      doc.y += 10
+    }
+
+    checkPageBreak(doc, 60, ctx)
+    doc.y += 6
+    doc
+      .font('Helvetica-Bold')
+      .fontSize(10)
+      .fillColor(COLORS.brandDark)
+      .text(`Total Geral do Edital: ${data.total} inscrição(ões)`, MARGINS.left)
+    doc.y += 6
+    addLegalNotice(doc, legalNoticeFor(data.status))
+    addCompactFooter(doc, ctx.pageNum)
+    return docToBuffer(doc)
+  }
+
+  // ── Caso 2: Lista de área/categoria individual ──────────────────────────
+  if (data.categoria) {
+    const columns = getColumns(data.status, true)
+
+    addInfoBlock(doc, [
+      { label: 'Edital', value: data.edital.titulo },
+      { label: 'Área / Categoria', value: data.categoria },
+      { label: 'Ano', value: String(data.edital.ano) },
+      { label: 'Total na lista', value: `${data.total} inscrição(ões)` },
+    ])
+    addDivider(doc)
+
+    addCompactSection(doc, `Inscrições — ${data.categoria}`)
+    addTableHeader(doc, columns)
+
+    for (let i = 0; i < data.inscricoes.length; i++) {
+      const item = data.inscricoes[i]
+      const values = buildRowValues(item, data.status, true)
+      const rowHeight = calculateRowHeight(doc, columns, values)
+
+      checkPageBreak(doc, rowHeight + 2, ctx, columns)
+      addTableRow(doc, columns, values, i % 2 === 0, rowHeight)
+    }
+
+    doc.y += 8
+    checkPageBreak(doc, 30, ctx)
+    doc
+      .font('Helvetica-Bold')
+      .fontSize(9)
+      .fillColor(COLORS.text)
+      .text(`Total da Área: ${data.total} inscrição(ões)`, MARGINS.left)
+
+    checkPageBreak(doc, 50, ctx)
+    addLegalNotice(doc, legalNoticeFor(data.status))
+    addCompactFooter(doc, ctx.pageNum)
+    return docToBuffer(doc)
+  }
+
+  // ── Caso 3: Lista padrão única (tabela contínua com coluna Categoria) ─────
+  const columns = getColumns(data.status, false)
+
   addInfoBlock(doc, [
     { label: 'Edital', value: data.edital.titulo },
     { label: 'Ano', value: String(data.edital.ano) },
@@ -199,25 +400,18 @@ export async function generateListaInscricoes(data: ListaInscricoesData): Promis
   ])
   addDivider(doc)
 
-  // ── Tabela ──────────────────────────────────────────────────────────────
   addCompactSection(doc, 'Inscrições')
   addTableHeader(doc, columns)
 
   for (let i = 0; i < data.inscricoes.length; i++) {
-    // Verifica page break antes de cada linha
-    checkPageBreak(doc, ROW_HEIGHT + 2, ctx)
-
-    // Repete header da tabela após page break (se estamos no topo da página)
-    if (doc.y <= MARGINS.top + 2) {
-      addTableHeader(doc, columns)
-    }
-
     const item = data.inscricoes[i]
-    const values = buildRowValues(item, data.status)
-    addTableRow(doc, columns, values, i % 2 === 0)
+    const values = buildRowValues(item, data.status, false)
+    const rowHeight = calculateRowHeight(doc, columns, values)
+
+    checkPageBreak(doc, rowHeight + 2, ctx, columns)
+    addTableRow(doc, columns, values, i % 2 === 0, rowHeight)
   }
 
-  // ── Rodapé de contagem ────────────────────────────────────────────────
   doc.y += 8
   checkPageBreak(doc, 30, ctx)
   doc
@@ -226,11 +420,8 @@ export async function generateListaInscricoes(data: ListaInscricoesData): Promis
     .fillColor(COLORS.text)
     .text(`Total: ${data.total} inscrição(ões)`, MARGINS.left)
 
-  // ── Aviso legal ───────────────────────────────────────────────────────
   checkPageBreak(doc, 50, ctx)
   addLegalNotice(doc, legalNoticeFor(data.status))
-
-  // ── Footer da última página ───────────────────────────────────────────
   addCompactFooter(doc, ctx.pageNum)
 
   return docToBuffer(doc)
@@ -260,14 +451,14 @@ function legalNoticeFor(status: string): string {
 }
 
 /** Monta os valores de uma linha de acordo com o status. */
-function buildRowValues(item: ListaInscricoesItem, status: string): string[] {
-  const base = [
-    String(item.posicao),
-    item.numero,
-    item.nome,
-    maskCpfCnpj(item.cpfCnpj),
-    item.categoria ?? '—',
-  ]
+function buildRowValues(
+  item: ListaInscricoesItem,
+  status: string,
+  hideCategoria = false,
+): string[] {
+  const base = hideCategoria
+    ? [String(item.posicao), item.numero, item.nome, maskCpfCnpj(item.cpfCnpj)]
+    : [String(item.posicao), item.numero, item.nome, maskCpfCnpj(item.cpfCnpj), item.categoria ?? '—']
 
   if (STATUS_COM_NOTA.has(status)) {
     return [

@@ -43,7 +43,7 @@ export async function generateListaResultado(data: ListaResultadoData): Promise<
   // Tabela de resultados
   addSection(doc, 'Classificação')
 
-  const colWidths = [40, 200, 100, 60, 95]
+  const colWidths = [30, 140, 160, 50, 115.28]
   const headers = ['Pos.', 'Proponente', 'Categoria', 'Nota', 'Status']
   const tableTop = doc.y + 5
   let y = tableTop
@@ -63,19 +63,6 @@ export async function generateListaResultado(data: ListaResultadoData): Promise<
 
   // Linhas da tabela
   for (const item of data.resultados) {
-    // Nova página se necessário
-    if (y > doc.page.height - MARGINS.bottom - 30) {
-      addFooter(doc, pageNum)
-      pageNum++
-      doc.addPage()
-      y = MARGINS.top
-    }
-
-    // Fundo alternado
-    if (item.posicao % 2 === 0) {
-      doc.rect(MARGINS.left, y, CONTENT_WIDTH, 18).fill('#f8fafc')
-    }
-
     const values = [
       String(item.posicao),
       maskName(item.nome),
@@ -83,6 +70,39 @@ export async function generateListaResultado(data: ListaResultadoData): Promise<
       item.nota.toFixed(2),
       formatStatus(item.status),
     ]
+
+    doc.font('Helvetica').fontSize(8)
+    let maxTextHeight = 10
+    values.forEach((val, i) => {
+      const th = doc.heightOfString(val, { width: colWidths[i] - 8 })
+      if (th > maxTextHeight) maxTextHeight = th
+    })
+    const rowHeight = Math.max(18, Math.ceil(maxTextHeight) + 8)
+
+    // Nova página se necessário
+    if (y + rowHeight > doc.page.height - MARGINS.bottom - 30) {
+      addFooter(doc, pageNum)
+      pageNum++
+      doc.addPage()
+      y = MARGINS.top
+
+      // Repete header
+      doc.rect(MARGINS.left, y, CONTENT_WIDTH, 20).fill('#f1f5f9')
+      headers.forEach((header, i) => {
+        const x = MARGINS.left + colWidths.slice(0, i).reduce((a, b) => a + b, 0)
+        doc
+          .font('Helvetica-Bold')
+          .fontSize(8)
+          .fillColor(COLORS.text)
+          .text(header, x + 4, y + 5, { width: colWidths[i] - 8 })
+      })
+      y += 22
+    }
+
+    // Fundo alternado
+    if (item.posicao % 2 === 0) {
+      doc.rect(MARGINS.left, y, CONTENT_WIDTH, rowHeight).fill('#f8fafc')
+    }
 
     values.forEach((val, i) => {
       const x = MARGINS.left + colWidths.slice(0, i).reduce((a, b) => a + b, 0)
@@ -93,7 +113,7 @@ export async function generateListaResultado(data: ListaResultadoData): Promise<
         .text(val, x + 4, y + 4, { width: colWidths[i] - 8 })
     })
 
-    y += 20
+    y += rowHeight
   }
 
   // Total
