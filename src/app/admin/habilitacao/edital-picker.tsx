@@ -95,12 +95,12 @@ function Card({ edital }: { edital: EditalHabilitacaoCard }) {
           <div className="flex flex-col items-center gap-1">
             <IconCheck className="h-4 w-4 text-emerald-500" />
             <dd className="text-xl font-bold tabular-nums text-emerald-600">{edital.habilitadas}</dd>
-            <dt className="text-[10px] font-medium uppercase tracking-wide text-slate-400">Habilitadas</dt>
+            <dt className="text-[10px] font-medium uppercase tracking-wide text-slate-400">Habilitadas / Aptas</dt>
           </div>
           <div className="flex flex-col items-center gap-1">
             <IconClose className="h-4 w-4 text-rose-500" />
             <dd className="text-xl font-bold tabular-nums text-rose-600">{edital.inabilitadas}</dd>
-            <dt className="text-[10px] font-medium uppercase tracking-wide text-slate-400">Inabilitadas</dt>
+            <dt className="text-[10px] font-medium uppercase tracking-wide text-slate-400">Inabilitadas / Inaptas</dt>
           </div>
         </dl>
       </Link>
@@ -124,10 +124,10 @@ export function EditalPicker({ editais }: { editais: EditalHabilitacaoCard[] }) 
             </div>
             <div className="min-w-0 flex-1">
               <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 leading-tight">
-                Habilitação documental
+                Conferência e Habilitação Documental
               </h1>
               <p className="text-sm sm:text-base text-slate-600 mt-1 max-w-2xl">
-                Selecione um edital para conferir a documentação das inscrições dele. Cada edital tem sua
+                Selecione um edital para conferir a documentação e validar as inscrições aptas para análise e avaliação. Cada edital tem sua
                 própria fila — evita misturar a conferência de um edital com a de outro.
               </p>
             </div>

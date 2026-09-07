@@ -46,12 +46,12 @@ interface ColumnDef {
 }
 
 const COLUMNS: ColumnDef[] = [
-  { label: 'Pos.', width: 32 },
-  { label: 'Protocolo', width: 80 },
-  { label: 'Nome', width: 148 },
-  { label: 'CPF/CNPJ', width: 85 },
-  { label: 'Categoria', width: 100 },
-  { label: 'Nota', width: 50 },
+  { label: 'Pos.', width: 28 },
+  { label: 'Protocolo', width: 72 },
+  { label: 'Nome', width: 130 },
+  { label: 'CPF/CNPJ', width: 68 },
+  { label: 'Categoria', width: 152.28 },
+  { label: 'Nota', width: 45 },
 ]
 
 // ─── Contexto de paginação ───────────────────────────────────────────────────
@@ -131,7 +131,7 @@ function addTimbreHeader(doc: PDFKit.PDFDocument, data: RelatorioFinalData): voi
     .font('Helvetica')
     .fontSize(9)
     .fillColor(COLORS.textLight)
-    .text('Secretaria de Arte e Cultura', textX, doc.y + 1, { width: textWidth, align: 'left' })
+    .text('Secretaria Municipal de Cultura e Turismo de Irecê', textX, doc.y + 1, { width: textWidth, align: 'left' })
 
   // PNAB + ano
   doc
@@ -236,21 +236,30 @@ function addTableHeader(doc: PDFKit.PDFDocument): void {
   doc.y = y + HEADER_ROW_HEIGHT + 1
 }
 
-function addTableRow(doc: PDFKit.PDFDocument, item: InscricaoItem, striped: boolean): void {
+function calculateRowHeight(doc: PDFKit.PDFDocument, values: string[]): number {
+  doc.font('Helvetica').fontSize(7.5)
+  let maxTextHeight = 10
+  for (let i = 0; i < COLUMNS.length; i++) {
+    const text = values[i] ?? '—'
+    const h = doc.heightOfString(text, { width: COLUMNS[i].width - 6 })
+    if (h > maxTextHeight) {
+      maxTextHeight = h
+    }
+  }
+  return Math.max(ROW_HEIGHT, Math.ceil(maxTextHeight) + 8)
+}
+
+function addTableRow(
+  doc: PDFKit.PDFDocument,
+  values: string[],
+  striped: boolean,
+  rowHeight: number,
+): void {
   const y = doc.y
 
   if (striped) {
-    doc.rect(MARGINS.left, y, CONTENT_WIDTH, ROW_HEIGHT).fill('#f8fafc')
+    doc.rect(MARGINS.left, y, CONTENT_WIDTH, rowHeight).fill('#f8fafc')
   }
-
-  const values = [
-    String(item.posicao),
-    item.numero,
-    item.nome,
-    maskCpfCnpj(item.cpfCnpj),
-    item.categoria ?? '—',
-    item.notaFinal !== null ? Number(item.notaFinal).toFixed(2) : '—',
-  ]
 
   let x = MARGINS.left
   for (let i = 0; i < COLUMNS.length; i++) {
@@ -260,12 +269,10 @@ function addTableRow(doc: PDFKit.PDFDocument, item: InscricaoItem, striped: bool
       .fillColor(COLORS.text)
       .text(values[i] ?? '—', x + 3, y + 4, {
         width: COLUMNS[i].width - 6,
-        ellipsis: true,
-        lineBreak: false,
       })
     x += COLUMNS[i].width
   }
-  doc.y = y + ROW_HEIGHT
+  doc.y = y + rowHeight
 }
 
 // ─── Seção de inscrições (contemplados, suplentes, etc.) ─────────────────────
@@ -283,14 +290,25 @@ function addInscricaoSection(
   addTableHeader(doc)
 
   for (let i = 0; i < items.length; i++) {
-    checkPageBreak(doc, ROW_HEIGHT + 2, ctx)
+    const item = items[i]
+    const values = [
+      String(item.posicao),
+      item.numero,
+      item.nome,
+      maskCpfCnpj(item.cpfCnpj),
+      item.categoria ?? '—',
+      item.notaFinal !== null ? Number(item.notaFinal).toFixed(2) : '—',
+    ]
+    const rowHeight = calculateRowHeight(doc, values)
+
+    checkPageBreak(doc, rowHeight + 2, ctx)
 
     // Repete header da tabela após page break
     if (doc.y <= MARGINS.top + 2) {
       addTableHeader(doc)
     }
 
-    addTableRow(doc, items[i], i % 2 === 0)
+    addTableRow(doc, values, i % 2 === 0, rowHeight)
   }
 
   doc.y += 6

@@ -55,9 +55,6 @@ export const navSections: NavSection[] = [
         icon: <IconClipboard className="h-5 w-5" />,
       },
       {
-        // Único item de menu do Habilitador — a tela dele é a seleção de
-        // edital + fila de conferência, não um dashboard genérico nem a
-        // lista bruta de inscrições.
         label: 'Habilitação',
         href: '/admin/habilitacao',
         roles: ['ADMIN', 'HABILITADOR'],

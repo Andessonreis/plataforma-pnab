@@ -42,7 +42,7 @@ export function addCompactHeader(doc: PDFKit.PDFDocument, title: string): void {
     .font('Helvetica')
     .fontSize(8)
     .fillColor(COLORS.textLight)
-    .text('  —  Secretaria de Arte e Cultura de Irecê/BA', { align: 'left' })
+    .text('  —  Secretaria Municipal de Cultura e Turismo de Irecê', { align: 'left' })
 
   // Título do documento centralizado
   doc

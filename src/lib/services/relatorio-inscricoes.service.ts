@@ -8,6 +8,7 @@ import { sendEmail, type EmailAttachment } from '@/lib/mail'
 import { generateListaInscricoes } from '@/lib/pdf/lista-inscricoes'
 import { inscricaoStatusLabel, cumulativeStatuses } from '@/lib/status-maps'
 import { categoriaWhere, labelArea } from '@/lib/inscricoes/area-filter'
+import { slugify } from '@/lib/utils/slug'
 import type { InscricaoStatus } from '@prisma/client'
 
 export interface RelatorioFiltro {
@@ -16,6 +17,8 @@ export interface RelatorioFiltro {
   categoria?: string
   /** Descarta cadastros de teste da equipe (nome contendo "teste"). */
   ocultarTeste?: boolean
+  /** Se true, agrupa as inscrições em seções por categoria. Se omitido, agrupa automaticamente quando houver múltiplas categorias. */
+  agruparPorCategoria?: boolean
 }
 
 export interface Destinatario {
@@ -86,9 +89,13 @@ export async function gerarRelatorioPdfs(filtro: RelatorioFiltro): Promise<Relat
 
   for (const linhas of porEdital.values()) {
     const { titulo, ano, slug } = linhas[0].edital
+    const categoriasDistintas = new Set(linhas.map((l) => l.categoria).filter(Boolean))
+    const agrupar = filtro.agruparPorCategoria ?? (categoriasDistintas.size > 1 && !filtro.categoria)
 
     const buffer = await generateListaInscricoes({
       edital: { titulo, ano },
+      categoria: filtro.categoria,
+      agruparPorCategoria: agrupar,
       status: filtro.status,
       statusLabel: inscricaoStatusLabel[filtro.status],
       total: linhas.length,
@@ -104,8 +111,82 @@ export async function gerarRelatorioPdfs(filtro: RelatorioFiltro): Promise<Relat
       })),
     })
 
-    anexos.push({ filename: `${statusSlug}_${slug}_${datePart}.pdf`, content: buffer })
+    const sufixo = agrupar ? '_consolidado-por-area' : ''
+    anexos.push({ filename: `${statusSlug}_${slug}${sufixo}_${datePart}.pdf`, content: buffer })
     resumo.push(`${titulo} — ${linhas.length} inscrição(ões)`)
+  }
+
+  return { anexos, resumo, total: considerados.length, descartados }
+}
+
+/**
+ * Gera um arquivo PDF individual para cada área/categoria presente nas inscrições.
+ */
+export async function gerarRelatoriosPorArea(
+  filtro: Omit<RelatorioFiltro, 'categoria'>,
+): Promise<RelatorioGerado> {
+  const where: Record<string, unknown> = {
+    status: { in: cumulativeStatuses[filtro.status] },
+  }
+  if (filtro.editalId) where.editalId = filtro.editalId
+
+  const inscricoes = await prisma.inscricao.findMany({
+    where,
+    orderBy: [{ editalId: 'asc' }, { categoria: 'asc' }, { numero: 'asc' }],
+    include: {
+      edital: { select: { id: true, titulo: true, ano: true, slug: true } },
+      proponente: { select: { nome: true, cpfCnpj: true, telefone: true } },
+    },
+  })
+
+  const considerados = filtro.ocultarTeste
+    ? inscricoes.filter((i) => !isCadastroTeste(i.proponente.nome))
+    : inscricoes
+  const descartados = inscricoes.length - considerados.length
+
+  // Agrupa por chave editalId::categoria
+  const porEditalECategoria = new Map<string, typeof considerados>()
+  for (const insc of considerados) {
+    const cat = insc.categoria || 'Sem Categoria Definida'
+    const key = `${insc.edital.id}::${cat}`
+    const atual = porEditalECategoria.get(key) ?? []
+    atual.push(insc)
+    porEditalECategoria.set(key, atual)
+  }
+
+  const datePart = new Date().toISOString().slice(0, 10)
+  const statusSlug = filtro.status.toLowerCase()
+  const anexos: EmailAttachment[] = []
+  const resumo: string[] = []
+
+  for (const linhas of porEditalECategoria.values()) {
+    const { titulo, ano, slug } = linhas[0].edital
+    const categoria = linhas[0].categoria || 'Sem Categoria'
+    const catSlug = slugify(categoria)
+
+    const buffer = await generateListaInscricoes({
+      edital: { titulo, ano },
+      categoria,
+      status: filtro.status,
+      statusLabel: inscricaoStatusLabel[filtro.status],
+      total: linhas.length,
+      inscricoes: linhas.map((insc, i) => ({
+        posicao: i + 1,
+        numero: insc.numero,
+        nome: insc.proponente.nome,
+        cpfCnpj: insc.proponente.cpfCnpj ?? '',
+        categoria: insc.categoria,
+        telefone: insc.proponente.telefone,
+        notaFinal: insc.notaFinal ? Number(insc.notaFinal) : null,
+        motivoInabilitacao: insc.motivoInabilitacao,
+      })),
+    })
+
+    anexos.push({
+      filename: `${statusSlug}_${slug}_${catSlug}_${datePart}.pdf`,
+      content: buffer,
+    })
+    resumo.push(`${categoria} — ${linhas.length} inscrição(ões)`)
   }
 
   return { anexos, resumo, total: considerados.length, descartados }
