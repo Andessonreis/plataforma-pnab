@@ -22,7 +22,7 @@ const createUserSchema = z.object({
       'CPF/CNPJ inválido',
     ),
   telefone: z.string().trim().optional(),
-  role: z.enum(['PROPONENTE', 'ATENDIMENTO', 'HABILITADOR', 'AVALIADOR', 'ADMIN']),
+  role: z.enum(['PROPONENTE', 'ATENDIMENTO', 'HABILITADOR', 'AVALIADOR', 'ADMIN', 'SUPER_ADMIN', 'COMUNICACAO']),
   password: passwordSchema,
   tipoProponente: z.enum(['PF', 'PJ', 'MEI', 'COLETIVO']).optional(),
 }).superRefine((data, ctx) => {
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const session = await auth()
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || session.user.role !== 'SUPER_ADMIN') {
       const res = NextResponse.json(
         { error: 'FORBIDDEN', message: 'Acesso negado.', requestId },
         { status: 403 },

@@ -25,11 +25,13 @@ const roleLabels: Record<UserRole, string> = {
   HABILITADOR: 'Habilitador',
   AVALIADOR: 'Avaliador',
   ADMIN: 'Administrador',
+  SUPER_ADMIN: 'Super Administrador',
+  COMUNICACAO: 'Comunicação',
 }
 
 export default async function AdminUsuariosPage({ searchParams }: Props) {
   const session = await auth()
-  if (!session || session.user.role !== 'ADMIN') redirect('/')
+  if (!session || session.user.role !== 'SUPER_ADMIN') redirect('/')
 
   const params = await searchParams
   const page = Math.max(1, Number(params.page) || 1)
@@ -69,7 +71,7 @@ export default async function AdminUsuariosPage({ searchParams }: Props) {
 
   const totalPages = Math.ceil(total / pageSize)
 
-  const allRoles: UserRole[] = ['PROPONENTE', 'ATENDIMENTO', 'HABILITADOR', 'AVALIADOR', 'ADMIN']
+  const allRoles: UserRole[] = ['PROPONENTE', 'ATENDIMENTO', 'HABILITADOR', 'AVALIADOR', 'ADMIN', 'SUPER_ADMIN', 'COMUNICACAO']
 
   const filterParams = new URLSearchParams()
   if (roleFilter) filterParams.set('role', roleFilter)

@@ -10,6 +10,8 @@ const roleOptions = [
   { value: 'HABILITADOR', label: 'Habilitador' },
   { value: 'AVALIADOR', label: 'Avaliador' },
   { value: 'ADMIN', label: 'Administrador' },
+  { value: 'COMUNICACAO', label: 'Comunicação' },
+  { value: 'SUPER_ADMIN', label: 'Super Administrador' },
 ]
 
 const tipoProponenteOptions = [

@@ -9,7 +9,7 @@ export const runtime = 'nodejs'
 const querySchema = z.object({
   q: z.string().trim().min(2).max(120).optional(),
   ids: z.string().trim().min(1).max(2000).optional(),
-  role: z.enum(['PROPONENTE', 'ATENDIMENTO', 'HABILITADOR', 'AVALIADOR', 'ADMIN']).optional(),
+  role: z.enum(['PROPONENTE', 'ATENDIMENTO', 'HABILITADOR', 'AVALIADOR', 'ADMIN', 'SUPER_ADMIN', 'COMUNICACAO']).optional(),
   limit: z.coerce.number().int().min(1).max(50).default(20),
 })
 
@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const session = await auth()
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || session.user.role !== 'SUPER_ADMIN') {
       const res = NextResponse.json(
         { error: 'FORBIDDEN', message: 'Acesso negado.', requestId },
         { status: 403 },
