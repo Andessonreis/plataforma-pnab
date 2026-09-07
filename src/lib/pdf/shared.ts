@@ -26,7 +26,7 @@ export function createDocument(): PDFKit.PDFDocument {
     margins: MARGINS,
     info: {
       Title: 'Portal PNAB Irecê',
-      Author: 'Secretaria de Arte e Cultura de Irecê',
+      Author: 'Secretaria Municipal de Cultura e Turismo de Irecê',
       Creator: 'Portal PNAB Irecê',
     },
   })
@@ -52,7 +52,7 @@ export function addHeader(doc: PDFKit.PDFDocument, title: string): void {
     .font('Helvetica')
     .fontSize(7)
     .fillColor(COLORS.textLight)
-    .text('Secretaria de Arte e Cultura de Irecê/BA', MARGINS.left, y - 8, { align: 'left' })
+    .text('Secretaria Municipal de Cultura e Turismo de Irecê', MARGINS.left, y - 8, { align: 'left' })
 
   // Linha separadora
   doc
