@@ -71,6 +71,18 @@ export const TEMPLATE_META: Record<EmailTemplate, TemplateMeta> = {
       { key: 'resposta', description: 'Texto da resposta da equipe.', sample: 'Segue esclarecimento sobre sua dúvida...', required: true },
     ],
   },
+  novo_atendimento: {
+    label: 'Novo atendimento (interno)',
+    description: 'Disparado pra equipe (ADMIN e ATENDIMENTO) quando um atendimento é aberto.',
+    placeholders: [
+      { key: 'nomeAtendente', description: 'Nome do integrante da equipe que está recebendo o alerta.', sample: 'Equipe SECULT', required: true },
+      { key: 'protocolo', description: 'Número do protocolo do atendimento recém-aberto.', sample: 'PROT-2026-12345', required: true },
+      { key: 'nomeContato', description: 'Nome de quem abriu o atendimento.', sample: 'Ana Souza', required: true },
+      { key: 'assunto', description: 'Assunto informado na abertura.', sample: 'Dúvida sobre documentação', required: true },
+      { key: 'mensagem', description: 'Texto da mensagem enviada pelo autor.', sample: 'Gostaria de saber se o comprovante de residência...', required: true },
+      { key: 'url', description: 'Link direto pro atendimento no painel admin.', sample: 'https://culturaeturismo.irece.ba.gov.br/admin/atendimentos/abc', required: true },
+    ],
+  },
   notificacao_prazo: {
     label: 'Lembrete de prazo',
     description: 'Lembretes diversos (prazo de inscrição, anexo faltando, etc).',

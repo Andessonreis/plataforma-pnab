@@ -21,6 +21,7 @@ const RECENTLY_WIRED = new Set<EmailTemplate>([
   'protocolo_atendimento',
   'notificacao_prazo',
   'atendimento_respondido',
+  'novo_atendimento',
 ])
 
 const CATEGORIAS: { titulo: string; chaves: EmailTemplate[] }[] = [
@@ -30,7 +31,7 @@ const CATEGORIAS: { titulo: string; chaves: EmailTemplate[] }[] = [
   },
   {
     titulo: 'Equipe / interno',
-    chaves: ['equipe_habilitacao_pendente', 'recurso_submetido', 'relatorio_inscricoes'],
+    chaves: ['novo_atendimento', 'equipe_habilitacao_pendente', 'recurso_submetido', 'relatorio_inscricoes'],
   },
   {
     titulo: 'Segurança',

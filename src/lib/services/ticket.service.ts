@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/db'
 import { ServiceError } from './errors'
+import { notifyEquipeNovoAtendimento } from '@/lib/atendimento/notify-novo-atendimento'
 import type { AtendimentoStatus, Prisma } from '@prisma/client'
 
 interface CreateAtendimentoData {
@@ -14,7 +15,7 @@ interface CreateAtendimentoData {
 export async function createAtendimento(data: CreateAtendimentoData) {
   const protocolo = `ATD-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`
 
-  return prisma.atendimento.create({
+  const atendimento = await prisma.atendimento.create({
     data: {
       protocolo,
       nomeContato: data.nomeContato,
@@ -26,6 +27,20 @@ export async function createAtendimento(data: CreateAtendimentoData) {
       historico: [],
     },
   })
+
+  try {
+    await notifyEquipeNovoAtendimento({
+      atendimentoId: atendimento.id,
+      protocolo,
+      nomeContato: data.nomeContato,
+      assunto: data.assunto,
+      mensagem: data.mensagem,
+    })
+  } catch (err) {
+    console.error({ message: 'Falha ao notificar equipe sobre novo atendimento', err })
+  }
+
+  return atendimento
 }
 
 export async function listAtendimentos(page: number, pageSize: number, status?: string) {
