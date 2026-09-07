@@ -50,7 +50,7 @@ export async function GET(req: NextRequest, context: RouteContext) {
         { status: 401, headers: { 'X-Request-Id': requestId, 'Cache-Control': 'no-store' } },
       )
     }
-    if (session.user.role !== 'ADMIN') {
+    if (!['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
       return NextResponse.json(
         { error: 'FORBIDDEN', message: 'Acesso negado.', requestId },
         { status: 403, headers: { 'X-Request-Id': requestId, 'Cache-Control': 'no-store' } },

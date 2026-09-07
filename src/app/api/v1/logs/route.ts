@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
   const ctx = createContext()
   try {
     const caller = await resolveAuth(req)
-    if (!requireRole(caller, 'ADMIN')) return forbidden(ctx)
+    if (!requireRole(caller, 'SUPER_ADMIN')) return forbidden(ctx)
     const params = querySchema.parse(Object.fromEntries(new URL(req.url).searchParams))
     const result = await auditService.queryLogs(params)
     logRequest(ctx, 'GET', '/api/v1/logs', 200)

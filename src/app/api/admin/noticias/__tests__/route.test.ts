@@ -42,7 +42,7 @@ describe('POST /api/admin/noticias', () => {
   })
 
   it('dados válidos → 201 + slug', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.noticia.findUnique.mockResolvedValue(null)
     mockPrisma.noticia.create.mockResolvedValue({
       id: 'not-1',
@@ -68,7 +68,7 @@ describe('POST /api/admin/noticias', () => {
   })
 
   it('título curto → 400', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
 
     const res = await POST(makePostRequest({ ...validNoticiaBody, titulo: 'AB' }))
 
@@ -76,7 +76,7 @@ describe('POST /api/admin/noticias', () => {
   })
 
   it('audit log registrado', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.noticia.findUnique.mockResolvedValue(null)
     mockPrisma.noticia.create.mockResolvedValue({
       id: 'not-1',
@@ -105,7 +105,7 @@ describe('PUT /api/admin/noticias', () => {
   })
 
   it('atualiza → 200', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.noticia.findUnique.mockResolvedValue({
       id: 'not-1',
       titulo: validNoticiaBody.titulo,
@@ -125,7 +125,7 @@ describe('PUT /api/admin/noticias', () => {
   })
 
   it('sem id → 400', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
 
     const res = await PUT(makePutRequest(validNoticiaBody))
 
@@ -133,7 +133,7 @@ describe('PUT /api/admin/noticias', () => {
   })
 
   it('id inexistente → 404', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.noticia.findUnique.mockResolvedValue(null)
 
     const res = await PUT(makePutRequest(validNoticiaBody, 'not-999'))

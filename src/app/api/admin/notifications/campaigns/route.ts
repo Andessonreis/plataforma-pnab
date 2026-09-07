@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const session = await auth()
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || !['ADMIN', 'SUPER_ADMIN', 'COMUNICACAO'].includes(session.user.role)) {
       return forbidden(requestId)
     }
 
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const session = await auth()
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || !['ADMIN', 'SUPER_ADMIN', 'COMUNICACAO'].includes(session.user.role)) {
       return forbidden(requestId)
     }
 

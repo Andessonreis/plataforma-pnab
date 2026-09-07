@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
   try {
     // Verificar autenticacao e role
     const session = await auth()
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
       const res = NextResponse.json(
         { error: 'FORBIDDEN', message: 'Acesso negado.', requestId },
         { status: 403 },

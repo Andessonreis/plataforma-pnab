@@ -24,7 +24,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
   const ctx = createContext()
   try {
     const caller = await resolveAuth(req)
-    if (!requireRole(caller, 'ADMIN')) return forbidden(ctx)
+    if (!requireRole(caller, 'COMUNICACAO')) return forbidden(ctx)
     const { id } = await params
     const data = cmsPageSchema.parse(await req.json())
     const result = await cmsService.updateCmsPage(id, data, caller.userId, getIp(req))
@@ -39,7 +39,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
   const ctx = createContext()
   try {
     const caller = await resolveAuth(req)
-    if (!requireRole(caller, 'ADMIN')) return forbidden(ctx)
+    if (!requireRole(caller, 'COMUNICACAO')) return forbidden(ctx)
     const { id } = await params
     await cmsService.deleteCmsPage(id, caller.userId, getIp(req))
     logRequest(ctx, 'DELETE', `/api/v1/cms/${id}`, 200)

@@ -11,7 +11,7 @@ const mockAuth = vi.mocked(auth)
 const mockLogAudit = vi.mocked(logAudit)
 const mockBcrypt = vi.mocked(bcrypt)
 
-const adminSession = { user: { id: 'admin-1', role: 'ADMIN' } }
+const adminSession = { user: { id: 'admin-1', role: 'SUPER_ADMIN' } }
 
 // CPF e CNPJ válidos por dígito verificador
 const VALID_CPF = '52998224725'

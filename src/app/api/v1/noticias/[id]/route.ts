@@ -24,7 +24,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
   const ctx = createContext()
   try {
     const caller = await resolveAuth(req)
-    if (!requireRole(caller, 'ADMIN')) return forbidden(ctx)
+    if (!requireRole(caller, 'COMUNICACAO')) return forbidden(ctx)
     const { id } = await params
     const data = noticiaSchema.parse(await req.json())
     const result = await noticiaService.updateNoticia(id, data, caller.userId, getIp(req))
@@ -39,7 +39,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
   const ctx = createContext()
   try {
     const caller = await resolveAuth(req)
-    if (!requireRole(caller, 'ADMIN')) return forbidden(ctx)
+    if (!requireRole(caller, 'COMUNICACAO')) return forbidden(ctx)
     const { id } = await params
     await noticiaService.deleteNoticia(id, caller.userId, getIp(req))
     logRequest(ctx, 'DELETE', `/api/v1/noticias/${id}`, 200)

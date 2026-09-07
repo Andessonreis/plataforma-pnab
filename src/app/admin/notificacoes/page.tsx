@@ -39,7 +39,7 @@ function formatRelative(date: Date): string {
 
 export default async function AdminNotificacoesPage() {
   const session = await auth()
-  if (!session || session.user.role !== 'ADMIN') redirect('/')
+  if (!session || !['ADMIN', 'SUPER_ADMIN', 'COMUNICACAO'].includes(session.user.role)) redirect('/')
 
   const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
 

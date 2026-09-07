@@ -28,7 +28,7 @@ const PREVIEW_LIMIT = 20
 
 export default async function ExportPage({ searchParams }: Props) {
   const session = await auth()
-  if (!session || session.user.role !== 'ADMIN') redirect('/login')
+  if (!session || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) redirect('/login')
 
   const params = await searchParams
   const editalId = params.editalId || undefined

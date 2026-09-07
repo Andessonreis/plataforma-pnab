@@ -17,7 +17,7 @@ export async function GET(
 
   try {
     const session = await auth()
-    if (!session || session.user.role !== 'ADMIN') return forbidden(requestId)
+    if (!session || !['ADMIN', 'SUPER_ADMIN', 'COMUNICACAO'].includes(session.user.role)) return forbidden(requestId)
 
     const { id } = await params
     const rule = await prisma.notificationRule.findUnique({
@@ -47,7 +47,7 @@ export async function PUT(
 
   try {
     const session = await auth()
-    if (!session || session.user.role !== 'ADMIN') return forbidden(requestId)
+    if (!session || !['ADMIN', 'SUPER_ADMIN', 'COMUNICACAO'].includes(session.user.role)) return forbidden(requestId)
 
     const { id } = await params
     const existing = await prisma.notificationRule.findUnique({ where: { id } })
@@ -113,7 +113,7 @@ export async function DELETE(
 
   try {
     const session = await auth()
-    if (!session || session.user.role !== 'ADMIN') return forbidden(requestId)
+    if (!session || !['ADMIN', 'SUPER_ADMIN', 'COMUNICACAO'].includes(session.user.role)) return forbidden(requestId)
 
     const { id } = await params
     const existing = await prisma.notificationRule.findUnique({ where: { id } })

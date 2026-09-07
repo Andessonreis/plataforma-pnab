@@ -37,7 +37,7 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
 
   try {
     const session = await auth()
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || session.user.role !== 'SUPER_ADMIN') {
       const res = NextResponse.json(
         { error: 'FORBIDDEN', message: 'Acesso negado.', requestId },
         { status: 403 },
@@ -83,7 +83,7 @@ export async function PUT(req: NextRequest, ctx: RouteContext) {
 
   try {
     const session = await auth()
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || session.user.role !== 'SUPER_ADMIN') {
       const res = NextResponse.json(
         { error: 'FORBIDDEN', message: 'Acesso negado.', requestId },
         { status: 403 },
@@ -202,7 +202,7 @@ export async function DELETE(req: NextRequest, ctx: RouteContext) {
 
   try {
     const session = await auth()
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || session.user.role !== 'SUPER_ADMIN') {
       const res = NextResponse.json(
         { error: 'FORBIDDEN', message: 'Acesso negado.', requestId },
         { status: 403 },

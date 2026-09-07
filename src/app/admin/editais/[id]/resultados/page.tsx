@@ -14,7 +14,7 @@ interface Props {
 
 export default async function AdminResultadosPage({ params }: Props) {
   const session = await auth()
-  if (!session || session.user.role !== 'ADMIN') notFound()
+  if (!session || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) notFound()
 
   const { id } = await params
 

@@ -32,7 +32,7 @@ export async function PUT(
 
   try {
     const session = await auth()
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || !['SUPER_ADMIN', 'COMUNICACAO'].includes(session.user.role)) {
       const res = NextResponse.json(
         { error: 'FORBIDDEN', message: 'Acesso negado.', requestId },
         { status: 403 },
@@ -135,7 +135,7 @@ export async function DELETE(
 
   try {
     const session = await auth()
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || !['SUPER_ADMIN', 'COMUNICACAO'].includes(session.user.role)) {
       const res = NextResponse.json(
         { error: 'FORBIDDEN', message: 'Acesso negado.', requestId },
         { status: 403 },

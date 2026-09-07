@@ -31,7 +31,7 @@ const configCards = [
 
 export default async function ConfiguracoesPage() {
   const session = await auth()
-  if (!session || session.user.role !== 'ADMIN') redirect('/')
+  if (!session || session.user.role !== 'SUPER_ADMIN') redirect('/')
 
   return (
     <div className="space-y-6">

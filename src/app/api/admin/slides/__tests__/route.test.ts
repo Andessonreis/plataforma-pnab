@@ -39,7 +39,7 @@ describe('POST /api/admin/slides', () => {
   })
 
   it('dados válidos → 201', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.slideDestaque.create.mockResolvedValue({
       id: 'slide-1',
       titulo: validSlideBody.titulo,
@@ -62,7 +62,7 @@ describe('POST /api/admin/slides', () => {
   })
 
   it('título curto → 400', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
 
     const res = await POST(makePostRequest({ ...validSlideBody, titulo: 'AB' }))
 
@@ -78,7 +78,7 @@ describe('POST /api/admin/slides', () => {
   })
 
   it('audit log registrado', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.slideDestaque.create.mockResolvedValue({
       id: 'slide-1',
       titulo: validSlideBody.titulo,

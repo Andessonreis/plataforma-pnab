@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function EditarFaqPage({ params }: Props) {
   const session = await auth()
   const role = session?.user?.role
-  if (!session || (role !== 'ADMIN' && role !== 'ATENDIMENTO')) redirect('/')
+  if (!session || (role !== 'ADMIN' && role !== 'SUPER_ADMIN' && role !== 'ATENDIMENTO')) redirect('/')
 
   const { id } = await params
   const faqItem = await prisma.faqItem.findUnique({

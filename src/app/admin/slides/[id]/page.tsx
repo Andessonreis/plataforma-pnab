@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function EditarSlidePage({ params }: Props) {
   const session = await auth()
-  if (!session || session.user.role !== 'ADMIN') redirect('/')
+  if (!session || !['SUPER_ADMIN', 'COMUNICACAO'].includes(session.user.role)) redirect('/')
 
   const { id } = await params
   const slide = await prisma.slideDestaque.findUnique({ where: { id } })

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export default async function NovoFaqPage() {
   const session = await auth()
   const role = session?.user?.role
-  if (!session || (role !== 'ADMIN' && role !== 'ATENDIMENTO')) redirect('/')
+  if (!session || (role !== 'ADMIN' && role !== 'SUPER_ADMIN' && role !== 'ATENDIMENTO')) redirect('/')
 
   const editais = await prisma.edital.findMany({
     select: { id: true, titulo: true },

@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const session = await auth()
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
       return buildResponse(401, { error: 'UNAUTHORIZED', message: 'Acesso negado.' })
     }
 

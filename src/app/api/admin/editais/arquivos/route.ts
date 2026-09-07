@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const session = await auth()
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
       const res = NextResponse.json(
         { error: 'UNAUTHORIZED', message: 'Acesso negado.', requestId },
         { status: 401 },
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const session = await auth()
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
       const res = NextResponse.json(
         { error: 'UNAUTHORIZED', message: 'Acesso negado.', requestId },
         { status: 401 },
@@ -193,7 +193,7 @@ export async function DELETE(req: NextRequest) {
 
   try {
     const session = await auth()
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
       const res = NextResponse.json(
         { error: 'UNAUTHORIZED', message: 'Acesso negado.', requestId },
         { status: 401 },

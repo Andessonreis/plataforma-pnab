@@ -24,7 +24,7 @@ const STATUS_VARIANT: Record<CampaignStatus, 'neutral' | 'info' | 'success' | 'e
 
 export default async function AdminCampanhasPage({ searchParams }: Props) {
   const session = await auth()
-  if (!session || session.user.role !== 'ADMIN') redirect('/')
+  if (!session || !['ADMIN', 'SUPER_ADMIN', 'COMUNICACAO'].includes(session.user.role)) redirect('/')
 
   const params = await searchParams
   const page = Math.max(1, Number(params.page) || 1)

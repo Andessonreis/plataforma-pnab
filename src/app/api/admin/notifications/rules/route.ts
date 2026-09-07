@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const session = await auth()
-    if (!session || session.user.role !== 'ADMIN') return forbidden(requestId)
+    if (!session || !['ADMIN', 'SUPER_ADMIN', 'COMUNICACAO'].includes(session.user.role)) return forbidden(requestId)
 
     const params = querySchema.parse(Object.fromEntries(new URL(req.url).searchParams))
     const where =
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const session = await auth()
-    if (!session || session.user.role !== 'ADMIN') return forbidden(requestId)
+    if (!session || !['ADMIN', 'SUPER_ADMIN', 'COMUNICACAO'].includes(session.user.role)) return forbidden(requestId)
 
     const body = await req.json()
     const data = ruleSchema.parse(body)

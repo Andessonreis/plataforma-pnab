@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default async function TemplatesAvaliacaoPage() {
   const session = await auth()
-  if (!session || session.user.role !== 'ADMIN') redirect('/')
+  if (!session || session.user.role !== 'SUPER_ADMIN') redirect('/')
 
   const rawTemplates = await prisma.evaluationTemplate.findMany({
     orderBy: { ordem: 'asc' },

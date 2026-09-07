@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function EditarNoticiaPage({ params }: Props) {
   const session = await auth()
-  if (!session || session.user.role !== 'ADMIN') redirect('/')
+  if (!session || !['SUPER_ADMIN', 'COMUNICACAO'].includes(session.user.role)) redirect('/')
 
   const { id } = await params
   const noticia = await prisma.noticia.findUnique({ where: { id } })

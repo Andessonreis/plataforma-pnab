@@ -18,7 +18,7 @@ export async function GET(
 
   try {
     const session = await auth()
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || !['ADMIN', 'SUPER_ADMIN', 'COMUNICACAO'].includes(session.user.role)) {
       return forbidden(requestId)
     }
 
@@ -53,7 +53,7 @@ export async function PUT(
 
   try {
     const session = await auth()
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || !['ADMIN', 'SUPER_ADMIN', 'COMUNICACAO'].includes(session.user.role)) {
       return forbidden(requestId)
     }
 
@@ -119,7 +119,7 @@ export async function DELETE(
 
   try {
     const session = await auth()
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || !['ADMIN', 'SUPER_ADMIN', 'COMUNICACAO'].includes(session.user.role)) {
       return forbidden(requestId)
     }
 

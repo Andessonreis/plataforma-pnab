@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default async function TiposAnexoPage() {
   const session = await auth()
-  if (!session || session.user.role !== 'ADMIN') redirect('/')
+  if (!session || session.user.role !== 'SUPER_ADMIN') redirect('/')
 
   const rawTipos = await prisma.attachmentType.findMany({
     orderBy: [{ tag: 'asc' }, { isSystem: 'desc' }, { label: 'asc' }],

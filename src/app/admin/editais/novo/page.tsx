@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default async function NovoEditalPage() {
   const session = await auth()
-  if (!session || session.user.role !== 'ADMIN') redirect('/')
+  if (!session || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) redirect('/')
 
   return (
     <section>

@@ -33,7 +33,7 @@ interface TipoAnexo {
 
 export default async function EditarEditalPage({ params }: Props) {
   const session = await auth()
-  if (!session || session.user.role !== 'ADMIN') redirect('/')
+  if (!session || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) redirect('/')
 
   const { id } = await params
   const edital = await prisma.edital.findUnique({ where: { id } })

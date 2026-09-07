@@ -14,7 +14,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     const caller = await resolveAuth(req)
     if (!requireRole(caller, 'ADMIN', 'AVALIADOR')) return forbidden(ctx)
     const { id } = await params
-    const result = await avaliacaoService.getAvaliacao(id, caller.userId, caller.role === 'ADMIN')
+    const result = await avaliacaoService.getAvaliacao(id, caller.userId, ['ADMIN', 'SUPER_ADMIN'].includes(caller.role))
     logRequest(ctx, 'GET', `/api/v1/inscricoes/${id}/avaliacao`, 200)
     return ok(ctx, result)
   } catch (err) {
@@ -29,7 +29,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     if (!requireRole(caller, 'ADMIN', 'AVALIADOR')) return forbidden(ctx)
     const { id } = await params
     const data = avaliacaoBodySchema.parse(await req.json())
-    const result = await avaliacaoService.saveAvaliacao(id, data, caller.userId, caller.role === 'ADMIN')
+    const result = await avaliacaoService.saveAvaliacao(id, data, caller.userId, ['ADMIN', 'SUPER_ADMIN'].includes(caller.role))
     logRequest(ctx, 'PUT', `/api/v1/inscricoes/${id}/avaliacao`, 200)
     return ok(ctx, result)
   } catch (err) {

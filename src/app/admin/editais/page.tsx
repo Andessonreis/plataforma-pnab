@@ -18,7 +18,7 @@ interface Props {
 
 export default async function AdminEditaisPage({ searchParams }: Props) {
   const session = await auth()
-  if (!session || session.user.role !== 'ADMIN') redirect('/')
+  if (!session || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) redirect('/')
 
   const params = await searchParams
   const page = Math.max(1, Number(params.page) || 1)

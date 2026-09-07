@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
   try {
     const session = await auth()
     if (!session) return erro('UNAUTHORIZED', 'Não autenticado.', 401, requestId)
-    if (session.user.role !== 'ADMIN') return erro('FORBIDDEN', 'Acesso negado.', 403, requestId)
+    if (!['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) return erro('FORBIDDEN', 'Acesso negado.', 403, requestId)
 
     const parsed = bodySchema.safeParse(await req.json())
     if (!parsed.success) {

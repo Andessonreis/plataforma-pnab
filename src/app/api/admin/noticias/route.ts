@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const session = await auth()
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || !['SUPER_ADMIN', 'COMUNICACAO'].includes(session.user.role)) {
       const res = NextResponse.json(
         { error: 'FORBIDDEN', message: 'Acesso negado.', requestId },
         { status: 403 },
@@ -144,7 +144,7 @@ export async function PUT(req: NextRequest) {
 
   try {
     const session = await auth()
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || !['SUPER_ADMIN', 'COMUNICACAO'].includes(session.user.role)) {
       const res = NextResponse.json(
         { error: 'FORBIDDEN', message: 'Acesso negado.', requestId },
         { status: 403 },

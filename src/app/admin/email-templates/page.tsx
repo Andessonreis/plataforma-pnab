@@ -45,7 +45,7 @@ const CATEGORIAS: { titulo: string; chaves: EmailTemplate[] }[] = [
 
 export default async function AdminEmailTemplatesPage() {
   const session = await auth()
-  if (!session || session.user.role !== 'ADMIN') redirect('/')
+  if (!session || !['ADMIN', 'SUPER_ADMIN', 'COMUNICACAO'].includes(session.user.role)) redirect('/')
 
   const overrides = await prisma.emailTemplateOverride.findMany({
     include: { updatedBy: { select: { nome: true } } },

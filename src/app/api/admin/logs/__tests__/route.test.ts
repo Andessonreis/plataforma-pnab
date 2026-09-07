@@ -25,7 +25,7 @@ const mockLogs = [
     entityId: 'ed-1',
     userId: 'u1',
     createdAt: new Date('2025-01-15'),
-    user: { id: 'u1', nome: 'Admin', email: 'admin@test.com', role: 'ADMIN' },
+    user: { id: 'u1', nome: 'Admin', email: 'admin@test.com', role: 'SUPER_ADMIN' },
   },
   {
     id: 'log-2',
@@ -44,7 +44,7 @@ describe('GET /api/admin/logs', () => {
   })
 
   it('ADMIN → 200 + paginacao', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.auditLog.findMany.mockResolvedValue(mockLogs as never)
     mockPrisma.auditLog.count.mockResolvedValue(2 as never)
 
@@ -60,7 +60,7 @@ describe('GET /api/admin/logs', () => {
   })
 
   it('filtro action → where inclui action', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.auditLog.findMany.mockResolvedValue([] as never)
     mockPrisma.auditLog.count.mockResolvedValue(0 as never)
 
@@ -74,7 +74,7 @@ describe('GET /api/admin/logs', () => {
   })
 
   it('filtro dateFrom/dateTo → where inclui createdAt', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.auditLog.findMany.mockResolvedValue([] as never)
     mockPrisma.auditLog.count.mockResolvedValue(0 as never)
 
@@ -93,7 +93,7 @@ describe('GET /api/admin/logs', () => {
   })
 
   it('filtro entity → where inclui entity', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.auditLog.findMany.mockResolvedValue([] as never)
     mockPrisma.auditLog.count.mockResolvedValue(0 as never)
 
@@ -107,7 +107,7 @@ describe('GET /api/admin/logs', () => {
   })
 
   it('retorna filters com actions e entities distintas', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.auditLog.findMany
       .mockResolvedValueOnce(mockLogs as never) // dados
       .mockResolvedValueOnce([{ action: 'EDITAL_CRIADO' }, { action: 'INSCRICAO_ENVIADA' }] as never) // distinct actions
@@ -142,7 +142,7 @@ describe('GET /api/admin/logs', () => {
   })
 
   it('paginacao personalizada → page=2, pageSize=5', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.auditLog.findMany.mockResolvedValue([] as never)
     mockPrisma.auditLog.count.mockResolvedValue(15 as never)
 
