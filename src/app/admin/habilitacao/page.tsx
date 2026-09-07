@@ -32,11 +32,11 @@ const ABAS = {
   },
   habilitadas: {
     status: 'HABILITADA' as InscricaoStatus,
-    label: 'Habilitadas',
+    label: 'Habilitadas / Aptas',
   },
   inabilitadas: {
     status: 'INABILITADA' as InscricaoStatus,
-    label: 'Inabilitadas',
+    label: 'Inabilitadas / Inaptas',
   },
 } as const
 
@@ -185,7 +185,7 @@ export default async function AdminHabilitacaoPage({ searchParams }: Props) {
                 {edital.titulo}
               </h1>
               <p className="text-sm sm:text-base text-slate-600 mt-1">
-                Edição {edital.ano} <span className="text-slate-400">·</span> Habilitação documental
+                Edição {edital.ano} <span className="text-slate-400">·</span> Conferência e Validação documental
               </p>
             </div>
           </div>
@@ -198,8 +198,8 @@ export default async function AdminHabilitacaoPage({ searchParams }: Props) {
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-600" />
               </span>
               <p className="text-sm text-emerald-900">
-                <strong className="font-semibold">Fase de habilitação aberta</strong> — confira a
-                documentação enviada e registre o resultado.
+                <strong className="font-semibold">Fase aberta de conferência</strong> — confira a
+                documentação enviada e valide as inscrições para habilitação e análise da comissão.
               </p>
             </div>
           ) : (
@@ -208,7 +208,7 @@ export default async function AdminHabilitacaoPage({ searchParams }: Props) {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <p className="text-sm text-slate-600">
-                A fase de habilitação deste edital já foi encerrada. As inscrições abaixo refletem o
+                A fase de conferência deste edital já foi encerrada. As inscrições abaixo refletem o
                 histórico da conferência.
               </p>
             </div>
@@ -464,10 +464,10 @@ async function renderPicker(editaisVisiveis: string[] | null) {
               </div>
               <div className="min-w-0 flex-1">
                 <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 leading-tight">
-                  Habilitação documental
+                  Conferência e Habilitação Documental
                 </h1>
                 <p className="text-sm sm:text-base text-slate-600 mt-1 max-w-2xl">
-                  Confira a documentação enviada pelos proponentes e registre o resultado da etapa de habilitação.
+                  Confira a documentação enviada pelos proponentes e valide as inscrições para análise e avaliação.
                 </p>
               </div>
             </div>
