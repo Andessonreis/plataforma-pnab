@@ -15,10 +15,11 @@ export interface TipoDocumentoOpcao {
 
 interface Props {
   inscricaoId: string
-  /** Tipos do edital + catálogo global, já deduplicados no servidor. */
+  /** Só os documentos previstos neste edital. */
   tipos: TipoDocumentoOpcao[]
-  /** Grupos existentes no catálogo — usados ao cadastrar um tipo novo. */
-  grupos: string[]
+  /** Contexto exibido no formulário — evita anexar na inscrição errada. */
+  editalTitulo: string
+  inscricaoNumero: string
   /** Só SUPER_ADMIN cadastra tipo novo no catálogo. */
   podeCriarTipo: boolean
 }
@@ -35,7 +36,7 @@ interface Props {
  * ainda não existe é cadastrado no catálogo (o identificador é gerado a
  * partir do nome), o que também o disponibiliza para os próximos editais.
  */
-export function JuntarDocumento({ inscricaoId, tipos, grupos, podeCriarTipo }: Props) {
+export function JuntarDocumento({ inscricaoId, tipos, editalTitulo, inscricaoNumero, podeCriarTipo }: Props) {
   const router = useRouter()
   const [aberto, setAberto] = useState(false)
   const [enviando, setEnviando] = useState(false)
@@ -43,9 +44,12 @@ export function JuntarDocumento({ inscricaoId, tipos, grupos, podeCriarTipo }: P
   const [salvandoTipo, setSalvandoTipo] = useState(false)
   const [tipoSelecionado, setTipoSelecionado] = useState(tipos[0]?.tipo ?? '')
   const [novoTipoLabel, setNovoTipoLabel] = useState('')
-  const [novoTipoGrupo, setNovoTipoGrupo] = useState(grupos[0] ?? 'PNAB')
   const [tiposLocais, setTiposLocais] = useState(tipos)
   const [ultimaNota, setUltimaNota] = useState('')
+
+  const rotuloDoTipo = (tipo: string) =>
+    tiposLocais.find((t) => t.tipo === tipo)?.label ?? ''
+
 
   async function criarTipo() {
     const label = novoTipoLabel.trim()
@@ -59,7 +63,7 @@ export function JuntarDocumento({ inscricaoId, tipos, grupos, podeCriarTipo }: P
       const res = await fetch('/api/admin/configuracoes/tipos-anexo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ label, tag: novoTipoGrupo, obrigatorio: false }),
+        body: JSON.stringify({ label, tag: editalTitulo, obrigatorio: false }),
       })
       const json = await res.json()
 
@@ -104,6 +108,9 @@ export function JuntarDocumento({ inscricaoId, tipos, grupos, podeCriarTipo }: P
       return
     }
     dados.set('tipo', tipoSelecionado)
+    // Título é sempre o nome do documento escolhido — campo separado só
+    // duplicava a informação e dava margem a divergência entre os dois.
+    dados.set('titulo', rotuloDoTipo(tipoSelecionado))
 
     setEnviando(true)
     try {
@@ -150,20 +157,22 @@ export function JuntarDocumento({ inscricaoId, tipos, grupos, podeCriarTipo }: P
 
   return (
     <Card padding="sm" className="border-brand-200 bg-brand-50/40">
-      <h3 className="text-sm font-semibold text-slate-900 mb-1">
+      <h3 className="text-sm font-semibold text-slate-900">
         Juntar documento ao processo
       </h3>
+      <p className="text-xs font-medium text-brand-800 mb-2">
+        {inscricaoNumero} · {editalTitulo}
+      </p>
       <p className="text-xs text-slate-600 mb-3 leading-relaxed">
-        Use quando o agente cultural enviar documento por fora do sistema (e-mail,
-        presencialmente) porque a inscrição já não aceita mais anexo. Fica registrado
-        que foi a equipe quem juntou, com a justificativa informada. Dá pra juntar
-        vários seguidos — o formulário continua aberto.
+        Para documento que o agente cultural mandou por fora do sistema (e-mail,
+        presencialmente), já que a inscrição enviada não aceita mais anexo. Fica
+        registrado que foi a equipe quem juntou. Dá pra juntar vários seguidos.
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-3">
         <div>
           <label htmlFor="tipo" className="block text-xs font-medium text-slate-700 mb-1">
-            Tipo do documento
+            Documento previsto neste edital
           </label>
           <select
             id="tipo"
@@ -172,9 +181,7 @@ export function JuntarDocumento({ inscricaoId, tipos, grupos, podeCriarTipo }: P
             className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm min-h-[40px]"
           >
             {tiposLocais.map((t) => (
-              <option key={t.tipo} value={t.tipo}>
-                {t.grupo ? `${t.label} — ${t.grupo}` : t.label}
-              </option>
+              <option key={t.tipo} value={t.tipo}>{t.label}</option>
             ))}
           </select>
 
@@ -192,8 +199,8 @@ export function JuntarDocumento({ inscricaoId, tipos, grupos, podeCriarTipo }: P
         {criandoTipo && (
           <div className="rounded-lg border border-slate-200 bg-white p-3 space-y-2">
             <p className="text-xs text-slate-600">
-              O identificador interno é gerado a partir do nome — não precisa digitar código.
-              O tipo fica disponível para os próximos editais.
+              Cadastra no grupo <strong>{editalTitulo}</strong>. O identificador interno é
+              gerado a partir do nome — não precisa digitar código.
             </p>
             <Input
               label="Nome do documento"
@@ -201,21 +208,6 @@ export function JuntarDocumento({ inscricaoId, tipos, grupos, podeCriarTipo }: P
               value={novoTipoLabel}
               onChange={(e) => setNovoTipoLabel(e.target.value)}
             />
-            <div>
-              <label htmlFor="grupo" className="block text-xs font-medium text-slate-700 mb-1">
-                Grupo
-              </label>
-              <select
-                id="grupo"
-                value={novoTipoGrupo}
-                onChange={(e) => setNovoTipoGrupo(e.target.value)}
-                className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm min-h-[40px]"
-              >
-                {grupos.map((g) => (
-                  <option key={g} value={g}>{g}</option>
-                ))}
-              </select>
-            </div>
             <div className="flex gap-2">
               <Button type="button" size="sm" onClick={criarTipo} loading={salvandoTipo}>
                 Cadastrar tipo
@@ -226,13 +218,6 @@ export function JuntarDocumento({ inscricaoId, tipos, grupos, podeCriarTipo }: P
             </div>
           </div>
         )}
-
-        <Input
-          name="titulo"
-          label="Título exibido"
-          placeholder="Ex.: Declaração de Residência — Retificação nº 02"
-          required
-        />
 
         <div>
           <label htmlFor="origemNota" className="block text-xs font-medium text-slate-700 mb-1">

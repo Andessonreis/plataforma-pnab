@@ -175,24 +175,12 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
     ? inscricao.edital.tiposAnexo
     : []) as unknown as { tipo: string; label: string }[]
 
-  // Catálogo global de tipos, pra quem junta documento não precisar digitar
-  // identificador (erro de ortografia ali gera anexo que não casa com o que o
-  // edital espera). Lido direto aqui: a API do catálogo é exclusiva de
-  // SUPER_ADMIN e o ADMIN também precisa da lista pra escolher.
-  const catalogoTipos = isAdmin
-    ? await prisma.attachmentType.findMany({
-        select: { tipo: true, label: true, tag: true },
-        orderBy: [{ tag: 'asc' }, { label: 'asc' }],
-      })
-    : []
-
-  const tiposJuntarDocumento = [
-    ...tiposAnexoEdital.map((t) => ({ tipo: t.tipo, label: t.label })),
-    ...catalogoTipos
-      .filter((c) => !tiposAnexoEdital.some((t) => t.tipo === c.tipo))
-      .map((c) => ({ tipo: c.tipo, label: c.label, grupo: c.tag })),
-  ]
-  const gruposCatalogo = [...new Set(catalogoTipos.map((c) => c.tag))]
+  // Só os documentos previstos NESTE edital. Misturar o catálogo global aqui
+  // trazia tipo de edital encerrado e de outro edital pra mesma lista — quem
+  // está juntando um documento de Mestres e Mestras via opção do Centenário e
+  // ficava sem saber onde estava mexendo. O que faltar, o SUPER_ADMIN cadastra
+  // pelo próprio formulário.
+  const tiposJuntarDocumento = tiposAnexoEdital.map((t) => ({ tipo: t.tipo, label: t.label }))
 
   // Documentos previstos no edital que não vieram — listados como "Não informado".
   const anexosPendentes = calcularAnexosPendentes(inscricao.edital.tiposAnexo, inscricao.anexos)
@@ -483,7 +471,8 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
             <JuntarDocumento
               inscricaoId={inscricao.id}
               tipos={tiposJuntarDocumento}
-              grupos={gruposCatalogo}
+              editalTitulo={inscricao.edital.titulo}
+              inscricaoNumero={inscricao.numero}
               podeCriarTipo={userRole === 'SUPER_ADMIN'}
             />
           )}
