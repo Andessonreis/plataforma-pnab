@@ -7,7 +7,7 @@ import { logAudit } from '@/lib/audit'
 
 export const runtime = 'nodejs'
 
-const FAQ_ROLES_PERMITIDOS = ['ADMIN', 'ATENDIMENTO']
+const FAQ_ROLES_PERMITIDOS = ['ADMIN', 'SUPER_ADMIN', 'ATENDIMENTO']
 
 // -- Schema de validacao -------------------------------------------------------
 

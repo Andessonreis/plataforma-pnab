@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     const destinatariosDb = await prisma.user.findMany({
       where: {
         ativo: true,
-        role: 'ADMIN',
+        role: { in: ['ADMIN', 'SUPER_ADMIN'] },
         ...(destinatarios === 'todos' ? {} : { id: { in: destinatarios } }),
       },
       select: { nome: true, email: true },

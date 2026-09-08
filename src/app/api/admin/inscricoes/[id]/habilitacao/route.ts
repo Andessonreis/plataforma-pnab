@@ -37,7 +37,7 @@ const habilitacaoSchema = z.object({
   },
 )
 
-const ROLES_PERMITIDOS: UserRole[] = ['ADMIN', 'HABILITADOR']
+const ROLES_PERMITIDOS: UserRole[] = ['HABILITADOR', 'SUPER_ADMIN']
 
 export async function PUT(
   req: NextRequest,

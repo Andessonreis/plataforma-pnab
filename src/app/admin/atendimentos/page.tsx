@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   title: 'Atendimentos — Portal PNAB Irecê',
 }
 
-const ROLES_PERMITIDOS: UserRole[] = ['ADMIN', 'ATENDIMENTO']
+const ROLES_PERMITIDOS: UserRole[] = ['ADMIN', 'SUPER_ADMIN', 'ATENDIMENTO']
 
 const STATUS_LABELS: Record<AtendimentoStatus, string> = {
   ABERTO: 'Aberto',

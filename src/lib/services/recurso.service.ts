@@ -13,7 +13,7 @@ function siteBaseUrl(): string {
 /** Notifica os admins ativos que um novo recurso foi interposto. */
 async function notifyEquipeRecursoSubmetido(inscricaoId: string, editalTitulo: string, fase: string) {
   const admins = await prisma.user.findMany({
-    where: { role: 'ADMIN', ativo: true },
+    where: { role: { in: ['ADMIN', 'SUPER_ADMIN'] }, ativo: true },
     select: { email: true },
   })
   if (admins.length === 0) return
@@ -165,7 +165,7 @@ export async function listRecursos(inscricaoId: string, callerId: string, caller
   if (!inscricao) throw new ServiceError('NOT_FOUND', 'Inscrição não encontrada.')
 
   const isOwner = inscricao.proponenteId === callerId
-  const isStaff = ['ADMIN', 'HABILITADOR'].includes(callerRole)
+  const isStaff = ['ADMIN', 'SUPER_ADMIN', 'HABILITADOR'].includes(callerRole)
   if (!isOwner && !isStaff) throw new ServiceError('FORBIDDEN', 'Acesso negado.')
 
   const recursos = await prisma.recurso.findMany({

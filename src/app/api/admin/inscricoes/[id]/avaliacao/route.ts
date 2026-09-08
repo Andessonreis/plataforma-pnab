@@ -38,7 +38,7 @@ const avaliacaoBodySchema = z.object({
   },
 )
 
-const ROLES_PERMITIDOS: UserRole[] = ['ADMIN', 'AVALIADOR']
+const ROLES_PERMITIDOS: UserRole[] = ['ADMIN', 'SUPER_ADMIN', 'AVALIADOR']
 
 // ─── GET — carrega avaliação existente + critérios do edital ─────────────────
 

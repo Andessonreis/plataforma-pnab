@@ -68,7 +68,7 @@ describe('PUT /api/admin/inscricoes/[id]/habilitacao', () => {
   })
 
   it('role ADMIN → 200', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.inscricao.findUnique.mockResolvedValue(baseInscricao as never)
 
     const res = await PUT(makeRequest({ status: 'HABILITADA' }), makeParams())
@@ -101,7 +101,7 @@ describe('PUT /api/admin/inscricoes/[id]/habilitacao', () => {
   })
 
   it('ADMIN ignora escopo de equipe do edital', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.inscricao.findUnique.mockResolvedValue(baseInscricao as never)
     // Equipe configurada e admin não é membro — não se aplica a ADMIN
     mockPrisma.editalMembro.count.mockResolvedValue(1 as never)
@@ -113,7 +113,7 @@ describe('PUT /api/admin/inscricoes/[id]/habilitacao', () => {
   })
 
   it('inscrição não encontrada → 404', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.inscricao.findUnique.mockResolvedValue(null)
 
     const res = await PUT(makeRequest({ status: 'HABILITADA' }), makeParams())
@@ -122,7 +122,7 @@ describe('PUT /api/admin/inscricoes/[id]/habilitacao', () => {
   })
 
   it('INABILITADA sem motivo → 400', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.inscricao.findUnique.mockResolvedValue(baseInscricao as never)
 
     const res = await PUT(makeRequest({ status: 'INABILITADA' }), makeParams())
@@ -131,7 +131,7 @@ describe('PUT /api/admin/inscricoes/[id]/habilitacao', () => {
   })
 
   it('HABILITADA → atualiza status, motivo null', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.inscricao.findUnique.mockResolvedValue(baseInscricao as never)
 
     await PUT(makeRequest({ status: 'HABILITADA' }), makeParams())
@@ -143,7 +143,7 @@ describe('PUT /api/admin/inscricoes/[id]/habilitacao', () => {
   })
 
   it('INABILITADA → atualiza status + motivo', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.inscricao.findUnique.mockResolvedValue(baseInscricao as never)
 
     await PUT(makeRequest({ status: 'INABILITADA', motivo: 'Doc incompleta' }), makeParams())
@@ -155,7 +155,7 @@ describe('PUT /api/admin/inscricoes/[id]/habilitacao', () => {
   })
 
   it('email de habilitação enfileirado (GAP 3)', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.inscricao.findUnique.mockResolvedValue(baseInscricao as never)
 
     await PUT(makeRequest({ status: 'HABILITADA' }), makeParams())
@@ -172,7 +172,7 @@ describe('PUT /api/admin/inscricoes/[id]/habilitacao', () => {
   })
 
   it('audit log registrado', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.inscricao.findUnique.mockResolvedValue(baseInscricao as never)
 
     await PUT(makeRequest({ status: 'HABILITADA' }), makeParams())

@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   title: 'Detalhe do Atendimento — Portal PNAB Irecê',
 }
 
-const ROLES_PERMITIDOS: UserRole[] = ['ADMIN', 'ATENDIMENTO']
+const ROLES_PERMITIDOS: UserRole[] = ['ADMIN', 'SUPER_ADMIN', 'ATENDIMENTO']
 
 type BadgeVariant = 'success' | 'warning' | 'error' | 'info' | 'neutral'
 
