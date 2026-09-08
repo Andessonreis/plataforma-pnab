@@ -25,7 +25,7 @@ const statusExecucaoVariant: Record<string, 'success' | 'warning' | 'error' | 'i
 
 export default async function ContempladosPage() {
   const session = await auth()
-  if (!session || session.user.role !== 'ADMIN') redirect('/admin')
+  if (!session || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) redirect('/admin')
 
   const [totalContemplados, editais, recentProjetos, lastImportLog] = await Promise.all([
     prisma.projetoApoiado.count(),

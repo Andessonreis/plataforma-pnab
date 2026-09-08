@@ -26,7 +26,7 @@ function erro(status: number, code: string, message: string, requestId: string) 
 
 async function exigirAdmin(requestId: string) {
   const session = await auth()
-  if (!session || session.user.role !== 'ADMIN') {
+  if (!session || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
     return {
       session: null,
       resposta: erro(403, 'FORBIDDEN', 'Apenas ADMIN pode retificar um edital.', requestId),

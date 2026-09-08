@@ -43,7 +43,7 @@ describe('GET /api/admin/configuracoes/tipos-anexo', () => {
   })
 
   it('ADMIN → 200 com lista de tipos', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.attachmentType.findMany
       .mockResolvedValueOnce([
         { id: '1', tipo: 'RG', label: 'RG', tag: 'PNAB', isSystem: true },
@@ -72,7 +72,7 @@ describe('POST /api/admin/configuracoes/tipos-anexo', () => {
   })
 
   it('campos faltando → 400', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     const res = await POST(makePostRequest({ label: '' }))
     expect(res.status).toBe(400)
     const body = await res.json()
@@ -80,7 +80,7 @@ describe('POST /api/admin/configuracoes/tipos-anexo', () => {
   })
 
   it('não aceita campo tipo no body (gera automaticamente)', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.attachmentType.findFirst.mockResolvedValue(null as never)
     mockPrisma.attachmentType.create.mockResolvedValue({
       id: 'at-1',
@@ -106,7 +106,7 @@ describe('POST /api/admin/configuracoes/tipos-anexo', () => {
   })
 
   it('gera sufixo numérico quando tipo já existe', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     // findFirst retorna match → slug duplicado
     mockPrisma.attachmentType.findFirst.mockResolvedValue({
       id: 'existing',
@@ -136,7 +136,7 @@ describe('POST /api/admin/configuracoes/tipos-anexo', () => {
   })
 
   it('gera sufixo _3 quando _2 já existe', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.attachmentType.findFirst.mockResolvedValue({
       id: 'existing',
       tipo: 'RG',
@@ -166,7 +166,7 @@ describe('POST /api/admin/configuracoes/tipos-anexo', () => {
   })
 
   it('registra audit log após criação', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.attachmentType.findFirst.mockResolvedValue(null as never)
     mockPrisma.attachmentType.create.mockResolvedValue({
       id: 'at-1',

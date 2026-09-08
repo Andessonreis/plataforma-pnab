@@ -29,7 +29,7 @@ export async function getInscricaoCountsByEdital(
   editalId: string,
 ): Promise<EditalInscricaoCounts> {
   const session = await auth()
-  if (!session || session.user.role !== 'ADMIN') return { byStatus: {}, total: 0 }
+  if (!session || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) return { byStatus: {}, total: 0 }
 
   // Buscar contagens brutas por status atual
   const rawCounts = await prisma.inscricao.groupBy({

@@ -17,6 +17,14 @@ enum UserRole {
   HABILITADOR
   AVALIADOR
   ADMIN
+  // SUPER_ADMIN enxerga e opera qualquer tela do backoffice — ver
+  // requireRole em src/app/admin/require-role.ts e src/lib/api/auth-resolver.ts,
+  // que dão bypass automático pra esse role em qualquer checagem existente.
+  SUPER_ADMIN
+  // Responsável por conteúdo institucional (notícias, páginas, banners,
+  // slides, templates de e-mail e notificações) — sem acesso a inscrições,
+  // atendimento, habilitação ou avaliação.
+  COMUNICACAO
 }
 
 enum TipoProponente {

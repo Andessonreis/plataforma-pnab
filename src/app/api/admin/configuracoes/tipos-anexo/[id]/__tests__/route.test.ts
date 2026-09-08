@@ -44,14 +44,14 @@ describe('GET /api/admin/configuracoes/tipos-anexo/[id]', () => {
   })
 
   it('tipo não encontrado → 404', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.attachmentType.findUnique.mockResolvedValue(null as never)
     const res = await GET(makeGetRequest(), makeCtx('at-999'))
     expect(res.status).toBe(404)
   })
 
   it('ADMIN → 200 com dados do tipo', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.attachmentType.findUnique.mockResolvedValue({
       id: 'at-1',
       tipo: 'RG',
@@ -83,7 +83,7 @@ describe('PUT /api/admin/configuracoes/tipos-anexo/[id]', () => {
   })
 
   it('tipo não encontrado → 404', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.attachmentType.findUnique.mockResolvedValue(null as never)
     const res = await PUT(
       makePutRequest({ label: 'Teste', tag: 'PNAB' }),
@@ -93,7 +93,7 @@ describe('PUT /api/admin/configuracoes/tipos-anexo/[id]', () => {
   })
 
   it('campos inválidos → 400', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.attachmentType.findUnique.mockResolvedValue({
       id: 'at-1',
       tipo: 'RG',
@@ -108,7 +108,7 @@ describe('PUT /api/admin/configuracoes/tipos-anexo/[id]', () => {
   })
 
   it('tipo do sistema → atualiza apenas label e obrigatório', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.attachmentType.findUnique.mockResolvedValue({
       id: 'at-1',
       tipo: 'RG',
@@ -139,7 +139,7 @@ describe('PUT /api/admin/configuracoes/tipos-anexo/[id]', () => {
   })
 
   it('tipo custom → atualiza label, obrigatório e tag (sem tipo)', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.attachmentType.findUnique.mockResolvedValue({
       id: 'at-2',
       tipo: 'CERTIFICADO_PNCV',
@@ -172,7 +172,7 @@ describe('PUT /api/admin/configuracoes/tipos-anexo/[id]', () => {
   })
 
   it('registra audit log', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.attachmentType.findUnique.mockResolvedValue({
       id: 'at-1',
       tipo: 'RG',
@@ -212,14 +212,14 @@ describe('DELETE /api/admin/configuracoes/tipos-anexo/[id]', () => {
   })
 
   it('tipo não encontrado → 404', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.attachmentType.findUnique.mockResolvedValue(null as never)
     const res = await DELETE(makeDeleteRequest(), makeCtx('at-999'))
     expect(res.status).toBe(404)
   })
 
   it('tipo do sistema → 403', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.attachmentType.findUnique.mockResolvedValue({
       id: 'at-1',
       tipo: 'RG',
@@ -231,7 +231,7 @@ describe('DELETE /api/admin/configuracoes/tipos-anexo/[id]', () => {
   })
 
   it('tipo custom → exclui com sucesso', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.attachmentType.findUnique.mockResolvedValue({
       id: 'at-2',
       tipo: 'CERTIFICADO_PNCV',

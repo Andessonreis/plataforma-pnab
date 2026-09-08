@@ -64,7 +64,7 @@ interface Props {
 }
 
 export default async function AdminHabilitacaoPage({ searchParams }: Props) {
-  const session = await requireRole('ADMIN', 'HABILITADOR')
+  const session = await requireRole('HABILITADOR')
   const isHabilitador = session.user.role === 'HABILITADOR'
   const editaisVisiveis = isHabilitador
     ? await getEditaisVisiveis(session.user.id, 'HABILITADOR')

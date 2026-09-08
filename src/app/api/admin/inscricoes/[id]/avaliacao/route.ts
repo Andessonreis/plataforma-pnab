@@ -93,7 +93,7 @@ export async function GET(
 
     // Avaliador só pode ver inscrições atribuídas a ele
     const avaliacao = inscricao.avaliacoes[0] ?? null
-    const isAssigned = session.user.role === 'ADMIN' || avaliacao !== null
+    const isAssigned = ['ADMIN', 'SUPER_ADMIN'].includes(session.user.role) || avaliacao !== null
 
     if (!isAssigned) {
       const res = NextResponse.json(
@@ -235,7 +235,7 @@ export async function PUT(
       select: { id: true, finalizada: true },
     })
 
-    if (existingAvaliacao?.finalizada && session.user.role !== 'ADMIN') {
+    if (existingAvaliacao?.finalizada && !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
       const res = NextResponse.json(
         { error: 'LOCKED', message: 'Esta avaliação já foi finalizada e não pode ser alterada.', requestId },
         { status: 422 },

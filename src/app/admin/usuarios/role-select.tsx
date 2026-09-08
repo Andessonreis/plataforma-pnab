@@ -20,6 +20,8 @@ const roleLabels: Record<UserRole, string> = {
   HABILITADOR: 'Habilitador',
   AVALIADOR: 'Avaliador',
   ADMIN: 'Administrador',
+  SUPER_ADMIN: 'Super Administrador',
+  COMUNICACAO: 'Comunicação',
 }
 
 interface RoleSelectProps {

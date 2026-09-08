@@ -71,7 +71,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 
     // Verificar acesso: apenas o proponente dono ou ADMIN
     const isOwner = inscricao.proponenteId === session.user.id
-    const isAdmin = session.user.role === 'ADMIN'
+    const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)
     if (!isOwner && !isAdmin) {
       const res = NextResponse.json(
         { error: 'FORBIDDEN', message: 'Acesso negado.', requestId },

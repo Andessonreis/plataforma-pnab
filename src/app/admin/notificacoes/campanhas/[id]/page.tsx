@@ -33,7 +33,7 @@ const STATUS_VARIANT: Record<CampaignStatus, 'neutral' | 'info' | 'success' | 'e
 
 export default async function CampanhaDetalhePage({ params }: Props) {
   const session = await auth()
-  if (!session || session.user.role !== 'ADMIN') redirect('/')
+  if (!session || !['ADMIN', 'SUPER_ADMIN', 'COMUNICACAO'].includes(session.user.role)) redirect('/')
 
   const { id } = await params
   const campaign = await prisma.notificationCampaign.findUnique({

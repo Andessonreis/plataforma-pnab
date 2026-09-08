@@ -7,7 +7,7 @@ import { corsHeaders, handlePreflight } from '@/lib/api/cors'
 
 const { auth } = NextAuth(authConfig)
 
-const ROLES_ADMIN: UserRole[] = ['ADMIN', 'ATENDIMENTO', 'HABILITADOR']
+const ROLES_ADMIN: UserRole[] = ['ADMIN', 'SUPER_ADMIN', 'COMUNICACAO', 'ATENDIMENTO', 'HABILITADOR']
 
 function handleV1Cors(req: NextRequest): NextResponse | null {
   const { pathname } = req.nextUrl

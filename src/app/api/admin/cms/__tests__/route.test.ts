@@ -44,7 +44,7 @@ describe('POST /api/admin/cms', () => {
   })
 
   it('dados validos → 201 + slug', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.cmsPage.findUnique.mockResolvedValue(null)
     mockPrisma.cmsPage.create.mockResolvedValue({
       id: 'cms-1',
@@ -63,7 +63,7 @@ describe('POST /api/admin/cms', () => {
   })
 
   it('slug colisao → slug com sufixo', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     // findUnique retorna existente — slug ja existe
     mockPrisma.cmsPage.findUnique.mockResolvedValue({
       id: 'cms-existing',
@@ -89,7 +89,7 @@ describe('POST /api/admin/cms', () => {
   })
 
   it('sanitizeContent e chamado no corpo', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.cmsPage.findUnique.mockResolvedValue(null)
     mockPrisma.cmsPage.create.mockResolvedValue({
       id: 'cms-3',
@@ -121,7 +121,7 @@ describe('POST /api/admin/cms', () => {
   })
 
   it('titulo curto → 400', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
 
     const res = await POST(makePostRequest({ ...validCmsBody, titulo: 'AB' }))
 
@@ -131,7 +131,7 @@ describe('POST /api/admin/cms', () => {
   })
 
   it('corpo vazio → 400', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
 
     const res = await POST(makePostRequest({ ...validCmsBody, corpo: '' }))
 
@@ -147,7 +147,7 @@ describe('PUT /api/admin/cms', () => {
   })
 
   it('atualiza → 200', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.cmsPage.findUnique.mockResolvedValue({
       id: 'cms-1',
       titulo: validCmsBody.titulo,
@@ -173,7 +173,7 @@ describe('PUT /api/admin/cms', () => {
   })
 
   it('id inexistente → 404', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.cmsPage.findUnique.mockResolvedValue(null)
 
     const res = await PUT(makePutRequest(validCmsBody, 'cms-999'))
@@ -182,7 +182,7 @@ describe('PUT /api/admin/cms', () => {
   })
 
   it('sem id → 400', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
 
     const res = await PUT(makePutRequest(validCmsBody))
 
@@ -190,7 +190,7 @@ describe('PUT /api/admin/cms', () => {
   })
 
   it('audit log registrado apos update', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.cmsPage.findUnique.mockResolvedValue({
       id: 'cms-1',
       titulo: validCmsBody.titulo,

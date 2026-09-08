@@ -83,8 +83,14 @@ async function resolveApiKey(rawKey: string): Promise<ApiCaller | null> {
 // Helpers de autorização
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * SUPER_ADMIN sempre passa, independente das roles pedidas — é o único
+ * cargo com acesso a toda rota do backoffice, então cada call site não
+ * precisa listar 'SUPER_ADMIN' manualmente entre os roles permitidos.
+ */
 export function requireRole(caller: ApiCaller | null, ...roles: UserRole[]): caller is ApiCaller {
   if (!caller) return false
+  if (caller.role === 'SUPER_ADMIN') return true
   return roles.includes(caller.role)
 }
 

@@ -69,6 +69,13 @@ export default async function AdminDashboardPage() {
     redirect('/admin/habilitacao')
   }
 
+  // Comunicação também não tem dashboard genérico — não opera inscrição,
+  // edital nem atendimento, então as métricas do AdminDashboard não dizem
+  // respeito a ela. Aterrissa direto na primeira tela da área dela.
+  if (role === 'COMUNICACAO') {
+    redirect('/admin/noticias')
+  }
+
   if (role === 'AVALIADOR') {
     const userId = session.user.id
     const startOfToday = inicioDeHoje()

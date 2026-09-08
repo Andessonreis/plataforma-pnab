@@ -57,6 +57,23 @@ const TEMAS: Record<UserRole, RoleTheme> = {
     highlightText: 'text-accent-300', highlightBg: 'bg-accent-500/10', highlightRing: 'ring-accent-500/25', highlightIcon: 'text-accent-300',
     chipBg: 'bg-accent-50', chipText: 'text-accent-800', chipRing: 'ring-accent-200',
   },
+  // Mesma cor do ADMIN (dourado/accent) — SUPER_ADMIN é o mesmo papel
+  // "administrativo", só que com acesso a tudo. Diferenciado pelo rótulo,
+  // não por uma cor nova fora da paleta institucional.
+  SUPER_ADMIN: {
+    soloBg: 'bg-accent-500', soloText: 'text-tinta-950',
+    activeBg: 'bg-accent-500', activeText: 'text-tinta-950',
+    highlightText: 'text-accent-300', highlightBg: 'bg-accent-500/10', highlightRing: 'ring-accent-500/25', highlightIcon: 'text-accent-300',
+    chipBg: 'bg-accent-50', chipText: 'text-accent-800', chipRing: 'ring-accent-200',
+  },
+  // Ameixa (criatividade e diversidade, no significado da identidade SECULT)
+  // é o par conceitual mais próximo pra um papel de conteúdo/design.
+  COMUNICACAO: {
+    soloBg: 'bg-ameixa-600', soloText: 'text-papel-50',
+    activeBg: 'bg-ameixa-600', activeText: 'text-papel-50',
+    highlightText: 'text-ameixa-300', highlightBg: 'bg-ameixa-400/10', highlightRing: 'ring-ameixa-400/25', highlightIcon: 'text-ameixa-300',
+    chipBg: 'bg-ameixa-50', chipText: 'text-ameixa-700', chipRing: 'ring-ameixa-200',
+  },
   // Nunca renderizado no backoffice (proponente tem sua própria sidebar) — só aqui pra fechar o Record.
   PROPONENTE: {
     soloBg: 'bg-accent-500', soloText: 'text-tinta-950',

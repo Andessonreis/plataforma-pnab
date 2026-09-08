@@ -48,7 +48,7 @@ describe('GET /api/admin/configuracoes/templates-avaliacao', () => {
   })
 
   it('ADMIN → 200 com lista de templates', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.evaluationTemplate.findMany.mockResolvedValue([
       { id: 't1', nome: 'PNAB Cultura Viva', criterios: VALID_CRITERIOS, ativo: true },
     ] as never)
@@ -62,7 +62,7 @@ describe('GET /api/admin/configuracoes/templates-avaliacao', () => {
   })
 
   it('filtra inativos por padrão', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.evaluationTemplate.findMany.mockResolvedValue([] as never)
 
     await GET(makeGetRequest())
@@ -73,7 +73,7 @@ describe('GET /api/admin/configuracoes/templates-avaliacao', () => {
   })
 
   it('all=true inclui inativos', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.evaluationTemplate.findMany.mockResolvedValue([] as never)
 
     await GET(makeGetRequest(true))
@@ -97,7 +97,7 @@ describe('POST /api/admin/configuracoes/templates-avaliacao', () => {
   })
 
   it('campos faltando → 400', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     const res = await POST(makePostRequest({ nome: '' }))
     expect(res.status).toBe(400)
     const body = await res.json()
@@ -105,13 +105,13 @@ describe('POST /api/admin/configuracoes/templates-avaliacao', () => {
   })
 
   it('critérios vazios → 400', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     const res = await POST(makePostRequest({ nome: 'Teste', criterios: [] }))
     expect(res.status).toBe(400)
   })
 
   it('POST válido → 201', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.evaluationTemplate.findFirst.mockResolvedValueOnce(null as never) // nome check
     mockPrisma.evaluationTemplate.findFirst.mockResolvedValueOnce(null as never) // ordem check
     mockPrisma.evaluationTemplate.create.mockResolvedValue({
@@ -132,7 +132,7 @@ describe('POST /api/admin/configuracoes/templates-avaliacao', () => {
   })
 
   it('nome duplicado → 409', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.evaluationTemplate.findFirst.mockResolvedValue({ id: 'existing' } as never)
 
     const res = await POST(makePostRequest({
@@ -146,7 +146,7 @@ describe('POST /api/admin/configuracoes/templates-avaliacao', () => {
   })
 
   it('registra audit log após criação', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.evaluationTemplate.findFirst.mockResolvedValueOnce(null as never)
     mockPrisma.evaluationTemplate.findFirst.mockResolvedValueOnce(null as never)
     mockPrisma.evaluationTemplate.create.mockResolvedValue({

@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const session = await auth()
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
       return NextResponse.json(
         { error: 'FORBIDDEN', message: 'Acesso restrito a administradores', requestId },
         { status: 403, headers: { 'X-Request-Id': requestId, 'Cache-Control': 'no-store' } },

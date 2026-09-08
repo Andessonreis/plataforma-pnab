@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db'
 import { rateLimit } from '@/lib/rate-limit'
 import { RATE_LIMITS } from '@/lib/rate-limit/config'
 import { generateUniqueProtocolo } from '@/lib/atendimento/protocolo'
+import { notifyEquipeNovoAtendimento } from '@/lib/atendimento/notify-novo-atendimento'
 import { enqueueEmail } from '@/lib/queue'
 
 export const runtime = 'nodejs'
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Cria o atendimento
-    await prisma.atendimento.create({
+    const atendimento = await prisma.atendimento.create({
       data: {
         protocolo,
         nomeContato: data.nomeContato,
@@ -70,6 +71,18 @@ export async function POST(req: NextRequest) {
       })
     } catch (err) {
       console.error({ requestId, message: 'Falha ao enfileirar e-mail de protocolo', err })
+    }
+
+    try {
+      await notifyEquipeNovoAtendimento({
+        atendimentoId: atendimento.id,
+        protocolo,
+        nomeContato: data.nomeContato,
+        assunto: data.assunto,
+        mensagem: data.mensagem,
+      })
+    } catch (err) {
+      console.error({ requestId, message: 'Falha ao notificar equipe sobre novo atendimento', err })
     }
 
     const res = NextResponse.json(

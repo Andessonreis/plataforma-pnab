@@ -10,7 +10,7 @@ export const runtime = 'nodejs'
 // ── Schema de validação ─────────────────────────────────────────────────────
 
 const updateRoleSchema = z.object({
-  role: z.enum(['PROPONENTE', 'ATENDIMENTO', 'HABILITADOR', 'AVALIADOR', 'ADMIN']),
+  role: z.enum(['PROPONENTE', 'ATENDIMENTO', 'HABILITADOR', 'AVALIADOR', 'ADMIN', 'SUPER_ADMIN', 'COMUNICACAO']),
 })
 
 // ── PATCH — Alterar perfil de acesso (role) ─────────────────────────────────
@@ -24,7 +24,7 @@ export async function PATCH(
 
   try {
     const session = await auth()
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || session.user.role !== 'SUPER_ADMIN') {
       const res = NextResponse.json(
         { error: 'FORBIDDEN', message: 'Acesso negado.', requestId },
         { status: 403 },

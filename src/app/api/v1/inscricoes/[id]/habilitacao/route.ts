@@ -12,7 +12,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
   const ctx = createContext()
   try {
     const caller = await resolveAuth(req)
-    if (!requireRole(caller, 'ADMIN', 'HABILITADOR')) return forbidden(ctx)
+    if (!requireRole(caller, 'HABILITADOR')) return forbidden(ctx)
     const { id } = await params
     const data = habilitacaoSchema.parse(await req.json())
     await habilitacaoService.updateHabilitacao(id, data, caller.userId, caller.role, getIp(req))

@@ -9,10 +9,12 @@ import { IconMenu, UserAvatar } from '@/components/ui'
 import { NotificationBell } from '@/components/layout'
 import { variaveisDeFonte } from '../fontes'
 
-const ROLES_PERMITIDOS: UserRole[] = ['ADMIN', 'ATENDIMENTO', 'HABILITADOR', 'AVALIADOR']
+const ROLES_PERMITIDOS: UserRole[] = ['ADMIN', 'SUPER_ADMIN', 'COMUNICACAO', 'ATENDIMENTO', 'HABILITADOR', 'AVALIADOR']
 
 const roleLabels: Record<string, string> = {
   ADMIN: 'Administrador',
+  SUPER_ADMIN: 'Super Administrador',
+  COMUNICACAO: 'Comunicação',
   ATENDIMENTO: 'Atendimento',
   HABILITADOR: 'Habilitador',
   AVALIADOR: 'Avaliador',
@@ -37,9 +39,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const avatarUrl = user?.avatarUrl ?? null
 
   // Pendências da fase de habilitação — alimenta o destaque do menu.
-  // ADMIN vê todos os editais; HABILITADOR só os que a equipe dele atende.
+  // SUPER_ADMIN vê todos os editais; HABILITADOR só os que a equipe dele atende.
   const habilitacaoPendentes = await (async () => {
-    if (role === 'ADMIN') {
+    if (role === 'SUPER_ADMIN') {
       return prisma.inscricao.count({
         where: { status: 'ENVIADA', edital: { status: 'HABILITACAO' } },
       })
@@ -60,7 +62,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   // Avaliação em andamento — destaca o menu enquanto houver edital na fase de
   // avaliação; o badge mostra as inscrições ainda não avaliadas por completo.
   const [editaisEmAvaliacao, avaliacaoPendentes] =
-    role === 'ADMIN'
+    role === 'ADMIN' || role === 'SUPER_ADMIN'
       ? await Promise.all([
           prisma.edital.count({ where: { status: 'AVALIACAO' } }),
           prisma.inscricao.count({

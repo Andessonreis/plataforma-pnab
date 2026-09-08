@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default async function AdminRegrasPage() {
   const session = await auth()
-  if (!session || session.user.role !== 'ADMIN') redirect('/')
+  if (!session || !['ADMIN', 'SUPER_ADMIN', 'COMUNICACAO'].includes(session.user.role)) redirect('/')
 
   const rules = await prisma.notificationRule.findMany({
     orderBy: { createdAt: 'desc' },

@@ -53,7 +53,7 @@ describe('GET /api/admin/configuracoes/templates-avaliacao/[id]', () => {
   })
 
   it('template não encontrado → 404', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.evaluationTemplate.findUnique.mockResolvedValue(null as never)
 
     const res = await GET(makeRequest('GET'), ctx())
@@ -61,7 +61,7 @@ describe('GET /api/admin/configuracoes/templates-avaliacao/[id]', () => {
   })
 
   it('ADMIN → 200 com template', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.evaluationTemplate.findUnique.mockResolvedValue(EXISTING_TEMPLATE as never)
 
     const res = await GET(makeRequest('GET'), ctx())
@@ -84,7 +84,7 @@ describe('PUT /api/admin/configuracoes/templates-avaliacao/[id]', () => {
   })
 
   it('template não encontrado → 404', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.evaluationTemplate.findUnique.mockResolvedValue(null as never)
 
     const res = await PUT(makeRequest('PUT', { descricao: 'Nova desc' }), ctx())
@@ -92,7 +92,7 @@ describe('PUT /api/admin/configuracoes/templates-avaliacao/[id]', () => {
   })
 
   it('atualiza template normal → 200', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.evaluationTemplate.findUnique.mockResolvedValue(EXISTING_TEMPLATE as never)
     mockPrisma.evaluationTemplate.findFirst.mockResolvedValue(null as never) // dup check
     mockPrisma.evaluationTemplate.update.mockResolvedValue({
@@ -105,7 +105,7 @@ describe('PUT /api/admin/configuracoes/templates-avaliacao/[id]', () => {
   })
 
   it('isSystem → nome não é alterado', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.evaluationTemplate.findUnique.mockResolvedValue(SYSTEM_TEMPLATE as never)
     mockPrisma.evaluationTemplate.update.mockResolvedValue(SYSTEM_TEMPLATE as never)
 
@@ -117,7 +117,7 @@ describe('PUT /api/admin/configuracoes/templates-avaliacao/[id]', () => {
   })
 
   it('registra audit log', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.evaluationTemplate.findUnique.mockResolvedValue(EXISTING_TEMPLATE as never)
     mockPrisma.evaluationTemplate.findFirst.mockResolvedValue(null as never)
     mockPrisma.evaluationTemplate.update.mockResolvedValue(EXISTING_TEMPLATE as never)
@@ -146,7 +146,7 @@ describe('DELETE /api/admin/configuracoes/templates-avaliacao/[id]', () => {
   })
 
   it('template não encontrado → 404', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.evaluationTemplate.findUnique.mockResolvedValue(null as never)
 
     const res = await DELETE(makeRequest('DELETE'), ctx())
@@ -154,7 +154,7 @@ describe('DELETE /api/admin/configuracoes/templates-avaliacao/[id]', () => {
   })
 
   it('template normal → 200', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.evaluationTemplate.findUnique.mockResolvedValue(EXISTING_TEMPLATE as never)
     mockPrisma.evaluationTemplate.delete.mockResolvedValue(EXISTING_TEMPLATE as never)
 
@@ -163,7 +163,7 @@ describe('DELETE /api/admin/configuracoes/templates-avaliacao/[id]', () => {
   })
 
   it('isSystem → 403', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.evaluationTemplate.findUnique.mockResolvedValue(SYSTEM_TEMPLATE as never)
 
     const res = await DELETE(makeRequest('DELETE'), ctx('t2'))
@@ -173,7 +173,7 @@ describe('DELETE /api/admin/configuracoes/templates-avaliacao/[id]', () => {
   })
 
   it('registra audit log', async () => {
-    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.evaluationTemplate.findUnique.mockResolvedValue(EXISTING_TEMPLATE as never)
     mockPrisma.evaluationTemplate.delete.mockResolvedValue(EXISTING_TEMPLATE as never)
 

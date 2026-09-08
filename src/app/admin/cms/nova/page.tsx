@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default async function NovaCmsPage() {
   const session = await auth()
-  if (!session || session.user.role !== 'ADMIN') redirect('/')
+  if (!session || !['SUPER_ADMIN', 'COMUNICACAO'].includes(session.user.role)) redirect('/')
 
   return (
     <section>

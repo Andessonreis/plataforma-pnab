@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   const ctx = createContext()
   try {
     const caller = await resolveAuth(req)
-    if (!requireRole(caller, 'ADMIN')) return forbidden(ctx)
+    if (!requireRole(caller, 'COMUNICACAO')) return forbidden(ctx)
     const data = noticiaSchema.parse(await req.json())
     const result = await noticiaService.createNoticia(data, caller.userId, getIp(req))
     logRequest(ctx, 'POST', '/api/v1/noticias', 201)

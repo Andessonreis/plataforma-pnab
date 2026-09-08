@@ -9,7 +9,7 @@ const mockPrisma = vi.mocked(prisma)
 const mockAuth = vi.mocked(auth)
 const mockLogAudit = vi.mocked(logAudit)
 
-const adminSession = { user: { id: 'admin-1', role: 'ADMIN' } }
+const adminSession = { user: { id: 'admin-1', role: 'SUPER_ADMIN' } }
 
 function makeRequest(id: string, body: Record<string, unknown>) {
   const req = new NextRequest(`http://localhost:3000/api/admin/users/${id}`, {

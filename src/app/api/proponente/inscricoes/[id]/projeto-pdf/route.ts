@@ -60,7 +60,7 @@ export async function GET(
 
     // Apenas o proponente dono ou ADMIN pode baixar
     const isOwner = inscricao.proponente.id === session.user.id
-    const isAdmin = session.user.role === 'ADMIN'
+    const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)
     if (!isOwner && !isAdmin) {
       return NextResponse.json(
         { error: 'FORBIDDEN', message: 'Acesso negado.', requestId },

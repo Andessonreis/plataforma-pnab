@@ -43,6 +43,11 @@ import {
   type NotificacaoPrazoData,
 } from './notificacao-prazo'
 import {
+  NovoAtendimento,
+  novoAtendimentoSubject,
+  type NovoAtendimentoData,
+} from './novo-atendimento'
+import {
   ProtocoloAtendimento,
   protocoloAtendimentoSubject,
   type ProtocoloAtendimentoData,
@@ -85,6 +90,7 @@ export type EmailTemplate =
   | 'resultado_final'
   | 'protocolo_atendimento'
   | 'atendimento_respondido'
+  | 'novo_atendimento'
   | 'notificacao_prazo'
   | 'recuperacao_senha'
   | 'recurso_submetido'
@@ -102,6 +108,7 @@ export interface TemplateDataMap {
   resultado_final: ResultadoFinalData
   protocolo_atendimento: ProtocoloAtendimentoData
   atendimento_respondido: AtendimentoRespondidoData
+  novo_atendimento: NovoAtendimentoData
   notificacao_prazo: NotificacaoPrazoData
   recuperacao_senha: RecuperacaoSenhaData
   recurso_submetido: RecursoSubmetidoData
@@ -144,6 +151,10 @@ export const templateRegistry: Registry = {
   atendimento_respondido: {
     Component: AtendimentoRespondido,
     defaultSubject: atendimentoRespondidoSubject,
+  },
+  novo_atendimento: {
+    Component: NovoAtendimento,
+    defaultSubject: novoAtendimentoSubject,
   },
   notificacao_prazo: {
     Component: NotificacaoPrazo,

@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
   const ctx = createContext()
   try {
     const caller = await resolveAuth(req)
-    if (!requireRole(caller, 'ADMIN')) return forbidden(ctx)
+    if (!requireRole(caller, 'COMUNICACAO')) return forbidden(ctx)
     const data = cmsPageSchema.parse(await req.json())
     const result = await cmsService.createCmsPage(data, caller.userId, getIp(req))
     logRequest(ctx, 'POST', '/api/v1/cms', 201)

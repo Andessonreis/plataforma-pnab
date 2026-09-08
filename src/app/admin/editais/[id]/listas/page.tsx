@@ -38,7 +38,7 @@ const STATUS_ORDER: InscricaoStatus[] = [
 
 export default async function ListasEditalPage({ params }: Props) {
   const session = await auth()
-  if (!session || session.user.role !== 'ADMIN') redirect('/')
+  if (!session || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) redirect('/')
 
   const { id } = await params
   const edital = await prisma.edital.findUnique({
