@@ -20,6 +20,7 @@ export const AUDIT_ACTIONS = {
   INSCRICAO_ENVIADA: 'INSCRICAO_ENVIADA',
   INSCRICAO_RETIRADA: 'INSCRICAO_RETIRADA',
   ANEXO_ENVIADO: 'ANEXO_ENVIADO',
+  ANEXO_ADICIONADO_PELA_EQUIPE: 'ANEXO_ADICIONADO_PELA_EQUIPE',
 
   // Admin — editais
   EDITAL_CRIADO: 'EDITAL_CRIADO',
@@ -123,6 +124,7 @@ export const ACTION_LABELS: Record<string, string> = {
   INSCRICAO_ENVIADA: 'Inscrição enviada',
   INSCRICAO_RETIRADA: 'Inscrição retirada para edição',
   ANEXO_ENVIADO: 'Anexo enviado',
+  ANEXO_ADICIONADO_PELA_EQUIPE: 'Documento juntado pela Secretaria',
   EDITAL_CRIADO: 'Edital criado',
   EDITAL_ATUALIZADO: 'Edital atualizado',
   EDITAL_PUBLICADO: 'Edital publicado',

@@ -139,6 +139,7 @@ model User {
   notificationCampaigns NotificationCampaign[] @relation("CampaignCreatedBy")
   notificationRules     NotificationRule[]     @relation("RuleCreatedBy")
   emailTemplateEdits    EmailTemplateOverride[] @relation("EmailTemplateUpdatedBy")
+  anexosAdicionados     AnexoInscricao[]        @relation("AnexosAdicionadosPelaEquipe")
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -372,7 +373,18 @@ model AnexoInscricao {
   observacao  String?
   createdAt   DateTime @default(now())
 
-  inscricao Inscricao @relation(fields: [inscricaoId], references: [id], onDelete: Cascade)
+  // Documento juntado pela Secretaria em nome do proponente — acontece quando o
+  // edital já está rodando (inscrição travada) e uma retificação passa a exigir
+  // documento novo, recebido por e-mail. Nulo = enviado pelo próprio proponente.
+  adicionadoPorId String?
+  // Justificativa da origem, exibida junto do documento (ex.: "recebido por
+  // e-mail conforme Retificação nº 02").
+  origemNota String?
+
+  inscricao     Inscricao @relation(fields: [inscricaoId], references: [id], onDelete: Cascade)
+  adicionadoPor User?     @relation("AnexosAdicionadosPelaEquipe", fields: [adicionadoPorId], references: [id])
+
+  @@index([adicionadoPorId])
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

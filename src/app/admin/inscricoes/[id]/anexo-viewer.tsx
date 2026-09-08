@@ -9,6 +9,9 @@ interface Anexo {
   titulo: string
   valido: boolean | null
   observacao: string | null
+  /** Preenchido quando foi a equipe que juntou o documento, não o proponente. */
+  adicionadoPor?: { nome: string } | null
+  origemNota?: string | null
 }
 
 /** Tipo de documento previsto no edital que o proponente não enviou. */
@@ -97,6 +100,13 @@ export function AnexoViewer({ inscricaoId, anexos, pendentes = [] }: AnexoViewer
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-slate-900 truncate">{anexo.titulo}</p>
               <p className="text-xs text-slate-500">{anexo.tipo}</p>
+              {anexo.adicionadoPor && (
+                <p className="text-[11px] text-brand-700 mt-0.5">
+                  Juntado pela Secretaria
+                  {anexo.adicionadoPor.nome ? ` por ${anexo.adicionadoPor.nome}` : ''}
+                  {anexo.origemNota ? ` — ${anexo.origemNota}` : ''}
+                </p>
+              )}
             </div>
             {anexo.valido !== null && (
               <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${

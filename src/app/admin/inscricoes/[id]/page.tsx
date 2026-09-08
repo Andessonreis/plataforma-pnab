@@ -16,6 +16,7 @@ import { RecursoDecision } from './recurso-decision'
 import { RecursoRespostaAvaliador } from './recurso-resposta-avaliador'
 import { RecursoAnexos } from '@/components/recurso/recurso-anexos'
 import { AnexoViewer } from './anexo-viewer'
+import { JuntarDocumento } from './juntar-documento'
 import { DistribuicaoAvaliadores } from './distribuicao-avaliadores'
 import { AvaliacoesComparativo } from './avaliacoes-comparativo'
 import { DadosInscricaoView } from '@/components/inscricao/dados-inscricao-view'
@@ -60,7 +61,7 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
       proponente: {
         select: { nome: true, cpfCnpj: true, email: true, telefone: true, tipoProponente: true },
       },
-      anexos: true,
+      anexos: { include: { adicionadoPor: { select: { nome: true } } } },
       avaliacoes: {
         include: { avaliador: { select: { nome: true } } },
         orderBy: { createdAt: 'asc' },
@@ -168,6 +169,12 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
           (s) => normalizarTitulo(a.tipo).includes(s) || normalizarTitulo(a.titulo).includes(s),
         ),
       )
+  // Tipos de documento previstos no edital — alimentam o seletor de "juntar
+  // documento" e a lista de pendentes.
+  const tiposAnexoEdital = (Array.isArray(inscricao.edital.tiposAnexo)
+    ? inscricao.edital.tiposAnexo
+    : []) as unknown as { tipo: string; label: string }[]
+
   // Documentos previstos no edital que não vieram — listados como "Não informado".
   const anexosPendentes = calcularAnexosPendentes(inscricao.edital.tiposAnexo, inscricao.anexos)
     .filter((p) => podeVerConteudoSensivel || !ETAPAS_CONTEUDO_SENSIVEL.some(
@@ -220,6 +227,8 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
                           titulo: a.titulo,
                           valido: a.valido,
                           observacao: a.observacao,
+                          adicionadoPor: a.adicionadoPor,
+                          origemNota: a.origemNota,
                         }))}
                         pendentes={anexosPendentes}
                       />
@@ -448,6 +457,14 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
                 </p>
               )}
             </Card>
+          )}
+
+          {/* Documento recebido por fora do sistema (e-mail, presencial) — só ADMIN junta */}
+          {isAdmin && (
+            <JuntarDocumento
+              inscricaoId={inscricao.id}
+              tiposDisponiveis={tiposAnexoEdital}
+            />
           )}
 
           {/* Distribuição de avaliadores — ADMIN, somente leitura (atribuição não ocorre nesta tela) */}
