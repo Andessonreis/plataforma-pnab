@@ -7,7 +7,7 @@ import type { UserRole, AtendimentoStatus } from '@prisma/client'
 
 export const runtime = 'nodejs'
 
-const ROLES_PERMITIDOS: UserRole[] = ['ADMIN', 'ATENDIMENTO']
+const ROLES_PERMITIDOS: UserRole[] = ['ADMIN', 'SUPER_ADMIN', 'ATENDIMENTO']
 
 const querySchema = z.object({
   page:   z.coerce.number().int().min(1).default(1),

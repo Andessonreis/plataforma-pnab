@@ -50,7 +50,7 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
   const backLabel = voltouDaAvaliacao ? 'Voltar para avaliação' : voltouDoEdital ? 'Voltar para o edital' : 'Voltar'
   const userRole = session.user.role
   const isAvaliador = userRole === 'AVALIADOR'
-  const isAdmin = userRole === 'ADMIN'
+  const isAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN'
 
   const inscricao = await prisma.inscricao.findUnique({
     where: { id },

@@ -6,7 +6,7 @@ import { getSignedUrl } from '@/lib/storage'
 
 export const runtime = 'nodejs'
 
-const INTERNAL_ROLES = ['ADMIN', 'HABILITADOR', 'AVALIADOR', 'ATENDIMENTO']
+const INTERNAL_ROLES = ['ADMIN', 'SUPER_ADMIN', 'HABILITADOR', 'AVALIADOR', 'ATENDIMENTO']
 
 // GET — Signed URL para um anexo do recurso (bucket 'propostas' é privado)
 export async function GET(

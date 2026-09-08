@@ -31,7 +31,7 @@ export async function notifyEquipeInscricaoEncerrada(
       select: { id: true, titulo: true, ano: true },
     }),
     prisma.user.findMany({
-      where: { role: 'ADMIN', ativo: true },
+      where: { role: { in: ['ADMIN', 'SUPER_ADMIN'] }, ativo: true },
       select: { id: true, nome: true, email: true },
     }),
     gerarRelatorioPdfs({ status: 'ENVIADA', editalId }),

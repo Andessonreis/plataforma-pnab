@@ -9,7 +9,7 @@ import { enqueueEmail } from '@/lib/queue'
 
 export const runtime = 'nodejs'
 
-const ROLES_PERMITIDOS: UserRole[] = ['ADMIN', 'ATENDIMENTO']
+const ROLES_PERMITIDOS: UserRole[] = ['ADMIN', 'SUPER_ADMIN', 'ATENDIMENTO']
 
 const patchSchema = z.object({
   status: z.enum(['ABERTO', 'EM_ATENDIMENTO', 'FECHADO']).optional(),

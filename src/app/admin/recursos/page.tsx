@@ -59,7 +59,7 @@ function statusInfo(
 
 export default async function AdminRecursosPage({ searchParams }: Props) {
   const session = await auth()
-  if (!session || !['ADMIN', 'HABILITADOR'].includes(session.user.role)) notFound()
+  if (!session || !['ADMIN', 'HABILITADOR', 'SUPER_ADMIN'].includes(session.user.role)) notFound()
 
   const params = await searchParams
   const page = Math.max(1, Number(params.page) || 1)

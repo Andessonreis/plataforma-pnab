@@ -27,7 +27,7 @@ export async function notifyEquipeHabilitacaoAberta(
       select: { id: true, titulo: true, ano: true },
     }),
     prisma.user.findMany({
-      where: { role: 'ADMIN', ativo: true },
+      where: { role: { in: ['ADMIN', 'SUPER_ADMIN'] }, ativo: true },
       select: { nome: true, email: true },
     }),
     prisma.inscricao.count({

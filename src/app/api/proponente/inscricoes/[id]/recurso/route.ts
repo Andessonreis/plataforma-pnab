@@ -65,7 +65,7 @@ export async function GET(
 
     // Apenas o dono ou admin/habilitador
     const isOwner = inscricao.proponenteId === session.user.id
-    const isStaff = ['ADMIN', 'HABILITADOR'].includes(session.user.role)
+    const isStaff = ['ADMIN', 'HABILITADOR', 'SUPER_ADMIN'].includes(session.user.role)
     if (!isOwner && !isStaff) {
       return NextResponse.json(
         { error: 'FORBIDDEN', message: 'Acesso negado.', requestId },

@@ -22,7 +22,7 @@ export async function POST(
 
   try {
     const session = await auth()
-    if (!session || session.user.role !== 'AVALIADOR') {
+    if (!session || !['AVALIADOR', 'SUPER_ADMIN'].includes(session.user.role)) {
       return NextResponse.json(
         { error: 'FORBIDDEN', message: 'Acesso negado.', requestId },
         { status: 403 },

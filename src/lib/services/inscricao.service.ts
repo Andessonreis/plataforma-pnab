@@ -343,7 +343,7 @@ export async function getInscricaoById(id: string, callerId: string, callerRole:
   if (!inscricao) throw new ServiceError('NOT_FOUND', 'Inscrição não encontrada.')
 
   const isOwner = inscricao.proponenteId === callerId
-  const isAdmin = callerRole === 'ADMIN'
+  const isAdmin = callerRole === 'ADMIN' || callerRole === 'SUPER_ADMIN'
   if (!isOwner && !isAdmin) throw new ServiceError('FORBIDDEN', 'Acesso negado.')
 
   return inscricao

@@ -68,7 +68,7 @@ export default async function ExportPage({ searchParams }: Props) {
         _count: { _all: true },
       }),
       prisma.user.findMany({
-        where: { role: 'ADMIN', ativo: true },
+        where: { role: { in: ['ADMIN', 'SUPER_ADMIN'] }, ativo: true },
         select: { id: true, nome: true, email: true },
         orderBy: { nome: 'asc' },
       }),

@@ -22,7 +22,7 @@ export async function PATCH(
 
   try {
     const session = await auth()
-    if (!session || !['ADMIN', 'HABILITADOR'].includes(session.user.role)) {
+    if (!session || !['ADMIN', 'HABILITADOR', 'SUPER_ADMIN'].includes(session.user.role)) {
       return NextResponse.json(
         { error: 'FORBIDDEN', message: 'Acesso negado.', requestId },
         { status: 403 },
