@@ -175,6 +175,25 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
     ? inscricao.edital.tiposAnexo
     : []) as unknown as { tipo: string; label: string }[]
 
+  // Catálogo global de tipos, pra quem junta documento não precisar digitar
+  // identificador (erro de ortografia ali gera anexo que não casa com o que o
+  // edital espera). Lido direto aqui: a API do catálogo é exclusiva de
+  // SUPER_ADMIN e o ADMIN também precisa da lista pra escolher.
+  const catalogoTipos = isAdmin
+    ? await prisma.attachmentType.findMany({
+        select: { tipo: true, label: true, tag: true },
+        orderBy: [{ tag: 'asc' }, { label: 'asc' }],
+      })
+    : []
+
+  const tiposJuntarDocumento = [
+    ...tiposAnexoEdital.map((t) => ({ tipo: t.tipo, label: t.label })),
+    ...catalogoTipos
+      .filter((c) => !tiposAnexoEdital.some((t) => t.tipo === c.tipo))
+      .map((c) => ({ tipo: c.tipo, label: c.label, grupo: c.tag })),
+  ]
+  const gruposCatalogo = [...new Set(catalogoTipos.map((c) => c.tag))]
+
   // Documentos previstos no edital que não vieram — listados como "Não informado".
   const anexosPendentes = calcularAnexosPendentes(inscricao.edital.tiposAnexo, inscricao.anexos)
     .filter((p) => podeVerConteudoSensivel || !ETAPAS_CONTEUDO_SENSIVEL.some(
@@ -463,7 +482,9 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
           {isAdmin && (
             <JuntarDocumento
               inscricaoId={inscricao.id}
-              tiposDisponiveis={tiposAnexoEdital}
+              tipos={tiposJuntarDocumento}
+              grupos={gruposCatalogo}
+              podeCriarTipo={userRole === 'SUPER_ADMIN'}
             />
           )}
 

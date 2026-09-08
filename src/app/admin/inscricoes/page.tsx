@@ -10,6 +10,7 @@ import { StatusTabs } from './_components/status-tabs'
 import { FiltrosInscricoes } from './_components/filtros'
 import { ListaMobile } from './_components/lista-mobile'
 import { TabelaDesktop } from './_components/tabela-desktop'
+import { InscricoesEditalPicker, type EditalInscricoesCard } from './_components/edital-picker'
 import type { UserRole } from '@prisma/client'
 
 export const metadata: Metadata = {
@@ -45,6 +46,59 @@ export default async function AdminInscricoesPage({ searchParams }: Props) {
   const isAvaliador = role === 'AVALIADOR'
   const isHabilitador = role === 'HABILITADOR'
 
+  // Sem edital escolhido, a lista misturaria processos de editais diferentes —
+  // ilegível com dezenas deles no ar. Então a entrada da tela é a seleção do
+  // edital, como já acontece na habilitação. Busca global escapa disso (quem
+  // procura um CPF não sabe de qual edital ele é), e o avaliador também: o
+  // escopo dele já é estreito por atribuição.
+  const mostrarSelecaoEdital = !editalIdFilter && !searchQuery && !isAvaliador
+
+  if (mostrarSelecaoEdital) {
+    const whereEscopo = await buildInscricoesWhere(session.user.id, role, {})
+
+    const [porEditalStatus, editaisDisponiveis] = await Promise.all([
+      prisma.inscricao.groupBy({
+        by: ['editalId', 'status'],
+        where: whereEscopo,
+        _count: { _all: true },
+      }),
+      prisma.edital.findMany({
+        where: { status: { not: 'RASCUNHO' } },
+        select: { id: true, titulo: true, ano: true, status: true },
+        orderBy: [{ ano: 'desc' }, { createdAt: 'desc' }],
+      }),
+    ])
+
+    const EM_ANDAMENTO: string[] = [
+      'HABILITADA', 'EM_AVALIACAO', 'RESULTADO_PRELIMINAR', 'RECURSO_ABERTO',
+      'RESULTADO_FINAL', 'CONTEMPLADA', 'NAO_CONTEMPLADA', 'SUPLENTE',
+    ]
+
+    const cards: EditalInscricoesCard[] = editaisDisponiveis
+      .map((edital) => {
+        const linhas = porEditalStatus.filter((g) => g.editalId === edital.id)
+        const somar = (statuses: string[]) =>
+          linhas
+            .filter((l) => statuses.includes(l.status))
+            .reduce((acc, l) => acc + l._count._all, 0)
+
+        return {
+          id: edital.id,
+          titulo: edital.titulo,
+          ano: edital.ano,
+          status: edital.status,
+          rascunhos: somar(['RASCUNHO']),
+          enviadas: somar(['ENVIADA']),
+          emAndamento: somar(EM_ANDAMENTO) + somar(['INABILITADA']),
+        }
+      })
+      // Edital sem nenhuma inscrição visível pra esse papel não ajuda em nada na
+      // seleção — só ocuparia espaço.
+      .filter((c) => c.rascunhos + c.enviadas + c.emAndamento > 0)
+
+    return <InscricoesEditalPicker editais={cards} />
+  }
+
   const where = await buildInscricoesWhere(session.user.id, role, {
     statusFilter, editalIdFilter, areaFilter, searchQuery,
   })
@@ -53,6 +107,10 @@ export default async function AdminInscricoesPage({ searchParams }: Props) {
   // visíveis pro usuário, mesmo quando uma área já está selecionada.
   const whereSemArea: Record<string, unknown> = { ...where }
   delete whereSemArea.categoria
+
+  const editalSelecionado = editalIdFilter
+    ? await prisma.edital.findUnique({ where: { id: editalIdFilter }, select: { titulo: true, ano: true } })
+    : null
 
   const [inscricoes, total, editais, agrupadoPorArea] = await Promise.all([
     prisma.inscricao.findMany({
@@ -113,7 +171,7 @@ export default async function AdminInscricoesPage({ searchParams }: Props) {
   return (
     <section>
       <FadeIn>
-        <CabecalhoInscricoes isAvaliador={isAvaliador} total={total} avisoNaoAtribuido={aviso === 'nao-atribuido'} />
+        <CabecalhoInscricoes isAvaliador={isAvaliador} total={total} avisoNaoAtribuido={aviso === 'nao-atribuido'} edital={editalSelecionado} />
       </FadeIn>
 
       <StatusTabs activeStatus={statusFilter} outrosParams={outrosParams} ocultarRascunho={isHabilitador} />

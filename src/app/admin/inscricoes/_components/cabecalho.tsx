@@ -1,21 +1,38 @@
-import { Button, IconExport } from '@/components/ui'
+import Link from 'next/link'
+import { Button, IconExport, IconArrowLeft } from '@/components/ui'
 
 interface CabecalhoInscricoesProps {
   isAvaliador: boolean
   total: number
   avisoNaoAtribuido: boolean
+  /** Edital selecionado — quando presente, o título vira o do edital. */
+  edital?: { titulo: string; ano: number } | null
 }
 
-export function CabecalhoInscricoes({ isAvaliador, total, avisoNaoAtribuido }: CabecalhoInscricoesProps) {
+export function CabecalhoInscricoes({ isAvaliador, total, avisoNaoAtribuido, edital }: CabecalhoInscricoesProps) {
   return (
     <>
+      {edital && (
+        <Link
+          href="/admin/inscricoes"
+          className="inline-flex items-center gap-1.5 text-sm text-slate-600 hover:text-slate-900 font-medium mb-3"
+        >
+          <IconArrowLeft className="h-4 w-4" />
+          Todos os editais
+        </Link>
+      )}
+
       <div className="flex items-center justify-between gap-3 mb-4 sm:mb-6">
         <div className="min-w-0">
           <h1 className="text-xl sm:text-2xl font-bold text-tinta-950">
-            {isAvaliador ? 'Minhas Avaliações' : 'Inscrições'}
+            {isAvaliador ? 'Minhas Avaliações' : edital ? edital.titulo : 'Inscrições'}
           </h1>
           <p className="text-xs sm:text-sm text-tinta-700/60 mt-0.5 sm:mt-1">
-            {isAvaliador ? `${total} inscrição(ões) atribuída(s) a você` : `${total} inscrição(ões)`}
+            {isAvaliador
+              ? `${total} inscrição(ões) atribuída(s) a você`
+              : edital
+                ? `Edição ${edital.ano} · ${total} inscrição(ões)`
+                : `${total} inscrição(ões)`}
           </p>
         </div>
         {!isAvaliador && (
