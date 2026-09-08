@@ -361,6 +361,11 @@ model Inscricao {
   avaliacoes     Avaliacao[]
   recursos       Recurso[]
   projetoApoiado ProjetoApoiado?
+  // Momento em que o resultado da habilitação foi liberado para este
+  // proponente. Nulo = conferência ainda interna: o painel dele mostra
+  // "Em análise" e nenhum e-mail de resultado é enviado. Não se usa o
+  // cronograma para isso porque suas datas mudam com frequência.
+  resultadoLiberadoEm DateTime?
 }
 
 model AnexoInscricao {

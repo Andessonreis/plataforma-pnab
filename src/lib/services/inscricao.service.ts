@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db'
+import { statusVisivelParaProponente } from '@/lib/edital/resultado-habilitacao'
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
 import { enqueueEmail } from '@/lib/queue'
 import { Prisma } from '@prisma/client'
@@ -346,6 +347,15 @@ export async function getInscricaoById(id: string, callerId: string, callerRole:
   const isAdmin = callerRole === 'ADMIN' || callerRole === 'SUPER_ADMIN'
   if (!isOwner && !isAdmin) throw new ServiceError('FORBIDDEN', 'Acesso negado.')
 
+  // Pro dono da inscrição, o resultado da habilitação só aparece depois de
+  // liberado. A equipe continua vendo o status real — é o trabalho dela.
+  if (!isAdmin) {
+    return {
+      ...inscricao,
+      status: statusVisivelParaProponente(inscricao.status, inscricao.resultadoLiberadoEm !== null),
+    }
+  }
+
   return inscricao
 }
 
@@ -365,7 +375,14 @@ export async function listInscricoesByProponente(userId: string, page: number, p
     prisma.inscricao.count({ where }),
   ])
 
-  return { data, meta: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } }
+  // Resultado de habilitação não liberado não sai daqui: a API é a fronteira
+  // real, mascarar só na tela deixaria o dado exposto a quem chamasse direto.
+  const visiveis = data.map((i) => ({
+    ...i,
+    status: statusVisivelParaProponente(i.status, i.resultadoLiberadoEm !== null),
+  }))
+
+  return { data: visiveis, meta: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } }
 }
 
 export async function listInscricoesAdmin(page: number, pageSize: number, editalId?: string, status?: string) {

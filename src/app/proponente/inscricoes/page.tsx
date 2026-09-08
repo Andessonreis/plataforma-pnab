@@ -1,8 +1,5 @@
 import type { Metadata } from 'next'
-import {
-  resultadoHabilitacaoPublicado,
-  statusVisivelParaProponente,
-} from '@/lib/edital/resultado-habilitacao'
+import { statusVisivelParaProponente } from '@/lib/edital/resultado-habilitacao'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
@@ -48,7 +45,8 @@ export default async function MinhasInscricoesPage({ searchParams }: Props) {
         categoria: true,
         status: true,
         submittedAt: true,
-        edital: { select: { titulo: true, status: true, cronograma: true } },
+        resultadoLiberadoEm: true,
+        edital: { select: { titulo: true } },
       },
     }),
     prisma.inscricao.count({ where }),
@@ -64,10 +62,7 @@ export default async function MinhasInscricoesPage({ searchParams }: Props) {
   // "Enviada" até o resultado sair no Diário Oficial.
   const inscricoesVisiveis = inscricoes.map((i) => ({
     ...i,
-    status: statusVisivelParaProponente(
-      i.status,
-      resultadoHabilitacaoPublicado(i.edital.cronograma, i.edital.status),
-    ),
+    status: statusVisivelParaProponente(i.status, i.resultadoLiberadoEm !== null),
   }))
 
   const totalPages = Math.ceil(totalFiltrado / pageSize)
