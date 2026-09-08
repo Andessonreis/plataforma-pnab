@@ -11,6 +11,9 @@ jobs:
   deploy:
     name: Deploy na VPS (Produção)
     runs-on: ubuntu-latest
+    # Token efêmero do próprio job — é com ele que a VPS busca o código.
+    permissions:
+      contents: read
     # Só roda se o CI da branch main terminou com sucesso (ou se for disparo manual)
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
 
@@ -21,17 +24,16 @@ jobs:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
           fetch-depth: 0
 
-      # A VPS não tem acesso ao repo privado — ela clona do mirror público
-      # Andessonreis/plataforma-pnab. Sem sincronizar aqui, o deploy abaixo
-      # roda "git merge --ff-only" contra um fork desatualizado e não pega
-      # os commits recém-mergeados.
-      - name: Sincroniza fork público (a VPS clona de lá, não do repo privado)
+      # Espelho público — mantido por conveniência (link compartilhável,
+      # histórico visível fora da org). O deploy NÃO depende mais dele: a VPS
+      # busca direto do repo privado com o token efêmero do job.
+      - name: Sincroniza espelho público (opcional)
         continue-on-error: true
         env:
           FORK_PUSH_TOKEN: ${{ secrets.FORK_PUSH_TOKEN }}
         run: |
           if [ -z "$FORK_PUSH_TOKEN" ]; then
-            echo "::warning::FORK_PUSH_TOKEN não configurado — pulando sync do fork. Configure o secret pra automatizar de vez."
+            echo "::notice::FORK_PUSH_TOKEN não configurado — espelho público não sincronizado automaticamente (não afeta o deploy)."
             exit 0
           fi
           git remote add fork "https://Andessonreis:${FORK_PUSH_TOKEN}@github.com/Andessonreis/plataforma-pnab.git"
@@ -39,35 +41,32 @@ jobs:
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          ESPERADO: ${{ github.event.workflow_run.head_sha || github.sha }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: 22
           command_timeout: 20m
+          # Token do próprio job: vale só enquanto ele roda e some depois.
+          # É o que dispensa guardar credencial de longa duração na VPS.
+          envs: GH_TOKEN,GH_REPO,ESPERADO
           script: |
             set -euo pipefail
             cd "${{ secrets.VPS_APP_DIR }}"
 
-            ESPERADO="${{ github.event.workflow_run.head_sha || github.sha }}"
+            # Busca direto do repositório principal usando o token efêmero do
+            # job. Antes a VPS puxava do espelho público, que precisava ser
+            # sincronizado à mão a cada merge: quando o deploy corria antes
+            # disso, ele republicava a versão anterior sem reclamar. A URL com
+            # token fica só neste comando — não é gravada no .git/config.
+            git fetch --quiet "https://x-access-token:${GH_TOKEN}@github.com/${GH_REPO}.git" main
 
-            # A VPS clona do fork público. Se o sync do fork ainda não chegou,
-            # o fetch abaixo traz código velho e o deploy terminaria "com
-            # sucesso" servindo a versão anterior — o modo de falha mais caro
-            # que esse pipeline já teve. Então: espera o commit aparecer e
-            # falha alto se ele não vier.
-            for tentativa in $(seq 1 12); do
-              git fetch origin main --quiet
-              if git cat-file -e "${ESPERADO}^{commit}" 2>/dev/null \
-                 && git merge-base --is-ancestor "$ESPERADO" origin/main; then
-                break
-              fi
-              echo "Commit $ESPERADO ainda não está no fork público (tentativa $tentativa/12) — aguardando 15s..."
-              sleep 15
-            done
-
-            if ! git merge-base --is-ancestor "$ESPERADO" origin/main 2>/dev/null; then
-              echo "::error::O fork público não tem o commit $ESPERADO. Rode 'git push andessonreis main' e redispare este deploy. (Configure o secret FORK_PUSH_TOKEN para isso ser automático.)"
+            if ! git merge-base --is-ancestor "$ESPERADO" FETCH_HEAD 2>/dev/null; then
+              echo "::error::O commit $ESPERADO não está no main do repositório. Deploy abortado."
               exit 1
             fi
 
@@ -75,7 +74,7 @@ jobs:
             # bloquear fast-forward (logs, arquivos deixados por execuções manuais),
             # preservando .env, backups/ e .next/. Depois exige merge fast-forward.
             git clean -fd -e .env -e 'backups/' -e '.next/' -e '*.log'
-            git merge --ff-only origin/main
+            git merge --ff-only FETCH_HEAD
 
             # Confirma que o código no disco contém o commit validado pelo CI.
             # (Pode estar à frente, se outro merge entrou no meio — isso é ok.)
