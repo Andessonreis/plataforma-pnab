@@ -1,4 +1,8 @@
 import type { Metadata } from 'next'
+import {
+  resultadoHabilitacaoPublicado,
+  statusVisivelParaProponente,
+} from '@/lib/edital/resultado-habilitacao'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
@@ -44,7 +48,7 @@ export default async function MinhasInscricoesPage({ searchParams }: Props) {
         categoria: true,
         status: true,
         submittedAt: true,
-        edital: { select: { titulo: true } },
+        edital: { select: { titulo: true, status: true, cronograma: true } },
       },
     }),
     prisma.inscricao.count({ where }),
@@ -55,6 +59,16 @@ export default async function MinhasInscricoesPage({ searchParams }: Props) {
       _count: { _all: true },
     }),
   ])
+
+  // Habilitação não publicada não aparece pro proponente: a inscrição segue
+  // "Enviada" até o resultado sair no Diário Oficial.
+  const inscricoesVisiveis = inscricoes.map((i) => ({
+    ...i,
+    status: statusVisivelParaProponente(
+      i.status,
+      resultadoHabilitacaoPublicado(i.edital.cronograma, i.edital.status),
+    ),
+  }))
 
   const totalPages = Math.ceil(totalFiltrado / pageSize)
   const contagemPorStatus = new Map(contagemBruta.map((c) => [c.status, c._count._all]))
@@ -84,7 +98,7 @@ export default async function MinhasInscricoesPage({ searchParams }: Props) {
         </div>
       )}
 
-      {inscricoes.length === 0 ? (
+      {inscricoesVisiveis.length === 0 ? (
         <Card>
           <EmptyState
             icon={<IconClipboard className="h-8 w-8 text-slate-500" />}

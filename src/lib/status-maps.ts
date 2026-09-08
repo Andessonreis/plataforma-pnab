@@ -17,6 +17,18 @@ export const inscricaoStatusLabel: Record<InscricaoStatus, string> = {
   SUPLENTE: 'Suplente',
 }
 
+/**
+ * Rótulos como o proponente vê.
+ *
+ * Pra quem se inscreveu, "Enviada" e "em análise" são o mesmo momento — e é
+ * esse o rótulo que a inscrição mantém enquanto o resultado da habilitação
+ * não é publicado, já que o status real fica mascarado até lá.
+ */
+export const inscricaoStatusLabelProponente: Record<InscricaoStatus, string> = {
+  ...inscricaoStatusLabel,
+  ENVIADA: 'Em análise',
+}
+
 export const inscricaoStatusVariant: Record<InscricaoStatus, BadgeVariant> = {
   RASCUNHO: 'neutral',
   ENVIADA: 'info',

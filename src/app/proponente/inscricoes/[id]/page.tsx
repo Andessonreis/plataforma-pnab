@@ -12,6 +12,10 @@ import type { InscricaoStatus } from '@prisma/client'
 import { SubmissionSuccessBanner } from './submission-success-banner'
 import { InscricaoHeader } from './inscricao-header'
 import { StatusTimeline } from './status-timeline'
+import {
+  resultadoHabilitacaoPublicado,
+  statusVisivelParaProponente,
+} from '@/lib/edital/resultado-habilitacao'
 import { InformacoesGeraisCard } from './informacoes-gerais-card'
 import { AnexosCard } from './anexos-card'
 import { MotivoInabilitacaoCard } from './motivo-inabilitacao-card'
@@ -113,7 +117,17 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
   const etapasCustomizadas = (Array.isArray(inscricao.edital.etapasCustomizadas)
     ? inscricao.edital.etapasCustomizadas : []) as unknown as EtapaCustomizada[]
 
-  const status = inscricao.status as InscricaoStatus
+  // Habilitação só existe pro proponente depois de publicada no Diário
+  // Oficial. Antes disso a inscrição segue "Enviada" pra ele, sem status
+  // real, sem motivo de inabilitação e sem abrir prazo de recurso.
+  const habilitacaoPublicada = resultadoHabilitacaoPublicado(
+    inscricao.edital.cronograma,
+    inscricao.edital.status,
+  )
+  const status = statusVisivelParaProponente(
+    inscricao.status as InscricaoStatus,
+    habilitacaoPublicada,
+  ) as InscricaoStatus
   const resultadoVisivel = RESULTADO_VISIVEL.includes(inscricao.edital.status)
   const retificacaoAtual = retificacaoVigente(inscricao.edital.retificacoes)
   const mostrarSucesso = enviada === 'true' && status === 'ENVIADA'
@@ -166,7 +180,9 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
           </div>
 
           <AnexosCard anexos={inscricao.anexos} />
-          <MotivoInabilitacaoCard motivo={inscricao.motivoInabilitacao} />
+          {habilitacaoPublicada && (
+            <MotivoInabilitacaoCard motivo={inscricao.motivoInabilitacao} />
+          )}
         </div>
 
         {/* Coluna lateral fina — um único painel de status/metadados dividido

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Badge, IconChevronLeft } from '@/components/ui'
-import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
+import { inscricaoStatusLabelProponente as inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
 import { TourButton } from '../../tour-button'
 import { PASSOS_DETALHE_INSCRICAO } from './detalhe-tour-steps'
 import type { InscricaoStatus } from '@prisma/client'

@@ -1,5 +1,5 @@
 import { Card, IconCheckSimple } from '@/components/ui'
-import { inscricaoStatusLabel } from '@/lib/status-maps'
+import { inscricaoStatusLabelProponente as inscricaoStatusLabel } from '@/lib/status-maps'
 import type { InscricaoStatus } from '@prisma/client'
 
 interface Props {

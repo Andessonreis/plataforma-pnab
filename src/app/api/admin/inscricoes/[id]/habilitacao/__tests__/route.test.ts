@@ -154,21 +154,16 @@ describe('PUT /api/admin/inscricoes/[id]/habilitacao', () => {
     })
   })
 
-  it('email de habilitação enfileirado (GAP 3)', async () => {
+  // Marcar habilitada é conferência interna: o resultado só existe pro agente
+  // cultural quando sai no Diário Oficial, e o e-mail parte de um comando da
+  // Secretaria. Avisar aqui já vazou resultado antes da publicação uma vez.
+  it('não avisa o proponente ao marcar o resultado', async () => {
     mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
     mockPrisma.inscricao.findUnique.mockResolvedValue(baseInscricao as never)
 
     await PUT(makeRequest({ status: 'HABILITADA' }), makeParams())
 
-    expect(mockEnqueueEmail).toHaveBeenCalledWith(
-      expect.objectContaining({
-        to: 'ana@test.com',
-        template: 'habilitacao',
-        data: expect.objectContaining({
-          resultado: 'HABILITADA',
-        }),
-      }),
-    )
+    expect(mockEnqueueEmail).not.toHaveBeenCalled()
   })
 
   it('audit log registrado', async () => {

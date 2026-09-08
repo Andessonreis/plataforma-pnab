@@ -1,6 +1,5 @@
 import { prisma } from '@/lib/db'
 import { logAudit } from '@/lib/audit'
-import { enqueueEmail } from '@/lib/queue'
 import { gateAcaoFase } from '@/lib/edital/gate'
 import { temAcessoEdital } from '@/lib/edital-acesso'
 import { ServiceError } from './errors'
@@ -22,7 +21,7 @@ export async function updateHabilitacao(
       status: true,
       editalId: true,
       proponente: { select: { email: true, nome: true } },
-      edital: { select: { titulo: true, status: true } },
+      edital: { select: { titulo: true, status: true, cronograma: true } },
     },
   })
 
@@ -93,22 +92,11 @@ export async function updateHabilitacao(
     ip,
   })
 
-  try {
-    const baseUrl = process.env.NEXTAUTH_URL ?? 'http://localhost:3000'
-    await enqueueEmail({
-      to: inscricao.proponente.email,
-      subject: `Resultado da Habilitação — ${inscricao.edital.titulo}`,
-      template: 'habilitacao',
-      data: {
-        nome: inscricao.proponente.nome,
-        numero: inscricao.numero,
-        edital: inscricao.edital.titulo,
-        resultado: data.status,
-        motivo: data.motivo ?? null,
-        url: `${baseUrl}/proponente/inscricoes`,
-      },
-    })
-  } catch {
-    console.error('[habilitacao] Falha ao enfileirar e-mail de habilitação')
-  }
+  // Nenhum aviso ao proponente aqui, de propósito.
+  //
+  // Marcar habilitada/inabilitada é conferência interna. O resultado só
+  // existe pro agente cultural depois de publicado no Diário Oficial, e o
+  // envio do e-mail é decisão da Secretaria: parte-se dela o comando, não
+  // do ato de marcar — mesmo com a conferência inteira concluída.
+
 }

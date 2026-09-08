@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { IconArrowRight } from '@/components/ui'
 import { Carimbo } from '@/components/ui/carimbo'
-import { inscricaoStatusLabel } from '@/lib/status-maps'
+import { inscricaoStatusLabelProponente as inscricaoStatusLabel } from '@/lib/status-maps'
 import { tomCarimboDeStatus } from '../status-carimbo'
 import type { InscricaoStatus } from '@prisma/client'
 
