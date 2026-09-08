@@ -13,6 +13,7 @@ import { HabilitacaoActions } from '../../inscricoes/[id]/habilitacao-actions'
 import { AnexoViewer } from '../../inscricoes/[id]/anexo-viewer'
 import { RecursoDecision } from '../../inscricoes/[id]/recurso-decision'
 import { DadosInscricaoView } from '@/components/inscricao/dados-inscricao-view'
+import { calcularAnexosPendentes } from '@/lib/inscricoes/anexos-pendentes'
 import { podeHabilitar } from '@/lib/edital/fase'
 
 interface Props {
@@ -51,6 +52,7 @@ export default async function AdminHabilitacaoDetailPage({ params, searchParams 
           status: true,
           camposFormulario: true,
           etapasCustomizadas: true,
+          tiposAnexo: true,
         },
       },
       proponente: {
@@ -120,6 +122,12 @@ export default async function AdminHabilitacaoDetailPage({ params, searchParams 
           (s) => normalizarTexto(a.tipo).includes(s) || normalizarTexto(a.titulo).includes(s),
         ),
       )
+  // Documentos previstos no edital que não vieram — listados como "Não informado"
+  // (mesmo filtro de conteúdo sensível se aplica ao que é listado como pendente).
+  const anexosPendentes = calcularAnexosPendentes(inscricao.edital.tiposAnexo, inscricao.anexos)
+    .filter((p) => podeVerConteudoSensivel || !CONTEUDO_SENSIVEL.some(
+      (s) => normalizarTexto(p.tipo).includes(s) || normalizarTexto(p.label).includes(s),
+    ))
 
   return (
     <section>
@@ -164,7 +172,7 @@ export default async function AdminHabilitacaoDetailPage({ params, searchParams 
             camposFormulario={camposFormulario}
             etapasCustomizadas={etapasOrdenadas}
             anexos={
-              anexosVisiveis.length > 0
+              anexosVisiveis.length > 0 || anexosPendentes.length > 0
                 ? {
                     count: anexosVisiveis.length,
                     node: (
@@ -177,6 +185,7 @@ export default async function AdminHabilitacaoDetailPage({ params, searchParams 
                           valido: a.valido,
                           observacao: a.observacao,
                         }))}
+                        pendentes={anexosPendentes}
                       />
                     ),
                   }

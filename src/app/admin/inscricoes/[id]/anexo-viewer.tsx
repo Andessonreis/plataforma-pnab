@@ -11,9 +11,22 @@ interface Anexo {
   observacao: string | null
 }
 
+/** Tipo de documento previsto no edital que o proponente não enviou. */
+interface AnexoPendente {
+  tipo: string
+  label: string
+  obrigatorio: boolean
+}
+
 interface AnexoViewerProps {
   inscricaoId: string
   anexos: Anexo[]
+  /**
+   * Documentos previstos no edital e não enviados. Aparecem na lista como
+   * "Não informado" para que a conferência veja o que falta sem precisar
+   * cruzar com o edital por fora.
+   */
+  pendentes?: AnexoPendente[]
 }
 
 type Preview =
@@ -33,7 +46,7 @@ function toEmbedUrl(url: string): string | null {
   return null
 }
 
-export function AnexoViewer({ inscricaoId, anexos }: AnexoViewerProps) {
+export function AnexoViewer({ inscricaoId, anexos, pendentes = [] }: AnexoViewerProps) {
   const [loading, setLoading] = useState<string | null>(null)
   const [preview, setPreview] = useState<{ anexoId: string; data: Preview } | null>(null)
 
@@ -132,6 +145,28 @@ export function AnexoViewer({ inscricaoId, anexos }: AnexoViewerProps) {
               )}
             </div>
           )}
+        </div>
+      ))}
+
+      {pendentes.map((pendente) => (
+        <div
+          key={`pendente-${pendente.tipo}`}
+          className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-slate-50/60 border border-dashed border-slate-200 rounded-lg"
+        >
+          <svg className="h-5 w-5 text-slate-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-slate-500 truncate">{pendente.label}</p>
+            <p className="text-xs text-slate-400">{pendente.tipo}</p>
+          </div>
+          <span
+            className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+              pendente.obrigatorio ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-500'
+            }`}
+          >
+            Não informado
+          </span>
         </div>
       ))}
     </div>

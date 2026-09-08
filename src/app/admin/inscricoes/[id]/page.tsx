@@ -20,6 +20,7 @@ import { DistribuicaoAvaliadores } from './distribuicao-avaliadores'
 import { AvaliacoesComparativo } from './avaliacoes-comparativo'
 import { DadosInscricaoView } from '@/components/inscricao/dados-inscricao-view'
 import { HistoricoProcesso } from '@/components/inscricao/historico-processo'
+import { calcularAnexosPendentes } from '@/lib/inscricoes/anexos-pendentes'
 import { viewNotaTotal } from '@/lib/services/avaliacao-view'
 import { podeAvaliar, podeHabilitar, mensagemForaDaFase } from '@/lib/edital/fase'
 import { ForaDaFaseAlert } from '@/components/edital/fora-da-fase-alert'
@@ -55,7 +56,7 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
   const inscricao = await prisma.inscricao.findUnique({
     where: { id },
     include: {
-      edital: { select: { titulo: true, slug: true, ano: true, status: true, criteriosAvaliacao: true, camposFormulario: true, etapasCustomizadas: true, formulaAvaliacao: true } },
+      edital: { select: { titulo: true, slug: true, ano: true, status: true, criteriosAvaliacao: true, camposFormulario: true, etapasCustomizadas: true, tiposAnexo: true, formulaAvaliacao: true } },
       proponente: {
         select: { nome: true, cpfCnpj: true, email: true, telefone: true, tipoProponente: true },
       },
@@ -167,6 +168,11 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
           (s) => normalizarTitulo(a.tipo).includes(s) || normalizarTitulo(a.titulo).includes(s),
         ),
       )
+  // Documentos previstos no edital que não vieram — listados como "Não informado".
+  const anexosPendentes = calcularAnexosPendentes(inscricao.edital.tiposAnexo, inscricao.anexos)
+    .filter((p) => podeVerConteudoSensivel || !ETAPAS_CONTEUDO_SENSIVEL.some(
+      (s) => normalizarTitulo(p.tipo).includes(s) || normalizarTitulo(p.label).includes(s),
+    ))
 
   return (
     <section>
@@ -202,7 +208,7 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
             etapasCustomizadas={etapasOrdenadas}
             auxilioInscricao={auxilioInscricaoView}
             anexos={
-              anexosVisiveis.length > 0
+              anexosVisiveis.length > 0 || anexosPendentes.length > 0
                 ? {
                     count: anexosVisiveis.length,
                     node: (
@@ -215,6 +221,7 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
                           valido: a.valido,
                           observacao: a.observacao,
                         }))}
+                        pendentes={anexosPendentes}
                       />
                     ),
                   }
