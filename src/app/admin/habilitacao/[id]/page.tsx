@@ -99,7 +99,27 @@ export default async function AdminHabilitacaoDetailPage({ params, searchParams 
   const etapasCustomizadas = (Array.isArray(inscricao.edital.etapasCustomizadas)
     ? inscricao.edital.etapasCustomizadas
     : []) as unknown as EtapaCustomizada[]
-  const etapasOrdenadas = [...etapasCustomizadas].sort((a, b) => a.ordem - b.ordem)
+  const etapasOrdenadasTodas = [...etapasCustomizadas].sort((a, b) => a.ordem - b.ordem)
+
+  // Plano de Trabalho e Planilha Orçamentária são conteúdo de mérito do projeto —
+  // a conferência documental não precisa deles. Só SUPER_ADMIN vê aqui (o
+  // AVALIADOR enxerga pela tela de avaliação, não por esta).
+  const normalizarTexto = (t: string) =>
+    t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+  const CONTEUDO_SENSIVEL = ['plano de trabalho', 'planilha orcamentaria']
+  const podeVerConteudoSensivel = session.user.role === 'SUPER_ADMIN'
+  const etapasOrdenadas = podeVerConteudoSensivel
+    ? etapasOrdenadasTodas
+    : etapasOrdenadasTodas.filter(
+        (e) => !CONTEUDO_SENSIVEL.some((s) => normalizarTexto(e.titulo).includes(s)),
+      )
+  const anexosVisiveis = podeVerConteudoSensivel
+    ? inscricao.anexos
+    : inscricao.anexos.filter(
+        (a) => !CONTEUDO_SENSIVEL.some(
+          (s) => normalizarTexto(a.tipo).includes(s) || normalizarTexto(a.titulo).includes(s),
+        ),
+      )
 
   return (
     <section>
@@ -144,13 +164,13 @@ export default async function AdminHabilitacaoDetailPage({ params, searchParams 
             camposFormulario={camposFormulario}
             etapasCustomizadas={etapasOrdenadas}
             anexos={
-              inscricao.anexos.length > 0
+              anexosVisiveis.length > 0
                 ? {
-                    count: inscricao.anexos.length,
+                    count: anexosVisiveis.length,
                     node: (
                       <AnexoViewer
                         inscricaoId={inscricao.id}
-                        anexos={inscricao.anexos.map((a) => ({
+                        anexos={anexosVisiveis.map((a) => ({
                           id: a.id,
                           tipo: a.tipo,
                           titulo: a.titulo,
