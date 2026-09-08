@@ -13,7 +13,7 @@ import { ID_TITULO_ACESSO } from '../pagina-acesso'
 /** Destino inicial de cada perfil depois de entrar. */
 function destinoPorPerfil(role: string | undefined): string {
   if (role === 'AVALIADOR') return '/avaliador'
-  if (role && ['ADMIN', 'ATENDIMENTO', 'HABILITADOR'].includes(role)) return '/admin'
+  if (role && ['ADMIN', 'SUPER_ADMIN', 'COMUNICACAO', 'ATENDIMENTO', 'HABILITADOR'].includes(role)) return '/admin'
   return '/proponente'
 }
 

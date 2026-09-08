@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
+import { enqueueEmail } from '@/lib/queue'
 import { Prisma } from '@prisma/client'
 import type { UserRole, AtendimentoStatus } from '@prisma/client'
 import {
@@ -101,7 +103,7 @@ export default async function TicketDetailPage({ params }: Props) {
       novoStatus = 'EM_ATENDIMENTO'
     }
 
-    await prisma.atendimento.update({
+    const atendimentoAtualizado = await prisma.atendimento.update({
       where: { id },
       data: {
         historico: novoHistorico as unknown as Prisma.InputJsonValue[],
@@ -109,6 +111,29 @@ export default async function TicketDetailPage({ params }: Props) {
         updatedAt: new Date(),
       },
     })
+
+    await logAudit({
+      userId: sessao.user.id,
+      action: AUDIT_ACTIONS.ATENDIMENTO_RESPONDIDO,
+      entity: 'Atendimento',
+      entityId: id,
+      details: { protocolo: atendimentoAtualizado.protocolo, statusAnterior: ticketAtual.status, novoStatus },
+    })
+
+    try {
+      await enqueueEmail({
+        to: atendimentoAtualizado.emailContato,
+        template: 'atendimento_respondido',
+        data: {
+          nomeContato: atendimentoAtualizado.nomeContato,
+          protocolo: atendimentoAtualizado.protocolo,
+          assunto: atendimentoAtualizado.assunto,
+          resposta: texto,
+        },
+      })
+    } catch (err) {
+      console.error({ message: 'Falha ao enfileirar e-mail de resposta de atendimento', err })
+    }
 
     redirect(`/admin/atendimentos/${id}`)
   }

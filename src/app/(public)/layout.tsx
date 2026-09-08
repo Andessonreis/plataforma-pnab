@@ -5,7 +5,7 @@ import { Header, Footer, CookieBanner } from '@/components/layout'
 import { ActiveBanners } from '@/components/layout'
 import { variaveisDeFonte } from '../fontes'
 
-const ROLES_ADMIN: UserRole[] = ['ADMIN', 'ATENDIMENTO', 'HABILITADOR']
+const ROLES_ADMIN: UserRole[] = ['ADMIN', 'SUPER_ADMIN', 'COMUNICACAO', 'ATENDIMENTO', 'HABILITADOR']
 
 function userAreaHrefFromRole(role: UserRole | undefined): string {
   if (!role) return '/login'

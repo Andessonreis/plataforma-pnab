@@ -26,7 +26,7 @@ export async function notifyEquipeNovoAtendimento({
   mensagem,
 }: NotifyNovoAtendimentoParams): Promise<{ destinatarios: number }> {
   const destinatarios = await prisma.user.findMany({
-    where: { role: { in: ['ADMIN', 'ATENDIMENTO'] }, ativo: true },
+    where: { role: { in: ['ADMIN', 'SUPER_ADMIN', 'ATENDIMENTO'] }, ativo: true },
     select: { nome: true, email: true },
   })
 
