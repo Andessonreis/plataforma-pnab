@@ -146,7 +146,27 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
     ? inscricao.edital.camposFormulario : []) as unknown as CampoFormulario[]
   const etapasCustomizadas = (Array.isArray(inscricao.edital.etapasCustomizadas)
     ? inscricao.edital.etapasCustomizadas : []) as unknown as import('@/types/etapa-customizada').EtapaCustomizada[]
-  const etapasOrdenadas = [...etapasCustomizadas].sort((a, b) => a.ordem - b.ordem)
+  const etapasOrdenadasTodas = [...etapasCustomizadas].sort((a, b) => a.ordem - b.ordem)
+
+  // Plano de Trabalho e Planilha Orçamentária são conteúdo de mérito do
+  // projeto — só quem avalia (AVALIADOR) e o SUPER_ADMIN têm acesso. HABILITADOR
+  // e ADMIN cuidam de elegibilidade documental, não da proposta em si. Demais
+  // anexos continuam visíveis pra toda a equipe normalmente.
+  const normalizarTitulo = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+  const ETAPAS_CONTEUDO_SENSIVEL = ['plano de trabalho', 'planilha orcamentaria']
+  const podeVerConteudoSensivel = isAvaliador || userRole === 'SUPER_ADMIN'
+  const etapasOrdenadas = podeVerConteudoSensivel
+    ? etapasOrdenadasTodas
+    : etapasOrdenadasTodas.filter(
+        (e) => !ETAPAS_CONTEUDO_SENSIVEL.some((s) => normalizarTitulo(e.titulo).includes(s)),
+      )
+  const anexosVisiveis = podeVerConteudoSensivel
+    ? inscricao.anexos
+    : inscricao.anexos.filter(
+        (a) => !ETAPAS_CONTEUDO_SENSIVEL.some(
+          (s) => normalizarTitulo(a.tipo).includes(s) || normalizarTitulo(a.titulo).includes(s),
+        ),
+      )
 
   return (
     <section>
@@ -182,13 +202,13 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
             etapasCustomizadas={etapasOrdenadas}
             auxilioInscricao={auxilioInscricaoView}
             anexos={
-              inscricao.anexos.length > 0
+              anexosVisiveis.length > 0
                 ? {
-                    count: inscricao.anexos.length,
+                    count: anexosVisiveis.length,
                     node: (
                       <AnexoViewer
                         inscricaoId={inscricao.id}
-                        anexos={inscricao.anexos.map((a) => ({
+                        anexos={anexosVisiveis.map((a) => ({
                           id: a.id,
                           tipo: a.tipo,
                           titulo: a.titulo,
