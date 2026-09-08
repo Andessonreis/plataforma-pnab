@@ -49,12 +49,42 @@ jobs:
             set -euo pipefail
             cd "${{ secrets.VPS_APP_DIR }}"
 
+            ESPERADO="${{ github.event.workflow_run.head_sha || github.sha }}"
+
+            # A VPS clona do fork público. Se o sync do fork ainda não chegou,
+            # o fetch abaixo traz código velho e o deploy terminaria "com
+            # sucesso" servindo a versão anterior — o modo de falha mais caro
+            # que esse pipeline já teve. Então: espera o commit aparecer e
+            # falha alto se ele não vier.
+            for tentativa in $(seq 1 12); do
+              git fetch origin main --quiet
+              if git cat-file -e "${ESPERADO}^{commit}" 2>/dev/null \
+                 && git merge-base --is-ancestor "$ESPERADO" origin/main; then
+                break
+              fi
+              echo "Commit $ESPERADO ainda não está no fork público (tentativa $tentativa/12) — aguardando 15s..."
+              sleep 15
+            done
+
+            if ! git merge-base --is-ancestor "$ESPERADO" origin/main 2>/dev/null; then
+              echo "::error::O fork público não tem o commit $ESPERADO. Rode 'git push andessonreis main' e redispare este deploy. (Configure o secret FORK_PUSH_TOKEN para isso ser automático.)"
+              exit 1
+            fi
+
             # Atualiza repo de forma resiliente: remove untracked que poderiam
             # bloquear fast-forward (logs, arquivos deixados por execuções manuais),
             # preservando .env, backups/ e .next/. Depois exige merge fast-forward.
-            git fetch origin main
             git clean -fd -e .env -e 'backups/' -e '.next/' -e '*.log'
             git merge --ff-only origin/main
+
+            # Confirma que o código no disco contém o commit validado pelo CI.
+            # (Pode estar à frente, se outro merge entrou no meio — isso é ok.)
+            ATUAL="$(git rev-parse HEAD)"
+            if ! git merge-base --is-ancestor "$ESPERADO" HEAD; then
+              echo "::error::HEAD da VPS ($ATUAL) não contém o commit esperado ($ESPERADO) — abortando antes de buildar."
+              exit 1
+            fi
+            echo "VPS em $ATUAL (contém $ESPERADO)"
 
             # Build das imagens
             docker compose -f docker-compose.prod.yml build
