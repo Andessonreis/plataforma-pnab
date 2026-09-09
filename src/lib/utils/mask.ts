@@ -23,6 +23,19 @@ export function maskCpfCnpj(value: string | null | undefined): string {
 }
 
 /**
+ * Máscara adotada nas listas oficiais em PDF: preserva os 3 primeiros e os 2
+ * últimos dígitos (123.***.***-01), formato já usado nas relações publicadas.
+ * Difere de {@link maskCpfCnpj} de propósito — mudar aqui mudaria documentos
+ * que a Secretaria já publicou.
+ */
+export function maskCpfCnpjParcial(value: string | null | undefined): string {
+  if (!value) return '—'
+  const digits = value.replace(/\D/g, '')
+  if (digits.length <= 6) return value
+  return `${digits.slice(0, 3)}.***.***-${digits.slice(-2)}`
+}
+
+/**
  * Máscara mínima de nome — preserva o primeiro e o último termo,
  * substitui o meio por "***". Reutilizada de /resultados para manter
  * apresentação consistente em todas as listas públicas.

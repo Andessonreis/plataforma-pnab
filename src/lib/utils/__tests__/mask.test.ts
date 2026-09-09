@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { maskCpfCnpj, maskName } from '../mask'
+import { maskCpfCnpj, maskCpfCnpjParcial, maskName } from '../mask'
 
 describe('maskCpfCnpj', () => {
   it('CPF cru (11 dígitos) → mascara 3 primeiros e 2 últimos', () => {
@@ -37,6 +37,34 @@ describe('maskCpfCnpj', () => {
     const cnpjMasked = maskCpfCnpj('98765432000190')
     expect(cnpjMasked.startsWith('**.')).toBe(true)
     expect(cnpjMasked).not.toMatch(/^98/)
+  })
+})
+
+describe('maskCpfCnpjParcial', () => {
+  it('CPF → preserva 3 primeiros e 2 últimos dígitos', () => {
+    expect(maskCpfCnpjParcial('12345678901')).toBe('123.***.***-01')
+  })
+
+  it('CPF formatado é normalizado', () => {
+    expect(maskCpfCnpjParcial('123.456.789-01')).toBe('123.***.***-01')
+  })
+
+  it('CNPJ → preserva 3 primeiros e 2 últimos dígitos', () => {
+    expect(maskCpfCnpjParcial('12345678000190')).toBe('123.***.***-90')
+  })
+
+  it('valor curto demais para mascarar volta como está', () => {
+    expect(maskCpfCnpjParcial('123')).toBe('123')
+  })
+
+  it('nulo/undefined/vazio → "—"', () => {
+    expect(maskCpfCnpjParcial(null)).toBe('—')
+    expect(maskCpfCnpjParcial(undefined)).toBe('—')
+    expect(maskCpfCnpjParcial('')).toBe('—')
+  })
+
+  it('não expõe o miolo do documento', () => {
+    expect(maskCpfCnpjParcial('98765432101')).toBe('987.***.***-01')
   })
 })
 

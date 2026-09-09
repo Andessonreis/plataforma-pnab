@@ -15,6 +15,7 @@ export const COLORS = {
 // Layout
 export const MARGINS = { top: 60, bottom: 60, left: 50, right: 50 } as const
 export const PAGE_WIDTH = 595.28 // A4
+export const PAGE_HEIGHT = 841.89 // A4
 export const CONTENT_WIDTH = PAGE_WIDTH - MARGINS.left - MARGINS.right
 
 /**

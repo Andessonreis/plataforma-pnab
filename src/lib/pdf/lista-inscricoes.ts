@@ -2,8 +2,9 @@
  * Gerador de PDF de lista oficial de inscrições por status/fase.
  * Tabela paginada com header repetido, zebra striping, CPF mascarado.
  */
-import { createDocument, docToBuffer, MARGINS, CONTENT_WIDTH, COLORS, PAGE_WIDTH } from './shared'
+import { createDocument, docToBuffer, MARGINS, CONTENT_WIDTH, COLORS } from './shared'
 import { formatTelefoneBR } from '@/lib/utils/format'
+import { maskCpfCnpjParcial } from '@/lib/utils/mask'
 import {
   addCompactHeader,
   addInfoBlock,
@@ -12,6 +13,14 @@ import {
   addCompactFooter,
   addCompactSection,
 } from './layout-helpers'
+import {
+  addTableHeader,
+  addTableRow,
+  calculateRowHeight,
+  checkPageBreak,
+  type ColumnDef,
+  type PageContext,
+} from './table-helpers'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -38,18 +47,6 @@ export interface ListaInscricoesData {
 }
 
 // ─── Constantes de layout ────────────────────────────────────────────────────
-
-const PAGE_HEIGHT = 841.89 // A4
-const FOOTER_ZONE = 60
-const SAFE_BOTTOM = PAGE_HEIGHT - MARGINS.bottom - FOOTER_ZONE
-const ROW_HEIGHT = 18
-const HEADER_ROW_HEIGHT = 20
-
-// Colunas adaptáveis por tipo de lista
-interface ColumnDef {
-  label: string
-  width: number
-}
 
 /** Status que exibem nota final e posição de classificação. */
 const STATUS_COM_NOTA = new Set(['CONTEMPLADA', 'NAO_CONTEMPLADA', 'SUPLENTE'])
@@ -148,105 +145,6 @@ function getColumns(status: string, hideCategoria = false): ColumnDef[] {
   }
 
   return base
-}
-
-// ─── Contexto de paginação ───────────────────────────────────────────────────
-
-interface PageContext {
-  pageNum: number
-}
-
-function checkPageBreak(
-  doc: PDFKit.PDFDocument,
-  requiredHeight: number,
-  ctx: PageContext,
-  columns?: ColumnDef[],
-): void {
-  if (doc.y + requiredHeight > SAFE_BOTTOM) {
-    addCompactFooter(doc, ctx.pageNum)
-    doc.addPage()
-    ctx.pageNum++
-    doc.y = MARGINS.top
-    if (columns) {
-      addTableHeader(doc, columns)
-    }
-  }
-}
-
-// ─── Helpers de tabela ───────────────────────────────────────────────────────
-
-/** Mascara CPF/CNPJ para exibição parcial. */
-function maskCpfCnpj(value: string): string {
-  if (!value) return '—'
-  const digits = value.replace(/\D/g, '')
-  if (digits.length <= 6) return value
-  return `${digits.slice(0, 3)}.***.***-${digits.slice(-2)}`
-}
-
-/** Renderiza o header da tabela (fundo cinza). */
-function addTableHeader(doc: PDFKit.PDFDocument, columns: ColumnDef[]): void {
-  const y = doc.y
-
-  doc.rect(MARGINS.left, y, CONTENT_WIDTH, HEADER_ROW_HEIGHT).fill('#e2e8f0')
-
-  let x = MARGINS.left
-  for (const col of columns) {
-    doc
-      .font('Helvetica-Bold')
-      .fontSize(7.5)
-      .fillColor(COLORS.text)
-      .text(col.label, x + 3, y + 5, { width: col.width - 6, ellipsis: true })
-    x += col.width
-  }
-
-  doc.y = y + HEADER_ROW_HEIGHT + 1
-}
-
-/** Calcula a altura da linha com base no maior conteúdo de célula. */
-function calculateRowHeight(
-  doc: PDFKit.PDFDocument,
-  columns: ColumnDef[],
-  values: string[],
-): number {
-  doc.font('Helvetica').fontSize(7.5)
-  let maxTextHeight = 10
-  for (let i = 0; i < columns.length; i++) {
-    const text = values[i] ?? '—'
-    const h = doc.heightOfString(text, { width: columns[i].width - 6 })
-    if (h > maxTextHeight) {
-      maxTextHeight = h
-    }
-  }
-  return Math.max(ROW_HEIGHT, Math.ceil(maxTextHeight) + 8)
-}
-
-/** Renderiza uma linha de dados da tabela com altura adaptável. */
-function addTableRow(
-  doc: PDFKit.PDFDocument,
-  columns: ColumnDef[],
-  values: string[],
-  striped: boolean,
-  rowHeight: number,
-): void {
-  const y = doc.y
-
-  if (striped) {
-    doc.rect(MARGINS.left, y, CONTENT_WIDTH, rowHeight).fill('#f8fafc')
-  }
-
-  let x = MARGINS.left
-  for (let i = 0; i < columns.length; i++) {
-    doc
-      .font('Helvetica')
-      .fontSize(7.5)
-      .fillColor(COLORS.text)
-      .text(values[i] ?? '—', x + 3, y + 4, {
-        width: columns[i].width - 6,
-      })
-    x += columns[i].width
-  }
-
-  doc.y = y + rowHeight
 }
 
 // ─── Geração do PDF ──────────────────────────────────────────────────────────
@@ -457,8 +355,8 @@ function buildRowValues(
   hideCategoria = false,
 ): string[] {
   const base = hideCategoria
-    ? [String(item.posicao), item.numero, item.nome, maskCpfCnpj(item.cpfCnpj)]
-    : [String(item.posicao), item.numero, item.nome, maskCpfCnpj(item.cpfCnpj), item.categoria ?? '—']
+    ? [String(item.posicao), item.numero, item.nome, maskCpfCnpjParcial(item.cpfCnpj)]
+    : [String(item.posicao), item.numero, item.nome, maskCpfCnpjParcial(item.cpfCnpj), item.categoria ?? '—']
 
   if (STATUS_COM_NOTA.has(status)) {
     return [
