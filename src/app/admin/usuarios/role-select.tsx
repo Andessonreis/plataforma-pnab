@@ -13,16 +13,7 @@ import {
 import { Badge, Button } from '@/components/ui'
 import { toast } from '@/hooks/use-toast'
 import type { UserRole } from '@prisma/client'
-
-const roleLabels: Record<UserRole, string> = {
-  PROPONENTE: 'Proponente',
-  ATENDIMENTO: 'Atendimento',
-  HABILITADOR: 'Habilitador',
-  AVALIADOR: 'Avaliador',
-  ADMIN: 'Administrador',
-  SUPER_ADMIN: 'Super Administrador',
-  COMUNICACAO: 'Comunicação',
-}
+import { userRoleLabel as roleLabels } from '@/lib/status-maps'
 
 interface RoleSelectProps {
   userId: string

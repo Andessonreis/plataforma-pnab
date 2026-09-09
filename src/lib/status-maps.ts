@@ -1,5 +1,24 @@
 import type { BadgeVariant } from '@/components/ui/badge'
-import type { InscricaoStatus, EditalStatus } from '@prisma/client'
+import type { InscricaoStatus, EditalStatus, TipoProponente, UserRole } from '@prisma/client'
+
+// ── Perfil de acesso e natureza do proponente ───────────────────────────────
+
+export const userRoleLabel: Record<UserRole, string> = {
+  PROPONENTE: 'Proponente',
+  ATENDIMENTO: 'Atendimento',
+  HABILITADOR: 'Habilitador',
+  AVALIADOR: 'Avaliador',
+  ADMIN: 'Administrador',
+  SUPER_ADMIN: 'Super Administrador',
+  COMUNICACAO: 'Comunicação',
+}
+
+export const tipoProponenteLabel: Record<TipoProponente, string> = {
+  PF: 'Pessoa física',
+  MEI: 'MEI',
+  PJ: 'Pessoa jurídica',
+  COLETIVO: 'Coletivo',
+}
 
 // ── Inscricao Status ────────────────────────────────────────────────────────
 

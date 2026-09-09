@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { Card, Badge, Pagination, Button, EmptyState, FadeIn, IconUsers } from '@/components/ui'
 import type { UserRole } from '@prisma/client'
+import { userRoleLabel as roleLabels } from '@/lib/status-maps'
 import { RoleSelect } from './role-select'
 import { NovoUsuarioModal } from './novo-usuario-modal'
 
@@ -19,15 +20,6 @@ interface Props {
   }>
 }
 
-const roleLabels: Record<UserRole, string> = {
-  PROPONENTE: 'Proponente',
-  ATENDIMENTO: 'Atendimento',
-  HABILITADOR: 'Habilitador',
-  AVALIADOR: 'Avaliador',
-  ADMIN: 'Administrador',
-  SUPER_ADMIN: 'Super Administrador',
-  COMUNICACAO: 'Comunicação',
-}
 
 export default async function AdminUsuariosPage({ searchParams }: Props) {
   const session = await auth()

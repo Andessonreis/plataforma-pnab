@@ -82,6 +82,7 @@ export const AUDIT_ACTIONS = {
 
   // Admin — dados
   EXPORTACAO_CSV: 'EXPORTACAO_CSV',
+  EXPORTACAO_AGENTES: 'EXPORTACAO_AGENTES',
   EXPORTACAO_LISTA_PDF: 'EXPORTACAO_LISTA_PDF',
   EXPORTACAO_RELATORIO_FINAL: 'EXPORTACAO_RELATORIO_FINAL',
   RELATORIO_INSCRICOES_ENVIADO: 'RELATORIO_INSCRICOES_ENVIADO',
@@ -107,6 +108,7 @@ export const AUDIT_ACTIONS = {
   // Admin — gestão de usuários
   USUARIO_CRIADO: 'USUARIO_CRIADO',
   USUARIO_ROLE_ALTERADA: 'USUARIO_ROLE_ALTERADA',
+  USUARIO_EXCLUIDO: 'USUARIO_EXCLUIDO',
 } as const
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS]
@@ -168,6 +170,7 @@ export const ACTION_LABELS: Record<string, string> = {
   TEMPLATE_AVALIACAO_ATUALIZADO: 'Template de avaliação atualizado',
   TEMPLATE_AVALIACAO_EXCLUIDO: 'Template de avaliação excluído',
   EXPORTACAO_CSV: 'Exportação CSV',
+  EXPORTACAO_AGENTES: 'Exportação de agentes culturais',
   EXPORTACAO_LISTA_PDF: 'Exportação lista PDF',
   EXPORTACAO_RELATORIO_FINAL: 'Exportação relatório final',
   RELATORIO_INSCRICOES_ENVIADO: 'Relatório de inscrições enviado por e-mail',
@@ -184,6 +187,7 @@ export const ACTION_LABELS: Record<string, string> = {
   NOTIFICACAO_REGRA_DESATIVADA: 'Regra de notificação desativada',
   USUARIO_CRIADO: 'Usuário criado (admin)',
   USUARIO_ROLE_ALTERADA: 'Perfil de acesso alterado',
+  USUARIO_EXCLUIDO: 'Usuário excluído',
 }
 
 interface LogAuditParams {

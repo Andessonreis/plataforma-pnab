@@ -56,11 +56,24 @@ export function checkPageBreak(
 
 // ─── Tabela ──────────────────────────────────────────────────────────────────
 
-/** Renderiza o header da tabela (fundo cinza). */
+/**
+ * Renderiza o header da tabela (fundo cinza).
+ *
+ * A altura acompanha o rótulo mais alto: com muitas colunas selecionadas, um
+ * título como "Cadastrado em" quebra em duas linhas e precisa de faixa maior,
+ * senão o texto vaza pra fora do fundo cinza.
+ */
 export function addTableHeader(doc: PDFKit.PDFDocument, columns: ColumnDef[]): void {
   const y = doc.y
 
-  doc.rect(MARGINS.left, y, CONTENT_WIDTH, HEADER_ROW_HEIGHT).fill('#e2e8f0')
+  doc.font('Helvetica-Bold').fontSize(7.5)
+  const alturaTexto = columns.reduce(
+    (maior, col) => Math.max(maior, doc.heightOfString(col.label, { width: col.width - 6 })),
+    0,
+  )
+  const altura = Math.max(HEADER_ROW_HEIGHT, Math.ceil(alturaTexto) + 8)
+
+  doc.rect(MARGINS.left, y, CONTENT_WIDTH, altura).fill('#e2e8f0')
 
   let x = MARGINS.left
   for (const col of columns) {
@@ -68,11 +81,11 @@ export function addTableHeader(doc: PDFKit.PDFDocument, columns: ColumnDef[]): v
       .font('Helvetica-Bold')
       .fontSize(7.5)
       .fillColor(COLORS.text)
-      .text(col.label, x + 3, y + 5, { width: col.width - 6, ellipsis: true })
+      .text(col.label, x + 3, y + 5, { width: col.width - 6 })
     x += col.width
   }
 
-  doc.y = y + HEADER_ROW_HEIGHT + 1
+  doc.y = y + altura + 1
 }
 
 /** Calcula a altura da linha com base no maior conteúdo de célula. */

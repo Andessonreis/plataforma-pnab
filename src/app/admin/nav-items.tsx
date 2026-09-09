@@ -86,6 +86,12 @@ export const navSections: NavSection[] = [
         roles: ['ADMIN', 'SUPER_ADMIN'],
         icon: <IconChatBubble className="h-5 w-5" />,
       },
+      {
+        label: 'Agentes Culturais',
+        href: '/admin/agentes',
+        roles: ['ADMIN', 'SUPER_ADMIN'],
+        icon: <IconUsers className="h-5 w-5" />,
+      },
     ],
   },
   {
