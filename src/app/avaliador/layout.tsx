@@ -1,7 +1,11 @@
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { AvaliadorSidebar } from './sidebar'
-import { IconMenu } from '@/components/ui'
+import { getRoleTheme } from '@/app/admin/role-theme'
+import { IconMenu, UserAvatar } from '@/components/ui'
+import { variaveisDeFonte } from '../fontes'
+
+const theme = getRoleTheme('AVALIADOR')
 
 export default async function AvaliadorLayout({ children }: { children: React.ReactNode }) {
   const session = await auth()
@@ -9,34 +13,36 @@ export default async function AvaliadorLayout({ children }: { children: React.Re
   if (!session) redirect('/login')
   if (session.user.role !== 'AVALIADOR') redirect('/')
 
+  const nome = session.user.name ?? 'Avaliador'
+
   return (
-    <div className="flex min-h-screen bg-slate-50">
-      <AvaliadorSidebar userName={session.user.name ?? 'Avaliador'} />
+    // Mesmo wrapper do resto do backoffice: .tema-secult resolve --brand-*/
+    // --accent-* pra terracota/dourado da identidade SECULT e as variáveis de
+    // fonte carregam Anton/Questrial. Sem os dois, esta área caía no verde/âmbar
+    // de fallback do Tailwind e no sans do sistema.
+    <div className={`tema-secult font-questrial flex min-h-screen bg-papel-50 ${variaveisDeFonte}`}>
+      <AvaliadorSidebar userName={nome} />
 
       <div className="flex-1 min-w-0 lg:ml-64">
-        <header className="lg:sticky lg:top-0 z-30 flex items-center justify-between bg-white/95 backdrop-blur-sm border-b border-slate-200 shadow-sm px-4 py-2 lg:px-6 lg:py-3">
+        <header className="lg:sticky lg:top-0 z-30 flex items-center justify-between bg-white/90 backdrop-blur-sm border-b border-tinta-900/10 shadow-sm px-4 py-2 lg:px-6 lg:py-3">
           <label
-            htmlFor="avaliador-sidebar-toggle"
-            className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg text-slate-600 hover:bg-slate-100 lg:hidden cursor-pointer"
+            htmlFor="admin-sidebar-toggle"
+            className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg text-tinta-700 hover:bg-papel-100 lg:hidden cursor-pointer"
             aria-label="Abrir menu"
           >
             <IconMenu className="h-6 w-6" />
           </label>
 
-          <div className="flex items-center gap-3 ml-auto">
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ring-1 ring-inset bg-green-50 text-green-700 ring-green-200">
+          <div className="flex items-center gap-2 sm:gap-3 ml-auto">
+            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ring-1 ring-inset ${theme.chipBg} ${theme.chipText} ${theme.chipRing}`}>
               Avaliador
             </span>
-            <span className="text-sm text-slate-600 hidden sm:block">
-              {session.user.name}
-            </span>
-            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-white flex items-center justify-center text-sm font-medium shadow-sm ring-2 ring-brand-100">
-              {(session.user.name ?? 'A').charAt(0).toUpperCase()}
-            </div>
+            <span className="text-sm text-tinta-700 hidden sm:block">{nome}</span>
+            <UserAvatar nome={nome} size={32} className="ring-2 ring-accent-100" />
           </div>
         </header>
 
-        <main className="p-4 pb-24 lg:p-6 lg:pb-8">
+        <main className="w-full p-4 pb-24 lg:p-8 lg:pb-10 xl:px-10 2xl:px-14">
           {children}
         </main>
       </div>

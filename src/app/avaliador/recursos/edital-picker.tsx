@@ -1,7 +1,7 @@
 import type { EditalStatus } from '@prisma/client'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { Card, EmptyState, FadeIn, IconShield, IconClock, IconCheck, IconClipboard } from '@/components/ui'
+import { Card, EmptyState, IconShield, IconClock, IconCheck, IconClipboard } from '@/components/ui'
 import { EditalPicker as EditalPickerBase, type EditalPickerCard } from '@/components/edital-picker'
 import { whereInscricoesComRecurso, classificarRecurso } from './filtros'
 
@@ -100,25 +100,6 @@ export async function SelecaoEdital({
     redirect(`/avaliador/recursos?editalId=${cards[0].id}`)
   }
 
-  if (cards.length === 0) {
-    return (
-      <section>
-        <FadeIn>
-          <div className="mb-4 sm:mb-6">
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Recursos</h1>
-          </div>
-        </FadeIn>
-        <Card>
-          <EmptyState
-            icon={<IconShield className="h-8 w-8 text-slate-400" />}
-            title="Nenhum recurso"
-            description="Quando um proponente de uma inscrição sua interpuser recurso, ele aparece aqui para você responder."
-          />
-        </Card>
-      </section>
-    )
-  }
-
   const pendentes = cards.reduce((acc, e) => acc + e.pendentes, 0)
 
   return (
@@ -131,6 +112,15 @@ export async function SelecaoEdital({
         pendentes > 0
           ? `${pendentes} ${pendentes === 1 ? 'recurso aguardando você' : 'recursos aguardando você'}`
           : 'tudo respondido'
+      }
+      vazio={
+        <Card>
+          <EmptyState
+            icon={<IconShield className="h-8 w-8 text-slate-400" />}
+            title="Nenhum recurso"
+            description="Quando um proponente de uma inscrição sua interpuser recurso, ele aparece aqui para você responder."
+          />
+        </Card>
       }
     />
   )

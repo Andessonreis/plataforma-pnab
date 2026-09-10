@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
@@ -12,10 +11,10 @@ import {
   Card,
   Pagination,
   EmptyState,
-  FadeIn,
   IconClipboard,
-  IconArrowLeft,
+  IconStar,
 } from '@/components/ui'
+import { CabecalhoEdital } from '../cabecalho-edital'
 import { SelecaoEdital } from './edital-picker'
 import { ListaInscricoes, type LinhaInscricao } from './lista-inscricoes'
 import {
@@ -134,27 +133,18 @@ export default async function AvaliadorInscricoesPage({ searchParams }: Props) {
 
   return (
     <section>
-      <FadeIn>
-        <header className="mb-4 sm:mb-6">
-          {editaisVisiveis.length > 1 && (
-            <Link
-              href="/avaliador/inscricoes"
-              className="inline-flex items-center gap-1 text-sm text-brand-600 hover:text-brand-700 font-medium mb-3"
-            >
-              <IconArrowLeft className="h-4 w-4" />
-              Trocar edital
-            </Link>
-          )}
-
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">{edital.titulo}</h1>
-          <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
-            Edição {edital.ano} <span className="text-slate-400">·</span>{' '}
-            {emAvaliacao
-              ? 'Fase de avaliação aberta'
-              : 'Fase de avaliação encerrada — consulta ao histórico'}
-          </p>
-        </header>
-      </FadeIn>
+      <CabecalhoEdital
+        icone={<IconStar className="h-6 w-6" />}
+        titulo={edital.titulo}
+        ano={edital.ano}
+        ativo={emAvaliacao}
+        situacao={
+          emAvaliacao
+            ? 'Fase de avaliação aberta — lance as notas das inscrições que estão com você.'
+            : 'Fase de avaliação encerrada — as inscrições abaixo são consulta ao histórico.'
+        }
+        voltarHref={editaisVisiveis.length > 1 ? '/avaliador/inscricoes' : undefined}
+      />
 
       <AbasStatus
         abas={(Object.keys(ABAS_AVALIADOR) as AbaAvaliador[]).map((aba) => ({

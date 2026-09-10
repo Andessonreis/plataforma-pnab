@@ -4,7 +4,8 @@ import { redirect } from 'next/navigation'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { getEditaisVisiveis } from '@/lib/edital-acesso'
-import { Card, Badge, EmptyState, FadeIn, IconShield, IconArrowLeft } from '@/components/ui'
+import { Card, Badge, EmptyState, IconShield } from '@/components/ui'
+import { CabecalhoEdital } from '../cabecalho-edital'
 import { SelecaoEdital } from './edital-picker'
 import { classificarRecurso, whereInscricoesComRecurso } from './filtros'
 
@@ -49,7 +50,7 @@ export default async function AvaliadorRecursosPage({ searchParams }: Props) {
 
   const edital = await prisma.edital.findUnique({
     where: { id: editalIdFiltro },
-    select: { titulo: true, ano: true },
+    select: { titulo: true, ano: true, status: true },
   })
   if (!edital) redirect('/avaliador/recursos')
 
@@ -79,27 +80,18 @@ export default async function AvaliadorRecursosPage({ searchParams }: Props) {
 
   return (
     <section>
-      <FadeIn>
-        <header className="mb-4 sm:mb-6">
-          {editaisVisiveis.length > 1 && (
-            <Link
-              href="/avaliador/recursos"
-              className="inline-flex items-center gap-1 text-sm text-brand-600 hover:text-brand-700 font-medium mb-3"
-            >
-              <IconArrowLeft className="h-4 w-4" />
-              Trocar edital
-            </Link>
-          )}
-
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">{edital.titulo}</h1>
-          <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
-            Edição {edital.ano} <span className="text-slate-400">·</span>{' '}
-            {totalPendentes > 0
-              ? `${totalPendentes} recurso(s) aguardando sua resposta`
-              : 'Recursos das suas inscrições'}
-          </p>
-        </header>
-      </FadeIn>
+      <CabecalhoEdital
+        icone={<IconShield className="h-6 w-6" />}
+        titulo={edital.titulo}
+        ano={edital.ano}
+        ativo={edital.status === 'RECURSO'}
+        situacao={
+          totalPendentes > 0
+            ? `${totalPendentes} ${totalPendentes === 1 ? 'recurso aguarda' : 'recursos aguardam'} sua resposta.`
+            : 'Nenhum recurso aguardando você neste edital.'
+        }
+        voltarHref={editaisVisiveis.length > 1 ? '/avaliador/recursos' : undefined}
+      />
 
       {inscricoes.length === 0 ? (
         <Card>

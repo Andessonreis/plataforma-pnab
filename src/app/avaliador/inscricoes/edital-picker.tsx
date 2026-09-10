@@ -2,7 +2,7 @@ import type { EditalStatus } from '@prisma/client'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { EDITAL_STATUS_COM_AVALIACAO } from '@/lib/services/avaliacao-buckets'
-import { Card, EmptyState, FadeIn, IconStar, IconClipboard, IconClock, IconCheck } from '@/components/ui'
+import { Card, EmptyState, IconStar, IconClipboard, IconClock, IconCheck } from '@/components/ui'
 import { EditalPicker as EditalPickerBase, type EditalPickerCard } from '@/components/edital-picker'
 import { classificarMinhaAvaliacao, whereInscricoesDoAvaliador } from './filtros'
 
@@ -106,30 +106,7 @@ export async function SelecaoEdital({
     redirect(`/avaliador/inscricoes?editalId=${cards[0].id}`)
   }
 
-  if (cards.length === 0) {
-    return (
-      <section>
-        <FadeIn>
-          <div className="mb-4 sm:mb-6">
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Minhas Avaliações</h1>
-          </div>
-        </FadeIn>
-        <Card>
-          <EmptyState
-            icon={<IconStar className="h-8 w-8 text-slate-400" />}
-            title="Nenhum edital para avaliar"
-            description="Você verá aqui os editais em que foi designado como avaliador, assim que entrarem na fase de avaliação."
-          />
-        </Card>
-      </section>
-    )
-  }
-
-  return <EditalPicker editais={cards} />
-}
-
-function EditalPicker({ editais }: { editais: EditalAvaliadorCard[] }) {
-  const pendentes = editais
+  const pendentes = cards
     .filter((e) => e.status === 'AVALIACAO')
     .reduce((acc, e) => acc + e.aAvaliar + e.emAvaliacao, 0)
 
@@ -138,11 +115,20 @@ function EditalPicker({ editais }: { editais: EditalAvaliadorCard[] }) {
       titulo="Minhas Avaliações"
       descricao="Escolha o edital para abrir a fila de inscrições que você avalia. Cada edital tem seus próprios critérios de pontuação — avaliar um de cada vez evita misturar régua de edital diferente."
       icone={<IconStar className="h-6 w-6" />}
-      editais={editais.map(paraCard)}
+      editais={cards.map(paraCard)}
       resumoAtivos={
         pendentes > 0
           ? `${pendentes} ${pendentes === 1 ? 'inscrição aguardando você' : 'inscrições aguardando você'}`
           : 'tudo avaliado'
+      }
+      vazio={
+        <Card>
+          <EmptyState
+            icon={<IconStar className="h-8 w-8 text-slate-400" />}
+            title="Nenhum edital para avaliar"
+            description="Você verá aqui os editais em que foi designado como avaliador, assim que entrarem na fase de avaliação."
+          />
+        </Card>
       }
     />
   )
