@@ -12,13 +12,17 @@ describe('notaItemSchema', () => {
     expect(notaItemSchema.safeParse({ criterio: 'x', nota: 10, peso: 1 }).success).toBe(true)
   })
 
+  it('aceita nota acima de 10 — o teto por critério é validado com o edital em mãos', () => {
+    expect(notaItemSchema.safeParse({ criterio: 'x', nota: 22, peso: 30 }).success).toBe(true)
+  })
+
   it('rejeita critério vazio', () => {
     const result = notaItemSchema.safeParse({ criterio: '', nota: 5, peso: 10 })
     expect(result.success).toBe(false)
   })
 
-  it('rejeita nota acima de 10', () => {
-    const result = notaItemSchema.safeParse({ criterio: 'x', nota: 11, peso: 10 })
+  it('rejeita nota absurda (guarda de sanidade)', () => {
+    const result = notaItemSchema.safeParse({ criterio: 'x', nota: 1001, peso: 10 })
     expect(result.success).toBe(false)
   })
 
@@ -75,7 +79,7 @@ describe('avaliacaoBodySchema', () => {
 
   it('rejeita item de nota inválido dentro do array', () => {
     const result = avaliacaoBodySchema.safeParse({
-      notas: [{ criterio: 'c1', nota: 15, peso: 10 }],
+      notas: [{ criterio: 'c1', nota: -5, peso: 10 }],
     })
     expect(result.success).toBe(false)
   })

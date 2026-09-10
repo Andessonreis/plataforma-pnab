@@ -1,7 +1,6 @@
 import { prisma } from '@/lib/db'
 import type { InscricaoStatus, Prisma } from '@prisma/client'
-import type { CriterioAvaliacao } from '@/lib/avaliacao-criterios'
-import { CRITERIOS_AVALIACAO_PADRAO } from '@/lib/avaliacao-criterios'
+import { parseCriterios } from '@/lib/avaliacao-criterios'
 import {
   calculateWithFormula,
   calculateWeightedAverage,
@@ -271,15 +270,6 @@ export async function saveManualOrder(
   await prisma.$transaction(updates)
 }
 
-export function parseCriterios(raw: unknown): CriterioAvaliacao[] {
-  let data = raw
-  if (typeof data === 'string') {
-    try { data = JSON.parse(data) } catch { return [...CRITERIOS_AVALIACAO_PADRAO] }
-  }
-  if (!Array.isArray(data) || data.length === 0) return [...CRITERIOS_AVALIACAO_PADRAO]
-  return data as CriterioAvaliacao[]
-}
-
 export function parseNotas(raw: unknown): NotaAvaliacao[] {
   let data = raw
   if (typeof data === 'string') {
@@ -294,5 +284,6 @@ export function parseNotas(raw: unknown): NotaAvaliacao[] {
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Re-exportar funções puras de formula.ts para manter compatibilidade
+export { parseCriterios }
 export { calculateWithFormula, calculateWeightedAverage, calculateBlockSum, evaluateExpression } from './formula'
 export type { NotaAvaliacao } from './formula'

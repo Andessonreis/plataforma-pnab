@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { CRITERIOS_AVALIACAO_PADRAO, type CriterioAvaliacao } from '@/lib/avaliacao-criterios'
+import {
+  CRITERIOS_AVALIACAO_PADRAO,
+  validarNotasContraCriterios,
+  type CriterioAvaliacao,
+} from '@/lib/avaliacao-criterios'
 
 describe('CriterioAvaliacao type', () => {
   it('critérios padrão PNAB têm 5 itens', () => {
@@ -108,5 +112,59 @@ describe('criteriosAvaliacao customizados (Cultura Viva)', () => {
     expect(maxValues).toContain(3)
     expect(maxValues).toContain(5)
     expect(maxValues).toContain(4)
+  })
+})
+
+describe('validarNotasContraCriterios', () => {
+  // Anexo VI do Festival do Centenário — critérios acima da escala 0-10
+  const criteriosFestival: CriterioAvaliacao[] = [
+    { bloco: 'Bloco 1', criterio: 'A) Qualidade do Projeto', notaMax: 30, peso: 30 },
+    { bloco: 'Bloco 1', criterio: 'E) Coerência do Plano de Divulgação', notaMax: 10, peso: 10 },
+  ]
+
+  it('aceita nota acima de 10 quando o critério permite (22 de 30)', () => {
+    const erro = validarNotasContraCriterios(
+      [{ criterio: 'A) Qualidade do Projeto', nota: 22 }],
+      criteriosFestival,
+    )
+    expect(erro).toBeNull()
+  })
+
+  it('aceita nota exatamente no notaMax', () => {
+    const erro = validarNotasContraCriterios(
+      [{ criterio: 'A) Qualidade do Projeto', nota: 30 }],
+      criteriosFestival,
+    )
+    expect(erro).toBeNull()
+  })
+
+  it('rejeita nota acima do notaMax do critério', () => {
+    const erro = validarNotasContraCriterios(
+      [{ criterio: 'A) Qualidade do Projeto', nota: 31 }],
+      criteriosFestival,
+    )
+    expect(erro).toContain('excede o máximo de 30')
+  })
+
+  it('rejeita 11 num critério de notaMax 10', () => {
+    const erro = validarNotasContraCriterios(
+      [{ criterio: 'E) Coerência do Plano de Divulgação', nota: 11 }],
+      criteriosFestival,
+    )
+    expect(erro).toContain('excede o máximo de 10')
+  })
+
+  it('rejeita critério que não existe no edital', () => {
+    const erro = validarNotasContraCriterios(
+      [{ criterio: 'Critério Fantasma', nota: 5 }],
+      criteriosFestival,
+    )
+    expect(erro).toContain('não pertence')
+  })
+
+  it('valida contra os critérios padrão (teto 10)', () => {
+    const criterios = [...CRITERIOS_AVALIACAO_PADRAO]
+    expect(validarNotasContraCriterios([{ criterio: 'Relevância Cultural', nota: 10 }], criterios)).toBeNull()
+    expect(validarNotasContraCriterios([{ criterio: 'Relevância Cultural', nota: 11 }], criterios)).not.toBeNull()
   })
 })

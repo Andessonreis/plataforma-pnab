@@ -1,15 +1,24 @@
 import { prisma } from '@/lib/db'
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
-import { CRITERIOS_AVALIACAO_PADRAO } from '@/lib/avaliacao-criterios'
+import { parseCriterios, validarNotasContraCriterios } from '@/lib/avaliacao-criterios'
+import { calculateTotal } from '@/lib/results/formula'
+import { temAcessoEdital } from '@/lib/edital-acesso'
 import { gateAcaoFase } from '@/lib/edital/gate'
 import { ServiceError } from './errors'
 import type { AvaliacaoInput } from '@/lib/schemas/avaliacao'
+
+/** Avaliador só alcança editais em cuja equipe (EditalMembro) está inscrito. */
+async function assertAcessoAvaliador(avaliadorId: string, editalId: string, isAdmin: boolean) {
+  if (isAdmin) return
+  const ok = await temAcessoEdital(avaliadorId, editalId, 'AVALIADOR')
+  if (!ok) throw new ServiceError('FORBIDDEN', 'Você não é avaliador deste edital.')
+}
 
 export async function getAvaliacao(inscricaoId: string, avaliadorId: string, isAdmin: boolean) {
   const inscricao = await prisma.inscricao.findUnique({
     where: { id: inscricaoId },
     include: {
-      edital: { select: { id: true } },
+      edital: { select: { id: true, criteriosAvaliacao: true } },
       avaliacoes: {
         where: { avaliadorId },
         select: { id: true, notas: true, parecer: true, notaTotal: true, finalizada: true, updatedAt: true },
@@ -19,6 +28,8 @@ export async function getAvaliacao(inscricaoId: string, avaliadorId: string, isA
 
   if (!inscricao) throw new ServiceError('NOT_FOUND', 'Inscrição não encontrada.')
 
+  await assertAcessoAvaliador(avaliadorId, inscricao.edital.id, isAdmin)
+
   const avaliacao = inscricao.avaliacoes[0] ?? null
   const isAssigned = isAdmin || avaliacao !== null
 
@@ -26,7 +37,7 @@ export async function getAvaliacao(inscricaoId: string, avaliadorId: string, isA
 
   return {
     avaliacao,
-    criterios: [...CRITERIOS_AVALIACAO_PADRAO],
+    criterios: parseCriterios(inscricao.edital.criteriosAvaliacao),
     inscricaoStatus: inscricao.status,
   }
 }
@@ -43,11 +54,20 @@ export async function saveAvaliacao(
       id: true,
       numero: true,
       status: true,
-      edital: { select: { status: true } },
+      editalId: true,
+      edital: {
+        select: { status: true, criteriosAvaliacao: true, formulaAvaliacao: true },
+      },
     },
   })
 
   if (!inscricao) throw new ServiceError('NOT_FOUND', 'Inscrição não encontrada.')
+
+  await assertAcessoAvaliador(avaliadorId, inscricao.editalId, isAdmin)
+
+  const criterios = parseCriterios(inscricao.edital.criteriosAvaliacao)
+  const erroNotas = validarNotasContraCriterios(data.notas, criterios)
+  if (erroNotas) throw new ServiceError('BAD_REQUEST', erroNotas)
 
   // Gate de fase do edital — bloqueia fora de AVALIACAO
   const gate = gateAcaoFase({
@@ -77,10 +97,7 @@ export async function saveAvaliacao(
     throw new ServiceError('LOCKED', 'Esta avaliação já foi finalizada e não pode ser alterada.')
   }
 
-  const totalPeso = data.notas.reduce((acc, n) => acc + n.peso, 0)
-  const notaTotal = totalPeso > 0
-    ? data.notas.reduce((acc, n) => acc + (n.nota * n.peso) / totalPeso, 0)
-    : 0
+  const notaTotal = calculateTotal(data.notas, criterios, inscricao.edital.formulaAvaliacao)
 
   const avaliacaoData = {
     notas: data.notas,

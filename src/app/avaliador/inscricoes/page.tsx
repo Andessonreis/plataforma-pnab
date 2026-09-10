@@ -1,187 +1,205 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
+import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { Card, Badge, Pagination, Button, EmptyState, FadeIn, IconClipboard } from '@/components/ui'
-import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
 import { getEditaisVisiveis } from '@/lib/edital-acesso'
-import type { InscricaoStatus } from '@prisma/client'
+import { viewNotaTotal } from '@/lib/services/avaliacao-view'
+import { EDITAL_STATUS_COM_AVALIACAO } from '@/lib/services/avaliacao-buckets'
+import { AbasStatus } from '@/components/abas-status'
+import { BuscaFiltro } from '@/components/busca-filtro'
+import {
+  Card,
+  Pagination,
+  EmptyState,
+  FadeIn,
+  IconClipboard,
+  IconArrowLeft,
+} from '@/components/ui'
+import { SelecaoEdital } from './edital-picker'
+import { ListaInscricoes, type LinhaInscricao } from './lista-inscricoes'
+import {
+  ABAS_AVALIADOR,
+  isAbaAvaliador,
+  whereAba,
+  whereInscricoesDoAvaliador,
+  type AbaAvaliador,
+} from './filtros'
 
 export const metadata: Metadata = {
   title: 'Minhas Avaliações — Portal PNAB Irecê',
 }
 
 interface Props {
-  searchParams: Promise<{ page?: string; search?: string }>
+  searchParams: Promise<{ editalId?: string; aba?: string; page?: string; search?: string }>
 }
 
 export default async function AvaliadorInscricoesPage({ searchParams }: Props) {
   const session = await auth()
   if (!session || session.user.role !== 'AVALIADOR') redirect('/login')
 
+  const avaliadorId = session.user.id
+  // AVALIADOR nunca cai no null de compatibilidade: só vê edital em que a
+  // equipe do edital o inclui.
+  const editaisVisiveis = (await getEditaisVisiveis(avaliadorId, 'AVALIADOR')) ?? []
+
   const params = await searchParams
+  const editalIdFiltro = params.editalId || undefined
+
+  if (!editalIdFiltro) {
+    return <SelecaoEdital avaliadorId={avaliadorId} editaisVisiveis={editaisVisiveis} />
+  }
+
+  // Edital fora da equipe do avaliador — mesmo destino do inexistente, não
+  // vaza que o edital existe.
+  if (!editaisVisiveis.includes(editalIdFiltro)) {
+    redirect('/avaliador/inscricoes')
+  }
+
+  const abaAtiva: AbaAvaliador = isAbaAvaliador(params.aba) ? params.aba : 'a_avaliar'
   const page = Math.max(1, Number(params.page) || 1)
   const pageSize = 15
-  const searchQuery = params.search || undefined
+  const searchQuery = params.search?.trim() || undefined
 
-  // Avaliador vê inscrições de editais onde ele é membro da equipe (função AVALIADOR).
-  // Se o edital não tem equipe configurada, todos os avaliadores veem (compat).
-  // Só aparecem inscrições de editais em fase de avaliação/resultado (não rascunho de inscrição).
-  const editaisVisiveis = await getEditaisVisiveis(session.user.id, 'AVALIADOR')
-  const where: Record<string, unknown> = {
-    status: { notIn: ['RASCUNHO', 'INABILITADA'] },
-    edital: {
-      status: { in: ['AVALIACAO', 'RESULTADO_PRELIMINAR', 'RECURSO', 'RESULTADO_FINAL', 'ENCERRADO'] },
-    },
-  }
-  if (editaisVisiveis !== null) {
-    where.editalId = { in: editaisVisiveis }
-  }
-  if (searchQuery) {
-    where.OR = [
-      { numero: { contains: searchQuery, mode: 'insensitive' } },
-      { proponente: { nome: { contains: searchQuery, mode: 'insensitive' } } },
-    ]
+  const edital = await prisma.edital.findFirst({
+    where: { id: editalIdFiltro, status: { in: EDITAL_STATUS_COM_AVALIACAO } },
+    select: { id: true, titulo: true, ano: true, status: true },
+  })
+  if (!edital) redirect('/avaliador/inscricoes')
+
+  const escopo = whereInscricoesDoAvaliador([edital.id])
+  const busca = searchQuery
+    ? {
+        OR: [
+          { numero: { contains: searchQuery, mode: 'insensitive' as const } },
+          { proponente: { nome: { contains: searchQuery, mode: 'insensitive' as const } } },
+        ],
+      }
+    : null
+
+  const where = {
+    AND: [escopo, whereAba(abaAtiva, avaliadorId), ...(busca ? [busca] : [])],
   }
 
-  const [inscricoes, total] = await Promise.all([
+  const contagemDaAba = (aba: AbaAvaliador) => ({
+    AND: [escopo, whereAba(aba, avaliadorId)],
+  })
+
+  const [inscricoes, total, contAAvaliar, contEmAvaliacao, contAvaliadas] = await Promise.all([
     prisma.inscricao.findMany({
       where,
       orderBy: { createdAt: 'desc' },
       skip: (page - 1) * pageSize,
       take: pageSize,
-      include: {
-        edital: { select: { titulo: true } },
+      select: {
+        id: true,
+        numero: true,
+        categoria: true,
         proponente: { select: { nome: true, cpfCnpj: true } },
         avaliacoes: {
-          where: { avaliadorId: session.user.id },
+          where: { avaliadorId },
           select: { finalizada: true, notaTotal: true },
         },
       },
     }),
     prisma.inscricao.count({ where }),
+    prisma.inscricao.count({ where: contagemDaAba('a_avaliar') }),
+    prisma.inscricao.count({ where: contagemDaAba('em_avaliacao') }),
+    prisma.inscricao.count({ where: contagemDaAba('avaliadas') }),
   ])
 
-  const totalPages = Math.ceil(total / pageSize)
+  const linhas: LinhaInscricao[] = inscricoes.map((ins) => ({
+    id: ins.id,
+    numero: ins.numero,
+    categoria: ins.categoria,
+    proponenteNome: ins.proponente.nome,
+    proponenteCpfCnpj: ins.proponente.cpfCnpj,
+    nota: ins.avaliacoes[0] ? viewNotaTotal(ins.avaliacoes[0]) : null,
+  }))
 
-  const filterParams = new URLSearchParams()
-  if (searchQuery) filterParams.set('search', searchQuery)
-  const baseUrl = `/avaliador/inscricoes${filterParams.toString() ? `?${filterParams.toString()}` : ''}`
+  const contagens: Record<AbaAvaliador, number> = {
+    a_avaliar: contAAvaliar,
+    em_avaliacao: contEmAvaliacao,
+    avaliadas: contAvaliadas,
+  }
+
+  function href(aba: AbaAvaliador) {
+    const sp = new URLSearchParams({ editalId: edital!.id, aba })
+    if (searchQuery) sp.set('search', searchQuery)
+    return `/avaliador/inscricoes?${sp.toString()}`
+  }
+
+  const totalPages = Math.ceil(total / pageSize)
+  const emAvaliacao = edital.status === 'AVALIACAO'
 
   return (
     <section>
       <FadeIn>
-        <div className="mb-4 sm:mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Minhas Avaliações</h1>
+        <header className="mb-4 sm:mb-6">
+          {editaisVisiveis.length > 1 && (
+            <Link
+              href="/avaliador/inscricoes"
+              className="inline-flex items-center gap-1 text-sm text-brand-600 hover:text-brand-700 font-medium mb-3"
+            >
+              <IconArrowLeft className="h-4 w-4" />
+              Trocar edital
+            </Link>
+          )}
+
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">{edital.titulo}</h1>
           <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
-            {total} inscrição(ões) atribuída(s) a você
+            Edição {edital.ano} <span className="text-slate-400">·</span>{' '}
+            {emAvaliacao
+              ? 'Fase de avaliação aberta'
+              : 'Fase de avaliação encerrada — consulta ao histórico'}
           </p>
-        </div>
+        </header>
       </FadeIn>
 
-      {/* Busca */}
-      <Card padding="sm" className="mb-4 sm:mb-6 sm:p-6">
-        <form method="get" action="/avaliador/inscricoes" className="flex items-end gap-3">
-          <div className="flex-1">
-            <label htmlFor="search" className="block text-sm font-medium text-slate-700 mb-1.5">Buscar</label>
-            <input
-              id="search" name="search" type="text" defaultValue={searchQuery}
-              placeholder="Nome ou número da inscrição..."
-              className="block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-500 min-h-[44px]"
-            />
-          </div>
-          <Button type="submit">Filtrar</Button>
-          <Button href="/avaliador/inscricoes" variant="ghost">Limpar</Button>
-        </form>
-      </Card>
+      <AbasStatus
+        abas={(Object.keys(ABAS_AVALIADOR) as AbaAvaliador[]).map((aba) => ({
+          chave: aba,
+          label: ABAS_AVALIADOR[aba],
+          count: contagens[aba],
+          href: href(aba),
+          alerta: aba === 'a_avaliar',
+        }))}
+        ativa={abaAtiva}
+        rotulo="Filtrar por situação da sua avaliação"
+      />
 
-      {inscricoes.length === 0 ? (
+      <BuscaFiltro
+        action="/avaliador/inscricoes"
+        campos={{ editalId: edital.id, aba: abaAtiva }}
+        placeholder="Buscar por nome do proponente ou número da inscrição"
+        valor={searchQuery}
+        limparHref={`/avaliador/inscricoes?editalId=${edital.id}&aba=${abaAtiva}`}
+        className="mb-4 sm:mb-6"
+      />
+
+      {linhas.length === 0 ? (
         <Card>
           <EmptyState
             icon={<IconClipboard className="h-8 w-8 text-slate-400" />}
-            title="Nenhuma inscrição atribuída"
-            description="Você ainda não possui inscrições atribuídas para avaliação."
+            title={
+              abaAtiva === 'a_avaliar'
+                ? 'Nenhuma inscrição aguardando sua avaliação'
+                : abaAtiva === 'em_avaliacao'
+                  ? 'Nenhuma avaliação em andamento'
+                  : 'Nenhuma avaliação concluída ainda'
+            }
+            description="Troque de aba ou ajuste a busca para ver outras inscrições deste edital."
           />
         </Card>
       ) : (
         <>
-          {/* Mobile */}
-          <div className="sm:hidden space-y-3">
-            {inscricoes.map((ins) => {
-              const minha = ins.avaliacoes[0]
-              return (
-                <Link
-                  key={ins.id}
-                  href={`/avaliador/inscricoes/${ins.id}`}
-                  className="block rounded-lg border border-slate-200 bg-white p-3.5 hover:bg-slate-50 transition-colors shadow-sm"
-                >
-                  <div className="flex items-start justify-between gap-2 mb-1.5">
-                    <p className="text-sm font-medium text-slate-900">{ins.proponente.nome}</p>
-                    {minha ? (
-                      <span className={`shrink-0 text-[11px] font-medium px-2 py-0.5 rounded-full ${minha.finalizada ? 'text-emerald-700 bg-emerald-50' : 'text-amber-700 bg-amber-50'}`}>
-                        {minha.finalizada ? `Nota: ${Number(minha.notaTotal)}` : 'Pendente'}
-                      </span>
-                    ) : (
-                      <span className="text-[11px] text-slate-400 shrink-0">Pendente</span>
-                    )}
-                  </div>
-                  <p className="text-xs text-slate-500 mb-1 line-clamp-1">{ins.edital.titulo}</p>
-                  <span className="text-[11px] font-mono text-slate-400">{ins.numero}</span>
-                </Link>
-              )
-            })}
-          </div>
-
-          {/* Desktop */}
-          <Card padding="sm" className="overflow-hidden hidden sm:block">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-slate-50">
-                    <th className="text-left py-3 px-4 font-medium text-slate-600">Inscrição</th>
-                    <th className="text-left py-3 px-4 font-medium text-slate-600">Proponente</th>
-                    <th className="text-left py-3 px-4 font-medium text-slate-600">Edital</th>
-                    <th className="text-left py-3 px-4 font-medium text-slate-600">Categoria</th>
-                    <th className="text-left py-3 px-4 font-medium text-slate-600">Avaliação</th>
-                    <th className="text-right py-3 px-4 font-medium text-slate-600">Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {inscricoes.map((ins) => {
-                    const minha = ins.avaliacoes[0]
-                    return (
-                      <tr key={ins.id} className="border-t border-slate-100 hover:bg-slate-50 transition-colors">
-                        <td className="py-3 px-4 font-mono text-xs">{ins.numero}</td>
-                        <td className="py-3 px-4">
-                          <p className="font-medium text-slate-900">{ins.proponente.nome}</p>
-                          <p className="text-xs text-slate-500">{ins.proponente.cpfCnpj}</p>
-                        </td>
-                        <td className="py-3 px-4 text-slate-600">{ins.edital.titulo}</td>
-                        <td className="py-3 px-4 text-slate-600">{ins.categoria ?? '—'}</td>
-                        <td className="py-3 px-4">
-                          {minha ? (
-                            <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${minha.finalizada ? 'text-emerald-700 bg-emerald-50' : 'text-amber-700 bg-amber-50'}`}>
-                              {minha.finalizada ? `Nota: ${Number(minha.notaTotal)}` : 'Pendente'}
-                            </span>
-                          ) : (
-                            <span className="text-xs text-slate-400">Pendente</span>
-                          )}
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          <Link href={`/avaliador/inscricoes/${ins.id}`} className="text-brand-600 hover:text-brand-700 font-medium text-xs">
-                            {minha?.finalizada ? 'Ver' : 'Avaliar'}
-                          </Link>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </Card>
-
-          <Pagination currentPage={page} totalPages={totalPages} baseUrl={baseUrl} className="mt-4 sm:mt-6" />
+          <ListaInscricoes inscricoes={linhas} />
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            baseUrl={href(abaAtiva)}
+            className="mt-4 sm:mt-6"
+          />
         </>
       )}
     </section>

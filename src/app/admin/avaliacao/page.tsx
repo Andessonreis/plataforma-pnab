@@ -13,7 +13,6 @@ import {
   IconClipboard,
   IconCheck,
   IconUsers,
-  IconSearch,
 } from '@/components/ui'
 import { viewNotaTotal } from '@/lib/services/avaliacao-view'
 import {
@@ -24,6 +23,8 @@ import {
   STATUS_RESULTADO_PUBLICADO,
   type BucketAvaliacao,
 } from '@/lib/services/avaliacao-buckets'
+import { AbasStatus } from '@/components/abas-status'
+import { BuscaFiltro } from '@/components/busca-filtro'
 import { EditalPicker, type EditalAvaliacaoCard } from './edital-picker'
 import type { Prisma } from '@prisma/client'
 
@@ -216,75 +217,26 @@ export default async function AdminAvaliacaoPage({ searchParams }: Props) {
         </header>
       </FadeIn>
 
-      {/* Barra de status — tabs com contagens integradas */}
-      <div className="mb-5 sm:mb-6 border-b border-slate-200">
-        <nav className="flex flex-wrap gap-x-1 -mb-px" aria-label="Filtrar por status de avaliação">
-          {(Object.keys(ABAS) as AbaKey[]).map((aba) => {
-            const isActive = aba === abaAtiva
-            const count = abasCount[aba]
-            return (
-              <Link
-                key={aba}
-                href={hrefAba(aba)}
-                aria-current={isActive ? 'page' : undefined}
-                className={[
-                  'inline-flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors min-h-[44px]',
-                  isActive
-                    ? 'border-brand-600 text-brand-700'
-                    : 'border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-300',
-                ].join(' ')}
-              >
-                <span>{ABAS[aba].label}</span>
-                <span
-                  className={[
-                    'inline-flex items-center justify-center min-w-[1.5rem] h-6 px-1.5 rounded-full text-xs font-semibold tabular-nums',
-                    isActive ? 'bg-brand-100 text-brand-800' : 'bg-slate-100 text-slate-600',
-                  ].join(' ')}
-                >
-                  {count}
-                </span>
-              </Link>
-            )
-          })}
-        </nav>
-      </div>
+      <AbasStatus
+        abas={(Object.keys(ABAS) as AbaKey[]).map((aba) => ({
+          chave: aba,
+          label: ABAS[aba].label,
+          count: abasCount[aba],
+          href: hrefAba(aba),
+        }))}
+        ativa={abaAtiva}
+        rotulo="Filtrar por status de avaliação"
+      />
 
       {/* Busca */}
       {(total > 0 || searchQuery) && (
-        <form method="get" action="/admin/avaliacao" className="mb-5 sm:mb-6">
-          <input type="hidden" name="editalId" value={edital.id} />
-          <input type="hidden" name="aba" value={abaAtiva} />
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="flex-1 relative">
-              <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
-              <input
-                id="search"
-                name="search"
-                type="text"
-                defaultValue={searchQuery}
-                placeholder="Buscar por nome, CPF/CNPJ ou número da inscrição"
-                aria-label="Buscar inscrições"
-                className="block w-full rounded-lg border border-slate-300 pl-9 pr-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-500 min-h-[44px]"
-              />
-            </div>
-            <div className="flex gap-2">
-              <button
-                type="submit"
-                className="inline-flex items-center justify-center min-h-[44px] px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium transition-colors"
-              >
-                Buscar
-              </button>
-              {searchQuery && (
-                <Link
-                  href={`/admin/avaliacao?editalId=${edital.id}&aba=${abaAtiva}`}
-                  className="inline-flex items-center justify-center min-h-[44px] px-4 py-2 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-700 text-sm font-medium transition-colors"
-                >
-                  Limpar
-                </Link>
-              )}
-            </div>
-          </div>
-        </form>
+        <BuscaFiltro
+          action="/admin/avaliacao"
+          campos={{ editalId: edital.id, aba: abaAtiva }}
+          placeholder="Buscar por nome, CPF/CNPJ ou número da inscrição"
+          valor={searchQuery}
+          limparHref={`/admin/avaliacao?editalId=${edital.id}&aba=${abaAtiva}`}
+        />
       )}
 
       {/* Conteúdo principal */}

@@ -27,12 +27,13 @@ function makeParams(id = 'insc-1') {
   return { params: Promise.resolve({ id }) }
 }
 
+// Precisa espelhar os critérios de baseInscricao.edital — a rota rejeita nota
+// cujo critério não existe no edital.
 const sampleNotas = [
-  { criterio: 'Relevancia Cultural', nota: 8, peso: 25 },
-  { criterio: 'Viabilidade Tecnica', nota: 7, peso: 25 },
-  { criterio: 'Coerencia do Plano', nota: 9, peso: 20 },
-  { criterio: 'Contrapartida Social', nota: 6, peso: 15 },
-  { criterio: 'Historico do Proponente', nota: 8, peso: 15 },
+  { criterio: 'Qualidade Artistica', nota: 8, peso: 40 },
+  { criterio: 'Relevancia Social', nota: 7, peso: 30 },
+  { criterio: 'Exequibilidade', nota: 9, peso: 15 },
+  { criterio: 'Historico do Proponente', nota: 6, peso: 15 },
 ]
 
 const baseInscricao = {
@@ -262,6 +263,90 @@ describe('PUT /api/admin/inscricoes/[id]/avaliacao', () => {
     )
 
     expect(res.status).toBe(403)
+  })
+
+  describe('teto de nota por criterio', () => {
+    // Edital tipo Festival do Centenario: criterio de 0 a 30
+    const editalNotaMax30 = {
+      ...baseInscricao.edital,
+      criteriosAvaliacao: [
+        { criterio: 'A) Qualidade do Projeto', peso: 30, notaMax: 30 },
+        { criterio: 'E) Coerencia do Plano de Divulgacao', peso: 10, notaMax: 10 },
+      ],
+    }
+
+    function mockInscricaoComEdital(edital: unknown) {
+      mockAuth.mockResolvedValue({ user: { id: 'aval-user-1', role: 'AVALIADOR' } } as never)
+      mockPrisma.inscricao.findUnique.mockResolvedValue({
+        id: 'insc-1',
+        numero: 'PNAB-2025-0001',
+        status: 'EM_AVALIACAO',
+        editalId: 'edital-1',
+        edital,
+      } as never)
+      mockPrisma.avaliacao.findUnique.mockResolvedValue(null)
+      mockPrisma.avaliacao.upsert.mockResolvedValue({
+        id: 'aval-1',
+        notaTotal: 7.33,
+        finalizada: false,
+        updatedAt: new Date(),
+      } as never)
+    }
+
+    it('aceita nota 22 em criterio com notaMax 30', async () => {
+      mockInscricaoComEdital(editalNotaMax30)
+
+      const res = await PUT(
+        makePutRequest({
+          notas: [
+            { criterio: 'A) Qualidade do Projeto', nota: 22, peso: 30 },
+            { criterio: 'E) Coerencia do Plano de Divulgacao', nota: 8, peso: 10 },
+          ],
+        }),
+        makeParams(),
+      )
+
+      expect(res.status).toBe(200)
+    })
+
+    it('rejeita nota 31 em criterio com notaMax 30', async () => {
+      mockInscricaoComEdital(editalNotaMax30)
+
+      const res = await PUT(
+        makePutRequest({ notas: [{ criterio: 'A) Qualidade do Projeto', nota: 31, peso: 30 }] }),
+        makeParams(),
+      )
+
+      expect(res.status).toBe(400)
+      const body = await res.json()
+      expect(body.message).toContain('excede o máximo de 30')
+    })
+
+    it('rejeita nota 11 em criterio com notaMax 10', async () => {
+      mockInscricaoComEdital(editalNotaMax30)
+
+      const res = await PUT(
+        makePutRequest({ notas: [{ criterio: 'E) Coerencia do Plano de Divulgacao', nota: 11, peso: 10 }] }),
+        makeParams(),
+      )
+
+      expect(res.status).toBe(400)
+      const body = await res.json()
+      expect(body.message).toContain('excede o máximo de 10')
+    })
+
+    it('rejeita criterio que nao existe no edital', async () => {
+      mockInscricaoComEdital(editalNotaMax30)
+
+      const res = await PUT(
+        makePutRequest({ notas: [{ criterio: 'Criterio Fantasma', nota: 5, peso: 10 }] }),
+        makeParams(),
+      )
+
+      expect(res.status).toBe(400)
+      const body = await res.json()
+      expect(body.message).toContain('não pertence')
+    })
   })
 
   it('inscricao nao encontrada → 404', async () => {

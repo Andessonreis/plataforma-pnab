@@ -3,12 +3,13 @@ import type { ReactNode } from 'react'
 import { FadeIn } from '@/components/ui'
 
 /**
- * Seleção de edital antes de abrir uma fila de trabalho do backoffice.
+ * Seleção de edital antes de abrir uma fila de trabalho.
  *
- * Nasceu na tela de habilitação e virou compartilhado quando a lista de
- * inscrições precisou do mesmo recorte: com dezenas de editais no ar, uma
- * lista única mistura processos de editais diferentes e fica ilegível. Cada
- * tela informa suas próprias métricas — o layout do card é o mesmo.
+ * Nasceu na tela de habilitação e virou compartilhado quando as listas de
+ * inscrições e as filas do avaliador precisaram do mesmo recorte: com dezenas
+ * de editais no ar, uma lista única mistura processos de editais diferentes e
+ * fica ilegível. Cada tela informa suas próprias métricas — o layout do card é
+ * o mesmo.
  */
 
 export interface EditalPickerStat {

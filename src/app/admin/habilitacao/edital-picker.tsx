@@ -1,6 +1,6 @@
 import type { EditalStatus } from '@prisma/client'
 import { IconShield, IconClipboard, IconCheck, IconClose } from '@/components/ui'
-import { EditalPicker as EditalPickerBase, type EditalPickerCard } from '@/components/admin/edital-picker'
+import { EditalPicker as EditalPickerBase, type EditalPickerCard } from '@/components/edital-picker'
 
 export interface EditalHabilitacaoCard {
   id: string

@@ -1,6 +1,6 @@
 import type { EditalStatus } from '@prisma/client'
 import { IconClipboard, IconDocument, IconCheck } from '@/components/ui'
-import { EditalPicker as EditalPickerBase, type EditalPickerCard } from '@/components/admin/edital-picker'
+import { EditalPicker as EditalPickerBase, type EditalPickerCard } from '@/components/edital-picker'
 
 /** Um edital na seleção, com o resumo das inscrições dele. */
 export interface EditalInscricoesCard {

@@ -1,8 +1,11 @@
 import { z } from 'zod'
 
+// O teto real de cada nota é o `notaMax` do critério do edital — validado no
+// service (validarNotasContraCriterios), depois de carregar o edital. Aqui só
+// um guarda de sanidade.
 export const notaItemSchema = z.object({
   criterio: z.string().min(1),
-  nota: z.number().min(0).max(10),
+  nota: z.number().min(0).max(1000),
   peso: z.number().min(0).max(100),
 })
 

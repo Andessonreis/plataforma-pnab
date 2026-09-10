@@ -4,8 +4,7 @@ import { randomUUID } from 'crypto'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { logAudit } from '@/lib/audit'
-import { CRITERIOS_AVALIACAO_PADRAO } from '@/lib/avaliacao-criterios'
-import type { CriterioAvaliacao } from '@/lib/avaliacao-criterios'
+import { parseCriterios, validarNotasContraCriterios } from '@/lib/avaliacao-criterios'
 import { calculateTotal } from '@/lib/results/formula'
 import { temAcessoEdital } from '@/lib/edital-acesso'
 import { gateAcaoFase } from '@/lib/edital/gate'
@@ -13,9 +12,11 @@ import type { UserRole } from '@prisma/client'
 
 export const runtime = 'nodejs'
 
+// O teto real de cada nota é o `notaMax` do critério do edital — validado no
+// handler, depois de carregar o edital. Aqui só um guarda de sanidade.
 const notaItemSchema = z.object({
   criterio: z.string().min(1),
-  nota: z.number().min(0).max(10),
+  nota: z.number().min(0).max(1000),
   peso: z.number().min(0).max(100),
 })
 
@@ -105,10 +106,7 @@ export async function GET(
       return res
     }
 
-    const editalCriterios = Array.isArray(inscricao.edital.criteriosAvaliacao)
-      ? (inscricao.edital.criteriosAvaliacao as unknown as CriterioAvaliacao[])
-      : []
-    const criterios = editalCriterios.length > 0 ? editalCriterios : [...CRITERIOS_AVALIACAO_PADRAO]
+    const criterios = parseCriterios(inscricao.edital.criteriosAvaliacao)
 
     const res = NextResponse.json({
       avaliacao,
@@ -200,6 +198,19 @@ export async function PUT(
       }
     }
 
+    const criterios = parseCriterios(inscricao.edital.criteriosAvaliacao)
+    const erroNotas = validarNotasContraCriterios(data.notas, criterios)
+
+    if (erroNotas) {
+      const res = NextResponse.json(
+        { error: 'BAD_REQUEST', message: erroNotas, requestId },
+        { status: 400 },
+      )
+      res.headers.set('X-Request-Id', requestId)
+      res.headers.set('Cache-Control', 'no-store')
+      return res
+    }
+
     // ── Gate de fase do edital — bloqueia fora de AVALIACAO ─────────────────
     const gate = gateAcaoFase({
       editalStatus: inscricao.edital.status,
@@ -246,11 +257,7 @@ export async function PUT(
     }
 
     // Calcular nota total usando fórmula do edital (se existir) ou média ponderada
-    const editalCriterios = Array.isArray(inscricao.edital.criteriosAvaliacao)
-      ? (inscricao.edital.criteriosAvaliacao as unknown as CriterioAvaliacao[])
-      : []
-    const criteriosCalc = editalCriterios.length > 0 ? editalCriterios : [...CRITERIOS_AVALIACAO_PADRAO]
-    const notaTotal = calculateTotal(data.notas, criteriosCalc, inscricao.edital.formulaAvaliacao)
+    const notaTotal = calculateTotal(data.notas, criterios, inscricao.edital.formulaAvaliacao)
 
     const avaliacaoData = {
       notas: data.notas,
