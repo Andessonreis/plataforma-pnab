@@ -4,7 +4,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { getEditaisVisiveis } from '@/lib/edital-acesso'
 import { viewNotaTotal } from '@/lib/services/avaliacao-view'
-import { EDITAL_STATUS_COM_AVALIACAO } from '@/lib/services/avaliacao-buckets'
+import { EDITAL_STATUS_VISIVEL_PARA_AVALIACAO } from '@/lib/services/avaliacao-buckets'
 import { AbasStatus } from '@/components/abas-status'
 import { BuscaFiltro } from '@/components/busca-filtro'
 import {
@@ -61,7 +61,7 @@ export default async function AvaliadorInscricoesPage({ searchParams }: Props) {
   const searchQuery = params.search?.trim() || undefined
 
   const edital = await prisma.edital.findFirst({
-    where: { id: editalIdFiltro, status: { in: EDITAL_STATUS_COM_AVALIACAO } },
+    where: { id: editalIdFiltro, status: { in: EDITAL_STATUS_VISIVEL_PARA_AVALIACAO } },
     select: { id: true, titulo: true, ano: true, status: true },
   })
   if (!edital) redirect('/avaliador/inscricoes')
@@ -129,7 +129,9 @@ export default async function AvaliadorInscricoesPage({ searchParams }: Props) {
   }
 
   const totalPages = Math.ceil(total / pageSize)
-  const emAvaliacao = edital.status === 'AVALIACAO'
+  // Fila aberta tanto na fase formal de AVALIACAO quanto quando o edital
+  // ainda está em HABILITACAO mas já tem inscrições liberadas em paralelo.
+  const emAvaliacao = edital.status === 'AVALIACAO' || contAAvaliar + contEmAvaliacao > 0
 
   return (
     <section>

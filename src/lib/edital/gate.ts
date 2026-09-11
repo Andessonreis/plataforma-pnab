@@ -5,7 +5,7 @@
  * para ser reusada em routes admin e services v1 sem duplicação.
  */
 
-import type { EditalStatus, UserRole } from '@prisma/client'
+import type { EditalStatus, InscricaoStatus, UserRole } from '@prisma/client'
 import { podeAcao, mensagemForaDaFase, type FaseAcao } from './fase'
 
 export type GateInput = {
@@ -13,6 +13,8 @@ export type GateInput = {
   acao: FaseAcao
   role: UserRole
   override?: boolean
+  /** Necessário pra 'avaliar'/'atribuir_avaliador' liberarem em paralelo à habilitação — ver fase.ts. */
+  inscricaoStatus?: InscricaoStatus
 }
 
 export type GateResult =
@@ -28,9 +30,9 @@ export type GateResult =
  * - Fora da fase em qualquer outro caso → bloqueia com mensagem clara
  */
 export function gateAcaoFase(input: GateInput): GateResult {
-  const { editalStatus, acao, role, override } = input
+  const { editalStatus, acao, role, override, inscricaoStatus } = input
 
-  if (podeAcao(editalStatus, acao)) {
+  if (podeAcao(editalStatus, acao, inscricaoStatus)) {
     return { ok: true, overrideUsed: false }
   }
 

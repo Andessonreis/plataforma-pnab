@@ -66,4 +66,34 @@ describe('gateAcaoFase', () => {
       gateAcaoFase({ editalStatus: 'HABILITACAO', acao: 'atribuir_avaliador', role: 'ADMIN' }).ok,
     ).toBe(false)
   })
+
+  it('libera avaliar/atribuir_avaliador em HABILITACAO quando a inscrição já está pronta (paralelo)', () => {
+    expect(
+      gateAcaoFase({
+        editalStatus: 'HABILITACAO',
+        acao: 'avaliar',
+        role: 'AVALIADOR',
+        inscricaoStatus: 'HABILITADA',
+      }),
+    ).toEqual({ ok: true, overrideUsed: false })
+
+    expect(
+      gateAcaoFase({
+        editalStatus: 'HABILITACAO',
+        acao: 'atribuir_avaliador',
+        role: 'ADMIN',
+        inscricaoStatus: 'EM_AVALIACAO',
+      }),
+    ).toEqual({ ok: true, overrideUsed: false })
+  })
+
+  it('bloqueia avaliar em HABILITACAO quando a inscrição ainda não foi decidida', () => {
+    const r = gateAcaoFase({
+      editalStatus: 'HABILITACAO',
+      acao: 'avaliar',
+      role: 'AVALIADOR',
+      inscricaoStatus: 'ENVIADA',
+    })
+    expect(r.ok).toBe(false)
+  })
 })

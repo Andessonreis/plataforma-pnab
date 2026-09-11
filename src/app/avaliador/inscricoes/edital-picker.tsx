@@ -1,7 +1,7 @@
 import type { EditalStatus } from '@prisma/client'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { EDITAL_STATUS_COM_AVALIACAO } from '@/lib/services/avaliacao-buckets'
+import { EDITAL_STATUS_VISIVEL_PARA_AVALIACAO } from '@/lib/services/avaliacao-buckets'
 import { Card, EmptyState, IconStar, IconClipboard, IconClock, IconCheck } from '@/components/ui'
 import { EditalPicker as EditalPickerBase, type EditalPickerCard } from '@/components/edital-picker'
 import { classificarMinhaAvaliacao, whereInscricoesDoAvaliador } from './filtros'
@@ -18,12 +18,15 @@ export interface EditalAvaliadorCard {
 
 function paraCard(edital: EditalAvaliadorCard): EditalPickerCard {
   const total = edital.aAvaliar + edital.emAvaliacao + edital.avaliadas
+  // Ativo tanto na fase formal de AVALIACAO quanto quando o edital ainda está
+  // em HABILITACAO mas já tem inscrições liberadas em paralelo pra este avaliador.
+  const ativo = edital.status === 'AVALIACAO' || edital.aAvaliar + edital.emAvaliacao > 0
 
   return {
     id: edital.id,
     titulo: edital.titulo,
     ano: edital.ano,
-    ativo: edital.status === 'AVALIACAO',
+    ativo,
     href: `/avaliador/inscricoes?editalId=${edital.id}`,
     progresso: {
       label: 'Suas avaliações concluídas',
@@ -65,7 +68,7 @@ export async function SelecaoEdital({
 }) {
   const editais = editaisVisiveis.length
     ? await prisma.edital.findMany({
-        where: { id: { in: editaisVisiveis }, status: { in: EDITAL_STATUS_COM_AVALIACAO } },
+        where: { id: { in: editaisVisiveis }, status: { in: EDITAL_STATUS_VISIVEL_PARA_AVALIACAO } },
         select: { id: true, titulo: true, ano: true, status: true },
       })
     : []
@@ -91,13 +94,14 @@ export async function SelecaoEdital({
     else t.avaliadas++
   }
 
-  // Editais em avaliação sempre aparecem; encerrados só quando têm histórico.
+  // Editais em avaliação (ou com trabalho liberado em paralelo) sempre
+  // aparecem; encerrados só quando têm histórico.
   const cards: EditalAvaliadorCard[] = editais
     .map((e) => ({ ...e, ...tally.get(e.id)! }))
     .filter((c) => c.status === 'AVALIACAO' || c.aAvaliar + c.emAvaliacao + c.avaliadas > 0)
     .sort((a, b) => {
-      const ativoA = a.status === 'AVALIACAO' ? 0 : 1
-      const ativoB = b.status === 'AVALIACAO' ? 0 : 1
+      const ativoA = a.status === 'AVALIACAO' || a.aAvaliar + a.emAvaliacao > 0 ? 0 : 1
+      const ativoB = b.status === 'AVALIACAO' || b.aAvaliar + b.emAvaliacao > 0 ? 0 : 1
       if (ativoA !== ativoB) return ativoA - ativoB
       return b.ano - a.ano
     })
@@ -107,7 +111,7 @@ export async function SelecaoEdital({
   }
 
   const pendentes = cards
-    .filter((e) => e.status === 'AVALIACAO')
+    .filter((e) => e.status === 'AVALIACAO' || e.aAvaliar + e.emAvaliacao > 0)
     .reduce((acc, e) => acc + e.aAvaliar + e.emAvaliacao, 0)
 
   return (

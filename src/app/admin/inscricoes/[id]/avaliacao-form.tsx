@@ -424,7 +424,15 @@ export function AvaliacaoForm({
                                 step={0.5}
                                 value={notaVal}
                                 onChange={(e) => {
-                                  const v = parseFloat(e.target.value)
+                                  const raw = e.target.value
+                                  // Campo vazio (apagado por completo) é o mesmo que zerar a nota —
+                                  // sem isso o guard de NaN barrava o update e o valor controlado
+                                  // "voltava sozinho" pro último dígito válido em vez de zerar.
+                                  if (raw === '') {
+                                    updateNota(c.criterio, 0)
+                                    return
+                                  }
+                                  const v = parseFloat(raw)
                                   if (!isNaN(v)) updateNota(c.criterio, Math.min(c.notaMax, Math.max(0, v)))
                                 }}
                                 className={[

@@ -13,6 +13,7 @@ export interface EditalAvaliacaoCard {
 }
 
 const FASE_LABEL: Record<string, string> = {
+  HABILITACAO: 'Habilitação — avaliação já liberada',
   AVALIACAO: 'Em avaliação',
   RESULTADO_PRELIMINAR: 'Resultado preliminar',
   RECURSO: 'Em recurso',
@@ -24,10 +25,15 @@ function faseLabel(status: EditalStatus): string {
   return FASE_LABEL[status] ?? 'Avaliação concluída'
 }
 
+/** Tem trabalho de avaliação em andamento — na fase formal ou liberado em paralelo. */
+function emAndamento(edital: EditalAvaliacaoCard): boolean {
+  return edital.status === 'AVALIACAO' || edital.aguardando + edital.emAvaliacao > 0
+}
+
 function Card({ edital }: { edital: EditalAvaliacaoCard }) {
   const total = edital.aguardando + edital.emAvaliacao + edital.avaliadas
   const pct = total > 0 ? Math.round((edital.avaliadas / total) * 100) : 0
-  const ativo = edital.status === 'AVALIACAO'
+  const ativo = emAndamento(edital)
 
   return (
     <li>
@@ -116,8 +122,8 @@ function Card({ edital }: { edital: EditalAvaliacaoCard }) {
 }
 
 export function EditalPicker({ editais }: { editais: EditalAvaliacaoCard[] }) {
-  const ativos = editais.filter((e) => e.status === 'AVALIACAO')
-  const concluidos = editais.filter((e) => e.status !== 'AVALIACAO')
+  const ativos = editais.filter(emAndamento)
+  const concluidos = editais.filter((e) => !emAndamento(e))
 
   const totalPendentes = ativos.reduce((acc, e) => acc + e.aguardando + e.emAvaliacao, 0)
 

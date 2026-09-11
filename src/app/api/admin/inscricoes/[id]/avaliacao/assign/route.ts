@@ -58,7 +58,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     // Pré-checagens fora da transaction: existência + fase do edital
     const inscricaoCheck = await prisma.inscricao.findUnique({
       where: { id: inscricaoId },
-      select: { id: true, edital: { select: { status: true } } },
+      select: { id: true, status: true, edital: { select: { status: true } } },
     })
 
     if (!inscricaoCheck) {
@@ -73,6 +73,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
       acao: 'atribuir_avaliador',
       role: 'ADMIN',
       override: adminOverride,
+      inscricaoStatus: inscricaoCheck.status,
     })
 
     if (!gate.ok) {

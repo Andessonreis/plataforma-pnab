@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { invalidCotasOptIn } from '@/types/categoria-config'
+import { statusVisivelParaProponente } from '@/lib/edital/resultado-habilitacao'
 
 export const runtime = 'nodejs'
 
@@ -82,7 +83,17 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       return res
     }
 
-    const res = NextResponse.json({ data: inscricao, requestId })
+    // Dono da inscrição só vê o resultado da habilitação depois de liberado —
+    // essa rota é chamada direto (fora da tela), então a máscara precisa
+    // acontecer aqui também, não só no server component (ver resultado-habilitacao.ts).
+    const data = isAdmin
+      ? inscricao
+      : {
+          ...inscricao,
+          status: statusVisivelParaProponente(inscricao.status, inscricao.resultadoLiberadoEm !== null),
+        }
+
+    const res = NextResponse.json({ data, requestId })
     res.headers.set('X-Request-Id', requestId)
     res.headers.set('Cache-Control', 'no-store')
 

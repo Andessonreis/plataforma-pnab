@@ -141,7 +141,7 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
 
   // Gating por fase do edital — bugs #84/#85
   const editalStatus = inscricao.edital.status
-  const podeAvaliarAgora = podeAvaliar(editalStatus)
+  const podeAvaliarAgora = podeAvaliar(editalStatus, inscricao.status)
   const podeHabilitarAgora = podeHabilitar(editalStatus)
 
   const camposFormulario = (Array.isArray(inscricao.edital.camposFormulario)

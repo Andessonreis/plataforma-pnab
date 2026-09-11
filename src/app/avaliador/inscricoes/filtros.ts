@@ -1,5 +1,9 @@
 import type { Prisma } from '@prisma/client'
-import { EDITAL_STATUS_COM_AVALIACAO } from '@/lib/services/avaliacao-buckets'
+import {
+  EDITAL_STATUS_COM_AVALIACAO,
+  STATUS_BLOQUEADO_PARA_AVALIADOR,
+  STATUS_EM_PROCESSO_AVALIACAO,
+} from '@/lib/services/avaliacao-buckets'
 
 /**
  * Recorte das inscrições sob a ótica do avaliador logado: o que ele ainda não
@@ -20,12 +24,22 @@ export function isAbaAvaliador(valor: string | undefined): valor is AbaAvaliador
   return !!valor && valor in ABAS_AVALIADOR
 }
 
-/** Inscrições que chegaram à fase de avaliação nos editais da equipe do avaliador. */
+/**
+ * Inscrições que chegaram à avaliação nos editais da equipe do avaliador.
+ *
+ * Um avaliador nunca vê RASCUNHO/ENVIADA/INABILITADA (`STATUS_BLOQUEADO_PARA_AVALIADOR`).
+ * Além disso, se o edital ainda está em HABILITACAO, só entram as inscrições
+ * já prontas pra avaliação (`STATUS_EM_PROCESSO_AVALIACAO`) — habilitação e
+ * avaliação correm em paralelo, mas quem ainda não foi decidido não aparece.
+ */
 export function whereInscricoesDoAvaliador(editaisVisiveis: string[]): Prisma.InscricaoWhereInput {
   return {
-    status: { notIn: ['RASCUNHO', 'INABILITADA'] },
     editalId: { in: editaisVisiveis },
-    edital: { status: { in: EDITAL_STATUS_COM_AVALIACAO } },
+    status: { notIn: STATUS_BLOQUEADO_PARA_AVALIADOR },
+    OR: [
+      { edital: { status: { in: EDITAL_STATUS_COM_AVALIACAO } } },
+      { edital: { status: 'HABILITACAO' }, status: { in: STATUS_EM_PROCESSO_AVALIACAO } },
+    ],
   }
 }
 

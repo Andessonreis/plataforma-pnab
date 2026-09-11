@@ -2,13 +2,18 @@
  * Gating por fase do edital.
  *
  * Habilitação só durante EditalStatus = HABILITACAO.
- * Avaliação (criar/editar/atribuir) só durante EditalStatus = AVALIACAO.
+ * Avaliação (criar/editar/atribuir) durante EditalStatus = AVALIACAO — ou,
+ * por inscrição, mesmo com o edital ainda em HABILITACAO, desde que aquela
+ * inscrição específica já esteja HABILITADA ou EM_AVALIACAO. Habilitação e
+ * avaliação correm em paralelo: quem já foi conferido não espera o resto da
+ * fila terminar pra ir pro avaliador.
  *
  * Bugs #84 e #85 — exigência de UAT: "apenas e unicamente na sua fase
  * do edital". ADMIN pode forçar com override + justificativa auditada.
  */
 
-import type { EditalStatus } from '@prisma/client'
+import type { EditalStatus, InscricaoStatus } from '@prisma/client'
+import { STATUS_EM_PROCESSO_AVALIACAO } from '@/lib/services/avaliacao-buckets'
 
 export type FaseAcao = 'avaliar' | 'atribuir_avaliador' | 'habilitar'
 
@@ -51,19 +56,22 @@ export function podeHabilitar(status: EditalStatus): boolean {
   return status === 'HABILITACAO'
 }
 
-export function podeAvaliar(status: EditalStatus): boolean {
-  return status === 'AVALIACAO'
+export function podeAvaliar(status: EditalStatus, inscricaoStatus?: InscricaoStatus): boolean {
+  if (status === 'AVALIACAO') return true
+  if (status === 'HABILITACAO' && inscricaoStatus) {
+    return STATUS_EM_PROCESSO_AVALIACAO.includes(inscricaoStatus)
+  }
+  return false
 }
 
-export function podeAtribuirAvaliador(status: EditalStatus): boolean {
-  // Atribuição só faz sentido durante a fase de avaliação.
-  return status === 'AVALIACAO'
+export function podeAtribuirAvaliador(status: EditalStatus, inscricaoStatus?: InscricaoStatus): boolean {
+  return podeAvaliar(status, inscricaoStatus)
 }
 
-export function podeAcao(status: EditalStatus, acao: FaseAcao): boolean {
+export function podeAcao(status: EditalStatus, acao: FaseAcao, inscricaoStatus?: InscricaoStatus): boolean {
   if (acao === 'habilitar') return podeHabilitar(status)
-  if (acao === 'avaliar') return podeAvaliar(status)
-  return podeAtribuirAvaliador(status)
+  if (acao === 'avaliar') return podeAvaliar(status, inscricaoStatus)
+  return podeAtribuirAvaliador(status, inscricaoStatus)
 }
 
 /**

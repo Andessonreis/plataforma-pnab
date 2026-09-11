@@ -11,6 +11,7 @@ import { AnexoViewer } from '@/app/admin/inscricoes/[id]/anexo-viewer'
 import { RecursoRespostaAvaliador } from '@/app/admin/inscricoes/[id]/recurso-resposta-avaliador'
 import { RecursoAnexos } from '@/components/recurso/recurso-anexos'
 import { temAcessoEdital } from '@/lib/edital-acesso'
+import { STATUS_BLOQUEADO_PARA_AVALIADOR } from '@/lib/services/avaliacao-buckets'
 import { DadosInscricaoView } from '@/components/inscricao/dados-inscricao-view'
 import { podeAvaliar, mensagemForaDaFase } from '@/lib/edital/fase'
 import { ForaDaFaseAlert } from '@/components/edital/fora-da-fase-alert'
@@ -65,6 +66,12 @@ export default async function AvaliadorInscricaoDetailPage({ params }: Props) {
   // Verificar se o avaliador tem acesso ao edital (via equipe ou compat quando sem equipe)
   const hasAcesso = await temAcessoEdital(session.user.id, inscricao.editalId, 'AVALIADOR')
   if (!hasAcesso) {
+    redirect('/avaliador/inscricoes?aviso=nao-atribuido')
+  }
+
+  // Inscrição ainda não decidida (ou inabilitada) — acesso direto por URL não
+  // pode furar o que a listagem já filtra (`whereInscricoesDoAvaliador`).
+  if (STATUS_BLOQUEADO_PARA_AVALIADOR.includes(inscricao.status)) {
     redirect('/avaliador/inscricoes?aviso=nao-atribuido')
   }
 
@@ -201,7 +208,7 @@ export default async function AvaliadorInscricaoDetailPage({ params }: Props) {
       )}
 
       {/* Formulário de avaliação — gateado por fase do edital (#84) */}
-      {podeAvaliar(inscricao.edital.status) ? (
+      {podeAvaliar(inscricao.edital.status, inscricao.status) ? (
         <AvaliacaoForm
           inscricaoId={inscricao.id}
           inscricaoNumero={inscricao.numero}

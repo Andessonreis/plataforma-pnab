@@ -8,6 +8,7 @@ import { parseCriterios, validarNotasContraCriterios } from '@/lib/avaliacao-cri
 import { calculateTotal } from '@/lib/results/formula'
 import { temAcessoEdital } from '@/lib/edital-acesso'
 import { gateAcaoFase } from '@/lib/edital/gate'
+import { STATUS_BLOQUEADO_PARA_AVALIADOR } from '@/lib/services/avaliacao-buckets'
 import type { UserRole } from '@prisma/client'
 
 export const runtime = 'nodejs'
@@ -92,9 +93,23 @@ export async function GET(
       return res
     }
 
+    const isAdminCaller = ['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)
+
+    // Inscrição ainda não decidida (ou inabilitada) nunca vai pro avaliador,
+    // mesmo que ele já tenha acesso à equipe do edital.
+    if (!isAdminCaller && STATUS_BLOQUEADO_PARA_AVALIADOR.includes(inscricao.status)) {
+      const res = NextResponse.json(
+        { error: 'FORBIDDEN', message: 'Esta inscrição não foi atribuída a você.', requestId },
+        { status: 403 },
+      )
+      res.headers.set('X-Request-Id', requestId)
+      res.headers.set('Cache-Control', 'no-store')
+      return res
+    }
+
     // Avaliador só pode ver inscrições atribuídas a ele
     const avaliacao = inscricao.avaliacoes[0] ?? null
-    const isAssigned = ['ADMIN', 'SUPER_ADMIN'].includes(session.user.role) || avaliacao !== null
+    const isAssigned = isAdminCaller || avaliacao !== null
 
     if (!isAssigned) {
       const res = NextResponse.json(
@@ -211,12 +226,14 @@ export async function PUT(
       return res
     }
 
-    // ── Gate de fase do edital — bloqueia fora de AVALIACAO ─────────────────
+    // ── Gate de fase do edital — bloqueia fora de AVALIACAO, exceto quando a
+    // própria inscrição já está liberada pra avaliação em paralelo (fase.ts)
     const gate = gateAcaoFase({
       editalStatus: inscricao.edital.status,
       acao: 'avaliar',
       role: session.user.role as UserRole,
       override: data.adminOverride,
+      inscricaoStatus: inscricao.status,
     })
 
     if (!gate.ok) {

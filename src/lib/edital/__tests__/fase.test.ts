@@ -28,7 +28,7 @@ describe('podeHabilitar', () => {
 })
 
 describe('podeAvaliar', () => {
-  it('libera apenas em AVALIACAO', () => {
+  it('libera em AVALIACAO independente do status da inscrição', () => {
     expect(podeAvaliar('AVALIACAO')).toBe(true)
   })
 
@@ -39,16 +39,33 @@ describe('podeAvaliar', () => {
     'RESULTADO_PRELIMINAR',
     'RECURSO',
     'ENCERRADO',
-  ] as const)('bloqueia em %s', (status) => {
+  ] as const)('bloqueia em %s sem status de inscrição', (status) => {
     expect(podeAvaliar(status)).toBe(false)
+  })
+
+  it('libera em HABILITACAO quando a inscrição já está HABILITADA ou EM_AVALIACAO (paralelo)', () => {
+    expect(podeAvaliar('HABILITACAO', 'HABILITADA')).toBe(true)
+    expect(podeAvaliar('HABILITACAO', 'EM_AVALIACAO')).toBe(true)
+  })
+
+  it('bloqueia em HABILITACAO quando a inscrição ainda não foi decidida', () => {
+    expect(podeAvaliar('HABILITACAO', 'ENVIADA')).toBe(false)
+    expect(podeAvaliar('HABILITACAO', 'INABILITADA')).toBe(false)
+    expect(podeAvaliar('HABILITACAO', 'RASCUNHO')).toBe(false)
+  })
+
+  it('inscricaoStatus não libera fora de AVALIACAO/HABILITACAO', () => {
+    expect(podeAvaliar('RESULTADO_PRELIMINAR', 'HABILITADA')).toBe(false)
   })
 })
 
 describe('podeAtribuirAvaliador', () => {
-  it('libera apenas em AVALIACAO', () => {
+  it('segue a mesma regra de podeAvaliar', () => {
     expect(podeAtribuirAvaliador('AVALIACAO')).toBe(true)
     expect(podeAtribuirAvaliador('HABILITACAO')).toBe(false)
     expect(podeAtribuirAvaliador('RESULTADO_PRELIMINAR')).toBe(false)
+    expect(podeAtribuirAvaliador('HABILITACAO', 'HABILITADA')).toBe(true)
+    expect(podeAtribuirAvaliador('HABILITACAO', 'ENVIADA')).toBe(false)
   })
 })
 
@@ -59,6 +76,12 @@ describe('podeAcao', () => {
     expect(podeAcao('AVALIACAO', 'atribuir_avaliador')).toBe(true)
     expect(podeAcao('HABILITACAO', 'avaliar')).toBe(false)
     expect(podeAcao('AVALIACAO', 'habilitar')).toBe(false)
+  })
+
+  it('repassa inscricaoStatus pra avaliar/atribuir_avaliador', () => {
+    expect(podeAcao('HABILITACAO', 'avaliar', 'HABILITADA')).toBe(true)
+    expect(podeAcao('HABILITACAO', 'atribuir_avaliador', 'EM_AVALIACAO')).toBe(true)
+    expect(podeAcao('HABILITACAO', 'avaliar', 'ENVIADA')).toBe(false)
   })
 })
 

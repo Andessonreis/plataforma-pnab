@@ -18,7 +18,7 @@ import { viewNotaTotal } from '@/lib/services/avaliacao-view'
 import {
   whereBucket,
   classificarInscricao,
-  EDITAL_STATUS_COM_AVALIACAO,
+  EDITAL_STATUS_VISIVEL_PARA_AVALIACAO,
   STATUS_EM_PROCESSO_AVALIACAO,
   STATUS_RESULTADO_PUBLICADO,
   type BucketAvaliacao,
@@ -108,11 +108,13 @@ export default async function AdminAvaliacaoPage({ searchParams }: Props) {
       prisma.inscricao.count({ where: countWhere('aguardando') }),
       prisma.inscricao.count({ where: countWhere('em_avaliacao') }),
       prisma.inscricao.count({ where: countWhere('avaliadas') }),
-      prisma.edital.count({ where: { status: { in: EDITAL_STATUS_COM_AVALIACAO } } }),
+      prisma.edital.count({ where: { status: { in: EDITAL_STATUS_VISIVEL_PARA_AVALIACAO } } }),
     ])
 
   const totalPages = Math.ceil(total / pageSize)
-  const ativo = edital.status === 'AVALIACAO'
+  // Ativo tanto na fase formal de AVALIACAO quanto quando o edital ainda está
+  // em HABILITACAO mas já tem inscrições liberadas em paralelo pra avaliação.
+  const ativo = edital.status === 'AVALIACAO' || contAguardando + contEmAvaliacao > 0
   const podeTrocarEdital = totalEditais > 1
 
   function hrefAba(aba: AbaKey) {
@@ -361,7 +363,7 @@ export default async function AdminAvaliacaoPage({ searchParams }: Props) {
 /** Tela de seleção de edital. Redireciona direto quando há um único edital. */
 async function renderPicker() {
   const editais = await prisma.edital.findMany({
-    where: { status: { in: EDITAL_STATUS_COM_AVALIACAO } },
+    where: { status: { in: EDITAL_STATUS_VISIVEL_PARA_AVALIACAO } },
     select: { id: true, titulo: true, ano: true, status: true },
   })
 

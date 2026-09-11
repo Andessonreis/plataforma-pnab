@@ -4,6 +4,7 @@ import { parseCriterios, validarNotasContraCriterios } from '@/lib/avaliacao-cri
 import { calculateTotal } from '@/lib/results/formula'
 import { temAcessoEdital } from '@/lib/edital-acesso'
 import { gateAcaoFase } from '@/lib/edital/gate'
+import { STATUS_BLOQUEADO_PARA_AVALIADOR } from '@/lib/services/avaliacao-buckets'
 import { ServiceError } from './errors'
 import type { AvaliacaoInput } from '@/lib/schemas/avaliacao'
 
@@ -29,6 +30,10 @@ export async function getAvaliacao(inscricaoId: string, avaliadorId: string, isA
   if (!inscricao) throw new ServiceError('NOT_FOUND', 'Inscrição não encontrada.')
 
   await assertAcessoAvaliador(avaliadorId, inscricao.edital.id, isAdmin)
+
+  if (!isAdmin && STATUS_BLOQUEADO_PARA_AVALIADOR.includes(inscricao.status)) {
+    throw new ServiceError('FORBIDDEN', 'Esta inscrição não foi atribuída a você.')
+  }
 
   const avaliacao = inscricao.avaliacoes[0] ?? null
   const isAssigned = isAdmin || avaliacao !== null
@@ -65,16 +70,22 @@ export async function saveAvaliacao(
 
   await assertAcessoAvaliador(avaliadorId, inscricao.editalId, isAdmin)
 
+  if (!isAdmin && STATUS_BLOQUEADO_PARA_AVALIADOR.includes(inscricao.status)) {
+    throw new ServiceError('FORBIDDEN', 'Esta inscrição não foi atribuída a você.')
+  }
+
   const criterios = parseCriterios(inscricao.edital.criteriosAvaliacao)
   const erroNotas = validarNotasContraCriterios(data.notas, criterios)
   if (erroNotas) throw new ServiceError('BAD_REQUEST', erroNotas)
 
-  // Gate de fase do edital — bloqueia fora de AVALIACAO
+  // Gate de fase do edital — bloqueia fora de AVALIACAO, exceto quando a
+  // própria inscrição já está liberada pra avaliação em paralelo (ver fase.ts)
   const gate = gateAcaoFase({
     editalStatus: inscricao.edital.status,
     acao: 'avaliar',
     role: isAdmin ? 'ADMIN' : 'AVALIADOR',
     override: data.adminOverride,
+    inscricaoStatus: inscricao.status,
   })
 
   if (!gate.ok) {
@@ -141,7 +152,7 @@ export async function assignAvaliadores(
   // Pré-checagem: existência + fase do edital
   const inscricaoCheck = await prisma.inscricao.findUnique({
     where: { id: inscricaoId },
-    select: { id: true, edital: { select: { status: true } } },
+    select: { id: true, status: true, edital: { select: { status: true } } },
   })
 
   if (!inscricaoCheck) throw new ServiceError('NOT_FOUND', 'Inscrição não encontrada.')
@@ -151,6 +162,7 @@ export async function assignAvaliadores(
     acao: 'atribuir_avaliador',
     role: 'ADMIN',
     override: options?.adminOverride,
+    inscricaoStatus: inscricaoCheck.status,
   })
 
   if (!gate.ok) {

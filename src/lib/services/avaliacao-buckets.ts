@@ -34,6 +34,24 @@ export const EDITAL_STATUS_COM_AVALIACAO: EditalStatus[] = [
   'ENCERRADO',
 ]
 
+/**
+ * Editais visíveis nas telas de avaliação (admin e avaliador) mesmo antes do
+ * edital como um todo avançar pra AVALIACAO. Habilitação e avaliação correm
+ * em paralelo: uma inscrição já habilitada pode ir pro avaliador enquanto o
+ * resto da fila ainda está em conferência — HABILITACAO entra aqui por isso,
+ * não porque o edital "esteja" em avaliação.
+ */
+export const EDITAL_STATUS_VISIVEL_PARA_AVALIACAO: EditalStatus[] = [
+  'HABILITACAO',
+  ...EDITAL_STATUS_COM_AVALIACAO,
+]
+
+/**
+ * Status pelos quais um avaliador nunca deve enxergar uma inscrição — ainda
+ * não decidida pela habilitação (RASCUNHO/ENVIADA) ou inabilitada.
+ */
+export const STATUS_BLOQUEADO_PARA_AVALIADOR: InscricaoStatus[] = ['RASCUNHO', 'ENVIADA', 'INABILITADA']
+
 /** Filtro Prisma para cada aba, baseado no progresso efetivo das avaliações. */
 export function whereBucket(bucket: BucketAvaliacao): Prisma.InscricaoWhereInput {
   switch (bucket) {
