@@ -137,6 +137,7 @@ export default async function AvaliadorInscricoesPage({ searchParams }: Props) {
     <section>
       <CabecalhoEdital
         icone={<IconStar className="h-6 w-6" />}
+        editalId={edital.id}
         titulo={edital.titulo}
         ano={edital.ano}
         ativo={emAvaliacao}

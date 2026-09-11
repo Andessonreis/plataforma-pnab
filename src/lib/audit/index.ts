@@ -40,6 +40,9 @@ export const AUDIT_ACTIONS = {
   MEMBRO_EDITAL_ADICIONADO: 'MEMBRO_EDITAL_ADICIONADO',
   MEMBRO_EDITAL_REMOVIDO: 'MEMBRO_EDITAL_REMOVIDO',
 
+  // Super admin — visibilidade da nota bônus
+  BONUS_VISIBILIDADE_ALTERADA: 'BONUS_VISIBILIDADE_ALTERADA',
+
   // Admin — conteúdo
   NOTICIA_CRIADA: 'NOTICIA_CRIADA',
   NOTICIA_ATUALIZADA: 'NOTICIA_ATUALIZADA',
@@ -144,6 +147,7 @@ export const ACTION_LABELS: Record<string, string> = {
   AVALIADOR_ATRIBUIDO_FORA_DA_FASE_BLOQUEADO: 'Atribuição bloqueada (fora da fase)',
   MEMBRO_EDITAL_ADICIONADO: 'Membro adicionado ao edital',
   MEMBRO_EDITAL_REMOVIDO: 'Membro removido do edital',
+  BONUS_VISIBILIDADE_ALTERADA: 'Visibilidade da nota bônus alterada',
   NOTICIA_CRIADA: 'Notícia criada',
   NOTICIA_ATUALIZADA: 'Notícia atualizada',
   NOTICIA_EXCLUIDA: 'Notícia excluída',

@@ -93,6 +93,12 @@ export function CategoriaConfigEditor({ nome }: { nome: string }) {
                 + Adicionar cota
               </button>
             </div>
+            {config.cotas.length > 0 && (
+              <div className="flex sm:justify-end gap-2 text-[11px] text-slate-400 mb-1 sm:mr-[92px]">
+                <span className="w-20 text-center">Vagas</span>
+                <span className="w-20 text-center">Bônus</span>
+              </div>
+            )}
             <div className="space-y-2">
               {config.cotas.map((cota) => (
                 <div key={cota.key} className="flex flex-col sm:flex-row sm:items-center gap-2">
@@ -111,6 +117,22 @@ export function CategoriaConfigEditor({ nome }: { nome: string }) {
                       onChange={(e) => updateCotaConfig(nome, cota.key, { vagas: Number(e.target.value) || 0 })}
                       className="w-20 rounded-md border border-slate-300 px-2 py-1.5 text-sm min-h-[44px] focus-visible:outline-2 focus-visible:outline-offset-2"
                       aria-label={`Vagas para ${cota.label || 'cota'}`}
+                      title="Vagas reservadas"
+                    />
+                    <input
+                      type="number"
+                      min={0}
+                      step="0.1"
+                      value={cota.pontosBonus ?? ''}
+                      onChange={(e) =>
+                        updateCotaConfig(nome, cota.key, {
+                          pontosBonus: e.target.value.trim() ? Number(e.target.value) : undefined,
+                        })
+                      }
+                      placeholder="Bônus"
+                      className="w-20 rounded-md border border-slate-300 px-2 py-1.5 text-sm min-h-[44px] focus-visible:outline-2 focus-visible:outline-offset-2"
+                      aria-label={`Pontos de nota bônus para ${cota.label || 'cota'}`}
+                      title="Pontos de nota bônus (visível só pra admin/super admin)"
                     />
                     <button
                       type="button"

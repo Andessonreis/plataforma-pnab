@@ -308,6 +308,10 @@ model Edital {
   videoHabilitado           Boolean      @default(false)
   // Data real de publicação (preenchida quando status sai de RASCUNHO)
   publishedAt               DateTime?
+  // Libera o painel de nota bônus (por cota) pra ADMIN comum deste edital.
+  // SUPER_ADMIN sempre vê, independente deste campo — é o interruptor que ele
+  // usa pra estender esse acesso. AVALIADOR nunca vê, não tem exceção aqui.
+  bonusVisivelParaAdmin     Boolean      @default(false)
   createdAt                 DateTime     @default(now())
   updatedAt                 DateTime     @updatedAt
 
@@ -346,6 +350,11 @@ model Inscricao {
   campos             Json            @default("{}")
   orcamento          Json?
   notaFinal          Decimal?        @db.Decimal(5, 2)
+  // Pontos somados das cotas de cotasOptIn no momento da publicação do
+  // resultado (edital.categoriasConfig[].cotas[].pontosBonus) — já estão
+  // somados dentro de notaFinal; guardado à parte só pra auditoria/dashboard,
+  // nunca recalculado silenciosamente depois de publicado.
+  notaBonus          Decimal?        @db.Decimal(5, 2)
   posicao            Int?
   motivoInabilitacao String?
   // Optou por substituir o preenchimento manual das etapas customizadas

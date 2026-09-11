@@ -178,6 +178,14 @@ export default async function EditalOverviewPage({ params }: Props) {
           >
             Ver Resultados
           </Link>
+          {(session.user.role === 'SUPER_ADMIN' || edital.bonusVisivelParaAdmin) && (
+            <Link
+              href={`/admin/editais/${edital.id}/bonus`}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+            >
+              Nota Bônus
+            </Link>
+          )}
           <GerarListasModal editalId={edital.id} editalTitulo={edital.titulo} editalStatus={status} />
           {statusFinal.includes(status) && <RelatorioFinalButton editalId={edital.id} />}
         </div>

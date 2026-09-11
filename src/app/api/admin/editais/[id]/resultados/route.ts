@@ -135,8 +135,10 @@ export async function POST(
       )
     }
 
-    // Calcula notas finais (sem desempate automático — desempate é manual)
-    const resultados = await calculateResults(id)
+    // Calcula notas finais (sem desempate automático — desempate é manual).
+    // incluirBonus: true — a publicação é o ato oficial, o bônus de cota tem
+    // que valer pra ranking/classificação real a partir daqui.
+    const resultados = await calculateResults(id, { incluirBonus: true })
 
     if (resultados.length === 0) {
       return NextResponse.json(

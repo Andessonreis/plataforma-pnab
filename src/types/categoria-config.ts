@@ -5,6 +5,9 @@ export interface CotaConfig {
   key: string
   label: string
   vagas: number
+  // Pontos de nota bônus somados a quem autodeclarou essa cota (undefined/0 = sem bônus).
+  // Visível só pra SUPER_ADMIN e, quando liberado, pra ADMIN — nunca pro avaliador.
+  pontosBonus?: number
 }
 
 export interface CategoriaConfig {

@@ -9,16 +9,32 @@ import {
   type NotaAvaliacao,
 } from './formula'
 import { alocarVagasCategoria } from './alocar-cotas'
+import { calcularBonusCotas, encontrarCategoriaConfig } from './bonus'
 import type { CategoriaConfig } from '@/types/categoria-config'
 
 export interface ResultadoInscricao {
   inscricaoId: string
+  numero?: string
   proponenteNome: string
   categoria: string | null
   cotasOptIn?: string[]
   notaFinal: number
+  // Pontos de cota já somados dentro de notaFinal quando `incluirBonus` foi
+  // usado em calculateResults — guardado à parte só pra exibição/auditoria.
+  notaBonus: number
   totalAvaliacoes: number
   empatados?: string[]
+}
+
+export interface CalculateResultsOptions {
+  /**
+   * Quando true, soma a nota bônus das cotas (calcularBonusCotas) em cima da
+   * média dos avaliadores antes de ordenar/ranquear — é o que a publicação de
+   * resultado sempre usa. Quando false/omitido (padrão da prévia visível a
+   * qualquer ADMIN), notaFinal fica só com a média dos avaliadores, sem bônus
+   * algum — a prévia não pode vazar o efeito do bônus antes da liberação.
+   */
+  incluirBonus?: boolean
 }
 
 /**
@@ -34,16 +50,20 @@ export interface ResultadoInscricao {
  */
 export async function calculateResults(
   editalId: string,
+  options?: CalculateResultsOptions,
 ): Promise<ResultadoInscricao[]> {
   // Busca critérios do edital
   const edital = await prisma.edital.findUnique({
     where: { id: editalId },
-    select: { criteriosAvaliacao: true, formulaAvaliacao: true },
+    select: { criteriosAvaliacao: true, formulaAvaliacao: true, categoriasConfig: true },
   })
 
   if (!edital) throw new Error(`Edital ${editalId} não encontrado`)
 
   const criterios = parseCriterios(edital.criteriosAvaliacao)
+  const categoriasConfig = Array.isArray(edital.categoriasConfig)
+    ? (edital.categoriasConfig as unknown as CategoriaConfig[])
+    : null
 
   // Busca inscrições avaliadas
   const inscricoes = await prisma.inscricao.findMany({
@@ -63,14 +83,19 @@ export async function calculateResults(
   const resultados: ResultadoInscricao[] = []
 
   for (const inscricao of inscricoes) {
+    const categoriaConfig = encontrarCategoriaConfig(categoriasConfig, inscricao.categoria)
+    const notaBonus = calcularBonusCotas(inscricao.cotasOptIn, categoriaConfig)
+
     if (inscricao.avaliacoes.length === 0) {
-      // Sem avaliações finalizadas — nota 0
+      // Sem avaliações finalizadas — nota 0 (bônus não se aplica sem avaliação)
       resultados.push({
         inscricaoId: inscricao.id,
+        numero: inscricao.numero,
         proponenteNome: inscricao.proponente.nome,
         categoria: inscricao.categoria,
         cotasOptIn: inscricao.cotasOptIn,
         notaFinal: 0,
+        notaBonus,
         totalAvaliacoes: 0,
       })
       continue
@@ -84,15 +109,19 @@ export async function calculateResults(
         : calculateWeightedAverage(notas, criterios),
     )
 
-    // Nota final = média das notas dos avaliadores
-    const notaFinal = notasAvaliadores.reduce((sum, n) => sum + n, 0) / notasAvaliadores.length
+    // Nota final = média das notas dos avaliadores (+ bônus de cota, só quando
+    // explicitamente pedido — ver CalculateResultsOptions.incluirBonus)
+    const media = notasAvaliadores.reduce((sum, n) => sum + n, 0) / notasAvaliadores.length
+    const notaFinal = options?.incluirBonus ? media + notaBonus : media
 
     resultados.push({
       inscricaoId: inscricao.id,
+      numero: inscricao.numero,
       proponenteNome: inscricao.proponente.nome,
       categoria: inscricao.categoria,
       cotasOptIn: inscricao.cotasOptIn,
       notaFinal: Math.round(notaFinal * 100) / 100,
+      notaBonus,
       totalAvaliacoes: inscricao.avaliacoes.length,
     })
   }
@@ -176,6 +205,7 @@ export async function saveResults(
         where: { id: r.inscricaoId },
         data: {
           notaFinal: r.notaFinal,
+          notaBonus: r.notaBonus,
           posicao: index + 1,
           status: fase === 'RESULTADO_FINAL' ? decideStatusLegado(r, index, vagas) : fase,
         },
@@ -198,7 +228,7 @@ export async function saveResults(
       grupo.forEach((r, i) => {
         updates.push(prisma.inscricao.update({
           where: { id: r.inscricaoId },
-          data: { notaFinal: r.notaFinal, posicao: i + 1, status: fase },
+          data: { notaFinal: r.notaFinal, notaBonus: r.notaBonus, posicao: i + 1, status: fase },
         }))
       })
       continue
@@ -219,7 +249,12 @@ export async function saveResults(
     grupo.forEach((r, i) => {
       updates.push(prisma.inscricao.update({
         where: { id: r.inscricaoId },
-        data: { notaFinal: r.notaFinal, posicao: alocacao[i].posicaoCategoria, status: alocacao[i].status },
+        data: {
+          notaFinal: r.notaFinal,
+          notaBonus: r.notaBonus,
+          posicao: alocacao[i].posicaoCategoria,
+          status: alocacao[i].status,
+        },
       }))
     })
   }

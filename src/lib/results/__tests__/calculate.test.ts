@@ -560,6 +560,91 @@ describe('calculateWithFormula', () => {
   })
 })
 
+describe('calculateResults com bônus de cota', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  const editalComCotas = {
+    criteriosAvaliacao: JSON.stringify([{ criterio: 'A', peso: 1, notaMax: 10 }]),
+    categoriasConfig: [
+      {
+        nome: 'Música',
+        vagasAmplaConcorrencia: 1,
+        valorPorProjeto: null,
+        valorTotalCategoria: 0,
+        cotas: [{ key: 'negros', label: 'Cotas Pessoas Negras', vagas: 1, pontosBonus: 0.5 }],
+      },
+    ],
+  }
+
+  it('sem incluirBonus (padrão) — notaFinal ignora o bônus, mas notaBonus vem calculado à parte', async () => {
+    mockPrisma.edital.findUnique.mockResolvedValue(editalComCotas as never)
+    mockPrisma.inscricao.findMany.mockResolvedValue([
+      {
+        id: '1',
+        proponente: { nome: 'Ana' },
+        categoria: 'Música',
+        cotasOptIn: ['negros'],
+        avaliacoes: [{ notas: JSON.stringify([{ criterio: 'A', nota: 7 }]), notaTotal: 7 }],
+      },
+    ] as never)
+
+    const results = await calculateResults('edital-1')
+
+    expect(results[0].notaFinal).toBe(7)
+    expect(results[0].notaBonus).toBe(0.5)
+  })
+
+  it('com incluirBonus: true — soma o bônus em cima da média', async () => {
+    mockPrisma.edital.findUnique.mockResolvedValue(editalComCotas as never)
+    mockPrisma.inscricao.findMany.mockResolvedValue([
+      {
+        id: '1',
+        proponente: { nome: 'Ana' },
+        categoria: 'Música',
+        cotasOptIn: ['negros'],
+        avaliacoes: [{ notas: JSON.stringify([{ criterio: 'A', nota: 7 }]), notaTotal: 7 }],
+      },
+      {
+        id: '2',
+        proponente: { nome: 'Bob' },
+        categoria: 'Música',
+        cotasOptIn: [],
+        avaliacoes: [{ notas: JSON.stringify([{ criterio: 'A', nota: 7.3 }]), notaTotal: 7.3 }],
+      },
+    ] as never)
+
+    const results = await calculateResults('edital-1', { incluirBonus: true })
+
+    const ana = results.find((r) => r.proponenteNome === 'Ana')!
+    const bob = results.find((r) => r.proponenteNome === 'Bob')!
+    expect(ana.notaFinal).toBe(7.5) // 7 + 0.5
+    expect(ana.notaBonus).toBe(0.5)
+    expect(bob.notaFinal).toBe(7.3)
+    expect(bob.notaBonus).toBe(0)
+    // Bônus pode virar a posição no ranking — é o objetivo da feature
+    expect(results[0].proponenteNome).toBe('Ana')
+  })
+
+  it('sem avaliação finalizada — notaBonus calculado, mas não soma em notaFinal (fica 0)', async () => {
+    mockPrisma.edital.findUnique.mockResolvedValue(editalComCotas as never)
+    mockPrisma.inscricao.findMany.mockResolvedValue([
+      {
+        id: '1',
+        proponente: { nome: 'Ana' },
+        categoria: 'Música',
+        cotasOptIn: ['negros'],
+        avaliacoes: [],
+      },
+    ] as never)
+
+    const results = await calculateResults('edital-1', { incluirBonus: true })
+    expect(results[0].notaFinal).toBe(0)
+    expect(results[0].notaBonus).toBe(0.5)
+  })
+})
+
 describe('calculateResults com formulaAvaliacao', () => {
   beforeEach(() => {
     vi.clearAllMocks()

@@ -82,6 +82,7 @@ export default async function AvaliadorRecursosPage({ searchParams }: Props) {
     <section>
       <CabecalhoEdital
         icone={<IconShield className="h-6 w-6" />}
+        editalId={editalIdFiltro}
         titulo={edital.titulo}
         ano={edital.ano}
         ativo={edital.status === 'RECURSO'}

@@ -2,12 +2,14 @@ import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { FadeIn, IconArrowLeft } from '@/components/ui'
 import { getRoleTheme } from '@/app/admin/role-theme'
+import { EditalInfoModal } from './edital-info-modal'
 
 const theme = getRoleTheme('AVALIADOR')
 
 interface Props {
   /** Ícone da frente de trabalho, já dimensionado pelo caller. */
   icone: ReactNode
+  editalId: string
   titulo: string
   ano: number
   /** Fase ativa pra esta tela — muda o realce da faixa de situação. */
@@ -25,7 +27,7 @@ interface Props {
  * situação da fase — e o edital é o contexto que não pode se perder de vista:
  * cada um tem sua própria régua de pontuação.
  */
-export function CabecalhoEdital({ icone, titulo, ano, ativo, situacao, voltarHref }: Props) {
+export function CabecalhoEdital({ icone, editalId, titulo, ano, ativo, situacao, voltarHref }: Props) {
   return (
     <FadeIn>
       <header className="mb-5 sm:mb-7">
@@ -46,6 +48,7 @@ export function CabecalhoEdital({ icone, titulo, ano, ativo, situacao, voltarHre
           <div className="min-w-0 flex-1">
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 leading-tight">{titulo}</h1>
             <p className="text-sm sm:text-base text-slate-600 mt-1">Edição {ano}</p>
+            <EditalInfoModal editalId={editalId} />
           </div>
         </div>
 
