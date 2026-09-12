@@ -1,0 +1,148 @@
+import { TipoProponente } from '@prisma/client'
+
+export interface SeedProponente {
+  email: string
+  nome: string
+  cpfCnpj: string
+  tipoProponente: TipoProponente
+  telefone: string
+  cep: string
+  logradouro: string
+  numero: string
+  bairro: string
+  cidade: string
+  uf: string
+}
+
+export const proponentesHabilitacaoData: SeedProponente[] = [
+  {
+    email: 'mundinha.reisado@teste.com',
+    nome: 'Maria Raimunda de Jesus (Mestra Mundinha)',
+    cpfCnpj: '13579246801',
+    tipoProponente: TipoProponente.PF,
+    telefone: '(74) 99912-3456',
+    cep: '44900-000',
+    logradouro: 'Rua ACM',
+    numero: '142',
+    bairro: 'Bairro São José',
+    cidade: 'Irecê',
+    uf: 'BA',
+  },
+  {
+    email: 'danilo.hiphop@teste.com',
+    nome: 'Danilo Santana dos Santos (Hip Hop Sertão MEI)',
+    cpfCnpj: '48123987000145',
+    tipoProponente: TipoProponente.MEI,
+    telefone: '(74) 99981-2244',
+    cep: '44900-000',
+    logradouro: 'Av. Tertuliano Cambuí',
+    numero: '880',
+    bairro: 'Centro',
+    cidade: 'Irecê',
+    uf: 'BA',
+  },
+  {
+    email: 'coletivo.mandacaru@teste.com',
+    nome: 'Coletivo Audiovisual Mandacaru de Irecê',
+    cpfCnpj: '22334455667',
+    tipoProponente: TipoProponente.COLETIVO,
+    telefone: '(74) 99823-7711',
+    cep: '44900-000',
+    logradouro: 'Rua do Copirecê',
+    numero: '310',
+    bairro: 'Copirecê',
+    cidade: 'Irecê',
+    uf: 'BA',
+  },
+  {
+    email: 'tiago.artesvisuais@teste.com',
+    nome: 'Tiago Barbosa Neves',
+    cpfCnpj: '33445566788',
+    tipoProponente: TipoProponente.PF,
+    telefone: '(74) 99945-8899',
+    cep: '44900-000',
+    logradouro: 'Rua Joel Modesto',
+    numero: '95',
+    bairro: 'Recanto das Árvores',
+    cidade: 'Irecê',
+    uf: 'BA',
+  },
+  {
+    email: 'claudia.cordel@teste.com',
+    nome: 'Cláudia Vasconcelos Ribeiro',
+    cpfCnpj: '55667788911',
+    tipoProponente: TipoProponente.PF,
+    telefone: '(74) 99933-6622',
+    cep: '44900-000',
+    logradouro: 'Rua Aurélio José Marques',
+    numero: '215',
+    bairro: 'Vivendas',
+    cidade: 'Irecê',
+    uf: 'BA',
+  },
+  {
+    email: 'artesaos.irece@teste.com',
+    nome: 'Associação dos Artesãos do Território de Irecê',
+    cpfCnpj: '07894561000192',
+    tipoProponente: TipoProponente.PJ,
+    telefone: '(74) 3641-2050',
+    cep: '44900-000',
+    logradouro: 'Praça Ayrton Senna',
+    numero: '50',
+    bairro: 'Centro',
+    cidade: 'Irecê',
+    uf: 'BA',
+  },
+  {
+    email: 'antonio.percussao@teste.com',
+    nome: 'Antônio Carlos Silveira Ramos',
+    cpfCnpj: '77889900122',
+    tipoProponente: TipoProponente.PF,
+    telefone: '(74) 99899-3311',
+    cep: '44900-000',
+    logradouro: 'Rua Rio Corrente',
+    numero: '78',
+    bairro: 'Boa Vista',
+    cidade: 'Irecê',
+    uf: 'BA',
+  },
+  {
+    email: 'juliana.vocal@teste.com',
+    nome: 'Juliana Mendes Pinheiro',
+    cpfCnpj: '88990011233',
+    tipoProponente: TipoProponente.PF,
+    telefone: '(74) 99855-4422',
+    cep: '44900-000',
+    logradouro: 'Rua Dom Pedro II',
+    numero: '312',
+    bairro: 'Arnóbio Batista',
+    cidade: 'Irecê',
+    uf: 'BA',
+  },
+  {
+    email: 'sertaoemcena@teste.com',
+    nome: 'Sertão em Cena Produções e Eventos Culturais LTDA',
+    cpfCnpj: '31456789000103',
+    tipoProponente: TipoProponente.PJ,
+    telefone: '(74) 3641-7788',
+    cep: '44900-000',
+    logradouro: 'Rua Coronel Terêncio Dourado',
+    numero: '450',
+    bairro: 'Centro',
+    cidade: 'Irecê',
+    uf: 'BA',
+  },
+  {
+    email: 'nonato.pifano@teste.com',
+    nome: 'Raimundo Nonato Ferreira (Seu Nonato do Pífano)',
+    cpfCnpj: '22114433555',
+    tipoProponente: TipoProponente.PF,
+    telefone: '(74) 99966-1289',
+    cep: '44900-000',
+    logradouro: 'Estrada Velha de Itapicuru',
+    numero: 'S/N',
+    bairro: 'Povoado de Itapicuru',
+    cidade: 'Irecê',
+    uf: 'BA',
+  },
+]
