@@ -261,6 +261,63 @@
   }
 }
 
+/*
+   Esteira de fotos — trilha duplicada no markup, desliza em loop fechado.
+   Usada só no dia a dia (a do conceito virou colagem parada). Pausa com foco
+   de teclado; sem movimento com prefers-reduced-motion, a trilha vira
+   rolagem comum.
+
+   `--esteira-desloc` é -50% para duas cópias da trilha (o padrão). Quando o
+   conteúdo real é curto (poucas fotos) e uma volta fica mais estreita que a
+   tela, quem monta a trilha repete mais vezes e ajusta essa variável — 3
+   cópias = -33.3333%, 4 cópias = -25% — senão sobra vão em branco antes do
+   loop fechar em telas largas.
+*/
+@keyframes esteira-x {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(var(--esteira-desloc, -50%));
+  }
+}
+
+.animar-esteira-x {
+  animation: esteira-x var(--duracao-esteira, 32s) linear infinite;
+}
+
+.animar-esteira-x:focus-within {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animar-esteira-x {
+    animation: none;
+  }
+}
+
+/*
+   Janela da esteira — com `overflow: auto` o dedo no trackpad e a animação
+   disputam a mesma posição e o loop salta (o "espaço em branco" antes de
+   voltar ao início). Com movimento ligado a janela trava em `hidden`: só a
+   animação move o conteúdo. Sem movimento, `auto` volta a ser rolagem comum
+   — é a única forma de folhear a trilha parada.
+*/
+.esteira-janela-x {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.esteira-janela-x::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .esteira-janela-x {
+    overflow-x: hidden;
+  }
+}
+
 @layer utilities {
   /* Serrilha — o recorte de bandeirinha da identidade, usado como aresta de
      seção no lugar de uma borda reta. Feita com gradiente repetido: um SVG

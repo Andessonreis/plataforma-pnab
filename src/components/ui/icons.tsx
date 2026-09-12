@@ -376,3 +376,13 @@ export function IconChatBubble({ className }: IconProps) {
     </svg>
   )
 }
+
+export function IconInstagram({ className }: IconProps) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
+      <rect x="3" y="3" width="18" height="18" rx="5" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="12" cy="12" r="4" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="17.25" cy="6.75" r="0.75" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}

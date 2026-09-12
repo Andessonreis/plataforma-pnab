@@ -17,7 +17,7 @@ const MIME_TO_EXT: Record<AllowedMime, string> = {
   'image/webp': 'webp',
 }
 
-const PASTAS_PERMITIDAS = ['noticias', 'slides'] as const
+const PASTAS_PERMITIDAS = ['noticias', 'slides', 'momentos'] as const
 type Pasta = (typeof PASTAS_PERMITIDAS)[number]
 
 function isAllowedMime(mime: string): mime is AllowedMime {
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const session = await auth()
-    if (!session || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
+    if (!session || !['ADMIN', 'SUPER_ADMIN', 'COMUNICACAO'].includes(session.user.role)) {
       return buildResponse(401, { error: 'UNAUTHORIZED', message: 'Acesso negado.' })
     }
 

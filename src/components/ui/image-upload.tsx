@@ -14,7 +14,7 @@ export interface ImageUploadProps {
   value: string
   onChange: (url: string) => void
   /** Pasta dentro do bucket (controla onde a imagem é salva). */
-  pasta?: 'noticias' | 'slides'
+  pasta?: 'noticias' | 'slides' | 'momentos'
   /** Permite limpar/remover a imagem do formulário (não deleta do storage). */
   allowClear?: boolean
 }

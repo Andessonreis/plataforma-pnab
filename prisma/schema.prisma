@@ -553,6 +553,21 @@ model SlideDestaque {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Dia a Dia da Secretaria (carrossel de momentos com link pro Instagram)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model MomentoSecretaria {
+  id           String   @id @default(cuid())
+  categoria    String
+  imagemUrl    String
+  instagramUrl String
+  ordem        Int      @default(0)
+  ativo        Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Equipe do Edital — Avaliadores e Habilitadores atribuídos
 // ─────────────────────────────────────────────────────────────────────────────
 
