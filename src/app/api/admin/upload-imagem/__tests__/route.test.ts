@@ -144,6 +144,17 @@ describe('POST /api/admin/upload-imagem', () => {
     expect(mockUploadFile).toHaveBeenCalledOnce()
   })
 
+  it('sessão com role COMUNICACAO → 201 (mesmo papel que já cadastra notícias/slides/momentos)', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'COMUNICACAO' } } as never)
+
+    const fd = new FormData()
+    fd.append('file', makeFile({}))
+    fd.append('pasta', 'momentos')
+
+    const res = await POST(makeRequest(fd))
+    expect(res.status).toBe(201)
+  })
+
   it('storage path usa UUID gerado pelo servidor, ignorando file.name do cliente', async () => {
     mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
 

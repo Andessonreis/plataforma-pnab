@@ -75,6 +75,46 @@ export function SolEspiral({ className = '' }: OrnamentoProps) {
   )
 }
 
+const ESTRELAS = [
+  { cx: 78, cy: 20, r: 2.6 },
+  { cx: 88, cy: 42, r: 1.8 },
+  { cx: 18, cy: 30, r: 2.2 },
+  { cx: 24, cy: 78, r: 1.6 },
+]
+
+/**
+ * Lua crescente, contraponto noturno ao SolEspiral — mesmo vocabulário de
+ * movimento (traço que se entalha, elementos que entram em batida seca), só
+ * que a curva é a lua e os raios viram estrelas espalhadas ao redor.
+ */
+export function LuaEspiral({ className = '' }: OrnamentoProps) {
+  return (
+    <svg viewBox="0 0 100 100" className={className} role="presentation" aria-hidden="true">
+      {ESTRELAS.map((estrela, i) => (
+        <circle
+          key={i}
+          className="entalhe-raio"
+          style={{ '--i': i } as CSSProperties}
+          cx={estrela.cx}
+          cy={estrela.cy}
+          r={estrela.r}
+          fill="currentColor"
+        />
+      ))}
+      <path
+        className="entalhe-traco"
+        style={{ '--i': 0 } as CSSProperties}
+        pathLength={1}
+        d="M87.5 53.29 A37.5 37.5 0 1 1 46.71 12.5 A29.17 29.17 0 0 0 87.5 53.29 Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="4"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 /**
  * Casario sertanejo — fachadas geminadas com platibanda, porta e janelas,
  * silhueta típica das ruas antigas de Irecê.

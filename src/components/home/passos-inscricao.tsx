@@ -65,7 +65,6 @@ export function PassosInscricao() {
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <FadeIn className="mb-7">
-          <p className="mb-0.5 rotulo text-xs text-brand-700">Como funciona</p>
           <h2 className="titulo text-2xl tracking-wide text-tinta-900 sm:text-3xl">
             Inscreva-se em 4 passos
           </h2>

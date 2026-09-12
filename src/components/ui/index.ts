@@ -116,4 +116,5 @@ export {
   IconTag,
   IconEdit,
   IconExternalLink,
+  IconInstagram,
 } from './icons'

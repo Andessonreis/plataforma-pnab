@@ -1,5 +1,6 @@
 import { PrismaClient, UserRole, TipoProponente } from '@prisma/client'
 import { hash } from 'bcryptjs'
+import { seedHabilitacao } from './seeds/habilitacao/seed-habilitacao'
 
 const prisma = new PrismaClient()
 
@@ -769,6 +770,11 @@ async function main() {
     },
   })
   console.log('  ✓ Template de avaliação PNAB Cultura Viva criado')
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Habilitação Documental — Dados realistas de proponentes e propostas
+  // ─────────────────────────────────────────────────────────────────────────
+  await seedHabilitacao(prisma)
 
   console.log('  ADMIN          → admin@pnab.irece.ba.gov.br')
   console.log('  ATENDIMENTO    → atendimento@pnab.irece.ba.gov.br')
