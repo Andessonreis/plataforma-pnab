@@ -13,6 +13,7 @@ import {
   addCompactFooter,
   addTwoColumnRow,
 } from './layout-helpers'
+import type { CampoFormulario } from '@/types/campo-formulario'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -28,7 +29,7 @@ export interface ProjetoCompletoData {
   edital: { titulo: string; ano: number }
   categoria?: string | null
   campos: Record<string, unknown>
-  camposFormulario: Array<{ nome: string; label: string; tipo: string }>
+  camposFormulario: CampoFormulario[]
   anexos: Array<{ titulo: string; tipo: string; valido?: boolean | null }>
   submittedAt: Date
 }
@@ -57,27 +58,20 @@ function checkPageBreak(doc: PDFKit.PDFDocument, requiredHeight: number, ctx: Pa
   }
 }
 
+/** Busca a definição completa de um campo em camposFormulario pelo nome. */
+function resolveCampoDef(key: string, camposFormulario: CampoFormulario[]): CampoFormulario | undefined {
+  return camposFormulario.find((cf) => cf.nome === key)
+}
+
 /** Resolve o label de um campo: busca em camposFormulario, fallback para camelCase→legível. */
-function resolveCampoLabel(
-  key: string,
-  camposFormulario: Array<{ nome: string; label: string }>,
-): string {
-  const def = camposFormulario.find((cf) => cf.nome === key)
+function resolveCampoLabel(key: string, camposFormulario: CampoFormulario[]): string {
+  const def = resolveCampoDef(key, camposFormulario)
   if (def) return def.label
   return key
     .replace(/([A-Z])/g, ' $1')
     .replace(/_/g, ' ')
     .replace(/^\w/, (c) => c.toUpperCase())
     .trim()
-}
-
-/** Resolve o tipo de um campo a partir de camposFormulario. */
-function resolveCampoTipo(
-  key: string,
-  camposFormulario: Array<{ nome: string; tipo: string }>,
-): string {
-  const def = camposFormulario.find((cf) => cf.nome === key)
-  return def?.tipo ?? 'texto'
 }
 
 /** Mascara CPF/CNPJ para exibição. */
@@ -107,19 +101,87 @@ function formatCurrency(value: unknown): string {
 }
 
 /** Formata data no padrão DD/MM/YYYY. */
+/**
+ * Formata data no padrão DD/MM/YYYY.
+ *
+ * Datas puras "YYYY-MM-DD" (sem hora, ex.: cronograma de execução) extraem
+ * o dia/mês/ano direto da string — sem passar por `Date`, que interpretaria
+ * como meia-noite UTC e, convertido pra America/Sao_Paulo (UTC-3), voltaria
+ * pro dia anterior (28/09 virando 27/09 no PDF). Valores com hora (ISO
+ * completo) continuam pelo caminho antigo, onde a conversão de fuso faz sentido.
+ */
 function formatDate(value: unknown): string {
-  const date = new Date(String(value))
-  if (isNaN(date.getTime())) return String(value)
+  const str = String(value)
+  const dataPura = /^(\d{4})-(\d{2})-(\d{2})$/.exec(str)
+  if (dataPura) {
+    const [, ano, mes, dia] = dataPura
+    return `${dia}/${mes}/${ano}`
+  }
+  const date = new Date(str)
+  if (isNaN(date.getTime())) return str
   return date.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
 }
 
-/** Formata valor de campo conforme o tipo e o nome. */
-function formatCampoValue(value: unknown, tipo: string, key: string): string {
+/**
+ * Formata um item de campo estruturado (uma linha de `tabela` ou um item de
+ * `grupo_repetivel`) como bloco "Label: valor" legível, um por linha —
+ * reaproveita formatCampoValue pra cada subcampo (datas e moedas dos
+ * subcampos saem formatadas igual aos campos de primeiro nível).
+ */
+function formatarItemEstrutura(item: Record<string, unknown>, subcampos: CampoFormulario[]): string {
+  return subcampos
+    .map((sub) => {
+      const valor = item[sub.nome]
+      if (valor === null || valor === undefined || valor === '') return null
+      return `${sub.label}: ${formatCampoValue(valor, sub, sub.nome)}`
+    })
+    .filter((linha): linha is string => linha !== null)
+    .join('\n')
+}
+
+/**
+ * Formata valor de campo conforme o tipo e o nome.
+ *
+ * Campos `tabela`/`grupo_repetivel` persistem array de objetos — cada item
+ * vira um bloco legível usando os labels de `colunas`/`subcampos` do
+ * formulário, em vez do JSON bruto que o proponente nunca preencheu como
+ * texto (bug: campo com essas estruturas estourava a altura da linha no PDF
+ * e sobrepunha o conteúdo seguinte — ver addTwoColumnRow em layout-helpers).
+ */
+export function formatCampoValue(value: unknown, campo: CampoFormulario | undefined, key: string): string {
   if (value === null || value === undefined || value === '') return '—'
-  if (tipo === 'moeda') return formatCurrency(value)
+
+  if (Array.isArray(value)) {
+    if (value.length === 0) return '—'
+
+    if (typeof value[0] === 'object' && value[0] !== null) {
+      const subcampos = campo?.tipo === 'tabela' ? campo.colunas : campo?.subcampos
+      const itens = value as Record<string, unknown>[]
+      return itens
+        .map((item, i) => {
+          const prefixo = itens.length > 1 ? `${i + 1}. ` : ''
+          const corpo = subcampos?.length
+            ? formatarItemEstrutura(item, subcampos)
+            // Sem definição de colunas/subcampos disponível — lista chave/valor bruta
+            // como último recurso, ainda assim legível (nunca JSON.stringify aninhado).
+            : Object.entries(item)
+              .filter(([, v]) => v !== null && v !== undefined && v !== '')
+              .map(([k, v]) => `${k}: ${v}`)
+              .join('\n')
+          return prefixo + corpo
+        })
+        .join('\n\n')
+    }
+
+    // Array de valores simples (multiselect / outras fontes etc.)
+    return value.map(String).join('; ')
+  }
+
+  const tipo = campo?.tipo ?? 'texto'
+  if (tipo === 'moeda' || tipo === 'currency') return formatCurrency(value)
   // Fallback: campo com "valor" no nome e valor numérico → formata como moeda
   if (key.toLowerCase().includes('valor') && !isNaN(Number(value))) return formatCurrency(value)
-  if (tipo === 'data') return formatDate(value)
+  if (tipo === 'data' || tipo === 'date') return formatDate(value)
   if (typeof value === 'object') return JSON.stringify(value)
   return String(value)
 }
@@ -231,13 +293,17 @@ export async function generateProjetoCompleto(data: ProjetoCompletoData): Promis
     addCompactSection(doc, 'Dados do Projeto')
 
     campoKeys.forEach((key, i) => {
+      const campoDef = resolveCampoDef(key, data.camposFormulario)
       const label = resolveCampoLabel(key, data.camposFormulario)
-      const tipo = resolveCampoTipo(key, data.camposFormulario)
       const value = data.campos[key]
-      const formatted = formatCampoValue(value, tipo, key)
+      const formatted = formatCampoValue(value, campoDef, key)
       const striped = i % 2 === 0
 
-      if (tipo === 'textarea' && formatted.length > 100) {
+      // Decide pelo tamanho do texto já formatado, não pelo tipo declarado do
+      // campo — campos tabela/grupo_repetivel também podem virar texto longo
+      // (várias linhas de equipe, cronograma, planilha orçamentária) e precisam
+      // do mesmo cálculo de altura real que addLongTextField faz.
+      if (formatted.length > 100) {
         addLongTextField(doc, label, formatted, ctx, striped)
       } else {
         checkPageBreak(doc, 20, ctx)

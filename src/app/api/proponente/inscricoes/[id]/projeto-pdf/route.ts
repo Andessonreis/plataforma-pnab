@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { generateProjetoCompleto } from '@/lib/pdf/projeto-completo'
 import { mesclarAnexosNoPdf } from '@/lib/pdf/dossie-completo'
+import type { CampoFormulario } from '@/types/campo-formulario'
 
 export const runtime = 'nodejs'
 
@@ -78,7 +79,7 @@ export async function GET(
 
     // Parsear camposFormulario do edital (Json do Prisma)
     const camposFormulario = Array.isArray(inscricao.edital.camposFormulario)
-      ? (inscricao.edital.camposFormulario as Array<{ nome: string; label: string; tipo: string }>)
+      ? (inscricao.edital.camposFormulario as unknown as CampoFormulario[])
       : []
 
     let pdfBuffer = await generateProjetoCompleto({

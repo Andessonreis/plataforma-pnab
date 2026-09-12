@@ -139,11 +139,18 @@ export function addTwoColumnRow(
     doc.rect(MARGINS.left, y - 1, CONTENT_WIDTH, ROW_HEIGHT + 2).fill('#f8fafc')
   }
 
+  // `ellipsis` só corta quando `height` também é passado — sem isso o
+  // PDFKit ignora a truncagem e quebra o texto em quantas linhas precisar,
+  // enquanto `doc.y` avança só ROW_HEIGHT fixo: a linha seguinte é desenhada
+  // por cima do fim do texto que devia ter sido cortado. addTwoColumnRow é
+  // pra valor de uma linha só — texto que pode ser longo (JSON de campo
+  // estruturado, textarea etc.) tem que passar por addLongTextField, que
+  // mede a altura real antes de desenhar.
   doc
     .font('Helvetica-Bold')
     .fontSize(8.5)
     .fillColor(COLORS.textLight)
-    .text(label, MARGINS.left + 4, y, { width: COL_LABEL_WIDTH, ellipsis: true })
+    .text(label, MARGINS.left + 4, y, { width: COL_LABEL_WIDTH, height: ROW_HEIGHT, ellipsis: true })
 
   doc
     .font('Helvetica')
@@ -151,6 +158,7 @@ export function addTwoColumnRow(
     .fillColor(COLORS.text)
     .text(value || '—', MARGINS.left + COL_LABEL_WIDTH + 4, y, {
       width: COL_VALUE_WIDTH - 8,
+      height: ROW_HEIGHT,
       ellipsis: true,
     })
 
