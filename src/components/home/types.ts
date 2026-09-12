@@ -1,4 +1,5 @@
 import type { BadgeVariant } from '@/components/ui/badge'
+import type { TomCarimbo } from '@/components/ui/carimbo'
 import type { BannerEditalProps } from './banner-edital'
 
 /** Edital já normalizado para exibição na home (Decimal/Date resolvidos na page). */
@@ -37,3 +38,20 @@ export interface SlideArte extends SlideBase {
 }
 
 export type SlideDestaque = SlideComposicao | SlideArte
+
+/** Momento do "dia a dia da Secretaria" — carrossel que linka pro Instagram. */
+export interface MomentoResumo {
+  id: string
+  categoria: string
+  imagemUrl: string
+  instagramUrl: string
+}
+
+/** Projeto apoiado em destaque na home — recorte leve da prestação de contas completa. */
+export interface ProjetoApoiadoResumo {
+  id: string
+  nome: string
+  categoria: string | null
+  valor: string
+  situacao: { label: string; tom: TomCarimbo }
+}
