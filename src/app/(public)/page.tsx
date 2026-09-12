@@ -4,13 +4,26 @@ import { Abertura } from '@/components/home/abertura'
 import { PassosInscricao } from '@/components/home/passos-inscricao'
 import { SecaoConceito } from '@/components/home/secao-conceito'
 import { SecaoServicos } from '@/components/home/secao-servicos'
+import { SecaoDiaADia } from '@/components/home/secao-dia-a-dia'
+import { SecaoNoticias } from '@/components/home/secao-noticias'
+import { SecaoProjetosApoiados } from '@/components/home/secao-projetos-apoiados'
+import { SecaoOndeEncontrar } from '@/components/home/secao-onde-encontrar'
 import { FaixaNumeros } from '@/components/ui'
 import { Varal } from '@/components/ui/varal'
-import type { SlideDestaque, EditalResumo } from '@/components/home/types'
+import type {
+  SlideDestaque,
+  EditalResumo,
+  MomentoResumo,
+  ProjetoApoiadoResumo,
+} from '@/components/home/types'
 import type { BadgeVariant } from '@/components/ui/badge'
+import type { EditalStatus } from '@prisma/client'
 import { getStatusDisplay, OPEN_STATUSES } from '@/lib/utils/edital-status'
 import { formatCurrency, formatDate } from '@/lib/utils/format'
 import { getNextDeadline } from '@/lib/utils/cronograma'
+import { noticiaParaListagem } from '@/app/(public)/noticias/consulta'
+import { nomeDoProjeto } from '@/app/(public)/projetos-apoiados/consulta'
+import { SITUACOES } from '@/app/(public)/projetos-apoiados/tipos'
 
 export const metadata: Metadata = {
   title: 'Início',
@@ -71,11 +84,26 @@ const SLIDE_INSTITUCIONAL: SlideDestaque = {
   },
 }
 
+// Editais em andamento p/ o painel de oportunidades da home — mais amplo que
+// OPEN_STATUSES (que em /editais marca "aberto" só até inscrição): aqui um
+// edital em habilitação ou avaliação ainda está rolando, só não recebe mais
+// inscrição. Não reaproveita OPEN_STATUSES pra não mudar a aba "Abertos" de
+// /editais nem o carimbo de arquivado dos cards.
+const HOME_EDITAIS_STATUSES: EditalStatus[] = [...OPEN_STATUSES, 'HABILITACAO', 'AVALIACAO']
+
 export default async function HomePage() {
   const agora = new Date()
 
-  const [editaisAbertos, totalFomento, projetosCount, editaisDestaque, slidesAdmin] =
-    await Promise.all([
+  const [
+    editaisAbertos,
+    totalFomento,
+    projetosCount,
+    editaisDestaque,
+    slidesAdmin,
+    momentosAdmin,
+    noticiasDestaque,
+    projetosDestaque,
+  ] = await Promise.all([
       prisma.edital.count({
         where: { status: { in: ['PUBLICADO', 'INSCRICOES_ABERTAS'] } },
       }),
@@ -85,9 +113,9 @@ export default async function HomePage() {
       }),
       prisma.projetoApoiado.count({ where: { publicado: true } }),
       prisma.edital.findMany({
-        // Banner exibe só editais em aberto — encerrados não entram nem
-        // pra completar as 3 vagas.
-        where: { status: { in: OPEN_STATUSES } },
+        // Banner exibe editais em andamento (aberto, habilitação ou
+        // avaliação) — encerrados não entram nem pra completar as 3 vagas.
+        where: { status: { in: HOME_EDITAIS_STATUSES } },
         orderBy: { createdAt: 'desc' },
         // Busca além dos 3 exibidos para conseguir promover os que estão com
         // inscrições abertas antes de cortar a lista.
@@ -114,6 +142,42 @@ export default async function HomePage() {
         },
         orderBy: [{ ordem: 'asc' }, { createdAt: 'desc' }],
         select: { id: true, titulo: true, descricao: true, imagemUrl: true, ctaLabel: true, ctaUrl: true },
+      }),
+      // Dia a dia da Secretaria: só os ativos, na ordem cadastrada no admin.
+      prisma.momentoSecretaria.findMany({
+        where: { ativo: true },
+        orderBy: [{ ordem: 'asc' }, { createdAt: 'desc' }],
+        select: { id: true, categoria: true, imagemUrl: true, instagramUrl: true },
+      }),
+      // Prévia do noticiário — mesmo critério de publicação de `/noticias`.
+      prisma.noticia.findMany({
+        where: { publicado: true, publicadoEm: { not: null } },
+        orderBy: { publicadoEm: 'desc' },
+        take: 3,
+        select: {
+          id: true,
+          titulo: true,
+          slug: true,
+          corpo: true,
+          tags: true,
+          imagemUrl: true,
+          publicadoEm: true,
+        },
+      }),
+      // Prévia de transparência — mesmo critério de publicação de `/projetos-apoiados`.
+      prisma.projetoApoiado.findMany({
+        where: { publicado: true },
+        orderBy: { createdAt: 'desc' },
+        take: 3,
+        include: {
+          inscricao: {
+            select: {
+              categoria: true,
+              campos: true,
+              proponente: { select: { nome: true } },
+            },
+          },
+        },
       }),
     ])
 
@@ -155,6 +219,29 @@ export default async function HomePage() {
       }
     })
 
+  const momentos: MomentoResumo[] = momentosAdmin.map((momento) => ({
+    id: momento.id,
+    categoria: momento.categoria,
+    imagemUrl: momento.imagemUrl,
+    instagramUrl: momento.instagramUrl,
+  }))
+
+  const noticias = noticiasDestaque.map((noticia) => noticiaParaListagem(noticia, 140))
+
+  const projetos: ProjetoApoiadoResumo[] = projetosDestaque.map((projeto) => {
+    const situacao = SITUACOES[projeto.statusExecucao] ?? {
+      label: projeto.statusExecucao,
+      tom: 'arquivo' as const,
+    }
+    return {
+      id: projeto.id,
+      nome: nomeDoProjeto(projeto.inscricao.campos) ?? projeto.inscricao.proponente.nome,
+      categoria: projeto.inscricao.categoria,
+      valor: formatCurrency(projeto.valorAprovado),
+      situacao,
+    }
+  })
+
   const somaFomento = totalFomento._sum.valorTotal ? Number(totalFomento._sum.valorTotal) : 0
   const numeros = [
     { valor: String(editaisAbertos || '—'), rotulo: 'Editais Abertos' },
@@ -183,6 +270,10 @@ export default async function HomePage() {
       <Varal />
 
       <SecaoConceito />
+      <SecaoProjetosApoiados projetos={projetos} />
+      <SecaoDiaADia momentos={momentos} />
+      <SecaoNoticias noticias={noticias} />
+      <SecaoOndeEncontrar />
       <SecaoServicos />
     </div>
   )
