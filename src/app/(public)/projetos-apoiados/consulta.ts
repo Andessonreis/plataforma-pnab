@@ -8,7 +8,7 @@ import type { FiltrosPrestacao, GrupoEdital, Prestacao, ProjetoRegistrado, Relat
 const EDITAIS_POR_PAGINA = 5
 
 /** O nome do projeto vive no formulário da inscrição, que é JSON livre. */
-function nomeDoProjeto(campos: unknown): string | null {
+export function nomeDoProjeto(campos: unknown): string | null {
   let dados = campos
   if (typeof dados === 'string') {
     try {
