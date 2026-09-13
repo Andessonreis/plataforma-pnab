@@ -4,6 +4,11 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { getNextDeadline } from '@/lib/utils/cronograma'
 import { parseBrazilDateTime } from '@/lib/utils/format'
+import {
+  statusVisivelParaProponente,
+  STATUS_POS_HABILITACAO_NAO_DIVULGADO,
+} from '@/lib/edital/resultado-habilitacao'
+import type { InscricaoStatus } from '@prisma/client'
 import { DashboardHero } from './dashboard-hero'
 import { OpenEditaisBanner } from './open-editais-banner'
 import { DashboardStats } from './dashboard-stats'
@@ -33,7 +38,23 @@ export default async function ProponenteDashboardPage() {
     unreadNotificationsCount,
   ] = await Promise.all([
     prisma.inscricao.count({ where: { proponenteId: userId } }),
-    prisma.inscricao.count({ where: { proponenteId: userId, status: 'ENVIADA' } }),
+    // "Pendente" pro proponente é o que ele ainda vê como "Em análise" — inclui
+    // ENVIADA de verdade e os status pós-habilitação/avaliação ainda não
+    // liberados (mesmo critério de statusVisivelParaProponente), senão esse
+    // contador cai sozinho quando a inscrição muda de status internamente,
+    // vazando de forma indireta que ela avançou de fase.
+    prisma.inscricao.count({
+      where: {
+        proponenteId: userId,
+        OR: [
+          { status: 'ENVIADA' },
+          {
+            status: { in: [...STATUS_POS_HABILITACAO_NAO_DIVULGADO] as InscricaoStatus[] },
+            resultadoLiberadoEm: null,
+          },
+        ],
+      },
+    }),
     prisma.inscricao.count({ where: { proponenteId: userId, status: 'CONTEMPLADA' } }),
     prisma.edital.count({ where: { status: 'INSCRICOES_ABERTAS' } }),
     prisma.inscricao.findMany({
@@ -120,7 +141,13 @@ export default async function ProponenteDashboardPage() {
       {/* Inscrições recentes em largura total (prazos já não mora mais aqui,
           foi pro hero) — rascunhos/notificações formam a segunda zona,
           lado a lado, não uma coluna lateral estreita empurrada pro canto. */}
-      <RecentInscricoesSection inscricoes={recentInscricoes} total={totalInscricoes} />
+      <RecentInscricoesSection
+        inscricoes={recentInscricoes.map((i) => ({
+          ...i,
+          status: statusVisivelParaProponente(i.status, i.resultadoLiberadoEm !== null),
+        }))}
+        total={totalInscricoes}
+      />
 
       <DashboardSidebar
         drafts={draftInscricoes.map((d) => ({

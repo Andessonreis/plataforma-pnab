@@ -18,7 +18,7 @@
  * o mesmo ato de divulgar o resultado da habilitação — sem essa entrada aqui,
  * o painel do proponente pularia direto pra "Em avaliação".
  */
-const STATUS_POS_HABILITACAO_NAO_DIVULGADO = new Set(['HABILITADA', 'INABILITADA', 'EM_AVALIACAO'])
+export const STATUS_POS_HABILITACAO_NAO_DIVULGADO = new Set(['HABILITADA', 'INABILITADA', 'EM_AVALIACAO'])
 
 /**
  * Status da inscrição como o proponente pode vê-lo.

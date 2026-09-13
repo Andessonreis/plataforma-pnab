@@ -68,7 +68,14 @@ export async function publishResultados(
   const editalStatus = fase === 'RESULTADO_FINAL' ? 'RESULTADO_FINAL' : 'RESULTADO_PRELIMINAR'
   await prisma.edital.update({
     where: { id: editalId },
-    data: { status: editalStatus },
+    data: {
+      status: editalStatus,
+      // Ato explícito que libera nota/parecer pro proponente — ver
+      // resultadoPreliminarPublicadoEm/resultadoFinalPublicadoEm no schema.
+      ...(fase === 'RESULTADO_FINAL'
+        ? { resultadoFinalPublicadoEm: new Date() }
+        : { resultadoPreliminarPublicadoEm: new Date() }),
+    },
   })
 
   // Notifica proponentes

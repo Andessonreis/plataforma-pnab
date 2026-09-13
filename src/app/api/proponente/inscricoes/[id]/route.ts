@@ -86,11 +86,13 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     // Dono da inscrição só vê o resultado da habilitação depois de liberado —
     // essa rota é chamada direto (fora da tela), então a máscara precisa
     // acontecer aqui também, não só no server component (ver resultado-habilitacao.ts).
+    const liberado = inscricao.resultadoLiberadoEm !== null
     const data = isAdmin
       ? inscricao
       : {
           ...inscricao,
-          status: statusVisivelParaProponente(inscricao.status, inscricao.resultadoLiberadoEm !== null),
+          status: statusVisivelParaProponente(inscricao.status, liberado),
+          motivoInabilitacao: liberado ? inscricao.motivoInabilitacao : null,
         }
 
     const res = NextResponse.json({ data, requestId })

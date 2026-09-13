@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db'
+import { STATUS_POS_HABILITACAO_NAO_DIVULGADO } from '@/lib/edital/resultado-habilitacao'
 import type { AudienceFilter } from './types'
 
 /**
@@ -16,11 +17,27 @@ export async function resolveAudience(filtro: AudienceFilter): Promise<string[]>
 
   // ── Filtros baseados em inscrição ──────────────────────────────────────
   if (filtro.editais && filtro.editais.length > 0) {
+    const statusFiltro = filtro.inscricaoStatus ?? []
+    // HABILITADA/INABILITADA/EM_AVALIACAO ainda não divulgados (sem liberação
+    // explícita) não podem virar critério de campanha — do contrário um admin
+    // monta um filtro por esse status e a campanha vira sinal indireto de que
+    // a inscrição avançou de fase antes da hora. Os demais status (ENVIADA,
+    // resultado publicado etc.) seguem sem essa exigência.
+    const statusDivulgados = statusFiltro.filter((s) => !STATUS_POS_HABILITACAO_NAO_DIVULGADO.has(s))
+    const statusNaoDivulgados = statusFiltro.filter((s) => STATUS_POS_HABILITACAO_NAO_DIVULGADO.has(s))
+
     const inscricoes = await prisma.inscricao.findMany({
       where: {
         editalId: { in: filtro.editais },
-        ...(filtro.inscricaoStatus && filtro.inscricaoStatus.length > 0
-          ? { status: { in: filtro.inscricaoStatus } }
+        ...(statusFiltro.length > 0
+          ? {
+              OR: [
+                ...(statusDivulgados.length > 0 ? [{ status: { in: statusDivulgados } }] : []),
+                ...(statusNaoDivulgados.length > 0
+                  ? [{ status: { in: statusNaoDivulgados }, resultadoLiberadoEm: { not: null } }]
+                  : []),
+              ],
+            }
           : {}),
       },
       select: { proponenteId: true },

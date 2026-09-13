@@ -312,6 +312,13 @@ model Edital {
   // SUPER_ADMIN sempre vê, independente deste campo — é o interruptor que ele
   // usa pra estender esse acesso. AVALIADOR nunca vê, não tem exceção aqui.
   bonusVisivelParaAdmin     Boolean      @default(false)
+  // Ato explícito da Secretaria publicando o resultado da avaliação. Não
+  // deriva de `status`: o scheduler avança `status` sozinho pela data do
+  // cronograma (que pode estar desatualizado), então sem estas colunas nota
+  // e parecer de avaliação vazariam pro proponente antes da hora — mesmo
+  // problema que `Inscricao.resultadoLiberadoEm` já resolve pra habilitação.
+  resultadoPreliminarPublicadoEm DateTime?
+  resultadoFinalPublicadoEm      DateTime?
   createdAt                 DateTime     @default(now())
   updatedAt                 DateTime     @updatedAt
 

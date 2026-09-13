@@ -71,6 +71,11 @@ export async function GET(req: NextRequest, context: RouteContext) {
     }
 
     const ehResultado = isAcaoResultado(acao)
+    // Lista de inscritos não expõe status processual (HABILITADA/EM_AVALIACAO/
+    // etc.) — vale pros dois formatos, JSON e CSV. Só listas de resultado
+    // (RESULTADO_PRELIMINAR/RESULTADO_FINAL, já gateadas por publishResultados)
+    // mostram status.
+    const incluirStatus = ehResultado || acao !== 'PUBLICACAO_INSCRITOS'
 
     // Mascarar dados sensíveis antes de devolver
     const itemsPublicos = publicacao.items.map((i) => ({
@@ -78,8 +83,8 @@ export async function GET(req: NextRequest, context: RouteContext) {
       nome: maskName(i.nome),
       cpfCnpj: maskCpfCnpj(i.cpfCnpj),
       categoria: i.categoria ?? null,
-      status: i.status,
-      statusLabel: inscricaoStatusLabel[i.status] ?? i.status,
+      status: incluirStatus ? i.status : null,
+      statusLabel: incluirStatus ? (inscricaoStatusLabel[i.status] ?? i.status) : null,
       posicao: i.posicao,
       notaFinal: i.notaFinal,
     }))
@@ -100,19 +105,17 @@ export async function GET(req: NextRequest, context: RouteContext) {
             i.cpfCnpj,
             i.categoria ?? '',
             i.notaFinal != null ? i.notaFinal.toFixed(2) : '',
-            i.statusLabel,
+            i.statusLabel ?? '',
           ]),
         ]
       } else {
-        // Lista de inscritos não expõe status processual (HABILITADA/INABILITADA/etc.)
-        const incluirStatus = acao !== 'PUBLICACAO_INSCRITOS'
         header = incluirStatus
           ? ['Numero', 'Nome', 'CPF/CNPJ', 'Categoria', 'Status']
           : ['Numero', 'Nome', 'CPF/CNPJ', 'Categoria']
         rows = [
           header,
           ...itemsPublicos.map((i) => incluirStatus
-            ? [i.numero, i.nome, i.cpfCnpj, i.categoria ?? '', i.statusLabel]
+            ? [i.numero, i.nome, i.cpfCnpj, i.categoria ?? '', i.statusLabel ?? '']
             : [i.numero, i.nome, i.cpfCnpj, i.categoria ?? '']),
         ]
       }

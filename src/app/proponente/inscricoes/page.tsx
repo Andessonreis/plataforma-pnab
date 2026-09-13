@@ -111,7 +111,7 @@ export default async function MinhasInscricoesPage({ searchParams }: Props) {
           {/* deslop-ignore-next-line 21 22 — borda e radius no mesmo elemento; linhas internas usam divide-y reto, sem raio próprio */}
           <div id="tour-inscricoes-lista" className="overflow-hidden rounded-lg border border-tinta-900/10 bg-white">
             <ul className="divide-y divide-tinta-900/10">
-              {inscricoes.map((inscricao, index) => (
+              {inscricoesVisiveis.map((inscricao, index) => (
                 <InscricaoItem key={inscricao.id} inscricao={inscricao} destaqueTour={index === 0} />
               ))}
             </ul>

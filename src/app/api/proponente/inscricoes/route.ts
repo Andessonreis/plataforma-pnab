@@ -6,6 +6,7 @@ import { prisma } from '@/lib/db'
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
 import { Prisma } from '@prisma/client'
 import { invalidCotasOptIn } from '@/types/categoria-config'
+import { statusVisivelParaProponente } from '@/lib/edital/resultado-habilitacao'
 
 export const runtime = 'nodejs'
 
@@ -252,8 +253,17 @@ export async function GET(req: NextRequest) {
       prisma.inscricao.count({ where }),
     ])
 
+    // Essa rota é chamada direto (não só pela tela de "Minhas Inscrições"),
+    // então a máscara de resultado precisa acontecer aqui também — ver
+    // resultado-habilitacao.ts.
+    const masked = data.map((i) => ({
+      ...i,
+      status: statusVisivelParaProponente(i.status, i.resultadoLiberadoEm !== null),
+      motivoInabilitacao: i.resultadoLiberadoEm !== null ? i.motivoInabilitacao : null,
+    }))
+
     const res = NextResponse.json({
-      data,
+      data: masked,
       meta: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) },
     })
     res.headers.set('X-Request-Id', requestId)

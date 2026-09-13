@@ -43,9 +43,6 @@ const STATUS_TIMELINE: InscricaoStatus[] = [
   'RESULTADO_FINAL',
 ]
 
-// Status do edital em que notas/avaliações já podem ser exibidas ao proponente.
-const RESULTADO_VISIVEL: string[] = ['RESULTADO_PRELIMINAR', 'RECURSO', 'RESULTADO_FINAL', 'ENCERRADO']
-
 /** Posição da inscrição na timeline visual, cobrindo status terminais que não estão na régua. */
 function timelineIndex(status: InscricaoStatus): number {
   const terminaisPosAvaliacao: InscricaoStatus[] = ['CONTEMPLADA', 'NAO_CONTEMPLADA', 'SUPLENTE']
@@ -81,6 +78,7 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
           titulo: true, slug: true, ano: true, categorias: true, status: true,
           formulaAvaliacao: true, camposFormulario: true, etapasCustomizadas: true,
           cronograma: true, retificacoes: true,
+          resultadoPreliminarPublicadoEm: true, resultadoFinalPublicadoEm: true,
         },
       },
       proponente: {
@@ -122,7 +120,11 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
     inscricao.status as InscricaoStatus,
     habilitacaoPublicada,
   ) as InscricaoStatus
-  const resultadoVisivel = RESULTADO_VISIVEL.includes(inscricao.edital.status)
+  // Nota e parecer só aparecem depois de um ato explícito de publicação da
+  // Secretaria — nunca por edital.status ter avançado sozinho (scheduler
+  // pela data do cronograma, ou avanço manual de fase).
+  const resultadoVisivel = inscricao.edital.resultadoPreliminarPublicadoEm !== null
+    || inscricao.edital.resultadoFinalPublicadoEm !== null
   const retificacaoAtual = retificacaoVigente(inscricao.edital.retificacoes)
   const mostrarSucesso = enviada === 'true' && status === 'ENVIADA'
 

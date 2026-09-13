@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { generateProjetoCompleto } from '@/lib/pdf/projeto-completo'
 import { mesclarAnexosNoPdf } from '@/lib/pdf/dossie-completo'
+import { statusVisivelParaProponente } from '@/lib/edital/resultado-habilitacao'
 import type { CampoFormulario } from '@/types/campo-formulario'
 
 export const runtime = 'nodejs'
@@ -82,9 +83,15 @@ export async function GET(
       ? (inscricao.edital.camposFormulario as unknown as CampoFormulario[])
       : []
 
+    // Dono da inscrição só vê o status real depois de liberado — mesma
+    // máscara da tela e das demais rotas (ver resultado-habilitacao.ts).
+    const statusPdf = isAdmin
+      ? inscricao.status
+      : statusVisivelParaProponente(inscricao.status, inscricao.resultadoLiberadoEm !== null)
+
     let pdfBuffer = await generateProjetoCompleto({
       numero: inscricao.numero,
-      status: inscricao.status,
+      status: statusPdf,
       proponente: {
         nome: inscricao.proponente.nome,
         cpfCnpj: inscricao.proponente.cpfCnpj ?? '',

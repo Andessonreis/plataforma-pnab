@@ -150,10 +150,17 @@ export async function getPublicacao(
 
   const ehResultado = isAcaoResultado(acao)
 
+  // Habilitados/inabilitados só entram na lista pública depois do ato
+  // explícito de liberação por inscrição (Inscricao.resultadoLiberadoEm) — a
+  // data do marco no cronograma não basta: pode estar desatualizada, ou a
+  // conferência ainda não ter terminado pra todo mundo quando ela chega.
+  const exigeLiberacao = acao === 'PUBLICACAO_HABILITADOS' || acao === 'PUBLICACAO_HABILITADOS_POS_RECURSOS'
+
   const inscricoes = await prisma.inscricao.findMany({
     where: {
       editalId: edital.id,
       status: { in: PUBLICACAO_STATUS_FILTER[acao] },
+      ...(exigeLiberacao ? { resultadoLiberadoEm: { not: null } } : {}),
     },
     // Resultado: ordena pela classificação (posição/nota). Demais: por número.
     orderBy: ehResultado

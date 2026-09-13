@@ -350,9 +350,11 @@ export async function getInscricaoById(id: string, callerId: string, callerRole:
   // Pro dono da inscrição, o resultado da habilitação só aparece depois de
   // liberado. A equipe continua vendo o status real — é o trabalho dela.
   if (!isAdmin) {
+    const liberado = inscricao.resultadoLiberadoEm !== null
     return {
       ...inscricao,
-      status: statusVisivelParaProponente(inscricao.status, inscricao.resultadoLiberadoEm !== null),
+      status: statusVisivelParaProponente(inscricao.status, liberado),
+      motivoInabilitacao: liberado ? inscricao.motivoInabilitacao : null,
     }
   }
 
@@ -380,6 +382,7 @@ export async function listInscricoesByProponente(userId: string, page: number, p
   const visiveis = data.map((i) => ({
     ...i,
     status: statusVisivelParaProponente(i.status, i.resultadoLiberadoEm !== null),
+    motivoInabilitacao: i.resultadoLiberadoEm !== null ? i.motivoInabilitacao : null,
   }))
 
   return { data: visiveis, meta: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } }
