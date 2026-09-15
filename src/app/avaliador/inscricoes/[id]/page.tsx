@@ -15,6 +15,7 @@ import { STATUS_BLOQUEADO_PARA_AVALIADOR } from '@/lib/services/avaliacao-bucket
 import { DadosInscricaoView } from '@/components/inscricao/dados-inscricao-view'
 import { podeAvaliar, mensagemForaDaFase } from '@/lib/edital/fase'
 import { ForaDaFaseAlert } from '@/components/edital/fora-da-fase-alert'
+import { resultadoPreliminarConsolidado } from '@/lib/results/consolidacao'
 import type { CampoFormulario } from '@/types/campo-formulario'
 import type { EtapaCustomizada } from '@/types/etapa-customizada'
 import Link from 'next/link'
@@ -77,6 +78,10 @@ export default async function AvaliadorInscricaoDetailPage({ params }: Props) {
 
   // Avaliação existente do usuário (pode não existir ainda — será criada no primeiro submit)
   const minhaAvaliacao = inscricao.avaliacoes.find((a) => a.avaliadorId === session.user.id)
+
+  const podeReabrir =
+    minhaAvaliacao?.finalizada === true &&
+    !(await resultadoPreliminarConsolidado(inscricao.editalId, inscricao.edital.status))
 
   const campos = (inscricao.campos && typeof inscricao.campos === 'object') ? inscricao.campos as Record<string, unknown> : {}
 
@@ -226,6 +231,7 @@ export default async function AvaliadorInscricaoDetailPage({ params }: Props) {
               : null
           }
           formulaAvaliacao={inscricao.edital.formulaAvaliacao}
+          podeReabrir={podeReabrir}
         />
       ) : (
         <ForaDaFaseAlert

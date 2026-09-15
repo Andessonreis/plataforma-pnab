@@ -6,6 +6,7 @@ import { logAudit } from '@/lib/audit'
 import { cumulativeStatuses } from '@/lib/status-maps'
 import { formatTelefoneBR } from '@/lib/utils/format'
 import { categoriaWhere } from '@/lib/inscricoes/area-filter'
+import { viewNotaFinal } from '@/lib/services/resultado-view'
 import type { InscricaoStatus } from '@prisma/client'
 
 export const runtime = 'nodejs'
@@ -44,7 +45,7 @@ export async function GET(req: NextRequest) {
       where,
       orderBy: { createdAt: 'desc' },
       include: {
-        edital: { select: { titulo: true } },
+        edital: { select: { titulo: true, bonusVisivelParaAdmin: true } },
         proponente: { select: { nome: true, cpfCnpj: true, email: true, telefone: true } },
       },
     })
@@ -57,18 +58,21 @@ export async function GET(req: NextRequest) {
     // Gerar CSV
     const headers = ['Numero', 'Nome', 'CPF/CNPJ', 'Email', 'Telefone', 'Edital', 'Status', 'Categoria', 'Nota Final', 'Enviada em']
 
-    const rows = inscricoes.map((i) => [
-      csvSafe(String(i.numero ?? '')),
-      `"${csvSafe(i.proponente.nome)}"`,
-      csvSafe(i.proponente.cpfCnpj ?? ''),
-      csvSafe(i.proponente.email),
-      csvSafe(formatTelefoneBR(i.proponente.telefone ?? '')),
-      `"${csvSafe(i.edital.titulo)}"`,
-      csvSafe(i.status),
-      csvSafe(i.categoria ?? ''),
-      i.notaFinal ? String(i.notaFinal) : '',
-      i.submittedAt ? new Date(i.submittedAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : '',
-    ])
+    const rows = inscricoes.map((i) => {
+      const nota = viewNotaFinal(i, session.user.role, i.edital.bonusVisivelParaAdmin)
+      return [
+        csvSafe(String(i.numero ?? '')),
+        `"${csvSafe(i.proponente.nome)}"`,
+        csvSafe(i.proponente.cpfCnpj ?? ''),
+        csvSafe(i.proponente.email),
+        csvSafe(formatTelefoneBR(i.proponente.telefone ?? '')),
+        `"${csvSafe(i.edital.titulo)}"`,
+        csvSafe(i.status),
+        csvSafe(i.categoria ?? ''),
+        nota === null ? '' : String(nota),
+        i.submittedAt ? new Date(i.submittedAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : '',
+      ]
+    })
 
     // BOM para UTF-8 + CSV
     const bom = '\uFEFF'

@@ -58,7 +58,7 @@ export const navSections: NavSection[] = [
       {
         label: 'Habilitação',
         href: '/admin/habilitacao',
-        roles: ['SUPER_ADMIN', 'HABILITADOR'],
+        roles: ['SUPER_ADMIN', 'HABILITADOR', 'ADMIN'],
         icon: <IconShield className="h-5 w-5" />,
         highlightKey: 'habilitacao',
       },

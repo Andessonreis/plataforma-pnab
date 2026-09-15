@@ -5,6 +5,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { logAudit } from '@/lib/audit'
 import { calculateResults, saveResults } from '@/lib/results/calculate'
+import { viewNotaFinal } from '@/lib/services/resultado-view'
 import { enqueueEmail } from '@/lib/queue'
 
 export const runtime = 'nodejs'
@@ -34,7 +35,7 @@ export async function GET(
 
     const edital = await prisma.edital.findUnique({
       where: { id },
-      select: { id: true, titulo: true, status: true },
+      select: { id: true, titulo: true, status: true, bonusVisivelParaAdmin: true },
     })
 
     if (!edital) {
@@ -78,7 +79,7 @@ export async function GET(
       numero: i.numero,
       proponenteNome: i.proponente.nome,
       categoria: i.categoria,
-      notaFinal: i.notaFinal ? Number(i.notaFinal) : null,
+      notaFinal: viewNotaFinal(i, session.user.role, edital.bonusVisivelParaAdmin),
       status: i.status,
       totalAvaliacoes: i.avaliacoes.length,
     }))

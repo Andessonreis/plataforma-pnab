@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 const STATUSES_HABILITACAO: InscricaoStatus[] = ['ENVIADA', 'HABILITADA', 'INABILITADA']
 
 export default async function AdminHabilitacaoDetailPage({ params, searchParams }: Props) {
-  const session = await requireRole('HABILITADOR')
+  const session = await requireRole('HABILITADOR', 'ADMIN')
 
   const { id } = await params
   const { editalId, aba } = await searchParams

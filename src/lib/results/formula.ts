@@ -108,6 +108,42 @@ export function calculateWithFormula(
   return Math.round(evaluateExpression(formula, variables) * 100) / 100
 }
 
+// ─── Validação: fórmula precisa referenciar todos os blocos ────────────────
+
+/**
+ * Confere se a fórmula referencia todos os blocos de critério existentes.
+ * Evita o caso real de produção onde um bloco inteiro (com nota preenchida
+ * pelo avaliador) fica de fora do cálculo por descuido na escrita da fórmula
+ * — a variável Bn é atribuída por ordem alfabética do nome do bloco
+ * (`calculateWithFormula`), então nomes parecidos (ex.: "Bloco 2-I" e
+ * "Bloco 2-II") facilmente resultam numa fórmula que esquece um bloco.
+ * Retorna null quando está tudo ok, ou uma mensagem de erro.
+ */
+export function validarFormulaCobreTodosBlocos(
+  criterios: CriterioAvaliacao[],
+  formula: string,
+): string | null {
+  const blocos = [...new Set(criterios.map((c) => c.bloco).filter(Boolean))] as string[]
+  blocos.sort()
+
+  if (blocos.length === 0) {
+    return 'A fórmula customizada exige que cada critério tenha um bloco definido (campo "bloco").'
+  }
+
+  const referenciados = new Set(
+    Array.from(formula.matchAll(/B(\d+)/g)).map((m) => Number(m[1])),
+  )
+
+  const faltando = blocos
+    .map((bloco, i) => ({ bloco, variavel: i + 1 }))
+    .filter(({ variavel }) => !referenciados.has(variavel))
+
+  if (faltando.length === 0) return null
+
+  const lista = faltando.map(({ bloco, variavel }) => `"${bloco}" (B${variavel})`).join(', ')
+  return `A fórmula não usa todos os blocos de critério: ${lista}. A nota desse(s) bloco(s) seria descartada do cálculo.`
+}
+
 // ─── Média ponderada normalizada (modo padrão) ─────────────────────────────
 
 export function calculateWeightedAverage(notas: NotaAvaliacao[], criterios: CriterioAvaliacao[]): number {

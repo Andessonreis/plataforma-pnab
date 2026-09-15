@@ -1,15 +1,17 @@
 import { Badge } from '@/components/ui'
 import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
 import { formatTelefoneBR } from '@/lib/utils/format'
-import type { InscricaoStatus } from '@prisma/client'
+import { viewNotaFinal } from '@/lib/services/resultado-view'
+import type { InscricaoStatus, UserRole } from '@prisma/client'
 
 export interface PreviewItem {
   id: string
   numero: string
   status: InscricaoStatus
   notaFinal: unknown
+  notaBonus: unknown
   submittedAt: Date | null
-  edital: { titulo: string }
+  edital: { titulo: string; bonusVisivelParaAdmin: boolean }
   proponente: {
     nome: string
     cpfCnpj: string | null
@@ -24,6 +26,7 @@ interface PreviewListProps {
   limit: number
   /** Quando há edital filtrado, a coluna de edital é redundante e some. */
   showEdital: boolean
+  viewerRole: UserRole
 }
 
 function formatData(value: Date | null): string {
@@ -31,11 +34,12 @@ function formatData(value: Date | null): string {
   return new Date(value).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
 }
 
-function formatNota(value: unknown): string {
-  return value ? Number(value).toFixed(2) : '—'
+function formatNota(item: PreviewItem, viewerRole: UserRole): string {
+  const nota = viewNotaFinal(item, viewerRole, item.edital.bonusVisivelParaAdmin)
+  return nota === null ? '—' : nota.toFixed(2)
 }
 
-export default function PreviewList({ items, total, limit, showEdital }: PreviewListProps) {
+export default function PreviewList({ items, total, limit, showEdital, viewerRole }: PreviewListProps) {
   if (total === 0) {
     return (
       <div className="rounded-lg border border-dashed border-slate-300 py-14 text-center">
@@ -141,7 +145,7 @@ export default function PreviewList({ items, total, limit, showEdital }: Preview
                     </Badge>
                   </td>
                   <td className="px-3 py-3 text-right text-xs text-slate-600 tabular-nums hidden lg:table-cell">
-                    {formatNota(i.notaFinal)}
+                    {formatNota(i, viewerRole)}
                   </td>
                   <td className="px-3 py-3 text-xs text-slate-400 whitespace-nowrap hidden lg:table-cell">
                     {formatData(i.submittedAt)}

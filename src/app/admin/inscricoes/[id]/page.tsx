@@ -23,8 +23,10 @@ import { DadosInscricaoView } from '@/components/inscricao/dados-inscricao-view'
 import { HistoricoProcesso } from '@/components/inscricao/historico-processo'
 import { calcularAnexosPendentes } from '@/lib/inscricoes/anexos-pendentes'
 import { viewNotaTotal } from '@/lib/services/avaliacao-view'
+import { viewNotaFinal } from '@/lib/services/resultado-view'
 import { podeAvaliar, podeHabilitar, mensagemForaDaFase } from '@/lib/edital/fase'
 import { ForaDaFaseAlert } from '@/components/edital/fora-da-fase-alert'
+import { resultadoPreliminarConsolidado } from '@/lib/results/consolidacao'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -57,7 +59,7 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
   const inscricao = await prisma.inscricao.findUnique({
     where: { id },
     include: {
-      edital: { select: { titulo: true, slug: true, ano: true, status: true, criteriosAvaliacao: true, camposFormulario: true, etapasCustomizadas: true, tiposAnexo: true, formulaAvaliacao: true } },
+      edital: { select: { titulo: true, slug: true, ano: true, status: true, criteriosAvaliacao: true, camposFormulario: true, etapasCustomizadas: true, tiposAnexo: true, formulaAvaliacao: true, bonusVisivelParaAdmin: true } },
       proponente: {
         select: { nome: true, cpfCnpj: true, email: true, telefone: true, tipoProponente: true },
       },
@@ -136,13 +138,19 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
     ? { nomeAuxiliar: auxilioInscricao.nomeAuxiliar, cpfAuxiliar: auxilioInscricao.cpfAuxiliar }
     : null
   const totalAvaliadores = inscricao.avaliacoes.length
-  const canHabilitar = session.user.role === 'SUPER_ADMIN' || session.user.role === 'HABILITADOR'
+  const canHabilitar = ['SUPER_ADMIN', 'HABILITADOR', 'ADMIN'].includes(session.user.role)
   const isHabilitacaoStatus = inscricao.status === 'ENVIADA' || inscricao.status === 'HABILITADA' || inscricao.status === 'INABILITADA'
 
   // Gating por fase do edital — bugs #84/#85
   const editalStatus = inscricao.edital.status
   const podeAvaliarAgora = podeAvaliar(editalStatus, inscricao.status)
   const podeHabilitarAgora = podeHabilitar(editalStatus)
+  const podeReabrir =
+    meuAvaliacao?.finalizada === true &&
+    !(await resultadoPreliminarConsolidado(inscricao.editalId, editalStatus))
+  // Bônus de identidade (bloco "Bonificação") — ADMIN comum só vê depois que o
+  // edital sai da fase de avaliação; SUPER_ADMIN vê sempre.
+  const podeVerBonusCriterio = userRole === 'SUPER_ADMIN' || editalStatus !== 'AVALIACAO'
 
   const camposFormulario = (Array.isArray(inscricao.edital.camposFormulario)
     ? inscricao.edital.camposFormulario : []) as unknown as CampoFormulario[]
@@ -245,16 +253,20 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
             }
           />
 
-          {/* Avaliacoes — comparativo critério × avaliador (somente ADMIN; avaliação cega entre avaliadores) */}
+          {/* Avaliacoes — comparativo critério × avaliador (somente ADMIN; avaliação cega entre avaliadores).
+              Bloco de bonificação (identidade do proponente) fica oculto pro ADMIN comum
+              enquanto o edital ainda está em avaliação — só SUPER_ADMIN vê antes disso. */}
           {inscricao.avaliacoes.length > 0 && !isAvaliador && (
             <AvaliacoesComparativo
-              criterios={criterios.map((c) => ({
-                criterio: c.criterio,
-                peso: c.peso,
-                notaMax: c.notaMax ?? 10,
-                descricao: c.descricao,
-                bloco: c.bloco,
-              }))}
+              criterios={criterios
+                .filter((c) => podeVerBonusCriterio || !/bonific/i.test(c.bloco ?? ''))
+                .map((c) => ({
+                  criterio: c.criterio,
+                  peso: c.peso,
+                  notaMax: c.notaMax ?? 10,
+                  descricao: c.descricao,
+                  bloco: c.bloco,
+                }))}
               hasFormula={hasFormula}
               avaliacoes={inscricao.avaliacoes.map((a) => ({
                 id: a.id,
@@ -422,15 +434,19 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
                     : 'Não enviada'}
                 </dd>
               </div>
-              {inscricao.notaFinal && (
-                <div>
-                  <dt className="text-xs font-medium text-slate-500 uppercase">{hasFormula ? 'Pontuação Final' : 'Nota Final'}</dt>
-                  <dd className="text-2xl font-bold text-brand-700 tabular-nums">
-                    {parseFloat(String(inscricao.notaFinal)).toFixed(hasFormula ? 2 : 1)}
-                    {hasFormula && <span className="text-sm font-normal text-slate-400 ml-1">pts</span>}
-                  </dd>
-                </div>
-              )}
+              {(() => {
+                const notaExibida = viewNotaFinal(inscricao, userRole, inscricao.edital.bonusVisivelParaAdmin)
+                if (notaExibida === null) return null
+                return (
+                  <div>
+                    <dt className="text-xs font-medium text-slate-500 uppercase">{hasFormula ? 'Pontuação Final' : 'Nota Final'}</dt>
+                    <dd className="text-2xl font-bold text-brand-700 tabular-nums">
+                      {notaExibida.toFixed(hasFormula ? 2 : 1)}
+                      {hasFormula && <span className="text-sm font-normal text-slate-400 ml-1">pts</span>}
+                    </dd>
+                  </div>
+                )
+              })()}
             </dl>
           </Card>
 
@@ -507,6 +523,7 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
                 : null,
               isAdmin,
               formulaAvaliacao: inscricao.edital.formulaAvaliacao,
+              podeReabrir,
             }
 
             if (podeAvaliarAgora) {
