@@ -1,13 +1,15 @@
+import type { UserRole } from '@prisma/client'
 import { prisma } from '@/lib/db'
 import { logAudit } from '@/lib/audit'
 import { calculateResults, saveResults } from '@/lib/results/calculate'
+import { viewNotaFinal } from '@/lib/services/resultado-view'
 import { enqueueEmail } from '@/lib/queue'
 import { ServiceError } from './errors'
 
-export async function getResultados(editalId: string) {
+export async function getResultados(editalId: string, role: UserRole) {
   const edital = await prisma.edital.findUnique({
     where: { id: editalId },
-    select: { id: true, titulo: true, status: true },
+    select: { id: true, titulo: true, status: true, bonusVisivelParaAdmin: true },
   })
   if (!edital) throw new ServiceError('NOT_FOUND', 'Edital não encontrado.')
 
@@ -31,7 +33,7 @@ export async function getResultados(editalId: string) {
       numero: i.numero,
       proponenteNome: i.proponente.nome,
       categoria: i.categoria,
-      notaFinal: i.notaFinal ? Number(i.notaFinal) : null,
+      notaFinal: viewNotaFinal(i, role, edital.bonusVisivelParaAdmin),
       status: i.status,
       totalAvaliacoes: i.avaliacoes.length,
     }))

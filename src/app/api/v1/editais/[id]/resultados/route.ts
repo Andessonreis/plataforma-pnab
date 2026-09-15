@@ -18,7 +18,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     const caller = await resolveAuth(req)
     if (!requireRole(caller, 'ADMIN')) return forbidden(ctx)
     const { id } = await params
-    const result = await resultadoService.getResultados(id)
+    const result = await resultadoService.getResultados(id, caller.role)
     logRequest(ctx, 'GET', `/api/v1/editais/${id}/resultados`, 200)
     return ok(ctx, result)
   } catch (err) {

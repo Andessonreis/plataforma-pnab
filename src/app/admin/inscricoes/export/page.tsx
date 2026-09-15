@@ -54,7 +54,7 @@ export default async function ExportPage({ searchParams }: Props) {
         orderBy: { createdAt: 'desc' },
         take: PREVIEW_LIMIT,
         include: {
-          edital: { select: { titulo: true } },
+          edital: { select: { titulo: true, bonusVisivelParaAdmin: true } },
           proponente: { select: { nome: true, cpfCnpj: true, email: true, telefone: true } },
         },
       }),
@@ -174,6 +174,7 @@ export default async function ExportPage({ searchParams }: Props) {
           total={total}
           limit={PREVIEW_LIMIT}
           showEdital={!editalId}
+          viewerRole={session.user.role}
         />
       </div>
 

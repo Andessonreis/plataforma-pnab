@@ -30,6 +30,7 @@ export default async function AdminResultadosPage({ params }: Props) {
       notaMinima: true,
       formulaAvaliacao: true,
       categoriasConfig: true,
+      bonusVisivelParaAdmin: true,
     },
   })
 
@@ -73,7 +74,12 @@ export default async function AdminResultadosPage({ params }: Props) {
       />
 
       {consolidado ? (
-        <PublishedResults editalId={id} categoriasConfig={categoriasConfig} />
+        <PublishedResults
+          editalId={id}
+          categoriasConfig={categoriasConfig}
+          viewerRole={session.user.role}
+          bonusVisivelParaAdmin={edital.bonusVisivelParaAdmin}
+        />
       ) : (
         <PreviewSection
           editalId={id}

@@ -1,5 +1,7 @@
+import type { UserRole } from '@prisma/client'
 import { prisma } from '@/lib/db'
 import type { CategoriaConfig } from '@/types/categoria-config'
+import { viewNotaFinal } from '@/lib/services/resultado-view'
 import { TiebreakerPanel } from './tiebreaker-panel'
 import { PublishedDesktopTable } from './published-desktop-table'
 import { PublishedMobileCards } from './published-mobile-cards'
@@ -8,10 +10,12 @@ import type { PublishedRow } from './published-types'
 interface Props {
   editalId: string
   categoriasConfig: CategoriaConfig[] | null
+  viewerRole: UserRole
+  bonusVisivelParaAdmin: boolean
 }
 
 /** Tabela oficial pós-publicação (valores gravados no banco). */
-export async function PublishedResults({ editalId, categoriasConfig }: Props) {
+export async function PublishedResults({ editalId, categoriasConfig, viewerRole, bonusVisivelParaAdmin }: Props) {
   const inscricoes = await prisma.inscricao.findMany({
     // Inabilitada não chega à avaliação — não entra na classificação do resultado.
     where: { editalId, status: { notIn: ['RASCUNHO', 'ENVIADA', 'INABILITADA'] } },
@@ -43,7 +47,7 @@ export async function PublishedResults({ editalId, categoriasConfig }: Props) {
     numero: i.numero,
     proponenteNome: i.proponente.nome,
     categoria: i.categoria,
-    notaFinal: i.notaFinal ? Number(i.notaFinal) : null,
+    notaFinal: viewNotaFinal(i, viewerRole, bonusVisivelParaAdmin),
     posicao: i.posicao,
     status: i.status,
   }))
@@ -73,7 +77,8 @@ export async function PublishedResults({ editalId, categoriasConfig }: Props) {
 
       {grupos.map(({ categoria, itens }) => {
         const rows: PublishedRow[] = itens.map((inscricao, index) => {
-          const nota = inscricao.notaFinal ? Number(inscricao.notaFinal) : null
+          const notaReal = inscricao.notaFinal ? Number(inscricao.notaFinal) : null
+          const nota = viewNotaFinal(inscricao, viewerRole, bonusVisivelParaAdmin)
           return {
             inscricaoId: inscricao.id,
             posicaoExibida: inscricao.posicao ?? index + 1,
@@ -82,7 +87,7 @@ export async function PublishedResults({ editalId, categoriasConfig }: Props) {
             categoria: inscricao.categoria,
             totalAvaliacoes: inscricao.avaliacoes.length,
             notaFinal: nota,
-            isEmpatada: nota != null && empatadas.has(nota),
+            isEmpatada: notaReal != null && empatadas.has(notaReal),
             status: inscricao.status,
           }
         })
