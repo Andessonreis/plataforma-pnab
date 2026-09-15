@@ -138,7 +138,7 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
     ? { nomeAuxiliar: auxilioInscricao.nomeAuxiliar, cpfAuxiliar: auxilioInscricao.cpfAuxiliar }
     : null
   const totalAvaliadores = inscricao.avaliacoes.length
-  const canHabilitar = session.user.role === 'SUPER_ADMIN' || session.user.role === 'HABILITADOR'
+  const canHabilitar = ['SUPER_ADMIN', 'HABILITADOR', 'ADMIN'].includes(session.user.role)
   const isHabilitacaoStatus = inscricao.status === 'ENVIADA' || inscricao.status === 'HABILITADA' || inscricao.status === 'INABILITADA'
 
   // Gating por fase do edital — bugs #84/#85

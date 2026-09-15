@@ -67,8 +67,17 @@ describe('PUT /api/admin/inscricoes/[id]/habilitacao', () => {
     expect(res.status).toBe(200)
   })
 
-  it('role ADMIN → 200', async () => {
+  it('role SUPER_ADMIN → 200', async () => {
     mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } } as never)
+    mockPrisma.inscricao.findUnique.mockResolvedValue(baseInscricao as never)
+
+    const res = await PUT(makeRequest({ status: 'HABILITADA' }), makeParams())
+
+    expect(res.status).toBe(200)
+  })
+
+  it('role ADMIN → 200', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
     mockPrisma.inscricao.findUnique.mockResolvedValue(baseInscricao as never)
 
     const res = await PUT(makeRequest({ status: 'HABILITADA' }), makeParams())
