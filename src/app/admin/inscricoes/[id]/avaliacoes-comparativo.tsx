@@ -65,11 +65,18 @@ export function AvaliacoesComparativo({ criterios, avaliacoes, hasFormula }: Pro
   const media = totais.length > 0 ? totais.reduce((a, n) => a + n, 0) / totais.length : null
   const decimals = hasFormula ? 2 : 1
 
+  // Soma direta dos critérios visíveis nesta tabela (não pondera nem aplica a
+  // fórmula) — mostrada ao lado da "Nota final" pra quem está conferindo
+  // conseguir bater a conta sozinho, sem precisar decorar a fórmula do edital.
+  const pontuacoesBrutas = avaliacoes.map((_, i) =>
+    criterios.reduce((soma, c) => soma + (notaMaps[i].get(c.criterio) ?? 0), 0),
+  )
+
   const temNotas = criterios.length > 0 && avaliacoes.some((a) => a.notas.length > 0)
 
   return (
     <Card padding="sm" className="sm:p-6">
-      <div className="flex items-center justify-between gap-3 mb-3 sm:mb-4">
+      <div className="flex items-center justify-between gap-3 mb-1 sm:mb-1.5">
         <h2 className="text-base sm:text-lg font-semibold text-slate-900">
           Avaliações ({avaliacoes.length})
         </h2>
@@ -80,6 +87,14 @@ export function AvaliacoesComparativo({ criterios, avaliacoes, hasFormula }: Pro
           </div>
         )}
       </div>
+
+      {hasFormula && (
+        <p className="text-xs text-slate-500 mb-3 sm:mb-4 leading-relaxed">
+          Pontuação bruta é a soma direta dos critérios mostrados na tabela. Nota final aplica a
+          fórmula de cálculo definida no edital sobre essa pontuação — visão interna da equipe, não é
+          o que aparece pro proponente nem pro público antes do resultado ser publicado.
+        </p>
+      )}
 
       {temNotas && (
         <div className="overflow-x-auto -mx-3 sm:mx-0 mb-4">
@@ -119,6 +134,20 @@ export function AvaliacoesComparativo({ criterios, avaliacoes, hasFormula }: Pro
               ))}
             </tbody>
             <tfoot>
+              {hasFormula && (
+                <tr>
+                  <td className="sticky left-0 z-10 bg-slate-50 py-2 px-3 text-[11px] font-semibold uppercase tracking-wide text-slate-500 border-t border-slate-200">
+                    Pontuação bruta
+                  </td>
+                  {pontuacoesBrutas.map((pontos, i) => (
+                    <td key={avaliacoes[i].id} className="py-2 px-3 text-center border-t border-slate-200 bg-slate-50">
+                      <span className="text-sm font-semibold text-slate-600 tabular-nums">
+                        {fmtNota(pontos)} pts
+                      </span>
+                    </td>
+                  ))}
+                </tr>
+              )}
               <tr>
                 <td className="sticky left-0 z-10 bg-slate-50 py-2.5 px-3 text-xs font-bold uppercase tracking-wide text-slate-700 border-t-2 border-slate-200">
                   Nota final

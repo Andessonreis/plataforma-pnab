@@ -22,7 +22,7 @@ import { AvaliacoesComparativo } from './avaliacoes-comparativo'
 import { DadosInscricaoView } from '@/components/inscricao/dados-inscricao-view'
 import { HistoricoProcesso } from '@/components/inscricao/historico-processo'
 import { calcularAnexosPendentes } from '@/lib/inscricoes/anexos-pendentes'
-import { viewNotaTotal } from '@/lib/services/avaliacao-view'
+import { viewNotaTotal, viewNotaTotalSemBonusCriterio } from '@/lib/services/avaliacao-view'
 import { viewNotaFinal } from '@/lib/services/resultado-view'
 import { podeAvaliar, podeHabilitar, mensagemForaDaFase } from '@/lib/edital/fase'
 import { ForaDaFaseAlert } from '@/components/edital/fora-da-fase-alert'
@@ -272,7 +272,9 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
                 id: a.id,
                 nome: a.avaliador.nome,
                 finalizada: a.finalizada,
-                notaTotal: viewNotaTotal(a),
+                notaTotal: podeVerBonusCriterio
+                  ? viewNotaTotal(a)
+                  : viewNotaTotalSemBonusCriterio(a, criterios, inscricao.edital.formulaAvaliacao),
                 notas: Array.isArray(a.notas)
                   ? (a.notas as unknown as { criterio: string; nota: number; peso: number }[])
                   : [],
