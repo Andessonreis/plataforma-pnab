@@ -42,6 +42,8 @@ interface AvaliacaoFormProps {
   formulaAvaliacao?: string | null
   /** Quando true, a ação está fora da fase e precisa de justificativa de override admin */
   overrideMode?: boolean
+  /** Avaliação finalizada + edital ainda sem resultado preliminar consolidado */
+  podeReabrir?: boolean
 }
 
 function notaColor(nota: number): string {
@@ -70,10 +72,14 @@ export function AvaliacaoForm({
   isAdmin = false,
   formulaAvaliacao,
   overrideMode = false,
+  podeReabrir = false,
 }: AvaliacaoFormProps) {
   const hasFormula = !!formulaAvaliacao
   const router = useRouter()
   const [overrideJustificativa, setOverrideJustificativa] = useState('')
+  const [reabrindo, setReabrindo] = useState(false)
+  const [showReabrirConfirm, setShowReabrirConfirm] = useState(false)
+  const [motivoReabertura, setMotivoReabertura] = useState('')
 
   const buildInitialNotas = useCallback((): NotaItem[] => {
     if (initialAvaliacao?.notas?.length) {
@@ -177,6 +183,34 @@ export function AvaliacaoForm({
     e.preventDefault()
   }
 
+  async function handleReabrir() {
+    setReabrindo(true)
+    setFeedback(null)
+
+    try {
+      const res = await fetch(`/api/admin/inscricoes/${inscricaoId}/avaliacao/reabrir`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ motivo: motivoReabertura.trim() || undefined }),
+      })
+      const data = await res.json()
+
+      if (!res.ok) {
+        setFeedback({ type: 'error', text: data.message ?? 'Erro ao reabrir. Tente novamente.' })
+        return
+      }
+
+      setFinalizada(false)
+      setShowReabrirConfirm(false)
+      setMotivoReabertura('')
+      setFeedback({ type: 'success', text: 'Avaliação reaberta — as notas anteriores continuam preenchidas abaixo.' })
+    } catch {
+      setFeedback({ type: 'error', text: 'Falha na conexão. Verifique sua internet e tente novamente.' })
+    } finally {
+      setReabrindo(false)
+    }
+  }
+
   // ─── Vista finalizada ────────────────────────────────────────────────────
 
   if (isLocked) {
@@ -194,6 +228,21 @@ export function AvaliacaoForm({
         </div>
 
         <div className="p-4 space-y-4">
+          {/* Feedback (reabertura) */}
+          {feedback && (
+            <div
+              role="alert"
+              className={[
+                'flex items-start gap-2.5 rounded-lg px-3.5 py-3 text-sm',
+                feedback.type === 'success'
+                  ? 'bg-emerald-50 text-emerald-800'
+                  : 'bg-red-50 text-red-800',
+              ].join(' ')}
+            >
+              <span>{feedback.text}</span>
+            </div>
+          )}
+
           {/* Nota total destaque */}
           <div className="text-center py-3 bg-slate-50 rounded-lg">
             <p className="text-xs font-medium text-slate-500 mb-1">{hasFormula ? 'Pontuação Final' : 'Nota Final Ponderada'}</p>
@@ -240,6 +289,62 @@ export function AvaliacaoForm({
 
           {savedAt && (
             <p className="text-xs text-slate-400 pt-1">Finalizado em {savedAt}</p>
+          )}
+
+          {/* Reabrir avaliação — corrigir erro ou revisar nota após comparar propostas */}
+          {podeReabrir && (
+            <div className="pt-2 border-t border-slate-100">
+              {showReabrirConfirm ? (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 space-y-2.5">
+                  <div>
+                    <label htmlFor="motivo-reabertura" className="block text-xs font-semibold text-amber-900 mb-1">
+                      Motivo da reabertura
+                      <span className="ml-1.5 font-normal text-amber-700">(opcional)</span>
+                    </label>
+                    <textarea
+                      id="motivo-reabertura"
+                      value={motivoReabertura}
+                      onChange={(e) => setMotivoReabertura(e.target.value)}
+                      rows={2}
+                      placeholder="Ex.: critério X ficou zerado por engano; ou: revisão após comparar com outras propostas do edital."
+                      className="block w-full resize-none rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-500"
+                    />
+                  </div>
+                  <p className="text-[11px] text-amber-700">
+                    Fica registrado em auditoria, com a nota e o parecer atuais preservados para consulta.
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={handleReabrir}
+                      disabled={reabrindo}
+                      className="flex-1 text-sm font-medium bg-amber-600 hover:bg-amber-700 text-white rounded-lg px-3 py-2 transition-colors disabled:opacity-50 min-h-[40px]"
+                    >
+                      {reabrindo ? 'Reabrindo…' : 'Confirmar reabertura'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowReabrirConfirm(false)}
+                      disabled={reabrindo}
+                      className="flex-1 text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 transition-colors min-h-[40px]"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowReabrirConfirm(true)}
+                  className="inline-flex items-center gap-2 text-sm font-medium text-amber-700 hover:text-amber-800"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Reabrir avaliação
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>

@@ -35,6 +35,7 @@ export const AUDIT_ACTIONS = {
   STATUS_ALTERADO: 'STATUS_ALTERADO',
   AVALIADOR_ATRIBUIDO: 'AVALIADOR_ATRIBUIDO',
   AVALIADOR_REMOVIDO: 'AVALIADOR_REMOVIDO',
+  AVALIACAO_REABERTA: 'AVALIACAO_REABERTA',
 
   // Admin — equipe do edital
   MEMBRO_EDITAL_ADICIONADO: 'MEMBRO_EDITAL_ADICIONADO',
@@ -58,6 +59,7 @@ export const AUDIT_ACTIONS = {
   RESULTADO_CALCULADO: 'RESULTADO_CALCULADO',
   RESULTADO_PRELIMINAR_PUBLICADO: 'RESULTADO_PRELIMINAR_PUBLICADO',
   RESULTADO_FINAL_PUBLICADO: 'RESULTADO_FINAL_PUBLICADO',
+  RESULTADO_CORRIGIDO_MANUALMENTE: 'RESULTADO_CORRIGIDO_MANUALMENTE',
 
   // Recursos
   RECURSO_SUBMETIDO: 'RECURSO_SUBMETIDO',
@@ -142,6 +144,7 @@ export const ACTION_LABELS: Record<string, string> = {
   AVALIADOR_REMOVIDO: 'Avaliador removido',
   AVALIACAO_FINALIZADA: 'Avaliação finalizada',
   AVALIACAO_RASCUNHO_SALVO: 'Rascunho de avaliação salvo',
+  AVALIACAO_REABERTA: 'Avaliação reaberta para edição',
   HABILITACAO_FORA_DA_FASE_BLOQUEADA: 'Habilitação bloqueada (fora da fase)',
   AVALIACAO_FORA_DA_FASE_BLOQUEADA: 'Avaliação bloqueada (fora da fase)',
   AVALIADOR_ATRIBUIDO_FORA_DA_FASE_BLOQUEADO: 'Atribuição bloqueada (fora da fase)',
@@ -160,6 +163,7 @@ export const ACTION_LABELS: Record<string, string> = {
   RESULTADO_CALCULADO: 'Resultado calculado',
   RESULTADO_PRELIMINAR_PUBLICADO: 'Resultado preliminar publicado',
   RESULTADO_FINAL_PUBLICADO: 'Resultado final publicado',
+  RESULTADO_CORRIGIDO_MANUALMENTE: 'Resultado corrigido manualmente',
   RECURSO_SUBMETIDO: 'Recurso submetido',
   RECURSO_RESPONDIDO: 'Recurso respondido por avaliador',
   RECURSO_DECIDIDO: 'Recurso decidido',
@@ -237,7 +241,7 @@ export async function logAudit(params: LogAuditParams): Promise<void> {
 export function actionBadgeVariant(action: string): 'success' | 'error' | 'warning' | 'info' | 'neutral' {
   if (action === 'LOGIN') return 'success'
   if (action === 'LOGIN_FALHA') return 'error'
-  if (action.includes('BLOQUEAD')) return 'warning'
+  if (action.includes('BLOQUEAD') || action.includes('REABERT') || action.includes('MANUALMENTE')) return 'warning'
   if (action.includes('EXCLU') || action.includes('INABILITADA') || action.includes('REMOVIDO')) return 'error'
   if (action.includes('CRIA') || action.includes('CADASTRO') || action.includes('HABILITADA') || action.includes('FINALIZADA') || action.includes('ATRIBUIDO')) return 'success'
   if (action.includes('ATUALIZ') || action.includes('PUBLICAD') || action.includes('RASCUNHO')) return 'info'

@@ -4,6 +4,7 @@ import { parseCriterios, validarNotasContraCriterios } from '@/lib/avaliacao-cri
 import { calculateTotal } from '@/lib/results/formula'
 import { temAcessoEdital } from '@/lib/edital-acesso'
 import { gateAcaoFase } from '@/lib/edital/gate'
+import { resultadoPreliminarConsolidado } from '@/lib/results/consolidacao'
 import { STATUS_BLOQUEADO_PARA_AVALIADOR } from '@/lib/services/avaliacao-buckets'
 import { ServiceError } from './errors'
 import type { AvaliacaoInput } from '@/lib/schemas/avaliacao'
@@ -141,6 +142,66 @@ export async function saveAvaliacao(
   })
 
   return avaliacao
+}
+
+/**
+ * Reabre a própria avaliação finalizada do avaliador (correção de erro ou
+ * revisão de nota após comparar com outras propostas). Só ele reabre a
+ * própria — trava por edital: enquanto o resultado preliminar não sai,
+ * reabertura livre; depois de publicado, trava (mexer em nota publicada
+ * mudaria o ranking e abriria problema com recursos já em andamento).
+ */
+export async function reabrirAvaliacao(inscricaoId: string, avaliadorId: string, motivo?: string) {
+  const inscricao = await prisma.inscricao.findUnique({
+    where: { id: inscricaoId },
+    select: {
+      id: true,
+      numero: true,
+      editalId: true,
+      edital: { select: { status: true } },
+    },
+  })
+
+  if (!inscricao) throw new ServiceError('NOT_FOUND', 'Inscrição não encontrada.')
+
+  const avaliacao = await prisma.avaliacao.findUnique({
+    where: { inscricaoId_avaliadorId: { inscricaoId, avaliadorId } },
+    select: { id: true, notas: true, parecer: true, notaTotal: true, finalizada: true },
+  })
+
+  if (!avaliacao) throw new ServiceError('NOT_FOUND', 'Avaliação não encontrada.')
+  if (!avaliacao.finalizada) throw new ServiceError('BAD_REQUEST', 'Esta avaliação ainda não foi finalizada.')
+
+  const consolidado = await resultadoPreliminarConsolidado(inscricao.editalId, inscricao.edital.status)
+  if (consolidado) {
+    throw new ServiceError(
+      'LOCKED',
+      'O resultado preliminar deste edital já foi publicado — a avaliação não pode mais ser reaberta.',
+    )
+  }
+
+  await prisma.avaliacao.update({
+    where: { id: avaliacao.id },
+    data: { finalizada: false },
+  })
+
+  await logAudit({
+    userId: avaliadorId,
+    action: AUDIT_ACTIONS.AVALIACAO_REABERTA,
+    entity: 'Avaliacao',
+    entityId: avaliacao.id,
+    details: {
+      inscricaoId,
+      inscricaoNumero: inscricao.numero,
+      notasAnteriores: avaliacao.notas,
+      parecerAnterior: avaliacao.parecer,
+      notaTotalAnterior: avaliacao.notaTotal === null ? null : String(avaliacao.notaTotal),
+      motivo: motivo ?? null,
+      editalStatus: inscricao.edital.status,
+    },
+  })
+
+  return { id: avaliacao.id }
 }
 
 export async function assignAvaliadores(

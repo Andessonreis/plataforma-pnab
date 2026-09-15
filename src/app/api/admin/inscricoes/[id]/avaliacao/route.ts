@@ -8,6 +8,7 @@ import { parseCriterios, validarNotasContraCriterios } from '@/lib/avaliacao-cri
 import { calculateTotal } from '@/lib/results/formula'
 import { temAcessoEdital } from '@/lib/edital-acesso'
 import { gateAcaoFase } from '@/lib/edital/gate'
+import { resultadoPreliminarConsolidado } from '@/lib/results/consolidacao'
 import { STATUS_BLOQUEADO_PARA_AVALIADOR } from '@/lib/services/avaliacao-buckets'
 import type { UserRole } from '@prisma/client'
 
@@ -68,7 +69,7 @@ export async function GET(
     const inscricao = await prisma.inscricao.findUnique({
       where: { id },
       include: {
-        edital: { select: { id: true, criteriosAvaliacao: true, formulaAvaliacao: true } },
+        edital: { select: { id: true, status: true, criteriosAvaliacao: true, formulaAvaliacao: true } },
         avaliacoes: {
           where: { avaliadorId: session.user.id },
           select: {
@@ -123,11 +124,20 @@ export async function GET(
 
     const criterios = parseCriterios(inscricao.edital.criteriosAvaliacao)
 
+    // Só o avaliador dono, com avaliação finalizada, e só enquanto o edital
+    // não tiver resultado preliminar consolidado (ver reabrir/route.ts).
+    const podeReabrir =
+      !isAdminCaller &&
+      session.user.role === 'AVALIADOR' &&
+      avaliacao?.finalizada === true &&
+      !(await resultadoPreliminarConsolidado(inscricao.edital.id, inscricao.edital.status))
+
     const res = NextResponse.json({
       avaliacao,
       criterios,
       inscricaoStatus: inscricao.status,
       formulaAvaliacao: inscricao.edital.formulaAvaliacao ?? null,
+      podeReabrir,
     })
     res.headers.set('X-Request-Id', requestId)
     res.headers.set('Cache-Control', 'no-store')
