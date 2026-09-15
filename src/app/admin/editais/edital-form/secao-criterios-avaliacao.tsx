@@ -83,18 +83,28 @@ export function SecaoCriteriosAvaliacao({ templatesDisponiveis }: { templatesDis
             ))}
           </div>
 
-          <div className="mt-4 rounded-lg bg-slate-50 border border-slate-200 px-4 py-3 flex flex-wrap items-center justify-between gap-2 text-sm">
-            <div className="flex flex-wrap gap-6">
-              <span className="text-slate-600">
-                Total de pesos: <strong className="text-slate-800">{criteriosAvaliacao.reduce((s, c) => s + c.peso, 0)}</strong>
-              </span>
-              <span className="text-slate-600">
-                Nota máxima possível:{' '}
-                <strong className="text-slate-800">{criteriosAvaliacao.reduce((s, c) => s + c.notaMax, 0)}</strong>
-              </span>
-            </div>
-            <span className="text-slate-500">{criteriosAvaliacao.length} critério(s)</span>
-          </div>
+          {(() => {
+            const totalPesos = criteriosAvaliacao.reduce((s, c) => s + c.peso, 0)
+            const totalNotaMax = criteriosAvaliacao.reduce((s, c) => s + c.notaMax, 0)
+            const pesoDivergente = !formulaAvaliacao.trim() && totalPesos !== 100
+            return (
+              <div className="mt-4 rounded-lg bg-slate-50 border border-slate-200 px-4 py-3 flex flex-wrap items-center justify-between gap-2 text-sm">
+                <div className="flex flex-wrap gap-6">
+                  <span className="text-slate-600">
+                    Total de pesos:{' '}
+                    <strong className={pesoDivergente ? 'text-amber-700' : 'text-slate-800'}>{totalPesos}</strong>
+                    {pesoDivergente && (
+                      <span className="ml-1.5 text-xs text-amber-700">(barema costuma somar 100)</span>
+                    )}
+                  </span>
+                  <span className="text-slate-600">
+                    Nota máxima possível: <strong className="text-slate-800">{totalNotaMax}</strong>
+                  </span>
+                </div>
+                <span className="text-slate-500">{criteriosAvaliacao.length} critério(s)</span>
+              </div>
+            )
+          })()}
         </>
       )}
 

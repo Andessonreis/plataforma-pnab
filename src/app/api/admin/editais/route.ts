@@ -5,6 +5,8 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { logAudit } from '@/lib/audit'
 import { validateCronogramaOrderServer } from '@/lib/utils/cronograma'
+import { validarFormulaCobreTodosBlocos } from '@/lib/results/formula'
+import type { CriterioAvaliacao } from '@/lib/avaliacao-criterios'
 
 export const runtime = 'nodejs'
 
@@ -139,6 +141,20 @@ const editalSchema = z.object({
       message: `categoriasConfig referencia categorias não selecionadas: ${nomesForaDeCategorias.join(', ')}`,
       path: ['categoriasConfig'],
     })
+  }
+
+  if (data.formulaAvaliacao && data.criteriosAvaliacao && data.criteriosAvaliacao.length > 0) {
+    const erroFormula = validarFormulaCobreTodosBlocos(
+      data.criteriosAvaliacao as CriterioAvaliacao[],
+      data.formulaAvaliacao,
+    )
+    if (erroFormula) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: erroFormula,
+        path: ['formulaAvaliacao'],
+      })
+    }
   }
 })
 
