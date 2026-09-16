@@ -109,19 +109,28 @@ export function renderMarkdown(corpo: string): ReactNode {
 
           case 'imagem':
             return (
-              <figure key={key} className="mt-6 first:mt-0">
+              <figure
+                key={key}
+                className="mx-auto mb-4 mt-6 w-44 first:mt-0 sm:float-left sm:mx-0 sm:mb-2 sm:mr-6 sm:w-56"
+              >
                 {/* Sem crop nem aspect-ratio forçado: imagem de corpo pode ser
                     peça gráfica com texto próprio (card, convocação), não só
-                    fotografia — recortar mutilaria a informação. */}
+                    fotografia — recortar mutilaria a informação. Flutua na
+                    lateral da própria coluna de texto (recorte de jornal),
+                    sem margem negativa: fica colada ao texto, não solta numa
+                    faixa vazia da página. No celular vira bloco centralizado
+                    antes do texto. */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={bloco.url}
                   alt={bloco.alt}
                   loading="lazy"
-                  className="mx-auto max-h-[36rem] w-auto max-w-full rounded-sm shadow-sm"
+                  className="w-full h-auto rounded-sm ring-1 ring-tinta-900/10"
                 />
                 {bloco.alt && (
-                  <figcaption className="mt-2 text-center text-sm text-tinta-500">{bloco.alt}</figcaption>
+                  <figcaption className="mt-1.5 text-center text-xs leading-snug text-tinta-500 sm:text-left">
+                    {bloco.alt}
+                  </figcaption>
                 )}
               </figure>
             )
