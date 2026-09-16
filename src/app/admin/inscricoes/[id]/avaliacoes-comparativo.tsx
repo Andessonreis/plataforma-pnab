@@ -59,18 +59,28 @@ export function AvaliacoesComparativo({ criterios, avaliacoes, hasFormula }: Pro
       )
     : [['', criterios] as [string, CriterioView[]]]
 
-  const totais = avaliacoes
-    .map((a) => a.notaTotal)
-    .filter((n): n is number => n !== null)
-  const media = totais.length > 0 ? totais.reduce((a, n) => a + n, 0) / totais.length : null
-  const decimals = hasFormula ? 2 : 1
-
   // Soma direta dos critérios visíveis nesta tabela (não pondera nem aplica a
-  // fórmula) — mostrada ao lado da "Nota final" pra quem está conferindo
-  // conseguir bater a conta sozinho, sem precisar decorar a fórmula do edital.
+  // fórmula) — é o número em destaque pra quem está conferindo a avaliação,
+  // sem precisar decorar a fórmula do edital.
   const pontuacoesBrutas = avaliacoes.map((_, i) =>
     criterios.reduce((soma, c) => soma + (notaMaps[i].get(c.criterio) ?? 0), 0),
   )
+
+  const decimals = hasFormula ? 2 : 1
+
+  // Quando o edital tem fórmula própria, a "Nota média" é a média das
+  // pontuações brutas (o que a equipe realmente compara entre si), não da
+  // nota já transformada pela fórmula — essa é interna de cada avaliador.
+  let media: number | null = null
+  if (hasFormula) {
+    media =
+      avaliacoes.length > 0
+        ? pontuacoesBrutas.reduce((a, n) => a + n, 0) / avaliacoes.length
+        : null
+  } else {
+    const totais = avaliacoes.map((a) => a.notaTotal).filter((n): n is number => n !== null)
+    media = totais.length > 0 ? totais.reduce((a, n) => a + n, 0) / totais.length : null
+  }
 
   const temNotas = criterios.length > 0 && avaliacoes.some((a) => a.notas.length > 0)
 
@@ -90,9 +100,9 @@ export function AvaliacoesComparativo({ criterios, avaliacoes, hasFormula }: Pro
 
       {hasFormula && (
         <p className="text-xs text-slate-500 mb-3 sm:mb-4 leading-relaxed">
-          Pontuação bruta é a soma direta dos critérios mostrados na tabela. Nota final aplica a
-          fórmula de cálculo definida no edital sobre essa pontuação — visão interna da equipe, não é
-          o que aparece pro proponente nem pro público antes do resultado ser publicado.
+          Pontuação bruta é a soma direta dos critérios mostrados na tabela — visão interna da
+          equipe, não é o que aparece pro proponente nem pro público antes do resultado ser
+          publicado.
         </p>
       )}
 
@@ -134,32 +144,33 @@ export function AvaliacoesComparativo({ criterios, avaliacoes, hasFormula }: Pro
               ))}
             </tbody>
             <tfoot>
-              {hasFormula && (
+              {hasFormula ? (
                 <tr>
-                  <td className="sticky left-0 z-10 bg-slate-50 py-2 px-3 text-[11px] font-semibold uppercase tracking-wide text-slate-500 border-t border-slate-200">
+                  <td className="sticky left-0 z-10 bg-slate-50 py-2.5 px-3 text-xs font-bold uppercase tracking-wide text-slate-700 border-t-2 border-slate-200">
                     Pontuação bruta
                   </td>
                   {pontuacoesBrutas.map((pontos, i) => (
-                    <td key={avaliacoes[i].id} className="py-2 px-3 text-center border-t border-slate-200 bg-slate-50">
-                      <span className="text-sm font-semibold text-slate-600 tabular-nums">
+                    <td key={avaliacoes[i].id} className="py-2.5 px-3 text-center border-t-2 border-slate-200 bg-slate-50">
+                      <span className="text-base font-bold text-brand-700 tabular-nums">
                         {fmtNota(pontos)} pts
                       </span>
                     </td>
                   ))}
                 </tr>
-              )}
-              <tr>
-                <td className="sticky left-0 z-10 bg-slate-50 py-2.5 px-3 text-xs font-bold uppercase tracking-wide text-slate-700 border-t-2 border-slate-200">
-                  Nota final
-                </td>
-                {avaliacoes.map((a) => (
-                  <td key={a.id} className="py-2.5 px-3 text-center border-t-2 border-slate-200 bg-slate-50">
-                    <span className="text-base font-bold text-brand-700 tabular-nums">
-                      {a.notaTotal === null ? '—' : a.notaTotal.toFixed(decimals)}
-                    </span>
+              ) : (
+                <tr>
+                  <td className="sticky left-0 z-10 bg-slate-50 py-2.5 px-3 text-xs font-bold uppercase tracking-wide text-slate-700 border-t-2 border-slate-200">
+                    Nota final
                   </td>
-                ))}
-              </tr>
+                  {avaliacoes.map((a) => (
+                    <td key={a.id} className="py-2.5 px-3 text-center border-t-2 border-slate-200 bg-slate-50">
+                      <span className="text-base font-bold text-brand-700 tabular-nums">
+                        {a.notaTotal === null ? '—' : a.notaTotal.toFixed(decimals)}
+                      </span>
+                    </td>
+                  ))}
+                </tr>
+              )}
             </tfoot>
           </table>
         </div>
