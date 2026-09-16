@@ -92,17 +92,22 @@ export function AvaliacoesComparativo({ criterios, avaliacoes, hasFormula }: Pro
         </h2>
         {media !== null && (
           <div className="text-right">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">Nota média</p>
-            <p className="text-lg font-bold text-brand-700 tabular-nums leading-none">{media.toFixed(decimals)}</p>
+            <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
+              {hasFormula ? 'Pontuação média' : 'Nota média'}
+            </p>
+            <p className="text-lg font-bold text-brand-700 tabular-nums leading-none">
+              {media.toFixed(decimals)}
+              {hasFormula && <span className="text-xs font-semibold text-slate-400"> pts</span>}
+            </p>
           </div>
         )}
       </div>
 
       {hasFormula && (
         <p className="text-xs text-slate-500 mb-3 sm:mb-4 leading-relaxed">
-          Pontuação bruta é a soma direta dos critérios mostrados na tabela — visão interna da
-          equipe, não é o que aparece pro proponente nem pro público antes do resultado ser
-          publicado.
+          Pontuação bruta é a soma direta dos critérios mostrados na tabela, por avaliador.
+          Pontuação média é a média dessas somas entre os avaliadores — visão interna da equipe,
+          não é o que aparece pro proponente nem pro público antes do resultado ser publicado.
         </p>
       )}
 
