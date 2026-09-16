@@ -32,13 +32,19 @@ Podem participar representantes de diferentes áreas da cultura, como audiovisua
 const DATA_EVENTO = new Date('2026-09-21T23:59:59-03:00')
 
 async function seedNoticia() {
+  // Sem imagemUrl de propósito: o card de divulgação é uma peça gráfica com
+  // texto próprio (título, data, endereço), não uma fotografia. Os
+  // componentes de capa de notícia (Manchete, CabecalhoNoticia) recortam a
+  // imagem em 16:9/21:9 e sobrepõem gradiente + título por cima — tratamento
+  // certo pra foto, mas que mutila um card com texto embutido. O card já
+  // aparece inteiro (object-contain) no slide de destaque da home.
   const noticia = await prisma.noticia.upsert({
     where: { slug: SLUG },
     update: {
       titulo: TITULO,
       corpo: CORPO,
       tags: ['Conselho Municipal de Cultura', 'Participação Social'],
-      imagemUrl: IMAGEM,
+      imagemUrl: null,
       publicado: true,
     },
     create: {
@@ -46,7 +52,6 @@ async function seedNoticia() {
       titulo: TITULO,
       corpo: CORPO,
       tags: ['Conselho Municipal de Cultura', 'Participação Social'],
-      imagemUrl: IMAGEM,
       publicado: true,
       publicadoEm: new Date(),
     },
