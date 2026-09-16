@@ -16,7 +16,9 @@ const SLUG = 'assembleia-composicao-conselho-municipal-cultura-irece-2026'
 
 const TITULO = 'Convocação para Assembleia de Composição do Conselho Municipal de Cultura de Irecê'
 
-const CORPO = `A cultura de Irecê é feita por você! Quem faz cultura tem voz e espaço para ajudar a construir os caminhos da cultura em nossa cidade.
+const CORPO = `![Card de divulgação oficial da Assembleia de Composição do Conselho Municipal de Cultura de Irecê, com data, horários e local do encontro](${IMAGEM})
+
+A cultura de Irecê é feita por você! Quem faz cultura tem voz e espaço para ajudar a construir os caminhos da cultura em nossa cidade.
 
 A Secretaria de Cultura e Turismo de Irecê convoca agentes, fazedores de cultura, artistas, produtores, instituições e representantes da sociedade civil para participar da Assembleia de Composição do Conselho Municipal de Cultura.
 

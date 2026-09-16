@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { FadeIn } from '@/components/ui/animated'
 import { IconArrowLeft, IconArrowRight } from '@/components/ui/icons'
-import { extractHeadings, stripMarkdown } from '@/lib/utils/markdown'
+import { extractFirstImageUrl, extractHeadings, stripMarkdown } from '@/lib/utils/markdown'
 import { parseGaleria } from '@/lib/utils/noticia-galeria'
 import { noticiaParaListagem } from '../consulta'
 import { EntradaNoticia } from '../entrada-noticia'
@@ -39,6 +39,7 @@ export async function generateMetadata({ params }: NoticiaPageProps): Promise<Me
   }
 
   const descricao = stripMarkdown(noticia.corpo, 160)
+  const imagemOg = noticia.imagemUrl ?? extractFirstImageUrl(noticia.corpo)
 
   return {
     title: noticia.titulo,
@@ -46,7 +47,7 @@ export async function generateMetadata({ params }: NoticiaPageProps): Promise<Me
     openGraph: {
       title: noticia.titulo,
       description: descricao,
-      images: noticia.imagemUrl ? [{ url: noticia.imagemUrl }] : [],
+      images: imagemOg ? [{ url: imagemOg }] : [],
     },
   }
 }

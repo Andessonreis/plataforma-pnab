@@ -62,18 +62,36 @@ export function extractHeadings(corpo: string): NoticiaHeading[] {
   return headings
 }
 
+/**
+ * Primeira imagem de linha própria no corpo (`![alt](url)`), pra servir de OG
+ * image quando a notícia não tem `imagemUrl` de capa — caso de peça gráfica
+ * (card, convocação) que não deve ir pro cabeçalho recortado, mas ainda
+ * precisa aparecer no preview de compartilhamento (WhatsApp, redes).
+ */
+export function extractFirstImageUrl(corpo: string): string | null {
+  for (const linha of corpo.split('\n')) {
+    const match = /^!\[([^\]]*)\]\(([^)]+)\)$/.exec(linha.trim())
+    if (match) return match[2].trim()
+  }
+  return null
+}
+
 // ── Blocos ───────────────────────────────────────────────────────────────────
 
 export type Bloco =
   | { tipo: 'heading'; nivel: 2 | 3; texto: string }
   | { tipo: 'lista'; ordenada: boolean; itens: string[] }
   | { tipo: 'citacao'; linhas: string[] }
+  | { tipo: 'imagem'; alt: string; url: string }
   | { tipo: 'paragrafo'; texto: string }
 
 const RE_HEADING = /^(#{2,3})\s+(.+)$/
 const RE_CITACAO = /^>\s?/
 const RE_ITEM_ORDENADO = /^\d+\.\s+/
 const RE_ITEM_NAO_ORDENADO = /^[-*+]\s+/
+// Imagem como linha própria (`![alt](url)` sozinha na linha) — distinto de
+// link inline, que `renderInline` já trata dentro de parágrafo.
+const RE_IMAGEM = /^!\[([^\]]*)\]\(([^)]+)\)$/
 
 export function agruparBlocos(corpo: string): Bloco[] {
   const linhas = corpo.split('\n')
@@ -91,6 +109,13 @@ export function agruparBlocos(corpo: string): Bloco[] {
     const heading = RE_HEADING.exec(trimmed)
     if (heading) {
       blocos.push({ tipo: 'heading', nivel: heading[1].length as 2 | 3, texto: heading[2].trim() })
+      i++
+      continue
+    }
+
+    const imagem = RE_IMAGEM.exec(trimmed)
+    if (imagem) {
+      blocos.push({ tipo: 'imagem', alt: imagem[1].trim(), url: imagem[2].trim() })
       i++
       continue
     }
@@ -125,6 +150,7 @@ export function agruparBlocos(corpo: string): Bloco[] {
       linhas[i].trim() &&
       !RE_HEADING.test(linhas[i].trim()) &&
       !RE_CITACAO.test(linhas[i].trim()) &&
+      !RE_IMAGEM.test(linhas[i].trim()) &&
       !RE_ITEM_ORDENADO.test(linhas[i].trim()) &&
       !RE_ITEM_NAO_ORDENADO.test(linhas[i].trim())
     ) {

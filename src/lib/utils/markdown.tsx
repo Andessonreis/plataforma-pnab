@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { agruparBlocos, extractHeadings } from './markdown-blocos'
 
-export { stripMarkdown, extractHeadings, type NoticiaHeading } from './markdown-blocos'
+export { stripMarkdown, extractHeadings, extractFirstImageUrl, type NoticiaHeading } from './markdown-blocos'
 
 // ── Ênfase e link inline ────────────────────────────────────────────────────
 
@@ -106,6 +106,25 @@ export function renderMarkdown(corpo: string): ReactNode {
               </ListaTag>
             )
           }
+
+          case 'imagem':
+            return (
+              <figure key={key} className="mt-6 first:mt-0">
+                {/* Sem crop nem aspect-ratio forçado: imagem de corpo pode ser
+                    peça gráfica com texto próprio (card, convocação), não só
+                    fotografia — recortar mutilaria a informação. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={bloco.url}
+                  alt={bloco.alt}
+                  loading="lazy"
+                  className="mx-auto max-h-[36rem] w-auto max-w-full rounded-sm shadow-sm"
+                />
+                {bloco.alt && (
+                  <figcaption className="mt-2 text-center text-sm text-tinta-500">{bloco.alt}</figcaption>
+                )}
+              </figure>
+            )
 
           case 'citacao':
             return (
