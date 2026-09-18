@@ -144,18 +144,27 @@ export async function calculateResults(
   // Ordena por nota final descendente
   resultados.sort((a, b) => b.notaFinal - a.notaFinal)
 
-  // Detecta empates: inscrições com mesma notaFinal
-  const notaGroups = new Map<number, string[]>()
+  // Detecta empates entre quem disputa as MESMAS vagas. Com vagas por
+  // categoria o corte é por categoria, então empatar em nota com outra
+  // categoria não muda classificação nenhuma — marcar isso na tela levava a
+  // equipe a discutir desempate inexistente. Quem não tem avaliação
+  // finalizada não está empatado: está sem nota.
+  const usaCategorias = categoriasConfig != null && categoriasConfig.length > 0
+  const chaveEmpate = (r: ResultadoInscricao) =>
+    usaCategorias ? `${r.categoria ?? '—'}|${r.notaFinal}` : `${r.notaFinal}`
+
+  const notaGroups = new Map<string, string[]>()
   for (const r of resultados) {
-    const key = r.notaFinal
+    if (r.totalAvaliacoes === 0) continue
+    const key = chaveEmpate(r)
     if (!notaGroups.has(key)) notaGroups.set(key, [])
     notaGroups.get(key)!.push(r.inscricaoId)
   }
 
   for (const r of resultados) {
-    const group = notaGroups.get(r.notaFinal)!
-    if (group.length > 1) {
-      r.empatados = group.filter(id => id !== r.inscricaoId)
+    const group = notaGroups.get(chaveEmpate(r))
+    if (group && group.length > 1) {
+      r.empatados = group.filter((id) => id !== r.inscricaoId)
     }
   }
 
