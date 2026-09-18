@@ -228,7 +228,7 @@ export default function AccessibilityPage() {
           </p>
           <ul className="space-y-2 text-slate-600">
             <li>
-              <strong className="text-slate-900">Secretaria de Arte e Cultura de Irecê</strong>
+              <strong className="text-slate-900">Secretaria de Cultura e Turismo de Irecê</strong>
             </li>
             <li>
               E-mail:{' '}

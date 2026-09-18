@@ -70,7 +70,7 @@ function desenharTimbre(doc: PDFKit.PDFDocument, data: ListaClassificacaoData): 
   doc.font('Helvetica-Bold').fontSize(11).fillColor(COLORS.text)
     .text('PREFEITURA MUNICIPAL DE IRECÊ', MARGINS.left + offset, topo, { width: 300 })
   doc.font('Helvetica').fontSize(8).fillColor(COLORS.textLight)
-    .text('Secretaria de Arte e Cultura', MARGINS.left + offset, topo + 14, { width: 300 })
+    .text('Secretaria de Cultura e Turismo', MARGINS.left + offset, topo + 14, { width: 300 })
   doc.font('Helvetica-Bold').fontSize(13).fillColor(COLORS.text)
     .text(
       data.consolidado ? 'Classificação' : 'Classificação — Prévia de Trabalho',

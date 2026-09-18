@@ -28,7 +28,7 @@ import { SITUACOES } from '@/app/(public)/projetos-apoiados/tipos'
 export const metadata: Metadata = {
   title: 'Início',
   description:
-    'Portal oficial da Política Nacional Aldir Blanc de Fomento à Cultura — Secretaria de Arte e Cultura de Irecê/BA.',
+    'Portal oficial da Política Nacional Aldir Blanc de Fomento à Cultura — Secretaria de Cultura e Turismo de Irecê/BA.',
 }
 
 /**

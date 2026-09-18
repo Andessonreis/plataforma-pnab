@@ -23,7 +23,7 @@ export default function PrivacyPolicyPage() {
         {/* Introdução */}
         <section className="mb-8">
           <p className="text-slate-600 leading-relaxed">
-            A Secretaria de Arte e Cultura da Prefeitura Municipal de
+            A Secretaria de Cultura e Turismo da Prefeitura Municipal de
             Irecê/BA, na qualidade de controladora dos dados pessoais
             tratados por meio do Portal da Política Nacional Aldir Blanc
             (PNAB), apresenta esta Política de Privacidade em conformidade
@@ -345,7 +345,7 @@ export default function PrivacyPolicyPage() {
           <ul className="space-y-2 text-slate-600">
             <li>
               <strong className="text-slate-900">Órgão responsável:</strong>{' '}
-              Secretaria de Arte e Cultura de Irecê
+              Secretaria de Cultura e Turismo de Irecê
             </li>
             <li>
               <strong className="text-slate-900">E-mail:</strong>{' '}
@@ -376,7 +376,7 @@ export default function PrivacyPolicyPage() {
             </li>
             <li>
               <strong className="text-slate-900">Endereço:</strong>{' '}
-              Secretaria de Arte e Cultura, Prefeitura Municipal de
+              Secretaria de Cultura e Turismo, Prefeitura Municipal de
               Irecê — Irecê/BA
             </li>
           </ul>

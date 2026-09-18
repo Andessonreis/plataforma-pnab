@@ -30,7 +30,7 @@ export function InscricaoNaoPermitida({ editalTitulo, tiposTexto }: InscricaoNao
             </p>
             <p className="text-sm text-accent-800 mt-2">
               Seu cadastro atual não corresponde aos tipos aceitos. Se acredita que houve um erro,
-              entre em contato com a Secretaria de Arte e Cultura de Irecê.
+              entre em contato com a Secretaria de Cultura e Turismo de Irecê.
             </p>
             <Button href="/proponente/perfil" variant="secondary" size="sm" className="mt-4">
               Ver meu perfil

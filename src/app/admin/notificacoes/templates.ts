@@ -35,7 +35,7 @@ export const MESSAGE_TEMPLATES: MessageTemplate[] = [
     corpo:
       'Olá! Identificamos que você começou uma inscrição em um dos editais do Portal PNAB Irecê, mas ainda não finalizou o envio.\n\n' +
       'Acesse sua área e finalize o envio antes do encerramento do prazo. Após o prazo, rascunhos não enviados não serão considerados.\n\n' +
-      'Em caso de dúvida, entre em contato com a Secretaria de Arte e Cultura.',
+      'Em caso de dúvida, entre em contato com a Secretaria de Cultura e Turismo.',
     ctaLabel: 'Acessar minhas inscrições',
     link: { mode: 'MY_INSCRICOES' },
   },
@@ -82,7 +82,7 @@ export const MESSAGE_TEMPLATES: MessageTemplate[] = [
     titulo: 'Novo edital publicado',
     assunto: 'Novo edital aberto para inscrições',
     corpo:
-      'Olá! A Secretaria de Arte e Cultura de Irecê publicou um novo edital no Portal PNAB.\n\n' +
+      'Olá! A Secretaria de Cultura e Turismo de Irecê publicou um novo edital no Portal PNAB.\n\n' +
       'Confira as regras de elegibilidade, o cronograma e os documentos necessários. Inscrições abertas pelo portal.',
     ctaLabel: 'Conhecer o edital',
     link: { mode: 'EDITAL' },
@@ -91,10 +91,10 @@ export const MESSAGE_TEMPLATES: MessageTemplate[] = [
     id: 'AVISO_GERAL',
     label: 'Aviso geral da Secretaria',
     description: 'Comunicado institucional sem ação obrigatória.',
-    titulo: 'Aviso da Secretaria de Arte e Cultura',
+    titulo: 'Aviso da Secretaria de Cultura e Turismo',
     assunto: 'Aviso da Secretaria',
     corpo:
-      'Olá! A Secretaria de Arte e Cultura de Irecê comunica:\n\n' +
+      'Olá! A Secretaria de Cultura e Turismo de Irecê comunica:\n\n' +
       '[escreva aqui o conteúdo do aviso]',
     ctaLabel: '',
     link: { mode: 'NONE' },

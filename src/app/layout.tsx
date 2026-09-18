@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     template: '%s | Portal PNAB Irecê',
   },
   description:
-    'Política Nacional Aldir Blanc de Fomento à Cultura — Secretaria de Arte e Cultura de Irecê/BA',
+    'Política Nacional Aldir Blanc de Fomento à Cultura — Secretaria de Cultura e Turismo de Irecê/BA',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

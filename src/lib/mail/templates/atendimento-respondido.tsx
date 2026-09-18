@@ -20,7 +20,7 @@ export function AtendimentoRespondido({ nomeContato, protocolo, assunto, respost
         Olá, <strong>{nomeContato}</strong>!
       </Text>
       <Text style={styles.paragraph}>
-        A Secretaria de Arte e Cultura respondeu ao seu atendimento <strong>{protocolo}</strong> — assunto:{' '}
+        A Secretaria de Cultura e Turismo respondeu ao seu atendimento <strong>{protocolo}</strong> — assunto:{' '}
         <strong>{assunto}</strong>.
       </Text>
       <Section

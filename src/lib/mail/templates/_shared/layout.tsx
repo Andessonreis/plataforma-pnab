@@ -101,7 +101,7 @@ export function Layout({ preview, children }: LayoutProps) {
               style={styles.headerBarBrasao}
             />
             <Text style={styles.headerBarText}>
-              Prefeitura Municipal de Irecê · Secretaria de Arte e Cultura
+              Prefeitura Municipal de Irecê · Secretaria de Cultura e Turismo
             </Text>
           </Section>
 
@@ -109,7 +109,7 @@ export function Layout({ preview, children }: LayoutProps) {
             {children}
             <Hr style={styles.hr} />
             <Text style={styles.footer}>
-              Secretaria de Arte e Cultura — Prefeitura Municipal de Irecê/BA
+              Secretaria de Cultura e Turismo — Prefeitura Municipal de Irecê/BA
             </Text>
             <Text style={{ ...styles.footer, color: colors.textSubtle, marginTop: '6px', paddingBottom: '20px' }}>
               Este é um e-mail automático. Para suporte, acesse o portal e abra um chamado.
