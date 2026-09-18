@@ -13,6 +13,7 @@ import {
   queryParaFiltros,
 } from '@/lib/agentes/filtros'
 import { listarAgentesParaExportar, LIMITE_EXPORTACAO } from '@/lib/services/agentes.service'
+import { registrarEmissao } from '@/lib/documentos/emissao'
 
 export const runtime = 'nodejs'
 
@@ -43,12 +44,23 @@ export async function GET(req: NextRequest) {
     const agentes = await listarAgentesParaExportar(params)
     const datePart = new Date().toISOString().slice(0, 10)
 
+    // Só o PDF circula fora do sistema; o CSV é planilha de trabalho.
+    const emissao = params.formato === 'pdf'
+      ? await registrarEmissao({
+          tipo: 'LISTA_AGENTES',
+          titulo: 'Relação de agentes culturais',
+          emitidoPorId: session.user.id,
+          conteudo: agentes,
+          metadados: { Registros: agentes.length },
+        })
+      : null
+
     const arquivo =
       params.formato === 'pdf'
         ? {
             nome: `agentes_pnab_${datePart}.pdf`,
             tipo: 'application/pdf',
-            corpo: new Uint8Array(await generateListaAgentes({ filtros, campos, agentes })),
+            corpo: new Uint8Array(await generateListaAgentes({ filtros, campos, agentes, emissao })),
           }
         : {
             nome: `agentes_pnab_${datePart}.csv`,

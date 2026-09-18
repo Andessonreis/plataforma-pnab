@@ -1,4 +1,7 @@
-import { createDocument, addHeader, addFooter, docToBuffer, MARGINS, COLORS, CONTENT_WIDTH } from './shared'
+import { maskCpfCnpjParcial } from '@/lib/utils/mask'
+import type { Emissao } from '@/lib/documentos/emissao'
+import { criarDocumentoOficial, finalizarDocumento } from './documento-oficial'
+import { CORES, FONTES, LARGURA_UTIL, X_ESQUERDA, fio } from './documento-oficial/tema'
 
 interface DeclaracaoData {
   proponente: {
@@ -11,88 +14,69 @@ interface DeclaracaoData {
   }
   tipo: string
   dataEmissao: Date
+  /** Registro de emissão; null quando o registro falhou (o PDF sai mesmo assim). */
+  emissao?: Emissao | null
 }
+
+const CORPO = 11
+const LINHA_ASSINATURA = 180
 
 /**
- * Gera PDF de declaração genérica.
+ * Declaração de participação ou contemplação num edital.
+ *
+ * Peça de texto corrido: segue a diagramação das matérias do Diário — serifa,
+ * parágrafo justificado e a rubrica do órgão centralizada ao pé.
  */
 export async function generateDeclaracao(data: DeclaracaoData): Promise<Buffer> {
-  const doc = createDocument()
+  const doc = await criarDocumentoOficial({
+    rotulo: 'Declaração',
+    titulo: 'Declaração',
+    subtitulo: `${data.edital.titulo} · ${data.edital.ano}`,
+    emissao: data.emissao ?? null,
+  })
 
-  addHeader(doc, 'Declaração')
+  const situacao = data.tipo === 'contemplado' ? 'contemplado(a)' : 'inscrito(a)'
 
-  doc.moveDown(2)
+  parrafo(
+    doc,
+    `Declaramos, para os devidos fins, que ${data.proponente.nome}, inscrito(a) sob o CPF/CNPJ `
+    + `${maskCpfCnpjParcial(data.proponente.cpfCnpj)}, encontra-se ${situacao} no edital `
+    + `"${data.edital.titulo}" (${data.edital.ano}), promovido pela Secretaria de Cultura e Turismo `
+    + 'de Irecê no âmbito da Política Nacional Aldir Blanc de Fomento à Cultura (PNAB).',
+  )
 
-  // Corpo da declaração
-  doc
-    .font('Helvetica')
-    .fontSize(11)
-    .fillColor(COLORS.text)
-    .text(
-      `Declaramos, para os devidos fins, que ${data.proponente.nome}, ` +
-      `inscrito(a) sob o CPF/CNPJ ${maskCpfCnpj(data.proponente.cpfCnpj)}, ` +
-      `encontra-se ${data.tipo === 'contemplado' ? 'contemplado(a)' : 'inscrito(a)'} ` +
-      `no edital "${data.edital.titulo}" (${data.edital.ano}), ` +
-      `promovido pela Secretaria Municipal de Cultura e Turismo de Irecê, ` +
-      `no âmbito da Política Nacional Aldir Blanc de Fomento à Cultura (PNAB).`,
-      MARGINS.left,
-      doc.y,
-      { width: CONTENT_WIDTH, align: 'justify', lineGap: 4 },
-    )
+  parrafo(doc, 'Esta declaração é válida para os fins a que se destina.')
 
-  doc.moveDown(2)
-
-  doc
-    .font('Helvetica')
-    .fontSize(11)
-    .fillColor(COLORS.text)
-    .text(
-      `Esta declaração é válida para os fins a que se destina.`,
-      MARGINS.left,
-      doc.y,
-      { width: CONTENT_WIDTH, align: 'justify' },
-    )
-
-  doc.moveDown(3)
-
-  // Local e data
-  doc
-    .font('Helvetica')
-    .fontSize(11)
-    .fillColor(COLORS.text)
-    .text(
-      `Irecê/BA, ${data.dataEmissao.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'America/Sao_Paulo' })}.`,
-      MARGINS.left,
-      doc.y,
-      { width: CONTENT_WIDTH, align: 'right' },
-    )
-
-  doc.moveDown(4)
-
-  // Linha de assinatura
-  doc
-    .moveTo(MARGINS.left + 100, doc.y)
-    .lineTo(MARGINS.left + CONTENT_WIDTH - 100, doc.y)
-    .strokeColor(COLORS.text)
-    .lineWidth(0.5)
-    .stroke()
-
-  doc
-    .font('Helvetica')
-    .fontSize(9)
-    .fillColor(COLORS.text)
-    .text('Secretaria Municipal de Cultura e Turismo de Irecê', MARGINS.left, doc.y + 5, {
-      width: CONTENT_WIDTH,
-      align: 'center',
+  doc.y += 24
+  doc.font(FONTES.corpo).fontSize(CORPO).fillColor(CORES.texto)
+    .text(`Irecê/BA, ${porExtenso(data.dataEmissao)}.`, X_ESQUERDA, doc.y, {
+      width: LARGURA_UTIL, align: 'right',
     })
 
-  addFooter(doc, 1)
+  doc.y += 56
+  const centro = X_ESQUERDA + LARGURA_UTIL / 2
+  fio(doc, doc.y, { de: centro - LINHA_ASSINATURA / 2, ate: centro + LINHA_ASSINATURA / 2, espessura: 0.7 })
+  doc.y += 6
+  doc.font(FONTES.titulo).fontSize(9).fillColor(CORES.tinta)
+    .text('SECRETARIA DE CULTURA E TURISMO DE IRECÊ', X_ESQUERDA, doc.y, {
+      width: LARGURA_UTIL, align: 'center', characterSpacing: 0.3,
+    })
 
-  return docToBuffer(doc)
+  return finalizarDocumento(doc, [
+    { rotulo: 'Documento', valor: 'Declaração' },
+    { rotulo: 'Edital', valor: `${data.edital.titulo} (${data.edital.ano})` },
+    { rotulo: 'Situação declarada', valor: situacao },
+  ])
 }
 
-function maskCpfCnpj(value: string): string {
-  if (!value) return '—'
-  if (value.length <= 6) return value
-  return `***${value.slice(-4)}`
+function parrafo(doc: PDFKit.PDFDocument, texto: string): void {
+  doc.font(FONTES.corpo).fontSize(CORPO).fillColor(CORES.texto)
+    .text(texto, X_ESQUERDA, doc.y, { width: LARGURA_UTIL, align: 'justify', lineGap: 3 })
+  doc.y += 14
+}
+
+function porExtenso(data: Date): string {
+  return data.toLocaleDateString('pt-BR', {
+    day: '2-digit', month: 'long', year: 'numeric', timeZone: 'America/Sao_Paulo',
+  })
 }

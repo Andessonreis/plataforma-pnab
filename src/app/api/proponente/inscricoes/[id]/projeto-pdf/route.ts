@@ -6,6 +6,7 @@ import { generateProjetoCompleto } from '@/lib/pdf/projeto-completo'
 import { mesclarAnexosNoPdf } from '@/lib/pdf/dossie-completo'
 import { statusVisivelParaProponente } from '@/lib/edital/resultado-habilitacao'
 import type { CampoFormulario } from '@/types/campo-formulario'
+import { registrarEmissao } from '@/lib/documentos/emissao'
 
 export const runtime = 'nodejs'
 
@@ -89,7 +90,17 @@ export async function GET(
       ? inscricao.status
       : statusVisivelParaProponente(inscricao.status, inscricao.resultadoLiberadoEm !== null)
 
+    const emissao = await registrarEmissao({
+      tipo: 'PROJETO_COMPLETO',
+      titulo: `Projeto completo — inscrição ${inscricao.numero}`,
+      editalId: inscricao.editalId,
+      emitidoPorId: session.user.id,
+      conteudo: { numero: inscricao.numero, categoria: inscricao.categoria },
+      metadados: { Inscrição: inscricao.numero },
+    })
+
     let pdfBuffer = await generateProjetoCompleto({
+      emissao,
       numero: inscricao.numero,
       status: statusPdf,
       proponente: {

@@ -1,137 +1,133 @@
 /**
- * Tabela paginada dos documentos oficiais: header cinza repetido a cada página,
- * zebra striping, altura de linha adaptável ao conteúdo e quebra de página que
- * respeita a faixa do rodapé.
+ * Tabelas dos documentos oficiais, no desenho do Diário: grade de fio fino,
+ * cabeçalho em trama cinza repetido a cada folha e altura de linha que
+ * acompanha o conteúdo da célula mais alta.
  *
- * Compartilhado pelos geradores que publicam listas (relação de inscritos,
- * relatório de recursos) para que todos saiam com a mesma cara.
+ * A grade fechada não é enfeite — em lista longa impressa é ela que mantém a
+ * leitura na linha certa, e é o padrão das tabelas publicadas no Diário.
  */
-import type PDFDocument from 'pdfkit'
-import { COLORS, MARGINS, CONTENT_WIDTH, PAGE_HEIGHT } from './shared'
-import { addCompactFooter } from './layout-helpers'
+import { CORES, FONTES, LARGURA_UTIL, X_ESQUERDA, LIMITE_CONTEUDO } from './documento-oficial/tema'
+import { novaPagina } from './documento-oficial/pagina'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
 export interface ColumnDef {
   label: string
   width: number
-}
-
-/** Acompanha a numeração das páginas ao longo da geração. */
-export interface PageContext {
-  pageNum: number
+  /** Alinhamento do dado na célula; o cabeçalho acompanha. Padrão: esquerda. */
+  align?: 'left' | 'right' | 'center'
 }
 
 // ─── Constantes de layout ────────────────────────────────────────────────────
 
-const FOOTER_ZONE = 60
 /** Última coordenada Y utilizável antes de invadir a faixa do rodapé. */
-export const SAFE_BOTTOM = PAGE_HEIGHT - MARGINS.bottom - FOOTER_ZONE
+export const SAFE_BOTTOM = LIMITE_CONTEUDO
 
-const ROW_HEIGHT = 18
-const HEADER_ROW_HEIGHT = 20
+const ALTURA_MINIMA = 16
+const ALTURA_CABECALHO = 18
+const RESPIRO = 4
+const FIO = 0.7
+const CORPO = 7.5
 
 // ─── Paginação ───────────────────────────────────────────────────────────────
 
 /**
- * Fecha a página e abre outra quando o bloco não cabe no espaço restante.
- * Passando `columns`, o header da tabela é repetido no topo da nova página.
+ * Fecha a folha e abre outra quando o bloco não cabe no espaço restante.
+ * Passando `columns`, o cabeçalho da tabela é repetido no topo da nova página.
  */
 export function checkPageBreak(
   doc: PDFKit.PDFDocument,
   requiredHeight: number,
-  ctx: PageContext,
   columns?: ColumnDef[],
 ): void {
-  if (doc.y + requiredHeight > SAFE_BOTTOM) {
-    addCompactFooter(doc, ctx.pageNum)
-    doc.addPage()
-    ctx.pageNum++
-    doc.y = MARGINS.top
-    if (columns) {
-      addTableHeader(doc, columns)
-    }
+  if (doc.y + requiredHeight <= SAFE_BOTTOM) return
+  novaPagina(doc)
+  if (columns) addTableHeader(doc, columns)
+}
+
+// ─── Grade ───────────────────────────────────────────────────────────────────
+
+/** Fio de contorno e as divisórias verticais de uma faixa da tabela. */
+function desenharGrade(doc: PDFKit.PDFDocument, columns: ColumnDef[], y: number, altura: number): void {
+  doc.save()
+  doc.lineWidth(FIO).strokeColor(CORES.fio)
+  doc.rect(X_ESQUERDA, y, LARGURA_UTIL, altura).stroke()
+
+  let x = X_ESQUERDA
+  for (const col of columns.slice(0, -1)) {
+    x += col.width
+    doc.moveTo(x, y).lineTo(x, y + altura).stroke()
+  }
+  doc.restore()
+}
+
+/** Escreve os valores dentro das células de uma faixa já grafada. */
+function escreverCelulas(
+  doc: PDFKit.PDFDocument,
+  columns: ColumnDef[],
+  valores: string[],
+  y: number,
+  fonte: string,
+): void {
+  let x = X_ESQUERDA
+  for (let i = 0; i < columns.length; i++) {
+    doc.font(fonte).fontSize(CORPO).fillColor(CORES.texto)
+      .text(valores[i] ?? '—', x + RESPIRO, y, {
+        width: columns[i].width - RESPIRO * 2,
+        align: columns[i].align ?? 'left',
+      })
+    x += columns[i].width
   }
 }
 
-// ─── Tabela ──────────────────────────────────────────────────────────────────
-
 /**
- * Renderiza o header da tabela (fundo cinza).
+ * Cabeçalho da tabela.
  *
- * A altura acompanha o rótulo mais alto: com muitas colunas selecionadas, um
- * título como "Cadastrado em" quebra em duas linhas e precisa de faixa maior,
- * senão o texto vaza pra fora do fundo cinza.
+ * A altura acompanha o rótulo mais alto: com muitas colunas, um título como
+ * "Cadastrado em" quebra em duas linhas e precisa de faixa maior, senão o texto
+ * vaza pra fora da trama.
  */
 export function addTableHeader(doc: PDFKit.PDFDocument, columns: ColumnDef[]): void {
   const y = doc.y
 
-  doc.font('Helvetica-Bold').fontSize(7.5)
+  doc.font(FONTES.rotulo).fontSize(CORPO)
   const alturaTexto = columns.reduce(
-    (maior, col) => Math.max(maior, doc.heightOfString(col.label, { width: col.width - 6 })),
+    (maior, col) => Math.max(maior, doc.heightOfString(col.label, { width: col.width - RESPIRO * 2 })),
     0,
   )
-  const altura = Math.max(HEADER_ROW_HEIGHT, Math.ceil(alturaTexto) + 8)
+  const altura = Math.max(ALTURA_CABECALHO, Math.ceil(alturaTexto) + RESPIRO * 2)
 
-  doc.rect(MARGINS.left, y, CONTENT_WIDTH, altura).fill('#e2e8f0')
+  doc.rect(X_ESQUERDA, y, LARGURA_UTIL, altura).fill(CORES.trama)
+  desenharGrade(doc, columns, y, altura)
+  escreverCelulas(doc, columns, columns.map((c) => c.label), y + RESPIRO + 1, FONTES.rotulo)
 
-  let x = MARGINS.left
-  for (const col of columns) {
-    doc
-      .font('Helvetica-Bold')
-      .fontSize(7.5)
-      .fillColor(COLORS.text)
-      .text(col.label, x + 3, y + 5, { width: col.width - 6 })
-    x += col.width
-  }
-
-  doc.y = y + altura + 1
+  doc.y = y + altura
 }
 
-/** Calcula a altura da linha com base no maior conteúdo de célula. */
+/** Altura da linha, medida pelo conteúdo da célula mais alta. */
 export function calculateRowHeight(
   doc: PDFKit.PDFDocument,
   columns: ColumnDef[],
   values: string[],
 ): number {
-  doc.font('Helvetica').fontSize(7.5)
-  let maxTextHeight = 10
-  for (let i = 0; i < columns.length; i++) {
-    const text = values[i] ?? '—'
-    const h = doc.heightOfString(text, { width: columns[i].width - 6 })
-    if (h > maxTextHeight) {
-      maxTextHeight = h
-    }
-  }
-  return Math.max(ROW_HEIGHT, Math.ceil(maxTextHeight) + 8)
+  doc.font(FONTES.dado).fontSize(CORPO)
+  const maior = columns.reduce(
+    (max, col, i) => Math.max(max, doc.heightOfString(values[i] ?? '—', { width: col.width - RESPIRO * 2 })),
+    10,
+  )
+  return Math.max(ALTURA_MINIMA, Math.ceil(maior) + RESPIRO * 2)
 }
 
-/** Renderiza uma linha de dados da tabela com altura adaptável. */
+/** Linha de dados da tabela. */
 export function addTableRow(
   doc: PDFKit.PDFDocument,
   columns: ColumnDef[],
   values: string[],
-  striped: boolean,
   rowHeight: number,
 ): void {
   const y = doc.y
-
-  if (striped) {
-    doc.rect(MARGINS.left, y, CONTENT_WIDTH, rowHeight).fill('#f8fafc')
-  }
-
-  let x = MARGINS.left
-  for (let i = 0; i < columns.length; i++) {
-    doc
-      .font('Helvetica')
-      .fontSize(7.5)
-      .fillColor(COLORS.text)
-      .text(values[i] ?? '—', x + 3, y + 4, {
-        width: columns[i].width - 6,
-      })
-    x += columns[i].width
-  }
-
+  desenharGrade(doc, columns, y, rowHeight)
+  escreverCelulas(doc, columns, values, y + RESPIRO + 1, FONTES.dado)
   doc.y = y + rowHeight
 }
 
@@ -141,15 +137,11 @@ export function addTableRow(
  */
 export function addTableEmptyRow(doc: PDFKit.PDFDocument, texto: string): void {
   const y = doc.y
-  const height = 26
+  const altura = 24
 
-  doc.rect(MARGINS.left, y, CONTENT_WIDTH, height).fill('#f8fafc')
+  desenharGrade(doc, [{ label: '', width: LARGURA_UTIL }], y, altura)
+  doc.font(FONTES.corpoItalico).fontSize(8.5).fillColor(CORES.apoio)
+    .text(texto, X_ESQUERDA + RESPIRO, y + 8, { width: LARGURA_UTIL - RESPIRO * 2, align: 'center' })
 
-  doc
-    .font('Helvetica-Oblique')
-    .fontSize(8.5)
-    .fillColor(COLORS.textLight)
-    .text(texto, MARGINS.left + 3, y + 9, { width: CONTENT_WIDTH - 6, align: 'center' })
-
-  doc.y = y + height
+  doc.y = y + altura
 }

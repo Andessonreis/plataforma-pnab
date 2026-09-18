@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { generateComprovante } from '@/lib/pdf/comprovante'
+import { registrarEmissao } from '@/lib/documentos/emissao'
 
 export const runtime = 'nodejs'
 
@@ -72,7 +73,17 @@ export async function GET(
       )
     }
 
+    const emissao = await registrarEmissao({
+      tipo: 'COMPROVANTE_INSCRICAO',
+      titulo: `Comprovante — inscrição ${inscricao.numero}`,
+      editalId: inscricao.editalId,
+      emitidoPorId: session.user.id,
+      conteudo: { numero: inscricao.numero, categoria: inscricao.categoria },
+      metadados: { Inscrição: inscricao.numero },
+    })
+
     const pdfBuffer = await generateComprovante({
+      emissao,
       numero: inscricao.numero,
       proponente: {
         nome: inscricao.proponente.nome,

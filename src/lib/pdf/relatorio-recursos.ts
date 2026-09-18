@@ -8,14 +8,11 @@
  * Segue o mesmo layout da relação de inscritos (mesmo header, mesma tabela)
  * para que as peças publicadas do edital tenham a mesma aparência.
  */
-import { createDocument, docToBuffer, MARGINS, CONTENT_WIDTH, COLORS } from './shared'
 import { maskCpfCnpjParcial } from '@/lib/utils/mask'
 import {
-  addCompactHeader,
   addInfoBlock,
   addDivider,
   addLegalNotice,
-  addCompactFooter,
   addCompactSection,
 } from './layout-helpers'
 import {
@@ -25,8 +22,10 @@ import {
   calculateRowHeight,
   checkPageBreak,
   type ColumnDef,
-  type PageContext,
 } from './table-helpers'
+import type { Emissao } from '@/lib/documentos/emissao'
+import { criarDocumentoOficial, finalizarDocumento } from './documento-oficial'
+import { CORES, FONTES, LARGURA_UTIL, X_ESQUERDA } from './documento-oficial/tema'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -51,11 +50,13 @@ export interface RelatorioRecursosData {
   totalInscricoes: number
   labelTotalInscricoes: string
   recursos: RelatorioRecursosItem[]
+  /** Registro de emissão; null quando o registro falhou (o PDF sai mesmo assim). */
+  emissao?: Emissao | null
 }
 
 // ─── Colunas ─────────────────────────────────────────────────────────────────
 
-// Somam CONTENT_WIDTH (495,28pt) — a tabela ocupa a largura útil da página.
+// Somam LARGURA_UTIL (495,28pt) — a tabela ocupa a largura útil da página.
 const COLUNAS: ColumnDef[] = [
   { label: 'Nº', width: 24 },
   { label: 'Inscrição', width: 74 },
@@ -98,11 +99,13 @@ function descreverSituacaoPrazo(prazo: RelatorioRecursosData['prazo']): string {
 // ─── Geração do PDF ──────────────────────────────────────────────────────────
 
 export async function generateRelatorioRecursos(data: RelatorioRecursosData): Promise<Buffer> {
-  const doc = createDocument()
-  const ctx: PageContext = { pageNum: 1 }
+  const doc = await criarDocumentoOficial({
+    rotulo: 'Recursos',
+    titulo: 'Relatório de Recursos Interpostos',
+    subtitulo: `${data.edital.titulo} · ${data.edital.ano}`,
+    emissao: data.emissao ?? null,
+  })
   const total = data.recursos.length
-
-  addCompactHeader(doc, 'Relatório de Recursos Interpostos')
 
   addInfoBlock(doc, [
     { label: 'Edital', value: data.edital.titulo },
@@ -125,32 +128,24 @@ export async function generateRelatorioRecursos(data: RelatorioRecursosData): Pr
       const values = buildRowValues(data.recursos[i])
       const rowHeight = calculateRowHeight(doc, COLUNAS, values)
 
-      checkPageBreak(doc, rowHeight + 2, ctx, COLUNAS)
-      addTableRow(doc, COLUNAS, values, i % 2 === 0, rowHeight)
+      checkPageBreak(doc, rowHeight + 2, COLUNAS)
+      addTableRow(doc, COLUNAS, values, rowHeight)
     }
   }
 
   doc.y += 8
-  checkPageBreak(doc, 30, ctx)
-  doc
-    .font('Helvetica-Bold')
-    .fontSize(9)
-    .fillColor(COLORS.text)
-    .text(`Total: ${total} recurso(s)`, MARGINS.left)
+  checkPageBreak(doc, 30)
+  doc.font(FONTES.rotulo).fontSize(9).fillColor(CORES.tinta)
+    .text(`Total: ${total} recurso(s)`, X_ESQUERDA, doc.y, { width: LARGURA_UTIL })
 
-  checkPageBreak(doc, 60, ctx)
+  checkPageBreak(doc, 60)
   addCompactSection(doc, 'Conclusão')
-  doc
-    .font('Helvetica')
-    .fontSize(9)
-    .fillColor(COLORS.text)
-    .text(conclusao(data.etapa, data.prazo, total), MARGINS.left, doc.y, {
-      width: CONTENT_WIDTH,
-      align: 'justify',
-      lineGap: 2,
+  doc.font(FONTES.corpo).fontSize(9.5).fillColor(CORES.texto)
+    .text(conclusao(data.etapa, data.prazo, total), X_ESQUERDA, doc.y, {
+      width: LARGURA_UTIL, align: 'justify', lineGap: 2,
     })
 
-  checkPageBreak(doc, 50, ctx)
+  checkPageBreak(doc, 50)
   addLegalNotice(
     doc,
     'Documento oficial gerado pela plataforma Portal PNAB Irecê. Relaciona os recursos ' +
@@ -158,9 +153,13 @@ export async function generateRelatorioRecursos(data: RelatorioRecursosData): Pr
     'na data e hora de geração.',
   )
 
-  addCompactFooter(doc, ctx.pageNum)
-
-  return docToBuffer(doc)
+  return finalizarDocumento(doc, [
+    { rotulo: 'Documento', valor: 'Relatório de recursos interpostos' },
+    { rotulo: 'Edital', valor: `${data.edital.titulo} (${data.edital.ano})` },
+    { rotulo: 'Etapa', valor: data.etapa },
+    { rotulo: 'Prazo', valor: descreverPrazo(data.prazo) },
+    { rotulo: 'Recursos', valor: String(total) },
+  ])
 }
 
 // ─── Helpers privados ────────────────────────────────────────────────────────

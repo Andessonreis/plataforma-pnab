@@ -1,13 +1,14 @@
-import { createDocument, docToBuffer } from './shared'
 import {
-  addCompactHeader,
   addProtocolBadge,
   addCompactSection,
   addInfoBlock,
   addDivider,
   addLegalNotice,
-  addCompactFooter,
 } from './layout-helpers'
+import { maskCpfCnpjParcial } from '@/lib/utils/mask'
+import type { Emissao } from '@/lib/documentos/emissao'
+import { criarDocumentoOficial, finalizarDocumento } from './documento-oficial'
+import { CORES, FONTES, LARGURA_UTIL, X_ESQUERDA } from './documento-oficial/tema'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -26,6 +27,8 @@ export interface ComprovanteData {
   categoria?: string | null
   submittedAt: Date
   campos?: Record<string, unknown>
+  /** Registro de emissão; null quando o registro falhou (o PDF sai mesmo assim). */
+  emissao?: Emissao | null
 }
 
 // Número máximo de campos do formulário exibidos no comprovante.
@@ -34,16 +37,16 @@ const MAX_CAMPOS_EXIBIDOS = 6
 
 // ─── Geração do comprovante ──────────────────────────────────────────────────
 
-/**
- * Gera PDF de comprovante de inscrição em layout compacto (1 página A4).
- * Usa helpers modulares de layout-helpers.ts.
- */
+/** Gera o comprovante de inscrição — peça de uma página entregue ao proponente. */
 export async function generateComprovante(data: ComprovanteData): Promise<Buffer> {
-  const doc = createDocument()
+  const doc = await criarDocumentoOficial({
+    rotulo: 'Comprovante',
+    titulo: 'Comprovante de Inscrição',
+    subtitulo: `${data.edital.titulo} · ${data.edital.ano}`,
+    emissao: data.emissao ?? null,
+  })
 
-  addCompactHeader(doc, 'Comprovante de Inscrição')
   addProtocolBadge(doc, data.numero)
-  addDivider(doc)
 
   // ── Edital ────────────────────────────────────────────────────────────────
   addCompactSection(doc, 'Edital')
@@ -58,7 +61,7 @@ export async function generateComprovante(data: ComprovanteData): Promise<Buffer
   addCompactSection(doc, 'Proponente')
   addInfoBlock(doc, [
     { label: 'Nome', value: data.proponente.nome },
-    { label: 'CPF/CNPJ', value: maskCpfCnpj(data.proponente.cpfCnpj) },
+    { label: 'CPF/CNPJ', value: maskCpfCnpjParcial(data.proponente.cpfCnpj) },
     { label: 'E-mail', value: data.proponente.email },
     { label: 'Tipo', value: formatTipoProponente(data.proponente.tipoProponente) },
   ])
@@ -92,14 +95,10 @@ export async function generateComprovante(data: ComprovanteData): Promise<Buffer
       (v) => v !== null && v !== undefined && v !== '',
     ).length
     if (total > MAX_CAMPOS_EXIBIDOS) {
-      doc
-        .font('Helvetica-Oblique')
-        .fontSize(7.5)
-        .fillColor('#64748b')
+      doc.font(FONTES.corpoItalico).fontSize(8).fillColor(CORES.apoio)
         .text(
-          `* Exibindo ${MAX_CAMPOS_EXIBIDOS} de ${total} campos. Consulte os dados completos na plataforma.`,
-          50,
-          doc.y + 2,
+          `Exibindo ${MAX_CAMPOS_EXIBIDOS} de ${total} campos. Os dados completos ficam na plataforma.`,
+          X_ESQUERDA, doc.y + 4, { width: LARGURA_UTIL },
         )
     }
   }
@@ -111,20 +110,15 @@ export async function generateComprovante(data: ComprovanteData): Promise<Buffer
     'Guarde este protocolo para acompanhamento e apresentação quando solicitado. ' +
     'A inscrição será analisada conforme os critérios estabelecidos no edital.',
   )
-  addCompactFooter(doc, 1)
-
-  return docToBuffer(doc)
+  return finalizarDocumento(doc, [
+    { rotulo: 'Documento', valor: 'Comprovante de inscrição' },
+    { rotulo: 'Edital', valor: `${data.edital.titulo} (${data.edital.ano})` },
+    { rotulo: 'Inscrição', valor: data.numero },
+    { rotulo: 'Proponente', valor: data.proponente.nome },
+  ])
 }
 
 // ─── Helpers privados ────────────────────────────────────────────────────────
-
-function maskCpfCnpj(value: string): string {
-  if (!value) return '—'
-  const digits = value.replace(/\D/g, '')
-  if (digits.length <= 6) return value
-  // Oculta dígitos do meio, mantém 3 primeiros e 2 últimos
-  return `${digits.slice(0, 3)}.***.***-${digits.slice(-2)}`
-}
 
 function formatTipoProponente(tipo: string): string {
   const map: Record<string, string> = {

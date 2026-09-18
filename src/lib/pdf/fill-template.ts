@@ -22,7 +22,7 @@ export interface FillField {
 export async function fillPdfTemplate(templateBytes: Buffer | Uint8Array, fields: FillField[]): Promise<Buffer> {
   const doc = await PDFDocument.load(templateBytes)
   const font = await doc.embedFont(StandardFonts.Helvetica)
-  const textColor = rgb(0.118, 0.161, 0.212) // #1e293b — mesmo tom de texto usado em src/lib/pdf/shared.ts
+  const textColor = rgb(0.118, 0.161, 0.212) // #1e293b — tom de texto dos documentos preenchidos sobre modelo
 
   for (const field of fields) {
     const page = doc.getPage(field.page)

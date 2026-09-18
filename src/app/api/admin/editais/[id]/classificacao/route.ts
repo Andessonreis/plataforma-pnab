@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db'
 import { logAudit } from '@/lib/audit'
 import { montarClassificacao } from '@/lib/results/classificacao'
 import { generateListaClassificacao } from '@/lib/pdf/lista-classificacao'
+import { registrarEmissao } from '@/lib/documentos/emissao'
 import type { CategoriaConfig } from '@/types/categoria-config'
 
 export const runtime = 'nodejs'
@@ -65,8 +66,27 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
       return erro(422, 'SEM_DADOS', 'Nenhuma inscrição avaliada para classificar ainda.', requestId)
     }
 
+    const total = categorias.reduce((soma, c) => soma + c.linhas.length, 0)
+
+    // O hash sai dos dados da classificação, não do PDF: reemitir o mesmo
+    // conteúdo precisa dar o mesmo identificador.
+    const emissao = await registrarEmissao({
+      tipo: 'CLASSIFICACAO',
+      titulo: `Classificação — ${edital.titulo} (${edital.ano})`,
+      editalId,
+      emitidoPorId: session.user.id,
+      conteudo: categorias,
+      metadados: {
+        Categorias: categorias.length,
+        Propostas: total,
+        Bonificação: mostraBonus ? 'incluída na nota final' : 'não exibida',
+        Situação: consolidado ? 'resultado consolidado' : 'prévia de trabalho',
+      },
+    })
+
     const buffer = await generateListaClassificacao({
       edital: { titulo: edital.titulo, ano: edital.ano },
+      emissao,
       categorias: categorias.map((c) => ({
         nome: c.nome,
         vagasAmplaConcorrencia: c.vagasAmplaConcorrencia,
@@ -89,13 +109,12 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
       geradoEm: new Date(),
     })
 
-    const total = categorias.reduce((soma, c) => soma + c.linhas.length, 0)
     await logAudit({
       userId: session.user.id,
       action: 'EXPORTACAO_CLASSIFICACAO_PDF',
       entity: 'Edital',
       entityId: editalId,
-      details: { total, categorias: categorias.length, consolidado, comBonus: mostraBonus },
+      details: { total, categorias: categorias.length, consolidado, comBonus: mostraBonus, codigo: emissao?.codigo ?? null },
       ip: req.headers.get('x-forwarded-for') ?? undefined,
     })
 

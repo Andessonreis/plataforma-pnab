@@ -8,6 +8,7 @@ import { generateListaInscricoes } from '@/lib/pdf/lista-inscricoes'
 import { inscricaoStatusLabel, cumulativeStatuses } from '@/lib/status-maps'
 import { categoriaWhere } from '@/lib/inscricoes/area-filter'
 import type { InscricaoStatus } from '@prisma/client'
+import { registrarEmissao } from '@/lib/documentos/emissao'
 
 export const runtime = 'nodejs'
 
@@ -118,8 +119,22 @@ export async function GET(req: NextRequest, context: RouteContext) {
       motivoInabilitacao: insc.motivoInabilitacao,
     }))
 
+    const emissao = await registrarEmissao({
+      tipo: 'LISTA_INSCRICOES',
+      titulo: `${statusLabel} — ${edital.titulo} (${edital.ano})`,
+      editalId,
+      emitidoPorId: session.user.id,
+      conteudo: items,
+      metadados: {
+        Situação: statusLabel,
+        Categoria: categoria ?? 'Todas',
+        Inscrições: items.length,
+      },
+    })
+
     const buffer = await generateListaInscricoes({
       edital: { titulo: edital.titulo, ano: edital.ano },
+      emissao,
       status,
       statusLabel,
       inscricoes: items,
