@@ -10,7 +10,7 @@ export function BonusTable({ linhas }: Props) {
   if (linhas.length === 0) {
     return (
       <p className="text-sm text-slate-500 py-6 text-center">
-        Nenhuma inscrição avaliada com cota bônus até agora.
+        Nenhuma inscrição avaliada com bonificação até agora.
       </p>
     )
   }
@@ -23,7 +23,7 @@ export function BonusTable({ linhas }: Props) {
             <th className="text-left py-2.5 px-3 font-semibold text-slate-700 text-xs uppercase tracking-wide">Número</th>
             <th className="text-left py-2.5 px-3 font-semibold text-slate-700 text-xs uppercase tracking-wide">Proponente</th>
             <th className="text-left py-2.5 px-3 font-semibold text-slate-700 text-xs uppercase tracking-wide">Categoria</th>
-            <th className="text-left py-2.5 px-3 font-semibold text-slate-700 text-xs uppercase tracking-wide">Cotas</th>
+            <th className="text-left py-2.5 px-3 font-semibold text-slate-700 text-xs uppercase tracking-wide">Bonificação</th>
             <th className="text-right py-2.5 px-3 font-semibold text-slate-700 text-xs uppercase tracking-wide">Nota avaliadores</th>
             <th className="text-right py-2.5 px-3 font-semibold text-slate-700 text-xs uppercase tracking-wide">Bônus</th>
             <th className="text-right py-2.5 px-3 font-semibold text-slate-700 text-xs uppercase tracking-wide">Nota com bônus</th>
@@ -37,9 +37,9 @@ export function BonusTable({ linhas }: Props) {
               <td className="py-2.5 px-3 text-slate-600">{linha.categoria ?? '—'}</td>
               <td className="py-2.5 px-3">
                 <div className="flex flex-wrap gap-1">
-                  {linha.cotas.map((cota) => (
-                    <Badge key={cota.key} variant="info">
-                      {cota.label} (+{cota.pontos})
+                  {linha.itens.map((item) => (
+                    <Badge key={item.key} variant="info">
+                      {item.label} (+{item.pontos})
                     </Badge>
                   ))}
                 </div>
