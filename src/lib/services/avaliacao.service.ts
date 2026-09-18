@@ -6,6 +6,7 @@ import { temAcessoEdital } from '@/lib/edital-acesso'
 import { gateAcaoFase } from '@/lib/edital/gate'
 import { resultadoPreliminarConsolidado } from '@/lib/results/consolidacao'
 import { STATUS_BLOQUEADO_PARA_AVALIADOR } from '@/lib/services/avaliacao-buckets'
+import { avaliacaoBloqueadaParaAvaliador, MENSAGEM_AVALIACAO_ENCERRADA } from '@/lib/edital/avaliacao-encerrada'
 import { ServiceError } from './errors'
 import type { AvaliacaoInput } from '@/lib/schemas/avaliacao'
 
@@ -62,7 +63,12 @@ export async function saveAvaliacao(
       status: true,
       editalId: true,
       edital: {
-        select: { status: true, criteriosAvaliacao: true, formulaAvaliacao: true },
+        select: {
+          status: true,
+          criteriosAvaliacao: true,
+          formulaAvaliacao: true,
+          avaliacaoEncerradaEm: true,
+        },
       },
     },
   })
@@ -73,6 +79,10 @@ export async function saveAvaliacao(
 
   if (!isAdmin && STATUS_BLOQUEADO_PARA_AVALIADOR.includes(inscricao.status)) {
     throw new ServiceError('FORBIDDEN', 'Esta inscrição não foi atribuída a você.')
+  }
+
+  if (avaliacaoBloqueadaParaAvaliador(inscricao.edital.avaliacaoEncerradaEm, isAdmin)) {
+    throw new ServiceError('LOCKED', MENSAGEM_AVALIACAO_ENCERRADA)
   }
 
   const criterios = parseCriterios(inscricao.edital.criteriosAvaliacao)
@@ -158,11 +168,16 @@ export async function reabrirAvaliacao(inscricaoId: string, avaliadorId: string,
       id: true,
       numero: true,
       editalId: true,
-      edital: { select: { status: true } },
+      edital: { select: { status: true, avaliacaoEncerradaEm: true } },
     },
   })
 
   if (!inscricao) throw new ServiceError('NOT_FOUND', 'Inscrição não encontrada.')
+
+  // Reabrir é sempre ação do próprio avaliador — nunca passa pelo isAdmin.
+  if (avaliacaoBloqueadaParaAvaliador(inscricao.edital.avaliacaoEncerradaEm, false)) {
+    throw new ServiceError('LOCKED', MENSAGEM_AVALIACAO_ENCERRADA)
+  }
 
   const avaliacao = await prisma.avaliacao.findUnique({
     where: { inscricaoId_avaliadorId: { inscricaoId, avaliadorId } },

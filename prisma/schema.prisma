@@ -323,6 +323,12 @@ model Edital {
   // problema que `Inscricao.resultadoLiberadoEm` já resolve pra habilitação.
   resultadoPreliminarPublicadoEm DateTime?
   resultadoFinalPublicadoEm      DateTime?
+  // Momento em que a Secretaria encerrou a fase de avaliação. Preenchido =
+  // avaliador não lança nem reabre nota neste edital; a equipe interna
+  // continua editando, porque o trabalho dela (bonificação, conferência,
+  // consolidação) acontece depois do prazo do parecerista. Não deriva de
+  // `status`, que o scheduler avança sozinho pela data do cronograma.
+  avaliacaoEncerradaEm           DateTime?
   createdAt                 DateTime     @default(now())
   updatedAt                 DateTime     @updatedAt
 

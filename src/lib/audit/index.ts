@@ -47,6 +47,10 @@ export const AUDIT_ACTIONS = {
   // Comissão — itens de bonificação validados por inscrição
   BONUS_ITENS_ALTERADOS: 'BONUS_ITENS_ALTERADOS',
 
+  // Secretaria — fecha/reabre o lançamento de nota pelo parecerista
+  AVALIACAO_FASE_ENCERRADA: 'AVALIACAO_FASE_ENCERRADA',
+  AVALIACAO_FASE_REABERTA: 'AVALIACAO_FASE_REABERTA',
+
   // Admin — conteúdo
   NOTICIA_CRIADA: 'NOTICIA_CRIADA',
   NOTICIA_ATUALIZADA: 'NOTICIA_ATUALIZADA',
@@ -155,6 +159,8 @@ export const ACTION_LABELS: Record<string, string> = {
   MEMBRO_EDITAL_REMOVIDO: 'Membro removido do edital',
   BONUS_VISIBILIDADE_ALTERADA: 'Visibilidade da nota bônus alterada',
   BONUS_ITENS_ALTERADOS: 'Itens de bonificação da inscrição alterados',
+  AVALIACAO_FASE_ENCERRADA: 'Fase de avaliação encerrada para os pareceristas',
+  AVALIACAO_FASE_REABERTA: 'Fase de avaliação reaberta para os pareceristas',
   NOTICIA_CRIADA: 'Notícia criada',
   NOTICIA_ATUALIZADA: 'Notícia atualizada',
   NOTICIA_EXCLUIDA: 'Notícia excluída',

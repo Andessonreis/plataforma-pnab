@@ -59,7 +59,8 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
   const inscricao = await prisma.inscricao.findUnique({
     where: { id },
     include: {
-      edital: { select: { titulo: true, slug: true, ano: true, status: true, criteriosAvaliacao: true, camposFormulario: true, etapasCustomizadas: true, tiposAnexo: true, formulaAvaliacao: true, bonusVisivelParaAdmin: true } },
+      edital: { select: { titulo: true, slug: true, ano: true, status: true, criteriosAvaliacao: true, camposFormulario: true, etapasCustomizadas: true, tiposAnexo: true, formulaAvaliacao: true,
+            avaliacaoEncerradaEm: true, bonusVisivelParaAdmin: true } },
       proponente: {
         select: { nome: true, cpfCnpj: true, email: true, telefone: true, tipoProponente: true },
       },
@@ -145,8 +146,10 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
   const editalStatus = inscricao.edital.status
   const podeAvaliarAgora = podeAvaliar(editalStatus, inscricao.status)
   const podeHabilitarAgora = podeHabilitar(editalStatus)
+  const avaliacaoEncerrada = !isAdmin && inscricao.edital.avaliacaoEncerradaEm != null
   const podeReabrir =
     meuAvaliacao?.finalizada === true &&
+    !avaliacaoEncerrada &&
     !(await resultadoPreliminarConsolidado(inscricao.editalId, editalStatus))
   // Bônus de identidade (bloco "Bonificação") — ADMIN comum só vê depois que o
   // edital sai da fase de avaliação; SUPER_ADMIN vê sempre.
@@ -526,6 +529,7 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
               isAdmin,
               formulaAvaliacao: inscricao.edital.formulaAvaliacao,
               podeReabrir,
+              avaliacaoEncerrada,
             }
 
             if (podeAvaliarAgora) {
