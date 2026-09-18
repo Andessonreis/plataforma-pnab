@@ -96,7 +96,10 @@ export async function montarClassificacao(
       valorPorProjeto: config.valorPorProjeto,
       linhas: grupo.map((r, i) => {
         const info = infoPorId.get(r.inscricaoId)
-        const bonus = incluirBonus ? r.notaBonus : 0
+        // Sem avaliação finalizada o cálculo não soma bônus (ver
+        // calculateResults), então não há o que subtrair: descontar aqui
+        // deixaria a nota base negativa num documento público.
+        const bonus = incluirBonus && r.totalAvaliacoes > 0 ? r.notaBonus : 0
         return {
           inscricaoId: r.inscricaoId,
           numero: info?.numero ?? r.numero ?? '',

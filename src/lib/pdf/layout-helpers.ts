@@ -1,260 +1,107 @@
 /**
- * Helpers modulares de layout para documentos PDF (comprovante, declaração, resultados).
- * Todos os helpers operam sobre um PDFDocument já criado e posicionam o cursor.
+ * Blocos de conteúdo dos documentos oficiais: ficha de dados, seção, aviso
+ * legal e protocolo em destaque. Todos operam sobre um documento já aberto por
+ * `criarDocumentoOficial` e posicionam o cursor para o bloco seguinte.
  */
-import type PDFDocument from 'pdfkit'
-import fs from 'fs'
-import path from 'path'
-import { COLORS, MARGINS, CONTENT_WIDTH, PAGE_WIDTH } from './shared'
+import { caixaRotulada, tarjaSecao, separador } from './documento-oficial/blocos'
+import { desenharRodape } from './documento-oficial/rodape'
+import { CORES, FONTES, LARGURA_UTIL, X_ESQUERDA, fio } from './documento-oficial/tema'
 
-// Selo do Projeto Cidades Inteligentes — mesma logo usada no rodapé do site
-// público. Todo documento oficial gerado pela plataforma leva essa marca.
-const LOGO_CIDADES_INTELIGENTES_PATH = path.join(
-  process.cwd(),
-  'public/images/marca/logo-cidades-inteligentes-color.png',
-)
+// ─── Constantes de layout ────────────────────────────────────────────────────
 
-// ─── Constantes de layout compacto ──────────────────────────────────────────
+const COL_ROTULO = 140
+const RESPIRO = 5
+const CORPO = 8.5
 
-const COL_LABEL_WIDTH = 150
-const COL_VALUE_WIDTH = CONTENT_WIDTH - COL_LABEL_WIDTH
-const ROW_HEIGHT = 16
-const SECTION_GAP = 6
+// ─── Ficha de dados ──────────────────────────────────────────────────────────
 
-// ─── Header Compacto ─────────────────────────────────────────────────────────
-
-/**
- * Header institucional compacto: faixa verde topo + título em 1 linha.
- * Ocupa ~50px verticais (vs ~90px do addHeader padrão).
- */
-export function addCompactHeader(doc: PDFKit.PDFDocument, title: string): void {
-  // Faixa verde topo
-  doc.rect(0, 0, PAGE_WIDTH, 6).fill(COLORS.brand)
-
-  const startY = MARGINS.top - 10
-
-  // Logo / nome institucional + secretaria em 1 linha
-  doc
-    .font('Helvetica-Bold')
-    .fontSize(9)
-    .fillColor(COLORS.brand)
-    .text('PORTAL PNAB IRECÊ', MARGINS.left, startY, { continued: true })
-    .font('Helvetica')
-    .fontSize(8)
-    .fillColor(COLORS.textLight)
-    .text('  —  Secretaria Municipal de Cultura e Turismo de Irecê', { align: 'left' })
-
-  // Título do documento centralizado
-  doc
-    .font('Helvetica-Bold')
-    .fontSize(15)
-    .fillColor(COLORS.text)
-    .text(title, MARGINS.left, startY + 14, { width: CONTENT_WIDTH, align: 'center' })
-
-  // Selo Cidades Inteligentes no canto superior direito. Falha de leitura do
-  // arquivo não pode derrubar a geração do PDF — documento sai sem o selo.
-  try {
-    const logoData = fs.readFileSync(LOGO_CIDADES_INTELIGENTES_PATH)
-    const logoHeight = 22
-    doc.image(logoData, PAGE_WIDTH - MARGINS.right - 60, startY - 4, { height: logoHeight })
-  } catch {
-    // segue sem o selo
-  }
-
-  // Linha separadora fina
-  const lineY = startY + 32
-  doc
-    .moveTo(MARGINS.left, lineY)
-    .lineTo(PAGE_WIDTH - MARGINS.right, lineY)
-    .strokeColor(COLORS.border)
-    .lineWidth(0.5)
-    .stroke()
-
-  doc.y = lineY + 8
+export interface LinhaFicha {
+  label: string
+  value: string
 }
 
-// ─── Protocolo em faixa ──────────────────────────────────────────────────────
+/** Altura que a linha precisa para caber o valor inteiro. */
+function alturaLinha(doc: PDFKit.PDFDocument, linha: LinhaFicha): number {
+  doc.font(FONTES.dado).fontSize(CORPO)
+  const altura = doc.heightOfString(linha.value || '—', { width: LARGURA_UTIL - COL_ROTULO - RESPIRO * 3 })
+  return Math.max(15, Math.ceil(altura) + 7)
+}
 
-/**
- * Exibe o número de protocolo em uma faixa verde-claro de destaque.
- * Ocupa ~28px verticais.
- */
-export function addProtocolBadge(doc: PDFKit.PDFDocument, numero: string): void {
-  const y = doc.y
-  const height = 26
-
-  doc.rect(MARGINS.left, y, CONTENT_WIDTH, height).fill('#f0fdf4')
-
-  doc
-    .font('Helvetica-Bold')
-    .fontSize(11)
-    .fillColor(COLORS.brandDark)
-    .text(`Protocolo: ${numero}`, MARGINS.left, y + 7, {
-      width: CONTENT_WIDTH,
-      align: 'center',
+/** Escreve um par rótulo/valor ocupando a faixa informada. */
+function escreverLinha(doc: PDFKit.PDFDocument, linha: LinhaFicha, y: number): void {
+  doc.font(FONTES.rotulo).fontSize(CORPO).fillColor(CORES.texto)
+    .text(linha.label, X_ESQUERDA + RESPIRO, y, { width: COL_ROTULO - RESPIRO, lineBreak: false, ellipsis: true })
+  doc.font(FONTES.dado).fontSize(CORPO).fillColor(CORES.texto)
+    .text(linha.value || '—', X_ESQUERDA + COL_ROTULO + RESPIRO, y, {
+      width: LARGURA_UTIL - COL_ROTULO - RESPIRO * 3,
     })
-
-  doc.y = y + height + 6
 }
 
-// ─── Seção compacta ──────────────────────────────────────────────────────────
-
 /**
- * Título de seção compacto com linha lateral (sem underline largo).
- * Ocupa ~18px verticais.
+ * Ficha de dados: rótulos à esquerda, valores à direita, dentro de uma moldura
+ * de fio fino com divisórias entre as linhas. É o bloco que identifica edital,
+ * proponente e inscrição na abertura dos documentos.
  */
+export function addInfoBlock(doc: PDFKit.PDFDocument, rows: LinhaFicha[]): void {
+  if (rows.length === 0) return
+
+  const topo = doc.y
+  const alturas = rows.map((linha) => alturaLinha(doc, linha))
+  const total = alturas.reduce((soma, altura) => soma + altura, 0)
+
+  doc.save()
+  doc.rect(X_ESQUERDA, topo, LARGURA_UTIL, total).strokeColor(CORES.fio).lineWidth(0.7).stroke()
+  doc.moveTo(X_ESQUERDA + COL_ROTULO, topo).lineTo(X_ESQUERDA + COL_ROTULO, topo + total)
+    .strokeColor(CORES.fio).lineWidth(0.4).stroke()
+  doc.restore()
+
+  let y = topo
+  rows.forEach((linha, i) => {
+    if (i > 0) fio(doc, y, { espessura: 0.4, cor: CORES.apoio })
+    escreverLinha(doc, linha, y + 4)
+    y += alturas[i]
+  })
+
+  doc.y = topo + total + 4
+}
+
+/** Uma linha de ficha isolada, para blocos montados campo a campo. */
+export function addTwoColumnRow(doc: PDFKit.PDFDocument, label: string, value: string): void {
+  addInfoBlock(doc, [{ label, value }])
+}
+
+// ─── Seção, divisor e destaques ──────────────────────────────────────────────
+
+/** Cabeçalho de seção — tarja preta e régua até a margem. */
 export function addCompactSection(doc: PDFKit.PDFDocument, title: string): void {
-  doc.y += SECTION_GAP
-
-  const y = doc.y
-
-  // Traço vertical colorido à esquerda
-  doc.rect(MARGINS.left, y, 3, 12).fill(COLORS.brand)
-
-  doc
-    .font('Helvetica-Bold')
-    .fontSize(9)
-    .fillColor(COLORS.brandDark)
-    .text(title.toUpperCase(), MARGINS.left + 8, y + 1, { characterSpacing: 0.5 })
-
-  doc.y = y + 14
-}
-
-// ─── Linha 2 colunas (label + valor) ─────────────────────────────────────────
-
-/**
- * Renderiza um par label:valor em 2 colunas na mesma linha.
- * Usa layout 30% label / 70% valor.
- * @param striped Se true, adiciona fundo cinza leve (zebra).
- */
-export function addTwoColumnRow(
-  doc: PDFKit.PDFDocument,
-  label: string,
-  value: string,
-  striped = false,
-): void {
-  const y = doc.y
-
-  if (striped) {
-    doc.rect(MARGINS.left, y - 1, CONTENT_WIDTH, ROW_HEIGHT + 2).fill('#f8fafc')
-  }
-
-  // `ellipsis` só corta quando `height` também é passado — sem isso o
-  // PDFKit ignora a truncagem e quebra o texto em quantas linhas precisar,
-  // enquanto `doc.y` avança só ROW_HEIGHT fixo: a linha seguinte é desenhada
-  // por cima do fim do texto que devia ter sido cortado. addTwoColumnRow é
-  // pra valor de uma linha só — texto que pode ser longo (JSON de campo
-  // estruturado, textarea etc.) tem que passar por addLongTextField, que
-  // mede a altura real antes de desenhar.
-  doc
-    .font('Helvetica-Bold')
-    .fontSize(8.5)
-    .fillColor(COLORS.textLight)
-    .text(label, MARGINS.left + 4, y, { width: COL_LABEL_WIDTH, height: ROW_HEIGHT, ellipsis: true })
-
-  doc
-    .font('Helvetica')
-    .fontSize(8.5)
-    .fillColor(COLORS.text)
-    .text(value || '—', MARGINS.left + COL_LABEL_WIDTH + 4, y, {
-      width: COL_VALUE_WIDTH - 8,
-      height: ROW_HEIGHT,
-      ellipsis: true,
-    })
-
-  doc.y = y + ROW_HEIGHT
-}
-
-// ─── Bloco de informações (múltiplas linhas) ─────────────────────────────────
-
-/**
- * Renderiza um array de pares label/valor em 2 colunas com fundo zebra.
- * Ideal para blocos de dados (Edital, Proponente).
- */
-export function addInfoBlock(
-  doc: PDFKit.PDFDocument,
-  rows: Array<{ label: string; value: string }>,
-): void {
-  rows.forEach((row, i) => {
-    addTwoColumnRow(doc, row.label, row.value, i % 2 === 0)
-  })
-  doc.y += 2
-}
-
-// ─── Divisor leve ────────────────────────────────────────────────────────────
-
-/** Linha divisória horizontal fina entre seções. */
-export function addDivider(doc: PDFKit.PDFDocument): void {
-  doc.y += 3
-  doc
-    .moveTo(MARGINS.left, doc.y)
-    .lineTo(PAGE_WIDTH - MARGINS.right, doc.y)
-    .strokeColor(COLORS.border)
-    .lineWidth(0.3)
-    .stroke()
-  doc.y += 4
-}
-
-// ─── Footer compacto ─────────────────────────────────────────────────────────
-
-/**
- * Footer renderizado na posição absoluta com margem desativada.
- * A margem é zerada temporariamente para blindar contra auto-page-break.
- */
-export function addCompactFooter(doc: PDFKit.PDFDocument, pageNumber: number): void {
-  // O TRUQUE DE MESTRE: Salvar a margem atual e zerar a inferior
-  const originalBottomMargin = doc.page.margins.bottom
-  doc.page.margins.bottom = 0
-
-  const lineY = 841.89 - 50 // 50 unidades do fundo (A4)
-
-  doc
-    .moveTo(MARGINS.left, lineY)
-    .lineTo(PAGE_WIDTH - MARGINS.right, lineY)
-    .strokeColor(COLORS.border)
-    .lineWidth(0.3)
-    .stroke()
-
-  const footerY = lineY + 6
-
-  const now = new Date()
-  const dateStr = now.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
-  const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' })
-
-  // Left: Geração do documento
-  doc
-    .font('Helvetica')
-    .fontSize(7)
-    .fillColor(COLORS.textLight)
-    .text(
-      `Portal PNAB Irecê — Documento gerado em ${dateStr} às ${timeStr}`,
-      MARGINS.left,
-      footerY,
-      { width: CONTENT_WIDTH, align: 'left', lineBreak: false },
-    )
-
-  // Right: Paginação
-  doc.text(`Pág. ${pageNumber}`, MARGINS.left, footerY, {
-    width: CONTENT_WIDTH,
-    align: 'right',
-    lineBreak: false,
-  })
-
-  // Retornar a margem ao normal após desenhar
-  doc.page.margins.bottom = originalBottomMargin
-}
-
-// ─── Aviso legal compacto ────────────────────────────────────────────────────
-
-/** Bloco de texto de aviso legal em fonte pequena. */
-export function addLegalNotice(doc: PDFKit.PDFDocument, text: string): void {
   doc.y += 6
-  doc.rect(MARGINS.left, doc.y, CONTENT_WIDTH, 1).fill(COLORS.border)
-  doc.y += 5
+  tarjaSecao(doc, title)
+}
 
-  doc
-    .font('Helvetica-Oblique')
-    .fontSize(7.5)
-    .fillColor(COLORS.textLight)
-    .text(text, MARGINS.left, doc.y, { width: CONTENT_WIDTH, align: 'justify' })
+/** Régua discreta entre blocos. */
+export function addDivider(doc: PDFKit.PDFDocument): void {
+  separador(doc)
+}
+
+/** Número de protocolo em destaque, na caixa rotulada do padrão oficial. */
+export function addProtocolBadge(doc: PDFKit.PDFDocument, numero: string): void {
+  caixaRotulada(doc, 'Protocolo da inscrição', 18, (x, y, largura) => {
+    doc.font(FONTES.codigo).fontSize(14).fillColor(CORES.tinta)
+      .text(numero, x, y, { width: largura, align: 'center', characterSpacing: 1 })
+  })
+}
+
+/** Nota legal ao pé do conteúdo, em serifa justificada. */
+export function addLegalNotice(doc: PDFKit.PDFDocument, text: string): void {
+  doc.y += 8
+  fio(doc, doc.y, { espessura: 0.5, cor: CORES.apoio })
+  doc.y += 7
+
+  doc.font(FONTES.corpo).fontSize(8).fillColor(CORES.texto)
+    .text(text, X_ESQUERDA, doc.y, { width: LARGURA_UTIL, align: 'justify' })
+}
+
+/** Rodapé de verificação da folha corrente. */
+export function addCompactFooter(doc: PDFKit.PDFDocument): void {
+  desenharRodape(doc)
 }

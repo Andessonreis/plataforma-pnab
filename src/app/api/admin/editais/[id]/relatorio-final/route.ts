@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db'
 import { logAudit } from '@/lib/audit'
 import { generateRelatorioFinal } from '@/lib/pdf/relatorio-final'
 import type { EditalStatus } from '@prisma/client'
+import { registrarEmissao } from '@/lib/documentos/emissao'
 
 export const runtime = 'nodejs'
 
@@ -92,7 +93,16 @@ export async function GET(req: NextRequest, context: RouteContext) {
 
     const totalAvaliados = contemplados.length + suplentes.length + naoContemplados.length
 
+    const emissao = await registrarEmissao({
+      tipo: 'RELATORIO_FINAL',
+      titulo: `Relatório final — ${edital.titulo} (${edital.ano})`,
+      editalId,
+      emitidoPorId: session.user.id,
+      conteudo: { edital: edital.titulo, ano: edital.ano },
+    })
+
     const buffer = await generateRelatorioFinal({
+      emissao,
       edital: {
         titulo: edital.titulo,
         ano: edital.ano,

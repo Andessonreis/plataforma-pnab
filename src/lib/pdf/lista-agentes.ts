@@ -5,13 +5,10 @@
  * falar com quem se cadastrou, então não é peça publicável. As colunas vêm da
  * seleção feita na exportação — o layout se ajusta às que foram pedidas.
  */
-import { createDocument, docToBuffer, MARGINS, CONTENT_WIDTH, COLORS } from './shared'
 import {
-  addCompactHeader,
   addInfoBlock,
   addDivider,
   addLegalNotice,
-  addCompactFooter,
   addCompactSection,
 } from './layout-helpers'
 import {
@@ -21,7 +18,6 @@ import {
   calculateRowHeight,
   checkPageBreak,
   type ColumnDef,
-  type PageContext,
 } from './table-helpers'
 import {
   DEFINICOES_CAMPO,
@@ -30,6 +26,9 @@ import {
   type AgenteRow,
   type CampoAgente,
 } from '@/lib/agentes/campos'
+import type { Emissao } from '@/lib/documentos/emissao'
+import { criarDocumentoOficial, finalizarDocumento } from './documento-oficial'
+import { CORES, FONTES, LARGURA_UTIL, X_ESQUERDA } from './documento-oficial/tema'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -40,6 +39,8 @@ export interface ListaAgentesData {
   filtros: Array<{ label: string; value: string }>
   campos: CampoAgente[]
   agentes: AgenteRow[]
+  /** Registro de emissão; null quando o registro falhou (o PDF sai mesmo assim). */
+  emissao?: Emissao | null
 }
 
 // ─── Colunas ─────────────────────────────────────────────────────────────────
@@ -52,7 +53,7 @@ const COLUNA_ORDEM: ColumnDef = { label: 'Nº', width: 24 }
  * exatamente na largura da página.
  */
 function montarColunas(campos: CampoAgente[]): ColumnDef[] {
-  const disponivel = CONTENT_WIDTH - COLUNA_ORDEM.width
+  const disponivel = LARGURA_UTIL - COLUNA_ORDEM.width
   const somaPesos = campos.reduce((acc, campo) => acc + DEFINICOES_CAMPO[campo].peso, 0)
 
   const colunas = campos.map((campo) => ({
@@ -71,12 +72,16 @@ function montarColunas(campos: CampoAgente[]): ColumnDef[] {
 // ─── Geração do PDF ──────────────────────────────────────────────────────────
 
 export async function generateListaAgentes(data: ListaAgentesData): Promise<Buffer> {
-  const doc = createDocument()
-  const ctx: PageContext = { pageNum: 1 }
+  const titulo = data.titulo ?? 'Agentes Culturais Cadastrados'
+  const doc = await criarDocumentoOficial({
+    rotulo: 'Agentes culturais',
+    titulo,
+    emissao: data.emissao ?? null,
+    aviso: 'Documento interno de trabalho. Relaciona dados de contato dos agentes cadastrados, '
+      + 'protegidos pela LGPD — não deve ser publicado nem compartilhado fora da Secretaria.',
+  })
   const colunas = montarColunas(data.campos)
   const total = data.agentes.length
-
-  addCompactHeader(doc, data.titulo ?? 'Agentes Culturais Cadastrados')
 
   addInfoBlock(doc, [
     ...data.filtros,
@@ -99,20 +104,17 @@ export async function generateListaAgentes(data: ListaAgentesData): Promise<Buff
       ]
       const rowHeight = calculateRowHeight(doc, colunas, values)
 
-      checkPageBreak(doc, rowHeight + 2, ctx, colunas)
-      addTableRow(doc, colunas, values, i % 2 === 0, rowHeight)
+      checkPageBreak(doc, rowHeight + 2, colunas)
+      addTableRow(doc, colunas, values, rowHeight)
     }
   }
 
   doc.y += 8
-  checkPageBreak(doc, 30, ctx)
-  doc
-    .font('Helvetica-Bold')
-    .fontSize(9)
-    .fillColor(COLORS.text)
-    .text(`Total: ${total} cadastro(s)`, MARGINS.left)
+  checkPageBreak(doc, 30)
+  doc.font(FONTES.rotulo).fontSize(9).fillColor(CORES.tinta)
+    .text(`Total: ${total} cadastro(s)`, X_ESQUERDA, doc.y, { width: LARGURA_UTIL })
 
-  checkPageBreak(doc, 60, ctx)
+  checkPageBreak(doc, 60)
   addLegalNotice(
     doc,
     'Documento interno de trabalho gerado pela plataforma Portal PNAB Irecê. ' +
@@ -121,7 +123,9 @@ export async function generateListaAgentes(data: ListaAgentesData): Promise<Buff
     'ser publicado nem compartilhado fora da Secretaria.',
   )
 
-  addCompactFooter(doc, ctx.pageNum)
-
-  return docToBuffer(doc)
+  return finalizarDocumento(doc, [
+    { rotulo: 'Documento', valor: titulo },
+    { rotulo: 'Registros', valor: String(total) },
+    { rotulo: 'Uso', valor: 'Interno — contém dados pessoais' },
+  ])
 }

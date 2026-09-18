@@ -1,4 +1,18 @@
-import { createDocument, addHeader, addFooter, addSection, docToBuffer, MARGINS, COLORS, CONTENT_WIDTH } from './shared'
+/**
+ * Resultado — preliminar ou final — de um edital.
+ *
+ * Peça de publicação: sai com o nome do proponente mascarado, no mesmo padrão
+ * das listas já publicadas pela Secretaria.
+ */
+import { maskName } from '@/lib/utils/mask'
+import {
+  addTableHeader, addTableRow, calculateRowHeight, checkPageBreak, addTableEmptyRow,
+  type ColumnDef,
+} from './table-helpers'
+import { addInfoBlock, addDivider, addCompactSection, addLegalNotice } from './layout-helpers'
+import { criarDocumentoOficial, finalizarDocumento } from './documento-oficial'
+import { CORES, FONTES, LARGURA_UTIL, X_ESQUERDA } from './documento-oficial/tema'
+import type { Emissao } from '@/lib/documentos/emissao'
 
 interface ResultadoItem {
   posicao: number
@@ -9,142 +23,90 @@ interface ResultadoItem {
 }
 
 interface ListaResultadoData {
-  edital: {
-    titulo: string
-    ano: number
-  }
-  fase: string // 'PRELIMINAR' | 'FINAL'
+  edital: { titulo: string; ano: number }
+  /** 'PRELIMINAR' ou 'FINAL'. */
+  fase: string
   resultados: ResultadoItem[]
   dataPublicacao: Date
+  /** Registro de emissão; null quando o registro falhou (o PDF sai mesmo assim). */
+  emissao?: Emissao | null
 }
 
-/**
- * Gera PDF da lista de resultados de um edital.
- */
+const COLUNAS: ColumnDef[] = [
+  { label: 'Pos.', width: 34, align: 'center' },
+  { label: 'Proponente', width: 175 },
+  { label: 'Categoria', width: 150 },
+  { label: 'Nota', width: 50, align: 'right' },
+  { label: 'Situação', width: 86.28 },
+]
+
+const SITUACAO: Record<string, string> = {
+  CONTEMPLADA: 'Contemplado(a)',
+  NAO_CONTEMPLADA: 'Não contemplado(a)',
+  SUPLENTE: 'Suplente',
+  HABILITADA: 'Habilitado(a)',
+  INABILITADA: 'Inabilitado(a)',
+}
+
 export async function generateListaResultado(data: ListaResultadoData): Promise<Buffer> {
-  const doc = createDocument()
-  let pageNum = 1
-
-  const faseLabel = data.fase === 'FINAL' ? 'Resultado Final' : 'Resultado Preliminar'
-  addHeader(doc, `${faseLabel} — ${data.edital.titulo}`)
-
-  // Info do edital
-  doc
-    .font('Helvetica')
-    .fontSize(9)
-    .fillColor(COLORS.textLight)
-    .text(`Ano: ${data.edital.ano} | Publicado em: ${data.dataPublicacao.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}`, MARGINS.left, doc.y, {
-      width: CONTENT_WIDTH,
-      align: 'center',
-    })
-
-  doc.moveDown(1)
-
-  // Tabela de resultados
-  addSection(doc, 'Classificação')
-
-  const colWidths = [30, 140, 160, 50, 115.28]
-  const headers = ['Pos.', 'Proponente', 'Categoria', 'Nota', 'Status']
-  const tableTop = doc.y + 5
-  let y = tableTop
-
-  // Header da tabela
-  doc.rect(MARGINS.left, y, CONTENT_WIDTH, 20).fill('#f1f5f9')
-  headers.forEach((header, i) => {
-    const x = MARGINS.left + colWidths.slice(0, i).reduce((a, b) => a + b, 0)
-    doc
-      .font('Helvetica-Bold')
-      .fontSize(8)
-      .fillColor(COLORS.text)
-      .text(header, x + 4, y + 5, { width: colWidths[i] - 8 })
+  const titulo = data.fase === 'FINAL' ? 'Resultado Final' : 'Resultado Preliminar'
+  const doc = await criarDocumentoOficial({
+    rotulo: 'Resultado',
+    titulo,
+    subtitulo: `${data.edital.titulo} · ${data.edital.ano}`,
+    emissao: data.emissao ?? null,
   })
 
-  y += 22
+  addInfoBlock(doc, [
+    { label: 'Edital', value: data.edital.titulo },
+    { label: 'Ano', value: String(data.edital.ano) },
+    { label: 'Fase', value: titulo },
+    {
+      label: 'Publicado em',
+      value: data.dataPublicacao.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+    },
+    { label: 'Classificados', value: String(data.resultados.length) },
+  ])
+  addDivider(doc)
 
-  // Linhas da tabela
-  for (const item of data.resultados) {
-    const values = [
-      String(item.posicao),
-      maskName(item.nome),
-      item.categoria ?? '—',
-      item.nota.toFixed(2),
-      formatStatus(item.status),
-    ]
+  addCompactSection(doc, 'Classificação')
+  addTableHeader(doc, COLUNAS)
 
-    doc.font('Helvetica').fontSize(8)
-    let maxTextHeight = 10
-    values.forEach((val, i) => {
-      const th = doc.heightOfString(val, { width: colWidths[i] - 8 })
-      if (th > maxTextHeight) maxTextHeight = th
-    })
-    const rowHeight = Math.max(18, Math.ceil(maxTextHeight) + 8)
-
-    // Nova página se necessário
-    if (y + rowHeight > doc.page.height - MARGINS.bottom - 30) {
-      addFooter(doc, pageNum)
-      pageNum++
-      doc.addPage()
-      y = MARGINS.top
-
-      // Repete header
-      doc.rect(MARGINS.left, y, CONTENT_WIDTH, 20).fill('#f1f5f9')
-      headers.forEach((header, i) => {
-        const x = MARGINS.left + colWidths.slice(0, i).reduce((a, b) => a + b, 0)
-        doc
-          .font('Helvetica-Bold')
-          .fontSize(8)
-          .fillColor(COLORS.text)
-          .text(header, x + 4, y + 5, { width: colWidths[i] - 8 })
-      })
-      y += 22
+  if (data.resultados.length === 0) {
+    addTableEmptyRow(doc, 'Nenhuma proposta classificada nesta fase.')
+  } else {
+    for (const item of data.resultados) {
+      const valores = [
+        String(item.posicao),
+        maskName(item.nome),
+        item.categoria ?? '—',
+        item.nota.toFixed(2),
+        SITUACAO[item.status] ?? item.status,
+      ]
+      const altura = calculateRowHeight(doc, COLUNAS, valores)
+      checkPageBreak(doc, altura + 2, COLUNAS)
+      addTableRow(doc, COLUNAS, valores, altura)
     }
-
-    // Fundo alternado
-    if (item.posicao % 2 === 0) {
-      doc.rect(MARGINS.left, y, CONTENT_WIDTH, rowHeight).fill('#f8fafc')
-    }
-
-    values.forEach((val, i) => {
-      const x = MARGINS.left + colWidths.slice(0, i).reduce((a, b) => a + b, 0)
-      doc
-        .font('Helvetica')
-        .fontSize(8)
-        .fillColor(COLORS.text)
-        .text(val, x + 4, y + 4, { width: colWidths[i] - 8 })
-    })
-
-    y += rowHeight
   }
 
-  // Total
-  doc.moveDown(1)
-  doc
-    .font('Helvetica-Bold')
-    .fontSize(9)
-    .fillColor(COLORS.text)
-    .text(`Total de inscrições classificadas: ${data.resultados.length}`, MARGINS.left)
+  doc.y += 8
+  checkPageBreak(doc, 30)
+  doc.font(FONTES.rotulo).fontSize(9).fillColor(CORES.tinta)
+    .text(`Total de propostas classificadas: ${data.resultados.length}`, X_ESQUERDA, doc.y, {
+      width: LARGURA_UTIL,
+    })
 
-  addFooter(doc, pageNum)
+  checkPageBreak(doc, 60)
+  addLegalNotice(
+    doc,
+    'Lista oficial gerada pela plataforma Portal PNAB Irecê, com os dados registrados no sistema '
+    + 'na data de geração. Os nomes são publicados de forma parcial, conforme a LGPD. '
+    + 'Para contestações e recursos, consulte os prazos estabelecidos no edital.',
+  )
 
-  return docToBuffer(doc)
-}
-
-/**
- * Mascara parcialmente o nome (LGPD).
- */
-function maskName(name: string): string {
-  const parts = name.split(' ')
-  if (parts.length <= 1) return name
-  return `${parts[0]} ${'*'.repeat(3)} ${parts[parts.length - 1]}`
-}
-
-function formatStatus(status: string): string {
-  const map: Record<string, string> = {
-    CONTEMPLADA: 'Contemplado(a)',
-    NAO_CONTEMPLADA: 'Não Contemplado(a)',
-    SUPLENTE: 'Suplente',
-    HABILITADA: 'Habilitado(a)',
-    INABILITADA: 'Inabilitado(a)',
-  }
-  return map[status] ?? status
+  return finalizarDocumento(doc, [
+    { rotulo: 'Documento', valor: titulo },
+    { rotulo: 'Edital', valor: `${data.edital.titulo} (${data.edital.ano})` },
+    { rotulo: 'Classificados', valor: String(data.resultados.length) },
+  ])
 }
