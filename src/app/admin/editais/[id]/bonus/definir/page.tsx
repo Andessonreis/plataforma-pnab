@@ -57,6 +57,17 @@ export default async function DefinirBonusPage({ params }: Props) {
   if (isAdmin && !edital.bonusVisivelParaAdmin) notFound()
 
   const config = parseItensBonus(edital.itensBonus)
+
+  // O Anexo VI do Festival traz gênero feminino e LGBTQIA+ como um item único
+  // de 5 pontos ("gênero feminino ou LGBTQIA+"). Eles aparecem separados aqui
+  // por decisão da coordenação, para a comissão registrar qual condição vale —
+  // mas marcar os dois soma 10, e quem marca precisa saber disso na hora.
+  const temGeneroSeparado =
+    config?.itens.some((i) => i.key === 'genero_feminino') &&
+    config?.itens.some((i) => i.key === 'lgbtqia')
+  const avisoEdital = temGeneroSeparado
+    ? 'O Anexo VI publicado descreve gênero feminino e LGBTQIA+ como um único item de 5 pontos ("agentes culturais do gênero feminino ou LGBTQIA+"). Eles estão separados aqui para registrar qual condição se aplica; marcar os dois soma 10 pontos e exige fundamentação em ata da comissão.'
+    : undefined
   const categoriasConfig = Array.isArray(edital.categoriasConfig)
     ? (edital.categoriasConfig as unknown as CategoriaConfig[])
     : null
@@ -77,6 +88,7 @@ export default async function DefinirBonusPage({ params }: Props) {
 
   const linhas: InscricaoParaBonus[] = inscricoes.map((i) => ({
     inscricaoId: i.id,
+    editalId: id,
     numero: i.numero,
     proponenteNome: i.proponente.nome,
     categoria: i.categoria,
@@ -109,7 +121,12 @@ export default async function DefinirBonusPage({ params }: Props) {
 
       {config ? (
         <Card padding="md">
-          <DefinirBonusTable linhas={linhas} itens={config.itens} maxItens={config.maxItens} />
+          <DefinirBonusTable
+            linhas={linhas}
+            itens={config.itens}
+            maxItens={config.maxItens}
+            avisoEdital={avisoEdital}
+          />
         </Card>
       ) : (
         <Card padding="md">

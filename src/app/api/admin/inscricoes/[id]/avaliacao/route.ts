@@ -10,6 +10,7 @@ import { temAcessoEdital } from '@/lib/edital-acesso'
 import { gateAcaoFase } from '@/lib/edital/gate'
 import { resultadoPreliminarConsolidado } from '@/lib/results/consolidacao'
 import { STATUS_BLOQUEADO_PARA_AVALIADOR } from '@/lib/services/avaliacao-buckets'
+import { avaliacaoBloqueadaParaAvaliador, MENSAGEM_AVALIACAO_ENCERRADA } from '@/lib/edital/avaliacao-encerrada'
 import type { UserRole } from '@prisma/client'
 
 export const runtime = 'nodejs'
@@ -69,7 +70,15 @@ export async function GET(
     const inscricao = await prisma.inscricao.findUnique({
       where: { id },
       include: {
-        edital: { select: { id: true, status: true, criteriosAvaliacao: true, formulaAvaliacao: true } },
+        edital: {
+          select: {
+            id: true,
+            status: true,
+            criteriosAvaliacao: true,
+            formulaAvaliacao: true,
+            avaliacaoEncerradaEm: true,
+          },
+        },
         avaliacoes: {
           where: { avaliadorId: session.user.id },
           select: {
@@ -126,10 +135,16 @@ export async function GET(
 
     // Só o avaliador dono, com avaliação finalizada, e só enquanto o edital
     // não tiver resultado preliminar consolidado (ver reabrir/route.ts).
+    const avaliacaoEncerrada = avaliacaoBloqueadaParaAvaliador(
+      inscricao.edital.avaliacaoEncerradaEm,
+      isAdminCaller,
+    )
+
     const podeReabrir =
       !isAdminCaller &&
       session.user.role === 'AVALIADOR' &&
       avaliacao?.finalizada === true &&
+      !avaliacaoEncerrada &&
       !(await resultadoPreliminarConsolidado(inscricao.edital.id, inscricao.edital.status))
 
     const res = NextResponse.json({
@@ -138,6 +153,7 @@ export async function GET(
       inscricaoStatus: inscricao.status,
       formulaAvaliacao: inscricao.edital.formulaAvaliacao ?? null,
       podeReabrir,
+      avaliacaoEncerrada,
     })
     res.headers.set('X-Request-Id', requestId)
     res.headers.set('Cache-Control', 'no-store')
@@ -194,6 +210,7 @@ export async function PUT(
             status: true,
             formulaAvaliacao: true,
             criteriosAvaliacao: true,
+            avaliacaoEncerradaEm: true,
           },
         },
       },
@@ -203,6 +220,17 @@ export async function PUT(
       const res = NextResponse.json(
         { error: 'NOT_FOUND', message: 'Inscrição não encontrada.', requestId },
         { status: 404 },
+      )
+      res.headers.set('X-Request-Id', requestId)
+      res.headers.set('Cache-Control', 'no-store')
+      return res
+    }
+
+    const isAdminCaller = ['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)
+    if (avaliacaoBloqueadaParaAvaliador(inscricao.edital.avaliacaoEncerradaEm, isAdminCaller)) {
+      const res = NextResponse.json(
+        { error: 'LOCKED', message: MENSAGEM_AVALIACAO_ENCERRADA, requestId },
+        { status: 422 },
       )
       res.headers.set('X-Request-Id', requestId)
       res.headers.set('Cache-Control', 'no-store')

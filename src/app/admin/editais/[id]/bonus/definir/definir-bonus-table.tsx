@@ -9,6 +9,8 @@ interface Props {
   linhas: InscricaoParaBonus[]
   itens: ItemBonusConfig[]
   maxItens: number | null
+  /** Texto do edital exibido acima da tabela, quando houver regra a lembrar. */
+  avisoEdital?: string
 }
 
 type Filtro = 'todas' | 'com-bonus' | 'sem-bonus'
@@ -19,7 +21,7 @@ const FILTROS: { valor: Filtro; label: string }[] = [
   { valor: 'sem-bonus', label: 'Sem bônus' },
 ]
 
-export function DefinirBonusTable({ linhas, itens, maxItens }: Props) {
+export function DefinirBonusTable({ linhas, itens, maxItens, avisoEdital }: Props) {
   const [busca, setBusca] = useState('')
   const [filtro, setFiltro] = useState<Filtro>('todas')
 
@@ -39,6 +41,11 @@ export function DefinirBonusTable({ linhas, itens, maxItens }: Props) {
 
   return (
     <div className="space-y-3">
+      {avisoEdital && (
+        <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
+          {avisoEdital}
+        </p>
+      )}
       <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
         <div className="relative sm:max-w-sm w-full">
           <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />

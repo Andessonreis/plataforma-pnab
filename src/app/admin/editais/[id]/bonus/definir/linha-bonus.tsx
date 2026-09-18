@@ -7,6 +7,7 @@ import type { ItemBonusConfig } from '@/types/bonus-config'
 
 export interface InscricaoParaBonus {
   inscricaoId: string
+  editalId: string
   numero: string
   proponenteNome: string
   categoria: string | null
@@ -67,14 +68,22 @@ export function LinhaDefinirBonus({ linha, itens, maxItens }: Props) {
   return (
     <tr className="border-t border-slate-100 align-top">
       <td className="py-3 px-3">
+        {/* Leva pra inscrição inteira: é onde a comissão confere os anexos de
+            autodeclaração antes de marcar o bônus — não dá pra validar item de
+            bonificação sem olhar o documento que o proponente enviou. */}
         <Link
-          href={`/admin/inscricoes/${linha.inscricaoId}`}
-          className="font-mono text-xs text-brand-600 hover:text-brand-700"
+          href={`/admin/inscricoes/${linha.inscricaoId}?from=bonus&editalId=${linha.editalId}`}
+          className="group block focus-visible:outline-2 rounded"
         >
-          {linha.numero}
+          <span className="font-mono text-xs text-brand-600 group-hover:text-brand-700">
+            {linha.numero}
+          </span>
+          <span className="block text-sm font-medium text-slate-900 mt-0.5 group-hover:text-brand-700 group-hover:underline">
+            {linha.proponenteNome}
+          </span>
+          <span className="block text-xs text-slate-500">{linha.categoria ?? '—'}</span>
         </Link>
-        <p className="text-sm font-medium text-slate-900 mt-0.5">{linha.proponenteNome}</p>
-        <p className="text-xs text-slate-500">{linha.categoria ?? '—'}</p>
+        <span className="block text-[11px] text-slate-400 mt-1">Abrir inscrição e anexos</span>
       </td>
       <td className="py-3 px-3">
         {linha.evidencias.length === 0 ? (

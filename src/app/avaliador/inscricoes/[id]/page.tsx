@@ -42,6 +42,7 @@ export default async function AvaliadorInscricaoDetailPage({ params }: Props) {
         select: {
           titulo: true, slug: true, ano: true, status: true,
           criteriosAvaliacao: true, formulaAvaliacao: true,
+            avaliacaoEncerradaEm: true,
           camposFormulario: true, etapasCustomizadas: true,
         },
       },
@@ -79,8 +80,11 @@ export default async function AvaliadorInscricaoDetailPage({ params }: Props) {
   // Avaliação existente do usuário (pode não existir ainda — será criada no primeiro submit)
   const minhaAvaliacao = inscricao.avaliacoes.find((a) => a.avaliadorId === session.user.id)
 
+  const avaliacaoEncerrada = inscricao.edital.avaliacaoEncerradaEm != null
+
   const podeReabrir =
     minhaAvaliacao?.finalizada === true &&
+    !avaliacaoEncerrada &&
     !(await resultadoPreliminarConsolidado(inscricao.editalId, inscricao.edital.status))
 
   const campos = (inscricao.campos && typeof inscricao.campos === 'object') ? inscricao.campos as Record<string, unknown> : {}
@@ -232,6 +236,7 @@ export default async function AvaliadorInscricaoDetailPage({ params }: Props) {
           }
           formulaAvaliacao={inscricao.edital.formulaAvaliacao}
           podeReabrir={podeReabrir}
+          avaliacaoEncerrada={avaliacaoEncerrada}
         />
       ) : (
         <ForaDaFaseAlert

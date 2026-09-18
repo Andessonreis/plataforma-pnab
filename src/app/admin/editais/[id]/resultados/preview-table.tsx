@@ -10,10 +10,12 @@ interface Props {
   mostraCategoria: boolean
   getFaixa: (r: PreviewRow, index: number) => Faixa
   getPos: (r: PreviewRow, index: number) => number
+  /** Abre as colunas de média e bonificação além da nota final. */
+  mostraBonus?: boolean
 }
 
 /** Tabela desktop (lg+) da prévia de ranking. */
-export function PreviewTable({ rows, mostraFaixa, decimals, mostraCategoria, getFaixa, getPos }: Props) {
+export function PreviewTable({ rows, mostraFaixa, decimals, mostraCategoria, getFaixa, getPos, mostraBonus = false }: Props) {
   return (
     <div className="hidden lg:block overflow-x-auto">
       <table className="w-full text-sm">
@@ -23,7 +25,13 @@ export function PreviewTable({ rows, mostraFaixa, decimals, mostraCategoria, get
             <th className="text-left py-3 px-4 font-semibold text-slate-600">Proponente</th>
             {mostraCategoria && <th className="text-left py-3 px-4 font-semibold text-slate-600">Categoria</th>}
             <th className="text-left py-3 px-4 font-semibold text-slate-600">Avaliações</th>
-            <th className="text-left py-3 px-4 font-semibold text-slate-600">Nota final (prévia)</th>
+            {mostraBonus && (
+              <>
+                <th className="text-right py-3 px-4 font-semibold text-slate-600">Média</th>
+                <th className="text-right py-3 px-4 font-semibold text-slate-600">Bônus</th>
+              </>
+            )}
+            <th className="text-right py-3 px-4 font-semibold text-slate-600">Nota final (prévia)</th>
             {mostraFaixa && (
               <th className="text-left py-3 px-4 font-semibold text-slate-600">Faixa simulada</th>
             )}
@@ -61,7 +69,19 @@ export function PreviewTable({ rows, mostraFaixa, decimals, mostraCategoria, get
                     </span>
                   )}
                 </td>
-                <td className="py-3 px-4">
+                {mostraBonus && (
+                  <>
+                    <td className="py-3 px-4 text-right tabular-nums text-slate-600">
+                      {semAval ? '—' : r.notaBase.toFixed(decimals)}
+                    </td>
+                    <td className="py-3 px-4 text-right tabular-nums">
+                      {r.notaBonus > 0
+                        ? <span className="font-medium text-emerald-700">+{r.notaBonus.toFixed(0)}</span>
+                        : <span className="text-slate-300">—</span>}
+                    </td>
+                  </>
+                )}
+                <td className="py-3 px-4 text-right">
                   <span className="font-semibold text-slate-900 tabular-nums">
                     {semAval ? '—' : r.notaFinal.toFixed(decimals)}
                   </span>

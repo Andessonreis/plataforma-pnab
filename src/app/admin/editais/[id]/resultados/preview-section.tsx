@@ -1,71 +1,56 @@
-import { prisma } from '@/lib/db'
-import { calculateResults } from '@/lib/results/calculate'
-import { alocarVagasCategoria } from '@/lib/results/alocar-cotas'
+import { montarClassificacao } from '@/lib/results/classificacao'
 import type { CategoriaConfig } from '@/types/categoria-config'
 import { ResultadosPreview, type PreviewRow, type VagasConfig } from './resultados-preview'
-
-const CONFIG_SEM_VAGAS_DISCRETAS = (nome: string | null): CategoriaConfig => ({
-  nome: nome ?? '—',
-  vagasAmplaConcorrencia: null,
-  cotas: [],
-  valorPorProjeto: null,
-  valorTotalCategoria: 0,
-})
 
 interface Props {
   editalId: string
   vagas: VagasConfig
   categoriasConfig: CategoriaConfig[] | null
   hasFormula: boolean
+  /**
+   * Quando true, a prévia ranqueia com a bonificação somada (é o que a
+   * publicação faz). Fora isso mostra só a média dos pareceristas — o efeito
+   * do bônus não pode vazar antes de a Secretaria liberar o painel.
+   */
+  incluirBonus?: boolean
 }
 
-/** Ranking-prévia: notas calculadas ao vivo, antes de publicar. */
-export async function PreviewSection({ editalId, vagas, categoriasConfig, hasFormula }: Props) {
-  const preview = await calculateResults(editalId)
-  const infos = await prisma.inscricao.findMany({
-    where: { id: { in: preview.map((p) => p.inscricaoId) } },
-    select: { id: true, numero: true, _count: { select: { avaliacoes: true } } },
+/**
+ * Ranking-prévia: notas calculadas ao vivo, antes de publicar.
+ *
+ * O cálculo vem de `montarClassificacao`, o mesmo que alimenta o PDF baixado —
+ * tela e documento não podem divergir.
+ */
+export async function PreviewSection({ editalId, vagas, categoriasConfig, hasFormula, incluirBonus = false }: Props) {
+  const categorias = await montarClassificacao(editalId, {
+    incluirBonus,
+    notaMinima: vagas.notaMinima,
+    maxSuplentes: vagas.suplentes,
+    categoriasConfig,
   })
-  const infoMap = new Map(infos.map((i) => [i.id, { numero: i.numero, atribuidos: i._count.avaliacoes }]))
 
-  // Com vagas por categoria: pré-calcula a mesma alocação (ampla + cotas +
-  // remanejamento) que seria salva ao publicar, pra mostrar a faixa simulada correta.
-  const statusPorInscricao = new Map<string, { status: string; posicaoCategoria: number }>()
-  if (categoriasConfig && categoriasConfig.length > 0) {
-    const porCategoria = new Map<string | null, typeof preview>()
-    for (const p of preview) {
-      if (!porCategoria.has(p.categoria)) porCategoria.set(p.categoria, [])
-      porCategoria.get(p.categoria)!.push(p)
-    }
-    for (const [categoria, grupo] of porCategoria) {
-      const config = categoriasConfig.find((c) => c.nome === categoria) ?? CONFIG_SEM_VAGAS_DISCRETAS(categoria)
-      const alocacao = alocarVagasCategoria(
-        grupo.map((p) => ({
-          inscricaoId: p.inscricaoId,
-          notaFinal: p.notaFinal,
-          totalAvaliacoes: p.totalAvaliacoes,
-          cotasOptIn: p.cotasOptIn ?? [],
-        })),
-        config,
-        vagas.notaMinima,
-        vagas.suplentes,
-      )
-      for (const a of alocacao) statusPorInscricao.set(a.inscricaoId, a)
-    }
-  }
+  const usaCategorias = categoriasConfig != null && categoriasConfig.length > 0
 
-  const rows: PreviewRow[] = preview.map((p) => ({
-    inscricaoId: p.inscricaoId,
-    numero: infoMap.get(p.inscricaoId)?.numero ?? '',
-    proponenteNome: p.proponenteNome,
-    categoria: p.categoria,
-    notaFinal: p.notaFinal,
-    finalizadas: p.totalAvaliacoes,
-    atribuidos: infoMap.get(p.inscricaoId)?.atribuidos ?? p.totalAvaliacoes,
-    empatado: !!(p.empatados && p.empatados.length > 0),
-    statusPrevia: statusPorInscricao.get(p.inscricaoId)?.status as PreviewRow['statusPrevia'],
-    posicaoCategoria: statusPorInscricao.get(p.inscricaoId)?.posicaoCategoria,
-  }))
+  const rows: PreviewRow[] = categorias.flatMap((c) =>
+    c.linhas.map((l) => ({
+      inscricaoId: l.inscricaoId,
+      numero: l.numero,
+      proponenteNome: l.proponenteNome,
+      categoria: c.nome === '—' ? null : c.nome,
+      notaBase: l.notaBase,
+      notaBonus: l.notaBonus,
+      notaFinal: l.notaFinal,
+      finalizadas: l.finalizadas,
+      atribuidos: l.atribuidos,
+      empatado: l.empatado,
+      statusPrevia: usaCategorias ? l.status : undefined,
+      posicaoCategoria: usaCategorias ? l.posicao : undefined,
+    })),
+  )
 
-  return <ResultadosPreview rows={rows} vagas={vagas} hasFormula={hasFormula} />
+  // Sem vagas por categoria o ranking é único no edital inteiro, então a ordem
+  // volta a ser global por nota.
+  if (!usaCategorias) rows.sort((a, b) => b.notaFinal - a.notaFinal)
+
+  return <ResultadosPreview rows={rows} vagas={vagas} hasFormula={hasFormula} mostraBonus={incluirBonus} />
 }

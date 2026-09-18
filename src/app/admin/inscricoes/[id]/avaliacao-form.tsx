@@ -44,6 +44,8 @@ interface AvaliacaoFormProps {
   overrideMode?: boolean
   /** Avaliação finalizada + edital ainda sem resultado preliminar consolidado */
   podeReabrir?: boolean
+  /** Secretaria encerrou o lançamento de nota — só trava o parecerista */
+  avaliacaoEncerrada?: boolean
 }
 
 function notaColor(nota: number): string {
@@ -73,6 +75,7 @@ export function AvaliacaoForm({
   formulaAvaliacao,
   overrideMode = false,
   podeReabrir = false,
+  avaliacaoEncerrada = false,
 }: AvaliacaoFormProps) {
   const hasFormula = !!formulaAvaliacao
   const router = useRouter()
@@ -110,7 +113,7 @@ export function AvaliacaoForm({
   const total = hasFormula
     ? calculateTotal(notas as NotaAvaliacao[], criterios as CriterioAvaliacao[], formulaAvaliacao)
     : calcTotalWeighted(notas)
-  const isLocked = finalizada && !isAdmin
+  const isLocked = (finalizada || avaliacaoEncerrada) && !isAdmin
 
   const grupos = useMemo(() => {
     const map: Record<string, Array<CriterioConfig & { originalIndex: number }>> = {}

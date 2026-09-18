@@ -3,6 +3,11 @@ export interface PreviewRow {
   numero: string
   proponenteNome: string
   categoria: string | null
+  /** Média dos pareceristas, sem bonificação. */
+  notaBase: number
+  /** Pontos de bonificação validados pela comissão (0 quando o viewer não pode vê-los). */
+  notaBonus: number
+  /** notaBase + notaBonus quando o bônus é visível; só a média caso contrário. */
   notaFinal: number
   finalizadas: number
   atribuidos: number

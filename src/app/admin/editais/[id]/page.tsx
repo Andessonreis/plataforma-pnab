@@ -22,6 +22,7 @@ import { editalStatusLabel, editalStatusVariant } from '@/lib/status-maps'
 import { formatCurrency } from '@/lib/utils/format'
 import { marcosEditaveis, retificacoesOrdenadas } from '@/lib/utils/retificacao'
 import { GerarListasModal } from '../gerar-listas-modal'
+import { ToggleAvaliacaoButton } from './toggle-avaliacao-button'
 import { RelatorioFinalButton } from './relatorio-final-button'
 import { AvancarFasePanel } from './avancar-fase-panel'
 import { RetificacaoPanel } from './retificacao-panel'
@@ -186,6 +187,10 @@ export default async function EditalOverviewPage({ params }: Props) {
               Nota Bônus
             </Link>
           )}
+          <ToggleAvaliacaoButton
+            editalId={edital.id}
+            encerradaEm={edital.avaliacaoEncerradaEm?.toISOString() ?? null}
+          />
           <GerarListasModal editalId={edital.id} editalTitulo={edital.titulo} editalStatus={status} />
           {statusFinal.includes(status) && <RelatorioFinalButton editalId={edital.id} />}
         </div>
