@@ -6,7 +6,8 @@ import { prisma } from '@/lib/db'
 import { Card } from '@/components/ui'
 import { calculateResults } from '@/lib/results/calculate'
 import type { CategoriaConfig } from '@/types/categoria-config'
-import { montarLinhasBonus, agregarPorCota } from './aggregate'
+import { parseItensBonus } from '@/types/bonus-config'
+import { montarLinhasBonus, agregarPorItem } from './aggregate'
 import { BonusTable } from './bonus-table'
 import { BonusChart } from './bonus-chart'
 import { ToggleBonusButton } from './toggle-bonus-button'
@@ -36,7 +37,14 @@ export default async function BonusPage({ params }: Props) {
 
   const edital = await prisma.edital.findUnique({
     where: { id },
-    select: { id: true, titulo: true, ano: true, categoriasConfig: true, bonusVisivelParaAdmin: true },
+    select: {
+      id: true,
+      titulo: true,
+      ano: true,
+      categoriasConfig: true,
+      itensBonus: true,
+      bonusVisivelParaAdmin: true,
+    },
   })
   if (!edital) notFound()
 
@@ -47,9 +55,10 @@ export default async function BonusPage({ params }: Props) {
     ? (edital.categoriasConfig as unknown as CategoriaConfig[])
     : null
 
+  const itensBonus = parseItensBonus(edital.itensBonus)
   const resultados = await calculateResults(id, { incluirBonus: true })
-  const linhas = montarLinhasBonus(resultados, categoriasConfig)
-  const agregadoPorCota = agregarPorCota(linhas)
+  const linhas = montarLinhasBonus(resultados, categoriasConfig, itensBonus)
+  const agregado = agregarPorItem(linhas)
   const totalBonus = Math.round(linhas.reduce((acc, l) => acc + l.notaBonus, 0) * 100) / 100
 
   return (
@@ -63,13 +72,23 @@ export default async function BonusPage({ params }: Props) {
             Nota Bônus — {edital.titulo} ({edital.ano})
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Cálculo em tempo real, a partir das cotas autodeclaradas e das avaliações já finalizadas —
+            Cálculo em tempo real, a partir da bonificação registrada e das avaliações já finalizadas —
             independe de consolidar/publicar resultado.
           </p>
         </div>
-        {isSuperAdmin && (
-          <ToggleBonusButton editalId={id} visivel={edital.bonusVisivelParaAdmin} />
-        )}
+        <div className="flex items-center gap-2">
+          {itensBonus && (
+            <Link
+              href={`/admin/editais/${id}/bonus/definir`}
+              className="text-sm font-medium px-3 py-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50"
+            >
+              Definir bonificação
+            </Link>
+          )}
+          {isSuperAdmin && (
+            <ToggleBonusButton editalId={id} visivel={edital.bonusVisivelParaAdmin} />
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -82,18 +101,18 @@ export default async function BonusPage({ params }: Props) {
           <p className="text-2xl font-bold text-emerald-700 mt-1">+{totalBonus.toFixed(2)}</p>
         </Card>
         <Card padding="md">
-          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Cotas com bônus configurado</p>
-          <p className="text-2xl font-bold text-slate-900 mt-1">{agregadoPorCota.length}</p>
+          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Itens de bonificação em uso</p>
+          <p className="text-2xl font-bold text-slate-900 mt-1">{agregado.length}</p>
         </Card>
       </div>
 
       <Card padding="md">
-        <h2 className="text-sm font-semibold text-slate-800 mb-3">Pontos por cota</h2>
-        {agregadoPorCota.length > 0 ? (
-          <BonusChart dados={agregadoPorCota} />
+        <h2 className="text-sm font-semibold text-slate-800 mb-3">Pontos por item</h2>
+        {agregado.length > 0 ? (
+          <BonusChart dados={agregado} />
         ) : (
           <p className="text-sm text-slate-500 py-6 text-center">
-            Nenhuma cota com pontos configurados ainda para este edital.
+            Nenhuma bonificação com pontos registrada ainda para este edital.
           </p>
         )}
       </Card>

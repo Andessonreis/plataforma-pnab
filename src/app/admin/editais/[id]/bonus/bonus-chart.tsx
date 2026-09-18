@@ -1,13 +1,13 @@
 'use client'
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import type { CotaAgregada } from './aggregate'
+import type { BonusAgregado } from './aggregate'
 
 interface Props {
-  dados: CotaAgregada[]
+  dados: BonusAgregado[]
 }
 
-/** Total de pontos bônus concedidos, agrupado por cota. */
+/** Total de pontos bônus concedidos, agrupado por item de bonificação. */
 export function BonusChart({ dados }: Props) {
   if (dados.length === 0) return null
 

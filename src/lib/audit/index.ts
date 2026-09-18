@@ -44,6 +44,9 @@ export const AUDIT_ACTIONS = {
   // Super admin — visibilidade da nota bônus
   BONUS_VISIBILIDADE_ALTERADA: 'BONUS_VISIBILIDADE_ALTERADA',
 
+  // Comissão — itens de bonificação validados por inscrição
+  BONUS_ITENS_ALTERADOS: 'BONUS_ITENS_ALTERADOS',
+
   // Admin — conteúdo
   NOTICIA_CRIADA: 'NOTICIA_CRIADA',
   NOTICIA_ATUALIZADA: 'NOTICIA_ATUALIZADA',
@@ -151,6 +154,7 @@ export const ACTION_LABELS: Record<string, string> = {
   MEMBRO_EDITAL_ADICIONADO: 'Membro adicionado ao edital',
   MEMBRO_EDITAL_REMOVIDO: 'Membro removido do edital',
   BONUS_VISIBILIDADE_ALTERADA: 'Visibilidade da nota bônus alterada',
+  BONUS_ITENS_ALTERADOS: 'Itens de bonificação da inscrição alterados',
   NOTICIA_CRIADA: 'Notícia criada',
   NOTICIA_ATUALIZADA: 'Notícia atualizada',
   NOTICIA_EXCLUIDA: 'Notícia excluída',

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { montarLinhasBonus, agregarPorCota } from '../aggregate'
+import { montarLinhasBonus, agregarPorItem } from '../aggregate'
 import type { ResultadoInscricao } from '@/lib/results/calculate'
 import type { CategoriaConfig } from '@/types/categoria-config'
 
@@ -46,7 +46,7 @@ describe('montarLinhasBonus', () => {
       notaBase: 7,
       notaBonus: 0.5,
       notaComBonus: 7.5,
-      cotas: [{ key: 'negros', label: 'Cotas Pessoas Negras', pontos: 0.5 }],
+      itens: [{ key: 'negros', label: 'Cotas Pessoas Negras', pontos: 0.5 }],
     })
   })
 
@@ -55,7 +55,7 @@ describe('montarLinhasBonus', () => {
       resultado({ inscricaoId: 'i1', cotasOptIn: ['negros', 'pcd'], notaFinal: 7.8, notaBonus: 0.8 }),
     ]
     const linhas = montarLinhasBonus(resultados, categoriasConfig)
-    expect(linhas[0].cotas).toHaveLength(2)
+    expect(linhas[0].itens).toHaveLength(2)
   })
 
   it('ordena por bônus descendente', () => {
@@ -67,7 +67,7 @@ describe('montarLinhasBonus', () => {
     expect(linhas[0].inscricaoId).toBe('alto')
   })
 
-  it('categoria sem config conhecida não quebra — cotas ficam vazias', () => {
+  it('categoria sem config conhecida não quebra — itens ficam vazios', () => {
     const resultados = [
       resultado({ categoria: 'Inexistente', cotasOptIn: ['negros'], notaBonus: 0.5 }),
     ]
@@ -75,8 +75,41 @@ describe('montarLinhasBonus', () => {
   })
 })
 
-describe('agregarPorCota', () => {
-  it('soma pontos e conta inscrições por cota', () => {
+describe('montarLinhasBonus com itens de bonificação do edital', () => {
+  const itensBonus = {
+    maxItens: 2,
+    itens: [
+      { key: 'genero_lgbtqia', label: 'Gênero feminino ou LGBTQIA+', pontos: 5 },
+      { key: 'etnico_racial', label: 'Negros e indígenas', pontos: 5 },
+    ],
+  }
+
+  it('resolve a origem dos pontos por bonusItens, ignorando as cotas', () => {
+    const resultados = [
+      resultado({
+        inscricaoId: 'i1',
+        cotasOptIn: ['negros'],
+        bonusItens: ['etnico_racial'],
+        notaFinal: 90,
+        notaBonus: 5,
+      }),
+    ]
+    const linhas = montarLinhasBonus(resultados, categoriasConfig, itensBonus)
+    expect(linhas[0].itens).toEqual([
+      { key: 'etnico_racial', label: 'Negros e indígenas', pontos: 5 },
+    ])
+  })
+
+  it('item marcado que não existe mais na config do edital não vira linha', () => {
+    const resultados = [
+      resultado({ inscricaoId: 'i1', bonusItens: ['removido'], notaFinal: 90, notaBonus: 5 }),
+    ]
+    expect(montarLinhasBonus(resultados, categoriasConfig, itensBonus)[0].itens).toEqual([])
+  })
+})
+
+describe('agregarPorItem', () => {
+  it('soma pontos e conta inscrições por item', () => {
     const linhas = montarLinhasBonus(
       [
         resultado({ inscricaoId: 'i1', cotasOptIn: ['negros'], notaFinal: 7.5, notaBonus: 0.5 }),
@@ -85,7 +118,7 @@ describe('agregarPorCota', () => {
       ],
       categoriasConfig,
     )
-    const agregado = agregarPorCota(linhas)
+    const agregado = agregarPorItem(linhas)
     expect(agregado).toEqual([
       { key: 'negros', label: 'Cotas Pessoas Negras', inscricoes: 2, totalPontos: 1 },
       { key: 'pcd', label: 'PCD', inscricoes: 1, totalPontos: 0.3 },
@@ -93,6 +126,6 @@ describe('agregarPorCota', () => {
   })
 
   it('lista vazia → agregado vazio', () => {
-    expect(agregarPorCota([])).toEqual([])
+    expect(agregarPorItem([])).toEqual([])
   })
 })
