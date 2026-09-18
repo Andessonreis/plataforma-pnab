@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
-import { calcularBonusCotas, encontrarCategoriaConfig } from '../bonus'
+import { calcularBonusCotas, calcularBonusItens, encontrarCategoriaConfig } from '../bonus'
 import type { CategoriaConfig } from '@/types/categoria-config'
+import type { ItensBonusConfig } from '@/types/bonus-config'
 
 const categoriaConfig: CategoriaConfig = {
   nome: 'Música I',
@@ -57,5 +58,49 @@ describe('encontrarCategoriaConfig', () => {
     expect(encontrarCategoriaConfig(configs, 'Inexistente')).toBeUndefined()
     expect(encontrarCategoriaConfig(null, 'Música I')).toBeUndefined()
     expect(encontrarCategoriaConfig(configs, null)).toBeUndefined()
+  })
+})
+
+describe('calcularBonusItens', () => {
+  const config: ItensBonusConfig = {
+    maxItens: 2,
+    itens: [
+      { key: 'genero_lgbtqia', label: 'Gênero feminino ou LGBTQIA+', pontos: 5 },
+      { key: 'etnico_racial', label: 'Negros e indígenas', pontos: 5 },
+      { key: 'pcd', label: 'Pessoa com deficiência', pontos: 5 },
+    ],
+  }
+
+  it('soma os itens validados pela comissão', () => {
+    expect(calcularBonusItens(['genero_lgbtqia', 'etnico_racial'], config)).toBe(10)
+  })
+
+  it('respeita o teto de itens do edital, mantendo os de maior pontuação', () => {
+    const pesos: ItensBonusConfig = {
+      maxItens: 2,
+      itens: [
+        { key: 'a', label: 'A', pontos: 2 },
+        { key: 'b', label: 'B', pontos: 5 },
+        { key: 'c', label: 'C', pontos: 3 },
+      ],
+    }
+    expect(calcularBonusItens(['a', 'b', 'c'], pesos)).toBe(8)
+  })
+
+  it('sem teto configurado soma tudo', () => {
+    expect(calcularBonusItens(['genero_lgbtqia', 'etnico_racial', 'pcd'], { ...config, maxItens: null })).toBe(15)
+  })
+
+  it('chave repetida conta uma vez só', () => {
+    expect(calcularBonusItens(['pcd', 'pcd'], config)).toBe(5)
+  })
+
+  it('chave fora da config do edital não soma', () => {
+    expect(calcularBonusItens(['inexistente'], config)).toBe(0)
+  })
+
+  it('sem itens marcados ou sem config → 0', () => {
+    expect(calcularBonusItens([], config)).toBe(0)
+    expect(calcularBonusItens(['pcd'], null)).toBe(0)
   })
 })

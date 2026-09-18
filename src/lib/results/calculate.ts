@@ -9,8 +9,9 @@ import {
   type NotaAvaliacao,
 } from './formula'
 import { alocarVagasCategoria } from './alocar-cotas'
-import { calcularBonusCotas, encontrarCategoriaConfig } from './bonus'
+import { calcularBonusCotas, calcularBonusItens, encontrarCategoriaConfig } from './bonus'
 import type { CategoriaConfig } from '@/types/categoria-config'
+import { parseItensBonus } from '@/types/bonus-config'
 
 export interface ResultadoInscricao {
   inscricaoId: string
@@ -18,9 +19,10 @@ export interface ResultadoInscricao {
   proponenteNome: string
   categoria: string | null
   cotasOptIn?: string[]
+  bonusItens?: string[]
   notaFinal: number
-  // Pontos de cota já somados dentro de notaFinal quando `incluirBonus` foi
-  // usado em calculateResults — guardado à parte só pra exibição/auditoria.
+  // Pontos de bonificação já somados dentro de notaFinal quando `incluirBonus`
+  // foi usado em calculateResults — guardado à parte só pra exibição/auditoria.
   notaBonus: number
   totalAvaliacoes: number
   empatados?: string[]
@@ -28,7 +30,8 @@ export interface ResultadoInscricao {
 
 export interface CalculateResultsOptions {
   /**
-   * Quando true, soma a nota bônus das cotas (calcularBonusCotas) em cima da
+   * Quando true, soma a nota bônus (itens validados pela comissão ou cotas
+   * autodeclaradas — ver bonus.ts) em cima da
    * média dos avaliadores antes de ordenar/ranquear — é o que a publicação de
    * resultado sempre usa. Quando false/omitido (padrão da prévia visível a
    * qualquer ADMIN), notaFinal fica só com a média dos avaliadores, sem bônus
@@ -55,7 +58,12 @@ export async function calculateResults(
   // Busca critérios do edital
   const edital = await prisma.edital.findUnique({
     where: { id: editalId },
-    select: { criteriosAvaliacao: true, formulaAvaliacao: true, categoriasConfig: true },
+    select: {
+      criteriosAvaliacao: true,
+      formulaAvaliacao: true,
+      categoriasConfig: true,
+      itensBonus: true,
+    },
   })
 
   if (!edital) throw new Error(`Edital ${editalId} não encontrado`)
@@ -64,6 +72,7 @@ export async function calculateResults(
   const categoriasConfig = Array.isArray(edital.categoriasConfig)
     ? (edital.categoriasConfig as unknown as CategoriaConfig[])
     : null
+  const itensBonus = parseItensBonus(edital.itensBonus)
 
   // Busca inscrições avaliadas
   const inscricoes = await prisma.inscricao.findMany({
@@ -83,8 +92,12 @@ export async function calculateResults(
   const resultados: ResultadoInscricao[] = []
 
   for (const inscricao of inscricoes) {
+    // Edital com itens de bonificação próprios usa o que a comissão validou;
+    // os demais seguem no bônus colado na cota autodeclarada.
     const categoriaConfig = encontrarCategoriaConfig(categoriasConfig, inscricao.categoria)
-    const notaBonus = calcularBonusCotas(inscricao.cotasOptIn, categoriaConfig)
+    const notaBonus = itensBonus
+      ? calcularBonusItens(inscricao.bonusItens, itensBonus)
+      : calcularBonusCotas(inscricao.cotasOptIn, categoriaConfig)
 
     if (inscricao.avaliacoes.length === 0) {
       // Sem avaliações finalizadas — nota 0 (bônus não se aplica sem avaliação)
@@ -94,6 +107,7 @@ export async function calculateResults(
         proponenteNome: inscricao.proponente.nome,
         categoria: inscricao.categoria,
         cotasOptIn: inscricao.cotasOptIn,
+        bonusItens: inscricao.bonusItens,
         notaFinal: 0,
         notaBonus,
         totalAvaliacoes: 0,
@@ -120,6 +134,7 @@ export async function calculateResults(
       proponenteNome: inscricao.proponente.nome,
       categoria: inscricao.categoria,
       cotasOptIn: inscricao.cotasOptIn,
+      bonusItens: inscricao.bonusItens,
       notaFinal: Math.round(notaFinal * 100) / 100,
       notaBonus,
       totalAvaliacoes: inscricao.avaliacoes.length,

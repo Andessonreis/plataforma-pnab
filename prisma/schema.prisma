@@ -270,6 +270,10 @@ model Edital {
   // só como rótulo, sem corte por categoria no resultado).
   // [{ nome, vagasAmplaConcorrencia: number|null, cotas: [{key,label,vagas}], valorPorProjeto: number|null, valorTotalCategoria: number }]
   categoriasConfig          Json?
+  // Itens de bonificação do edital (pontuação extra somada UMA vez sobre a
+  // média dos avaliadores, nunca dentro da nota de cada um).
+  // { maxItens: number|null, itens: [{key,label,pontos}] }
+  itensBonus                Json?
   acoesAfirmativas          String?
   regrasElegibilidade       String?
   // Tipos de proponente aceitos (vazio = todos): PF, MEI, PJ, COLETIVO
@@ -353,6 +357,10 @@ model Inscricao {
   categoria          String?
   // Chaves das cotas (edital.categoriasConfig[].cotas[].key) que o proponente optou por concorrer
   cotasOptIn         String[]        @default([])
+  // Chaves dos itens de bonificação (edital.itensBonus.itens[].key) que a
+  // comissão validou para esta inscrição, a partir das autodeclarações.
+  // Decisão da comissão, não do parecerista — ver notaBonus.
+  bonusItens         String[]        @default([])
   // Campos dinâmicos preenchidos pelo proponente
   campos             Json            @default("{}")
   orcamento          Json?
