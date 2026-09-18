@@ -14,6 +14,10 @@ import { prisma } from '@/lib/db'
 import { CRITERIOS_AVALIACAO_PADRAO } from '@/lib/avaliacao-criterios'
 
 const mockPrisma = vi.mocked(prisma)
+const prismaMock = mockPrisma as unknown as {
+  edital: { findUnique: ReturnType<typeof vi.fn> }
+  inscricao: { findMany: ReturnType<typeof vi.fn> }
+}
 
 describe('calculateWeightedAverage', () => {
   const criterios = [
@@ -729,5 +733,77 @@ describe('saveManualOrder', () => {
 
     await expect(saveManualOrder('edital-1', ['inexistente']))
       .rejects.toThrow('não pertence ao edital')
+  })
+})
+
+describe('detecção de empate', () => {
+  const criterios = [{ criterio: 'A', peso: 1, notaMax: 10 }]
+
+  function inscricao(id: string, categoria: string | null, nota: number, finalizadas = 1) {
+    return {
+      id, numero: id, categoria, cotasOptIn: [], bonusItens: [],
+      proponente: { nome: id },
+      avaliacoes: Array.from({ length: finalizadas }, () => ({
+        notas: [{ criterio: 'A', nota }], notaTotal: nota,
+      })),
+    }
+  }
+
+  function mockEdital(categoriasConfig: unknown) {
+    prismaMock.edital.findUnique.mockResolvedValue({
+      criteriosAvaliacao: criterios, formulaAvaliacao: null,
+      categoriasConfig, itensBonus: null,
+    })
+  }
+
+  it('com vagas por categoria, nota igual em categorias diferentes NÃO é empate', async () => {
+    mockEdital([
+      { nome: 'Música', vagasAmplaConcorrencia: 1, cotas: [], valorPorProjeto: null, valorTotalCategoria: 0 },
+      { nome: 'Teatro', vagasAmplaConcorrencia: 1, cotas: [], valorPorProjeto: null, valorTotalCategoria: 0 },
+    ])
+    prismaMock.inscricao.findMany.mockResolvedValue([
+      inscricao('musica', 'Música', 8),
+      inscricao('teatro', 'Teatro', 8),
+    ])
+
+    const r = await calculateResults('e1')
+    expect(r.find((x) => x.inscricaoId === 'musica')?.empatados).toBeUndefined()
+    expect(r.find((x) => x.inscricaoId === 'teatro')?.empatados).toBeUndefined()
+  })
+
+  it('com vagas por categoria, nota igual na MESMA categoria é empate', async () => {
+    mockEdital([
+      { nome: 'Música', vagasAmplaConcorrencia: 1, cotas: [], valorPorProjeto: null, valorTotalCategoria: 0 },
+    ])
+    prismaMock.inscricao.findMany.mockResolvedValue([
+      inscricao('a', 'Música', 8),
+      inscricao('b', 'Música', 8),
+    ])
+
+    const r = await calculateResults('e1')
+    expect(r.find((x) => x.inscricaoId === 'a')?.empatados).toEqual(['b'])
+    expect(r.find((x) => x.inscricaoId === 'b')?.empatados).toEqual(['a'])
+  })
+
+  it('sem vagas por categoria, o ranking é único e nota igual empata', async () => {
+    mockEdital(null)
+    prismaMock.inscricao.findMany.mockResolvedValue([
+      inscricao('a', 'Música', 8),
+      inscricao('b', 'Teatro', 8),
+    ])
+
+    const r = await calculateResults('e1')
+    expect(r.find((x) => x.inscricaoId === 'a')?.empatados).toEqual(['b'])
+  })
+
+  it('quem não tem avaliação finalizada não entra em empate', async () => {
+    mockEdital(null)
+    prismaMock.inscricao.findMany.mockResolvedValue([
+      inscricao('sem1', 'Música', 0, 0),
+      inscricao('sem2', 'Música', 0, 0),
+    ])
+
+    const r = await calculateResults('e1')
+    expect(r.every((x) => x.empatados === undefined)).toBe(true)
   })
 })
