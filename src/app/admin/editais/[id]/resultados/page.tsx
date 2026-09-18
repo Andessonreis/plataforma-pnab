@@ -6,6 +6,8 @@ import { editalStatusLabel } from '@/lib/status-maps'
 import { ResultActions } from './result-actions'
 import { PreviewSection } from './preview-section'
 import { PublishedResults } from './published-results'
+import { AutoAtualizar } from './auto-atualizar'
+import { BaixarClassificacao } from './baixar-classificacao'
 import type { CategoriaConfig } from '@/types/categoria-config'
 
 interface Props {
@@ -48,6 +50,11 @@ export default async function AdminResultadosPage({ params }: Props) {
   const temAvaliacoes =
     (await prisma.avaliacao.count({ where: { inscricao: { editalId: id }, finalizada: true } })) > 0
 
+  // Mesmo portão do painel de nota bônus: o efeito da bonificação no ranking
+  // não aparece para quem ainda não pode vê-la.
+  const podeVerBonus =
+    session.user.role === 'SUPER_ADMIN' || edital.bonusVisivelParaAdmin
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -62,6 +69,10 @@ export default async function AdminResultadosPage({ params }: Props) {
             Resultados — {edital.titulo} ({edital.ano})
           </h1>
           <p className="text-sm text-slate-500 mt-1">Status: {editalStatusLabel[edital.status]}</p>
+        </div>
+        <div className="flex flex-col sm:items-end gap-2">
+          <BaixarClassificacao editalId={id} />
+          {!consolidado && <AutoAtualizar />}
         </div>
       </div>
 
@@ -90,6 +101,7 @@ export default async function AdminResultadosPage({ params }: Props) {
           }}
           categoriasConfig={categoriasConfig}
           hasFormula={!!edital.formulaAvaliacao}
+          incluirBonus={podeVerBonus}
         />
       )}
     </div>

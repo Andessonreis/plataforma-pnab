@@ -10,9 +10,10 @@ interface Props {
   rows: PreviewRow[]
   vagas: VagasConfig
   hasFormula: boolean
+  mostraBonus?: boolean
 }
 
-export function ResultadosPreview({ rows, vagas, hasFormula }: Props) {
+export function ResultadosPreview({ rows, vagas, hasFormula, mostraBonus = false }: Props) {
   const usaCategorias = rows.some((r) => r.posicaoCategoria != null)
   const mostraFaixa = usaCategorias || vagas.contemplados != null || vagas.notaMinima != null
   const decimals = hasFormula ? 2 : 2
@@ -44,6 +45,7 @@ export function ResultadosPreview({ rows, vagas, hasFormula }: Props) {
                 mostraCategoria={false}
                 getFaixa={(r) => faixaPorCategoria(r, vagas)}
                 getPos={(r) => r.posicaoCategoria ?? 0}
+                mostraBonus={mostraBonus}
               />
               <PreviewTable
                 rows={grupo}
@@ -52,6 +54,7 @@ export function ResultadosPreview({ rows, vagas, hasFormula }: Props) {
                 mostraCategoria={false}
                 getFaixa={(r) => faixaPorCategoria(r, vagas)}
                 getPos={(r) => r.posicaoCategoria ?? 0}
+                mostraBonus={mostraBonus}
               />
             </div>
           ))
@@ -74,6 +77,7 @@ export function ResultadosPreview({ rows, vagas, hasFormula }: Props) {
             mostraCategoria
             getFaixa={(r, index) => faixa(index + 1, r.notaFinal, r.finalizadas, vagas)}
             getPos={(_r, index) => index + 1}
+            mostraBonus={mostraBonus}
           />
           <PreviewTable
             rows={rows}
@@ -82,6 +86,7 @@ export function ResultadosPreview({ rows, vagas, hasFormula }: Props) {
             mostraCategoria
             getFaixa={(r, index) => faixa(index + 1, r.notaFinal, r.finalizadas, vagas)}
             getPos={(_r, index) => index + 1}
+            mostraBonus={mostraBonus}
           />
         </div>
       )}

@@ -10,10 +10,11 @@ interface Props {
   mostraCategoria: boolean
   getFaixa: (r: PreviewRow, index: number) => Faixa
   getPos: (r: PreviewRow, index: number) => number
+  mostraBonus?: boolean
 }
 
 /** Cards empilhados (< lg) da prévia de ranking — mesmas colunas da tabela desktop. */
-export function PreviewMobileCards({ rows, mostraFaixa, decimals, mostraCategoria, getFaixa, getPos }: Props) {
+export function PreviewMobileCards({ rows, mostraFaixa, decimals, mostraCategoria, getFaixa, getPos, mostraBonus = false }: Props) {
   return (
     <div className="lg:hidden space-y-3 p-3">
       {rows.map((r, index) => {
@@ -41,6 +42,11 @@ export function PreviewMobileCards({ rows, mostraFaixa, decimals, mostraCategori
               </>
             }
             nota={semAval ? '—' : r.notaFinal.toFixed(decimals)}
+            notaDetalhe={
+              mostraBonus && !semAval && r.notaBonus > 0
+                ? `${r.notaBase.toFixed(decimals)} + ${r.notaBonus.toFixed(0)} de bônus`
+                : undefined
+            }
             status={mostraFaixa ? <FaixaBadge faixa={f} /> : undefined}
             detailsHref={`/admin/inscricoes/${r.inscricaoId}`}
             muted={semAval}

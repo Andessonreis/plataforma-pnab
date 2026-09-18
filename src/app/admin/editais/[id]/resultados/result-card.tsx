@@ -10,6 +10,8 @@ interface ResultCardProps {
   categoria?: string | null
   avaliacoes: ReactNode
   nota: ReactNode
+  /** Linha fina sob a nota: composição do cálculo (média + bônus). */
+  notaDetalhe?: string
   status?: ReactNode
   detailsHref: string
   /** Inscrição ainda sem avaliação finalizada — reduz ênfase visual do card. */
@@ -29,6 +31,7 @@ export function ResultCard({
   categoria,
   avaliacoes,
   nota,
+  notaDetalhe,
   status,
   detailsHref,
   muted,
@@ -54,7 +57,10 @@ export function ResultCard({
 
       <div className="flex items-center justify-between gap-2 text-sm mb-2.5">
         <div className="text-slate-600">{avaliacoes}</div>
-        <div className="font-semibold text-slate-900 tabular-nums shrink-0">{nota}</div>
+        <div className="shrink-0 text-right">
+          <div className="font-semibold text-slate-900 tabular-nums">{nota}</div>
+          {notaDetalhe && <div className="text-[11px] text-slate-500 tabular-nums">{notaDetalhe}</div>}
+        </div>
       </div>
 
       <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100">
