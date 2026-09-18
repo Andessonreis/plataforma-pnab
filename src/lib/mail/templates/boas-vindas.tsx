@@ -34,7 +34,7 @@ export function BoasVindas({ nome, url }: BoasVindasData) {
       <CtaButton href={url} label="Acessar minha área" />
       <Text style={{ ...styles.paragraph, fontSize: '13px', color: colors.textMuted }}>
         Se você não criou esta conta, ignore este e-mail ou entre em contato com a
-        Secretaria de Arte e Cultura para verificarmos.
+        Secretaria de Cultura e Turismo para verificarmos.
       </Text>
     </Layout>
   )

@@ -349,7 +349,7 @@ function addSignatureBlock(doc: PDFKit.PDFDocument, ctx: PageContext): void {
     .font('Helvetica-Bold')
     .fontSize(9)
     .fillColor(COLORS.text)
-    .text('Secretário(a) de Arte e Cultura', MARGINS.left, doc.y, {
+    .text('Secretário(a) de Cultura e Turismo', MARGINS.left, doc.y, {
       width: CONTENT_WIDTH,
       align: 'center',
     })
