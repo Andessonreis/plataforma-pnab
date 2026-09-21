@@ -5,7 +5,11 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { logAudit } from '@/lib/audit'
 import { gateAcaoFase } from '@/lib/edital/gate'
-import { temAcessoEdital } from '@/lib/edital-acesso'
+import {
+  ROLES_HABILITACAO,
+  MENSAGEM_FORA_DA_EQUIPE,
+  acessoHabilitacaoPermitido,
+} from '@/lib/edital/acesso-habilitacao'
 import type { UserRole } from '@prisma/client'
 
 export const runtime = 'nodejs'
@@ -36,8 +40,6 @@ const habilitacaoSchema = z.object({
   },
 )
 
-const ROLES_PERMITIDOS: UserRole[] = ['HABILITADOR', 'SUPER_ADMIN', 'ADMIN']
-
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -47,7 +49,7 @@ export async function PUT(
 
   try {
     const session = await auth()
-    if (!session || !ROLES_PERMITIDOS.includes(session.user.role as UserRole)) {
+    if (!session || !ROLES_HABILITACAO.includes(session.user.role as UserRole)) {
       const res = NextResponse.json(
         { error: 'FORBIDDEN', message: 'Acesso negado.', requestId },
         { status: 403 },
@@ -82,29 +84,21 @@ export async function PUT(
     }
 
     // ── Escopo por equipe — HABILITADOR só age em editais aos quais está atribuído ──
-    if (session.user.role === 'HABILITADOR') {
-      const temAcesso = await temAcessoEdital(session.user.id, inscricao.editalId, 'HABILITADOR')
-      if (!temAcesso) {
-        await logAudit({
-          userId: session.user.id,
-          action: 'HABILITACAO_ACESSO_NEGADO',
-          entity: 'Inscricao',
-          entityId: id,
-          details: {
-            editalId: inscricao.editalId,
-            motivo: 'Usuário não pertence à equipe de habilitação deste edital.',
-          },
-          ip: req.headers.get('x-forwarded-for') ?? undefined,
-        })
-
-        const res = NextResponse.json(
-          { error: 'FORBIDDEN', message: 'Você não está atribuído à equipe de habilitação deste edital.', requestId },
-          { status: 403 },
-        )
-        res.headers.set('X-Request-Id', requestId)
-        res.headers.set('Cache-Control', 'no-store')
-        return res
-      }
+    const dentroDoEscopo = await acessoHabilitacaoPermitido({
+      userId: session.user.id,
+      role: session.user.role as UserRole,
+      editalId: inscricao.editalId,
+      alvo: { entity: 'Inscricao', id },
+      ip: req.headers.get('x-forwarded-for') ?? undefined,
+    })
+    if (!dentroDoEscopo) {
+      const res = NextResponse.json(
+        { error: 'FORBIDDEN', message: MENSAGEM_FORA_DA_EQUIPE, requestId },
+        { status: 403 },
+      )
+      res.headers.set('X-Request-Id', requestId)
+      res.headers.set('Cache-Control', 'no-store')
+      return res
     }
 
     const body = await req.json()
