@@ -33,9 +33,10 @@ export interface ListaInscricoesData {
   emissao?: Emissao | null
 }
 
-function tituloDe(data: ListaInscricoesData): string {
+export function tituloDe(data: ListaInscricoesData): string {
   if (data.tituloDocumento) return data.tituloDocumento
   if (data.status === 'ENVIADA') return 'Relação de Inscritos'
+  if (data.status === 'HABILITADA') return 'Relação Definitiva de Habilitados'
   if (data.status === 'RASCUNHO') return 'Relação de Inscrições em Rascunho'
   return `Relação de Inscrições — ${data.statusLabel}`
 }
