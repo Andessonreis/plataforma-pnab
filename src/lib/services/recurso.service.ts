@@ -2,13 +2,8 @@ import { prisma } from '@/lib/db'
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
 import { respostaRecursoLiberada } from '@/lib/edital/fase'
 import { enqueueEmail } from '@/lib/queue'
+import { siteBaseUrl } from '@/lib/utils/site-url'
 import { ServiceError } from './errors'
-
-const SITE_URL_FALLBACK = 'https://culturaeturismo.irece.ba.gov.br'
-
-function siteBaseUrl(): string {
-  return (process.env.NEXT_PUBLIC_SITE_URL || SITE_URL_FALLBACK).replace(/\/$/, '')
-}
 
 /** Notifica os admins ativos que um novo recurso foi interposto. */
 async function notifyEquipeRecursoSubmetido(inscricaoId: string, editalTitulo: string, fase: string) {
