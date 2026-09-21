@@ -1,5 +1,10 @@
-import { describe, it, expect } from 'vitest'
-import { gerarCodigo, hashConteudo, urlVerificacao } from '../emissao'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { descartarEmissao, gerarCodigo, hashConteudo, urlVerificacao } from '../emissao'
+import { prisma } from '@/lib/db'
+
+vi.mock('@/lib/db', () => ({ prisma: { documentoEmitido: { deleteMany: vi.fn() } } }))
+
+const mockDeleteMany = vi.mocked(prisma.documentoEmitido.deleteMany)
 
 describe('gerarCodigo', () => {
   it('sai no formato PNAB-XXXX-XXXX', () => {
@@ -64,5 +69,29 @@ describe('urlVerificacao', () => {
     process.env.NEXT_PUBLIC_SITE_URL = 'https://exemplo.gov.br/'
     expect(urlVerificacao('PNAB-ABCD-2345')).toBe('https://exemplo.gov.br/verificar/PNAB-ABCD-2345')
     process.env.NEXT_PUBLIC_SITE_URL = anterior
+  })
+})
+
+describe('descartarEmissao', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('apaga o registro pelo código', async () => {
+    mockDeleteMany.mockResolvedValue({ count: 1 })
+
+    await descartarEmissao('PNAB-ABCD-2345')
+
+    expect(mockDeleteMany).toHaveBeenCalledWith({ where: { codigo: 'PNAB-ABCD-2345' } })
+  })
+
+  it('falha ao apagar não propaga e é registrada sem dado pessoal', async () => {
+    const erroLog = vi.spyOn(console, 'error').mockImplementation(() => {})
+    mockDeleteMany.mockRejectedValue(new Error('conexão perdida'))
+
+    await expect(descartarEmissao('PNAB-ABCD-2345')).resolves.toBeUndefined()
+
+    expect(erroLog).toHaveBeenCalledWith({ escopo: 'descartarEmissao', erro: 'conexão perdida' })
+    erroLog.mockRestore()
   })
 })

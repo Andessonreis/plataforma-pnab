@@ -132,3 +132,18 @@ export async function registrarEmissao(input: RegistrarEmissaoInput): Promise<Em
   console.error({ escopo: 'registrarEmissao', erro: 'três colisões de código seguidas' })
   return null
 }
+
+/**
+ * Apaga a emissão de um documento que não chegou a ser gerado.
+ *
+ * Sem isso o código continuaria valendo na página de verificação sem que
+ * exista PDF algum. Falha na limpeza só é registrada: não pode mascarar o erro
+ * que levou ao descarte.
+ */
+export async function descartarEmissao(codigo: string): Promise<void> {
+  try {
+    await prisma.documentoEmitido.deleteMany({ where: { codigo } })
+  } catch (err) {
+    console.error({ escopo: 'descartarEmissao', erro: err instanceof Error ? err.message : 'desconhecido' })
+  }
+}
