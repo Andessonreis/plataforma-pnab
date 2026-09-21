@@ -15,7 +15,7 @@ import { isAcaoPublicacao, isAcaoResultado } from '@/types/cronograma'
 // POS_RECURSOS: mesma fonte; a diferença é o momento (snapshot pós-decisão
 // dos recursos — quem foi inabilitado mas teve recurso provido aparece
 // como HABILITADA aqui).
-const PUBLICACAO_STATUS_FILTER: Record<AcaoPublicacao, InscricaoStatus[]> = {
+export const PUBLICACAO_STATUS_FILTER: Record<AcaoPublicacao, InscricaoStatus[]> = {
   PUBLICACAO_INSCRITOS: [
     'ENVIADA',
     'HABILITADA',
