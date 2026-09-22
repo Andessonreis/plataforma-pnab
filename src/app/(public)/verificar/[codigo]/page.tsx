@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { prisma } from '@/lib/db'
-import { TIPOS_DOCUMENTO, type TipoDocumento } from '@/lib/documentos/emissao'
+import { NOME_DO_TIPO, type TipoDocumento } from '@/lib/documentos/titulos'
 
 interface Props {
   params: Promise<{ codigo: string }>
@@ -68,7 +68,7 @@ export default async function VerificarDocumentoPage({ params }: Props) {
     )
   }
 
-  const rotuloTipo = TIPOS_DOCUMENTO[documento.tipo as TipoDocumento] ?? documento.tipo
+  const rotuloTipo = NOME_DO_TIPO[documento.tipo as TipoDocumento] ?? documento.tipo
   const metadados = (documento.metadados ?? {}) as Record<string, unknown>
   const linhas = Object.entries(metadados).filter(([, v]) => v !== null && v !== undefined)
 

@@ -4,22 +4,15 @@
  * O recorte muda com o status: lista de resultado leva nota e posição, lista de
  * inabilitados leva o motivo, e a de rascunhos leva telefone — é documento
  * interno de contato, a Secretaria usa pra ligar pra quem não concluiu.
+ *
+ * Sem PDFKit: as duas versões de layout montam a tabela a partir do que sai
+ * daqui, então a largura de cada coluna e o texto de cada célula são os mesmos.
  */
 import { formatTelefoneBR } from '@/lib/utils/format'
 import { maskCpfCnpjParcial } from '@/lib/utils/mask'
-import { LARGURA_UTIL } from '../documento-oficial/tema'
-import type { ColumnDef } from '../table-helpers'
-
-export interface ListaInscricoesItem {
-  posicao: number
-  numero: string
-  nome: string
-  cpfCnpj: string
-  categoria: string | null
-  telefone: string | null
-  notaFinal: number | null
-  motivoInabilitacao: string | null
-}
+import { LARGURA_UTIL } from '@/lib/pdf/documento-oficial/tema'
+import type { ColumnDef } from '@/lib/pdf/table-helpers'
+import type { ListaInscricoesItem } from './tipos'
 
 /** Status que exibem nota final e posição de classificação. */
 export const STATUS_COM_NOTA = new Set(['CONTEMPLADA', 'NAO_CONTEMPLADA', 'SUPLENTE'])

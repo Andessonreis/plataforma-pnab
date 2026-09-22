@@ -7,7 +7,10 @@
  * o Diário Oficial do Município de Irecê, que é onde esses documentos acabam
  * publicados ou anexados.
  */
-export { CORES, FONTES, PAGINA, LARGURA_UTIL, X_ESQUERDA, X_DIREITA, LIMITE_CONTEUDO, fio, dataHora, dataPorExtenso } from './tema'
+export {
+  CORES, FONTES, PAGINA, LARGURA_UTIL, X_ESQUERDA, X_DIREITA, LIMITE_CONTEUDO,
+  NOME_ORGAO, fio, dataHora, dataPorExtenso,
+} from './tema'
 export { MARCAS, PROPORCAO, carregarMarca, gerarQrCode } from './assets'
 export { tarjaSecao, caixaRotulada, linhaDado, separador } from './blocos'
 export { contextoDe, type DocumentoOficial } from './contexto'

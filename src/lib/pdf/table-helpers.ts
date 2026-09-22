@@ -145,3 +145,34 @@ export function addTableEmptyRow(doc: PDFKit.PDFDocument, texto: string): void {
 
   doc.y = y + altura
 }
+
+/**
+ * Corpo da tabela: mede cada linha, quebra a página quando ela não cabe e
+ * repete o cabeçalho na folha nova. Sem registros, desenha a linha única de
+ * `textoVazio`; sem `textoVazio`, não desenha nada.
+ */
+export function addTableRows(
+  doc: PDFKit.PDFDocument,
+  columns: ColumnDef[],
+  rows: string[][],
+  textoVazio?: string,
+): void {
+  if (rows.length === 0) {
+    if (textoVazio) addTableEmptyRow(doc, textoVazio)
+    return
+  }
+
+  for (const values of rows) {
+    const altura = calculateRowHeight(doc, columns, values)
+    checkPageBreak(doc, altura + 2, columns)
+    addTableRow(doc, columns, values, altura)
+  }
+}
+
+/** Total em destaque ao pé da tabela. */
+export function addTableTotal(doc: PDFKit.PDFDocument, texto: string): void {
+  doc.y += 8
+  checkPageBreak(doc, 30)
+  doc.font(FONTES.rotulo).fontSize(9).fillColor(CORES.tinta)
+    .text(texto, X_ESQUERDA, doc.y, { width: LARGURA_UTIL })
+}

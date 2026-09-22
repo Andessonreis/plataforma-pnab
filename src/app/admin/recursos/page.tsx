@@ -5,6 +5,7 @@ import { auth } from '@/lib/auth'
 import { notFound } from 'next/navigation'
 import { Card, Badge, Pagination, Button, EmptyState, FadeIn, IconClipboard } from '@/components/ui'
 import { formatDate } from '@/lib/utils/format'
+import { recursoDecisaoLabel } from '@/lib/status-maps'
 
 export const metadata: Metadata = {
   title: 'Recursos — Portal PNAB Irecê',
@@ -41,8 +42,8 @@ function statusInfo(
   if (decisao) {
     const por = decididoPor === 'ADMIN' ? ' · Secretaria' : decididoPor === 'CONSENSO' ? ' · consenso' : ''
     return decisao === 'DEFERIDO'
-      ? { label: `Deferido${por}`, variant: 'success' }
-      : { label: `Indeferido${por}`, variant: 'error' }
+      ? { label: `${recursoDecisaoLabel.DEFERIDO}${por}`, variant: 'success' }
+      : { label: `${recursoDecisaoLabel.INDEFERIDO}${por}`, variant: 'error' }
   }
   if (totalAvaliadores > 0 && respostas.length >= totalAvaliadores) {
     const todasIguais = respostas.every((r) => r.decisao === respostas[0].decisao)
@@ -237,7 +238,7 @@ export default async function AdminRecursosPage({ searchParams }: Props) {
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-sm font-medium text-slate-900">{resp.avaliador.nome}</span>
                             <Badge variant={resp.decisao === 'DEFERIDO' ? 'success' : 'error'}>
-                              {resp.decisao === 'DEFERIDO' ? 'Deferido' : 'Indeferido'}
+                              {recursoDecisaoLabel[resp.decisao] ?? resp.decisao}
                             </Badge>
                           </div>
                           <p className="text-sm text-slate-700 whitespace-pre-wrap break-words">{resp.justificativa}</p>

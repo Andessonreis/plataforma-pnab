@@ -13,43 +13,16 @@ import { addLegalNotice } from './layout-helpers'
 import { criarDocumentoOficial, finalizarDocumento, garantirEspaco } from './documento-oficial'
 import { tarjaSecao } from './documento-oficial/blocos'
 import { CORES, FONTES, PAGINA, LARGURA_UTIL, X_ESQUERDA } from './documento-oficial/tema'
-import type { Emissao } from '@/lib/documentos/emissao'
+import type {
+  CategoriaClassificacao, LinhaClassificacao, ListaClassificacaoData,
+} from './modelo/tipos'
 
-export interface LinhaClassificacao {
-  posicao: number
-  numero: string
-  proponente: string
-  notaBase: number
-  notaBonus: number
-  notaFinal: number
-  cotista: boolean
-  status: 'CONTEMPLADA' | 'SUPLENTE' | 'NAO_CONTEMPLADA'
-  semAvaliacao: boolean
-}
-
-export interface CategoriaClassificacao {
-  nome: string
-  vagasAmplaConcorrencia: number | null
-  cotas: { label: string; vagas: number }[]
-  valorPorProjeto: number | null
-  linhas: LinhaClassificacao[]
-}
-
-export interface ListaClassificacaoData {
-  edital: { titulo: string; ano: number }
-  categorias: CategoriaClassificacao[]
-  /** Falso enquanto o resultado não foi consolidado — carimba a marca d'água. */
-  consolidado: boolean
-  mostraBonus: boolean
-  geradoEm: Date
-  /** Registro de emissão; null quando o registro falhou (o PDF sai mesmo assim). */
-  emissao: Emissao | null
-}
+export type { CategoriaClassificacao, LinhaClassificacao, ListaClassificacaoData }
 
 const SITUACAO: Record<LinhaClassificacao['status'], string> = {
-  CONTEMPLADA: 'Contemplada',
+  CONTEMPLADA: 'Classificado',
   SUPLENTE: 'Suplente',
-  NAO_CONTEMPLADA: 'Não contemplada',
+  NAO_CONTEMPLADA: 'Desclassificado',
 }
 
 const AVISO_PREVIA =

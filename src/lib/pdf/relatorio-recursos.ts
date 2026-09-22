@@ -23,36 +23,13 @@ import {
   checkPageBreak,
   type ColumnDef,
 } from './table-helpers'
-import type { Emissao } from '@/lib/documentos/emissao'
 import { criarDocumentoOficial, finalizarDocumento } from './documento-oficial'
 import { CORES, FONTES, LARGURA_UTIL, X_ESQUERDA } from './documento-oficial/tema'
+import type { RelatorioRecursosData, RelatorioRecursosItem } from './modelo/tipos'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
-export interface RelatorioRecursosItem {
-  posicao: number
-  /** Protocolo da inscrição a que o recurso se refere. */
-  numero: string
-  nome: string
-  cpfCnpj: string
-  protocoladoEm: Date
-  /** Deferido, Indeferido ou Em análise. */
-  situacao: string
-}
-
-export interface RelatorioRecursosData {
-  edital: { titulo: string; ano: number }
-  /** Etapa do cronograma a que o prazo recursal se refere. */
-  etapa: string
-  /** Janela de interposição prevista no cronograma; nula se o edital não fixa. */
-  prazo: { inicio: Date; fim: Date } | null
-  /** Universo considerado na etapa (ex.: inscrições enviadas). */
-  totalInscricoes: number
-  labelTotalInscricoes: string
-  recursos: RelatorioRecursosItem[]
-  /** Registro de emissão; null quando o registro falhou (o PDF sai mesmo assim). */
-  emissao?: Emissao | null
-}
+export type { RelatorioRecursosData, RelatorioRecursosItem }
 
 // ─── Colunas ─────────────────────────────────────────────────────────────────
 
@@ -101,7 +78,7 @@ function descreverSituacaoPrazo(prazo: RelatorioRecursosData['prazo']): string {
 export async function generateRelatorioRecursos(data: RelatorioRecursosData): Promise<Buffer> {
   const doc = await criarDocumentoOficial({
     rotulo: 'Recursos',
-    titulo: 'Relatório de Recursos Interpostos',
+    titulo: `Relatório de Recursos Interpostos - ${data.etapa}`,
     subtitulo: `${data.edital.titulo} · ${data.edital.ano}`,
     emissao: data.emissao ?? null,
   })
@@ -141,7 +118,7 @@ export async function generateRelatorioRecursos(data: RelatorioRecursosData): Pr
   checkPageBreak(doc, 60)
   addCompactSection(doc, 'Conclusão')
   doc.font(FONTES.corpo).fontSize(9.5).fillColor(CORES.texto)
-    .text(conclusao(data.etapa, data.prazo, total), X_ESQUERDA, doc.y, {
+    .text(conclusao(data), X_ESQUERDA, doc.y, {
       width: LARGURA_UTIL, align: 'justify', lineGap: 2,
     })
 
@@ -164,11 +141,8 @@ export async function generateRelatorioRecursos(data: RelatorioRecursosData): Pr
 
 // ─── Helpers privados ────────────────────────────────────────────────────────
 
-function conclusao(
-  etapa: string,
-  prazo: RelatorioRecursosData['prazo'],
-  total: number,
-): string {
+export function conclusao({ etapa, prazo, recursos, foraDoPrazo = 0 }: RelatorioRecursosData): string {
+  const total = recursos.length
   const janela = prazo
     ? ` — de ${formatData(prazo.inicio)} a ${formatDataPorExtenso(prazo.fim)} —`
     : ''
@@ -180,10 +154,11 @@ function conclusao(
     )
   }
 
-  return (
-    `No prazo recursal previsto no cronograma do edital para a etapa "${etapa}"${janela}, ` +
-    `foram registrados ${total} recurso(s), relacionados acima.`
-  )
+  const abertura = foraDoPrazo > 0
+    ? `Encerrado o prazo recursal previsto no cronograma do edital para a etapa "${etapa}"`
+    : `No prazo recursal previsto no cronograma do edital para a etapa "${etapa}"`
+  const ressalva = foraDoPrazo > 0 ? `, dos quais ${foraDoPrazo} protocolado(s) fora desse prazo` : ''
+  return `${abertura}${janela}, foram registrados ${total} recurso(s), relacionados acima${ressalva}.`
 }
 
 function buildRowValues(item: RelatorioRecursosItem): string[] {

@@ -15,6 +15,9 @@ export const MARCAS = {
   regua: 'public/images/marca/regua-100-anos.png',
   pnab: 'public/images/marca/selo-pnab.png',
   cidades: 'public/images/marca/logo-cidades-inteligentes-color.png',
+  /** Brasão e logo da Secretaria: timbre da versão 1, que não usa a régua. */
+  brasao: 'public/images/marca/brasao-irece.png',
+  secult: 'public/images/secult/logo-secult-horizontal.png',
 } as const
 
 /** Proporção altura/largura de cada marca, para posicionar sem medir o arquivo. */
@@ -22,6 +25,8 @@ export const PROPORCAO = {
   regua: 677 / 4385,
   pnab: 294 / 612,
   cidades: 185 / 649,
+  brasao: 97 / 85,
+  secult: 597 / 1207,
 } as const
 
 const cache = new Map<string, Buffer | null>()

@@ -3,7 +3,7 @@ import { registrarContexto } from './contexto'
 import { gerarQrCode } from './assets'
 import { desenharCromo, desenharAbertura } from './timbre'
 import { desenharRodape } from './rodape'
-import { PAGINA, LIMITE_CONTEUDO } from './tema'
+import { PAGINA, LIMITE_CONTEUDO, NOME_ORGAO } from './tema'
 import type { Emissao } from '@/lib/documentos/emissao'
 
 /** Ciclo de vida da folha: criação, quebra de página e fechamento do arquivo. */
@@ -43,7 +43,7 @@ export async function criarDocumentoOficial(
     },
     info: {
       Title: opcoes.titulo,
-      Author: 'Secretaria de Cultura e Turismo de Irecê',
+      Author: NOME_ORGAO,
       Creator: 'Portal PNAB Irecê',
     },
   })

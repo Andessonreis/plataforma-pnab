@@ -152,6 +152,8 @@ export function parseCronograma(raw: unknown): CronogramaDisplayItem[] {
           ...(typeof item.fimEm === 'string' && item.fimEm ? { fimEm: item.fimEm } : {}),
           ...(typeof item.acao === 'string' ? { acao: item.acao as CronogramaDisplayItem['acao'] } : {}),
           ...(item.retificado ? { retificado: item.retificado as CronogramaDisplayItem['retificado'] } : {}),
+          ...(typeof item.link === 'string' && item.link ? { link: item.link } : {}),
+          ...(typeof item.diarioOficialUrl === 'string' && item.diarioOficialUrl ? { diarioOficialUrl: item.diarioOficialUrl } : {}),
         }
       }
       // Formato legado (sem campo `tipo`) — fuzzy match preserva comportamento antigo

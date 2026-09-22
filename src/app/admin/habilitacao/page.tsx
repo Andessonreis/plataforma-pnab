@@ -17,9 +17,11 @@ import {
   IconArrowLeft,
 } from '@/components/ui'
 import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
+import { getResumoDivulgacao } from '@/lib/services/divulgacao-habilitacao.service'
 import { AbasStatus } from '@/components/abas-status'
 import { BuscaFiltro } from '@/components/busca-filtro'
 import { EditalPicker, type EditalHabilitacaoCard } from './edital-picker'
+import { DivulgarResultadoPanel } from './divulgar-resultado-panel'
 import type { InscricaoStatus, EditalStatus } from '@prisma/client'
 
 export const metadata: Metadata = {
@@ -108,7 +110,7 @@ export default async function AdminHabilitacaoPage({ searchParams }: Props) {
     ]
   }
 
-  const [inscricoes, total, contagens] = await Promise.all([
+  const [inscricoes, total, contagens, resumoDivulgacao] = await Promise.all([
     prisma.inscricao.findMany({
       where,
       orderBy: { submittedAt: 'desc' },
@@ -125,6 +127,7 @@ export default async function AdminHabilitacaoPage({ searchParams }: Props) {
       where: { editalId: edital.id, status: { in: STATUS_HABILITACAO } },
       _count: { _all: true },
     }),
+    getResumoDivulgacao(edital.id),
   ])
 
   const countMap = Object.fromEntries(contagens.map((c) => [c.status, c._count._all]))
@@ -216,6 +219,8 @@ export default async function AdminHabilitacaoPage({ searchParams }: Props) {
           )}
         </header>
       </FadeIn>
+
+      <DivulgarResultadoPanel editalId={edital.id} resumo={resumoDivulgacao} />
 
       <AbasStatus
         abas={(Object.keys(ABAS) as AbaKey[]).map((aba) => ({

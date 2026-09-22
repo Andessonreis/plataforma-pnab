@@ -81,6 +81,14 @@ export const cumulativeStatuses: Record<InscricaoStatus, InscricaoStatus[]> = {
   SUPLENTE: ['SUPLENTE'],
 }
 
+// ── Recurso ─────────────────────────────────────────────────────────────────
+// `Recurso.decisao` é texto no schema (DEFERIDO | INDEFERIDO), por isso a chave é string.
+
+export const recursoDecisaoLabel: Record<string, string> = {
+  DEFERIDO: 'Deferido',
+  INDEFERIDO: 'Indeferido',
+}
+
 // ── Edital Status ───────────────────────────────────────────────────────────
 
 export const editalStatusLabel: Record<EditalStatus, string> = {

@@ -819,6 +819,8 @@ model DocumentoEmitido {
   /// Resumo do que o documento continha (totais, fase, categoria), para a
   /// página de verificação confirmar o conteúdo sem republicar dado pessoal.
   metadados    Json     @default("{}")
+  /// Layout usado na emissão: 1 = layout anterior, 2 = padrão Diário Oficial.
+  template     Int      @default(2) @db.SmallInt
   emitidoEm    DateTime @default(now())
 
   editalId     String?
@@ -828,4 +830,5 @@ model DocumentoEmitido {
 
   @@index([editalId])
   @@index([emitidoEm])
+  @@index([emitidoPorId, emitidoEm])
 }
