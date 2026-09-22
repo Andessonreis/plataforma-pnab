@@ -8,6 +8,9 @@
  * continuar legível impresso em preto e branco ou fotocopiado.
  */
 
+/** Nome oficial do órgão emissor, como assina nos documentos. */
+export const NOME_ORGAO = 'Secretaria de Cultura e Turismo de Irecê'
+
 export const CORES = {
   /** Preto das tarjas, réguas e títulos. */
   tinta: '#000000',

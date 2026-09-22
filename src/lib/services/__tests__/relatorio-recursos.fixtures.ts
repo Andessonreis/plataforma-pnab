@@ -1,6 +1,6 @@
 import { vi } from 'vitest'
 import { prisma } from '@/lib/db'
-import { registrarEmissao } from '@/lib/documentos/emissao'
+import { registrarEmissao, type Emissao } from '@/lib/documentos/emissao'
 import { generateRelatorioRecursos } from '@/lib/pdf/relatorio-recursos'
 
 export const JANELA_HABILITACAO = {
@@ -28,11 +28,12 @@ export function edital(cronograma: unknown[] = [JANELA_HABILITACAO, JANELA_SELEC
   }
 }
 
-export const EMISSAO = {
+export const EMISSAO: Emissao = {
   codigo: 'PNAB-ABCD-2345',
   emitidoEm: new Date('2026-09-21T15:00:00Z'),
   urlVerificacao: 'https://portal.exemplo/verificar/PNAB-ABCD-2345',
   hashConteudo: 'hash-do-conteudo',
+  template: 2,
 }
 
 export const entrada = {

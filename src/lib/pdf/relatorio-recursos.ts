@@ -23,38 +23,13 @@ import {
   checkPageBreak,
   type ColumnDef,
 } from './table-helpers'
-import type { Emissao } from '@/lib/documentos/emissao'
 import { criarDocumentoOficial, finalizarDocumento } from './documento-oficial'
 import { CORES, FONTES, LARGURA_UTIL, X_ESQUERDA } from './documento-oficial/tema'
+import type { RelatorioRecursosData, RelatorioRecursosItem } from './modelo/tipos'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
-export interface RelatorioRecursosItem {
-  posicao: number
-  /** Protocolo da inscrição a que o recurso se refere. */
-  numero: string
-  nome: string
-  cpfCnpj: string
-  protocoladoEm: Date
-  /** Deferido, Indeferido ou Em análise. */
-  situacao: string
-}
-
-export interface RelatorioRecursosData {
-  edital: { titulo: string; ano: number }
-  /** Etapa do cronograma a que o prazo recursal se refere. */
-  etapa: string
-  /** Janela de interposição prevista no cronograma; nula se o edital não fixa. */
-  prazo: { inicio: Date; fim: Date } | null
-  /** Universo considerado na etapa (ex.: inscrições enviadas). */
-  totalInscricoes: number
-  labelTotalInscricoes: string
-  recursos: RelatorioRecursosItem[]
-  /** Recursos protocolados fora da janela; a conclusão do documento os cita. */
-  foraDoPrazo?: number
-  /** Registro de emissão; null quando o registro falhou (o PDF sai mesmo assim). */
-  emissao?: Emissao | null
-}
+export type { RelatorioRecursosData, RelatorioRecursosItem }
 
 // ─── Colunas ─────────────────────────────────────────────────────────────────
 

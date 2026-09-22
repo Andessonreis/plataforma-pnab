@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { FolhaDeRosto } from '@/components/ui/folha-de-rosto'
 import { FaixaSecao } from '@/components/ui/faixa-secao'
-import { IconArrowLeft } from '@/components/ui/icons'
+import { IconArrowLeft, IconDownload } from '@/components/ui/icons'
 import { consultarResultado } from './consulta'
 import { TabelaClassificacao } from './tabela-classificacao'
 
@@ -60,13 +60,26 @@ export default async function PaginaResultados({ params }: Props) {
         }
         compacto
       >
-        <Link
-          href={`/editais/${slug}`}
-          className="mt-5 inline-flex min-h-[44px] items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-accent-300 underline-offset-4 hover:underline"
-        >
-          <IconArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
-          {dados.titulo}
-        </Link>
+        <div className="mt-5 flex flex-wrap items-center gap-4">
+          <Link
+            href={`/editais/${slug}`}
+            className="inline-flex min-h-[44px] items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-accent-300 underline-offset-4 hover:underline"
+          >
+            <IconArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+            {dados.titulo}
+          </Link>
+          {dados.diarioOficialUrl && (
+            <a
+              href={dados.diarioOficialUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-[44px] items-center gap-2 bg-accent-500 px-5 py-2.5 text-xs font-bold uppercase tracking-[0.14em] text-tinta-950 transition-colors hover:bg-accent-400"
+            >
+              <IconDownload className="h-4 w-4" aria-hidden="true" />
+              Diário Oficial (Edição nº 2.935)
+            </a>
+          )}
+        </div>
       </FolhaDeRosto>
 
       {!dados.resultado ? (
@@ -90,7 +103,28 @@ export default async function PaginaResultados({ params }: Props) {
                 Nenhuma proposta chegou à fase de classificação neste edital.
               </p>
             ) : (
-              <TabelaClassificacao linhas={dados.linhas} porPontuacao={dados.porPontuacao} />
+              <>
+                {dados.diarioOficialUrl && (
+                  <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-2 border-tinta-900 bg-papel-50 p-4">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-[0.14em] text-tinta-700">Publicação Oficial</p>
+                      <p className="mt-0.5 text-sm font-medium text-tinta-900">
+                        Consulte a publicação oficial com a lista completa no Diário Oficial do Município de Irecê.
+                      </p>
+                    </div>
+                    <a
+                      href={dados.diarioOficialUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex shrink-0 items-center justify-center gap-2 border border-tinta-900 bg-tinta-900 px-4 py-2.5 text-xs font-bold uppercase tracking-[0.12em] text-papel-50 transition-colors hover:bg-tinta-800"
+                    >
+                      <IconDownload className="h-4 w-4" aria-hidden="true" />
+                      Baixar Diário Oficial (PDF)
+                    </a>
+                  </div>
+                )}
+                <TabelaClassificacao linhas={dados.linhas} porPontuacao={dados.porPontuacao} />
+              </>
             )}
           </FaixaSecao>
 

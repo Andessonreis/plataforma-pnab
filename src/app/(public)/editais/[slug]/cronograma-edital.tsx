@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { IconArrowRight, IconDownload } from '@/components/ui/icons'
 import { getCronogramaItemStatus } from '@/lib/utils/cronograma'
-import { isAcaoPublicacao } from '@/types/cronograma'
+import { isAcaoPublicacao, isAcaoResultado } from '@/types/cronograma'
 import type { CronogramaDisplayItem } from '@/types/cronograma'
 import { LinhaDatasMarco } from './linha-datas-marco'
 import { RecursoEditalButton } from './recurso-edital-button'
@@ -97,33 +97,64 @@ export function CronogramaEdital({ itens, slug, agora, escuro = false }: Cronogr
 
                 {(cumprido || emCurso) && (
                   <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2">
-                    {isAcaoPublicacao(item.acao) && (
+                    {/* Link direto configurado no marco */}
+                    {item.link ? (
+                      <Link
+                        href={item.link}
+                        className={`inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] ${corAcao} underline-offset-4 hover:underline`}
+                      >
+                        Ver lista
+                        <IconArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                      </Link>
+                    ) : (
                       <>
-                        <Link
-                          href={`/editais/${slug}/publicacoes/${item.acao}`}
-                          className={`inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] ${corAcao} underline-offset-4 hover:underline`}
-                        >
-                          Ver lista
-                          <IconArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-                        </Link>
-                        <a
-                          href={`/api/editais/${slug}/publicacoes/${item.acao}?format=csv`}
-                          className={`inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] ${corAcao} underline-offset-4 hover:underline`}
-                        >
-                          <IconDownload className="h-3.5 w-3.5" aria-hidden="true" />
-                          Baixar CSV
-                        </a>
+                        {isAcaoPublicacao(item.acao) && (
+                          <>
+                            <Link
+                              href={
+                                isAcaoResultado(item.acao)
+                                  ? `/editais/${slug}/resultados`
+                                  : `/editais/${slug}/publicacoes/${item.acao}`
+                              }
+                              className={`inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] ${corAcao} underline-offset-4 hover:underline`}
+                            >
+                              Ver lista
+                              <IconArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                            </Link>
+                            {!isAcaoResultado(item.acao) && (
+                              <a
+                                href={`/api/editais/${slug}/publicacoes/${item.acao}?format=csv`}
+                                className={`inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] ${corAcao} underline-offset-4 hover:underline`}
+                              >
+                                <IconDownload className="h-3.5 w-3.5" aria-hidden="true" />
+                                Baixar CSV
+                              </a>
+                            )}
+                          </>
+                        )}
+
+                        {(item.fase === 'RESULTADO_PRELIMINAR' || item.fase === 'RESULTADO_FINAL') && (
+                          <Link
+                            href={`/editais/${slug}/resultados`}
+                            className={`inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] ${corAcao} underline-offset-4 hover:underline`}
+                          >
+                            Ver resultados
+                            <IconArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                          </Link>
+                        )}
                       </>
                     )}
 
-                    {(item.fase === 'RESULTADO_PRELIMINAR' || item.fase === 'RESULTADO_FINAL') && (
-                      <Link
-                        href={`/editais/${slug}/resultados`}
+                    {item.diarioOficialUrl && (
+                      <a
+                        href={item.diarioOficialUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className={`inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] ${corAcao} underline-offset-4 hover:underline`}
                       >
-                        Ver resultados
-                        <IconArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-                      </Link>
+                        <IconDownload className="h-3.5 w-3.5" aria-hidden="true" />
+                        Diário Oficial
+                      </a>
                     )}
 
                     {emCurso && item.acao === 'RECURSO_EDITAL_JANELA' && (
@@ -138,3 +169,4 @@ export function CronogramaEdital({ itens, slug, agora, escuro = false }: Cronogr
     </ol>
   )
 }
+

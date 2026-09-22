@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { PageHeader, Badge } from '@/components/ui'
 import { IconArrowLeft, IconDownload, IconClock } from '@/components/ui/icons'
@@ -31,11 +31,40 @@ export default async function PublicacaoPage({ params }: Props) {
   const { slug, acao } = await params
   if (!isAcaoPublicacao(acao)) notFound()
 
+  // Publicações de resultado redirecionam para o quadro completo de classificação
+  if (isAcaoResultado(acao)) {
+    redirect(`/editais/${slug}/resultados`)
+  }
+
   const edital = await prisma.edital.findUnique({
     where: { slug },
-    select: { titulo: true, ano: true },
+    select: { id: true, titulo: true, ano: true, cronograma: true },
   })
   if (!edital) notFound()
+
+  let diarioOficialUrl: string | null = null
+  if (Array.isArray(edital.cronograma)) {
+    const itemComDiario = (edital.cronograma as any[]).find((it) => it && typeof it === 'object' && it.diarioOficialUrl)
+    if (itemComDiario?.diarioOficialUrl) {
+      diarioOficialUrl = itemComDiario.diarioOficialUrl
+    }
+  }
+
+  if (!diarioOficialUrl) {
+    const arquivo = await prisma.arquivoEdital.findFirst({
+      where: {
+        editalId: edital.id,
+        OR: [
+          { titulo: { contains: 'Diário Oficial', mode: 'insensitive' } },
+          { url: { contains: 'pdfGateway', mode: 'insensitive' } },
+        ],
+      },
+      select: { url: true },
+    })
+    if (arquivo) {
+      diarioOficialUrl = arquivo.url
+    }
+  }
 
   const publicacao = await getPublicacao(slug, acao)
   if (!publicacao || !publicacao.exists) notFound()
@@ -96,7 +125,7 @@ export default async function PublicacaoPage({ params }: Props) {
             <> · Publicado em {formatDateTime(publicacao.dataPublicacao)}</>
           )}
         </p>
-        <div className="mt-4">
+        <div className="mt-4 flex flex-wrap items-center gap-3">
           <a
             href={csvUrl}
             className="inline-flex items-center gap-2 rounded-lg bg-white/15 hover:bg-white/25 border border-white/30 px-4 py-2.5 text-sm font-semibold text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-700 min-h-[44px]"
@@ -105,6 +134,17 @@ export default async function PublicacaoPage({ params }: Props) {
             <IconDownload className="h-5 w-5" aria-hidden="true" />
             Baixar CSV
           </a>
+          {diarioOficialUrl && (
+            <a
+              href={diarioOficialUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-lg bg-accent-500 hover:bg-accent-400 px-4 py-2.5 text-sm font-semibold text-tinta-950 transition-colors focus-visible:outline-none min-h-[44px]"
+            >
+              <IconDownload className="h-5 w-5" aria-hidden="true" />
+              Diário Oficial
+            </a>
+          )}
         </div>
       </PageHeader>
 

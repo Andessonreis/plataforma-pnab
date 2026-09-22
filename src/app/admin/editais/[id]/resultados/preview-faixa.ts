@@ -13,14 +13,14 @@ export const TONE_CLASS: Record<Tone, string> = {
 export function faixa(pos: number, notaFinal: number, finalizadas: number, vagas: VagasConfig): Faixa {
   if (finalizadas === 0) return { label: 'Sem avaliação', tone: 'slate' }
   if (vagas.notaMinima != null && notaFinal < vagas.notaMinima) {
-    return { label: 'Abaixo da nota mínima', tone: 'red' }
+    return { label: 'Desclassificado', tone: 'amber' }
   }
   if (vagas.contemplados != null) {
-    if (pos <= vagas.contemplados) return { label: 'Contemplável', tone: 'emerald' }
+    if (pos <= vagas.contemplados) return { label: 'Classificado', tone: 'emerald' }
     if (vagas.suplentes == null || pos <= vagas.contemplados + vagas.suplentes) {
       return { label: 'Suplente', tone: 'amber' }
     }
-    return { label: 'Fora do corte', tone: 'slate' }
+    return { label: 'Desclassificado', tone: 'amber' }
   }
   return null
 }
@@ -28,12 +28,12 @@ export function faixa(pos: number, notaFinal: number, finalizadas: number, vagas
 export function faixaPorCategoria(r: PreviewRow, vagas: VagasConfig): Faixa {
   if (r.finalizadas === 0) return { label: 'Sem avaliação', tone: 'slate' }
   if (vagas.notaMinima != null && r.notaFinal < vagas.notaMinima) {
-    return { label: 'Abaixo da nota mínima', tone: 'red' }
+    return { label: 'Desclassificado', tone: 'amber' }
   }
   switch (r.statusPrevia) {
-    case 'CONTEMPLADA': return { label: 'Contemplável', tone: 'emerald' }
+    case 'CONTEMPLADA': return { label: 'Classificado', tone: 'emerald' }
     case 'SUPLENTE': return { label: 'Suplente', tone: 'amber' }
-    case 'NAO_CONTEMPLADA': return { label: 'Fora do corte', tone: 'slate' }
+    case 'NAO_CONTEMPLADA': return { label: 'Desclassificado', tone: 'amber' }
     default: return null
   }
 }

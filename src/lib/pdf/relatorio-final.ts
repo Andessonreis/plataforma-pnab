@@ -14,26 +14,9 @@ import {
 } from './layout-helpers'
 import { criarDocumentoOficial, finalizarDocumento, garantirEspaco } from './documento-oficial'
 import { CORES, FONTES, LARGURA_UTIL, X_ESQUERDA, fio } from './documento-oficial/tema'
-import type { Emissao } from '@/lib/documentos/emissao'
+import type { InscricaoItem, RelatorioFinalData } from './modelo/tipos'
 
-export interface InscricaoItem {
-  posicao: number
-  numero: string
-  nome: string
-  cpfCnpj: string
-  categoria: string | null
-  notaFinal: number | null
-}
-
-export interface RelatorioFinalData {
-  edital: { titulo: string; ano: number; slug: string; valorTotal: number | null }
-  contemplados: InscricaoItem[]
-  suplentes: InscricaoItem[]
-  naoContemplados: InscricaoItem[]
-  totalAvaliados: number
-  /** Registro de emissão; null quando o registro falhou (o PDF sai mesmo assim). */
-  emissao?: Emissao | null
-}
+export type { InscricaoItem, RelatorioFinalData }
 
 const COLUNAS: ColumnDef[] = [
   { label: 'Pos.', width: 28, align: 'center' },

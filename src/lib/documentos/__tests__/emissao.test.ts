@@ -1,10 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { descartarEmissao, gerarCodigo, hashConteudo, urlVerificacao } from '../emissao'
+import { descartarEmissao, gerarCodigo, hashConteudo, registrarEmissao, urlVerificacao } from '../emissao'
 import { prisma } from '@/lib/db'
 
-vi.mock('@/lib/db', () => ({ prisma: { documentoEmitido: { deleteMany: vi.fn() } } }))
+vi.mock('@/lib/db', () => ({
+  prisma: { documentoEmitido: { deleteMany: vi.fn(), create: vi.fn() } },
+}))
 
 const mockDeleteMany = vi.mocked(prisma.documentoEmitido.deleteMany)
+const mockCreate = vi.mocked(prisma.documentoEmitido.create)
 
 describe('gerarCodigo', () => {
   it('sai no formato PNAB-XXXX-XXXX', () => {
@@ -69,6 +72,66 @@ describe('urlVerificacao', () => {
     process.env.NEXT_PUBLIC_SITE_URL = 'https://exemplo.gov.br/'
     expect(urlVerificacao('PNAB-ABCD-2345')).toBe('https://exemplo.gov.br/verificar/PNAB-ABCD-2345')
     process.env.NEXT_PUBLIC_SITE_URL = anterior
+  })
+})
+
+describe('registrarEmissao', () => {
+  const entrada = {
+    tipo: 'CLASSIFICACAO' as const,
+    titulo: 'Classificação por Categoria — Festival (2026)',
+    conteudo: { linhas: [] },
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  function criaCom(template: number) {
+    mockCreate.mockImplementation((async ({ data }: { data: { codigo: string } }) => ({
+      codigo: data.codigo,
+      emitidoEm: new Date('2026-09-21T12:00:00Z'),
+      template,
+    })) as never)
+  }
+
+  it('grava a versão pedida e devolve na emissão', async () => {
+    criaCom(1)
+
+    const emissao = await registrarEmissao({ ...entrada, template: 1 })
+
+    expect(emissao?.template).toBe(1)
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ template: 1 }) }),
+    )
+  })
+
+  it('sem versão pedida grava o padrão do sistema', async () => {
+    criaCom(2)
+
+    const emissao = await registrarEmissao(entrada)
+
+    expect(emissao?.template).toBe(2)
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ template: 2 }) }),
+    )
+  })
+
+  it('versão fora de 1 e 2 no banco não contamina o documento', async () => {
+    criaCom(9)
+
+    await expect(registrarEmissao(entrada)).resolves.toMatchObject({ template: 2 })
+  })
+
+  it('falha de banco devolve null e o PDF sai sem código', async () => {
+    const erroLog = vi.spyOn(console, 'error').mockImplementation(() => {})
+    mockCreate.mockRejectedValue(new Error('coluna template não existe'))
+
+    await expect(registrarEmissao(entrada)).resolves.toBeNull()
+
+    expect(erroLog).toHaveBeenCalledWith({
+      escopo: 'registrarEmissao', erro: 'coluna template não existe',
+    })
+    erroLog.mockRestore()
   })
 })
 

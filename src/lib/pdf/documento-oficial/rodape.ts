@@ -2,7 +2,7 @@ import { contextoDe } from './contexto'
 import { carregarMarca, MARCAS, PROPORCAO } from './assets'
 import {
   CORES, FONTES, PAGINA, LARGURA_UTIL, X_ESQUERDA, X_DIREITA,
-  fio, dataHora,
+  fio, dataHora, NOME_ORGAO,
 } from './tema'
 
 /**
@@ -15,7 +15,7 @@ import {
 
 const LADO_QR = 28
 const ENDERECO = [
-  'Secretaria de Cultura e Turismo de Irecê',
+  NOME_ORGAO,
   'Praça Teotônio Marques Dourado Filho, nº 1 — Centro · Irecê/BA',
   'Município de Irecê · CNPJ 13.715.891/0001-04',
 ]

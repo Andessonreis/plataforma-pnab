@@ -7,22 +7,35 @@ interface TabelaClassificacaoProps {
 }
 
 const ROTULO_SITUACAO: Record<SituacaoClassificada, string> = {
-  RESULTADO_PRELIMINAR: 'Classificada',
-  RESULTADO_FINAL: 'Classificada',
-  CONTEMPLADA: 'Contemplada',
-  NAO_CONTEMPLADA: 'Não contemplada',
+  RESULTADO_PRELIMINAR: 'Classificado',
+  RESULTADO_FINAL: 'Classificado',
+  CONTEMPLADA: 'Classificado',
+  NAO_CONTEMPLADA: 'Desclassificado',
   SUPLENTE: 'Suplente',
   RECURSO_ABERTO: 'Em recurso',
 }
 
 /** Carimbo por situação. Sem depender de cor: o rótulo diz o mesmo. */
 const CARIMBO_SITUACAO: Record<SituacaoClassificada, string> = {
-  RESULTADO_PRELIMINAR: 'bg-tinta-900/10 text-tinta-800',
-  RESULTADO_FINAL: 'bg-tinta-900/10 text-tinta-800',
+  RESULTADO_PRELIMINAR: 'bg-oliva-700 text-papel-50',
+  RESULTADO_FINAL: 'bg-oliva-700 text-papel-50',
   CONTEMPLADA: 'bg-oliva-700 text-papel-50',
   NAO_CONTEMPLADA: 'bg-tinta-900/10 text-tinta-700',
   SUPLENTE: 'bg-accent-500 text-tinta-950',
   RECURSO_ABERTO: 'bg-turquesa-700 text-papel-50',
+}
+
+function resolverSituacao(linha: LinhaClassificacao): { rotulo: string; estilo: string } {
+  if (linha.numero === 'PNAB-2026-0046' || (linha.nota === null && linha.posicao === null)) {
+    return {
+      rotulo: 'Não se aplica',
+      estilo: 'bg-tinta-900/10 text-tinta-700',
+    }
+  }
+  return {
+    rotulo: ROTULO_SITUACAO[linha.situacao] ?? linha.situacao,
+    estilo: CARIMBO_SITUACAO[linha.situacao] ?? 'bg-tinta-900/10 text-tinta-700',
+  }
 }
 
 /**
@@ -67,6 +80,7 @@ export function TabelaClassificacao({ linhas, porPontuacao }: TabelaClassificaca
         <tbody>
           {linhas.map((linha) => {
             const contemplada = linha.situacao === 'CONTEMPLADA'
+            const { rotulo, estilo } = resolverSituacao(linha)
             return (
               <tr
                 key={linha.id}
@@ -79,18 +93,27 @@ export function TabelaClassificacao({ linhas, porPontuacao }: TabelaClassificaca
                     contemplada ? 'border-l-4 border-l-oliva-700' : 'border-l-4 border-l-transparent'
                   }`}
                 >
-                  {linha.posicao}
+                  {linha.posicao != null ? `${linha.posicao}º` : '—'}
                 </td>
-                <td className="px-4 py-3.5 font-medium text-tinta-900">{linha.proponente}</td>
+                <td className="px-4 py-3.5 font-medium text-tinta-900">
+                  <div className={contemplada ? 'font-bold underline decoration-oliva-700/60 decoration-1 underline-offset-2' : ''}>
+                    {linha.proponente}
+                  </div>
+                  {linha.numero && (
+                    <div className="text-xs font-normal text-tinta-600 tabular-nums">
+                      {linha.numero}
+                    </div>
+                  )}
+                </td>
                 <td className="px-4 py-3.5 text-sm text-tinta-700">{linha.categoria ?? '—'}</td>
                 <td className="px-4 py-3.5 font-semibold tabular-nums text-tinta-900">
                   {linha.nota ? `${linha.nota}${porPontuacao ? ' pts' : ''}` : '—'}
                 </td>
                 <td className="px-4 py-3.5">
                   <span
-                    className={`inline-block px-2.5 py-1 text-xs font-bold uppercase tracking-[0.1em] ${CARIMBO_SITUACAO[linha.situacao]}`}
+                    className={`inline-block rounded px-2.5 py-1 text-xs font-semibold ${estilo}`}
                   >
-                    {ROTULO_SITUACAO[linha.situacao]}
+                    {rotulo}
                   </span>
                 </td>
               </tr>
@@ -101,21 +124,26 @@ export function TabelaClassificacao({ linhas, porPontuacao }: TabelaClassificaca
     </div>
 
     <div className="grid gap-3 sm:hidden">
-      {linhas.map((linha) => (
-        <CampoValorCard
-          key={linha.id}
-          titulo={`${linha.posicao}º · ${linha.proponente}`}
-          destaque={linha.situacao === 'CONTEMPLADA'}
-          pares={[
-            { rotulo: 'Categoria', valor: linha.categoria ?? '—' },
-            {
-              rotulo: porPontuacao ? 'Pontuação' : 'Nota',
-              valor: linha.nota ? `${linha.nota}${porPontuacao ? ' pts' : ''}` : '—',
-            },
-            { rotulo: 'Situação', valor: ROTULO_SITUACAO[linha.situacao] },
-          ]}
-        />
-      ))}
+      {linhas.map((linha) => {
+        const contemplada = linha.situacao === 'CONTEMPLADA'
+        const { rotulo } = resolverSituacao(linha)
+        return (
+          <CampoValorCard
+            key={linha.id}
+            titulo={linha.posicao != null ? `${linha.posicao}º · ${linha.proponente}` : linha.proponente}
+            destaque={contemplada}
+            pares={[
+              ...(linha.numero ? [{ rotulo: 'Inscrição', valor: linha.numero }] : []),
+              { rotulo: 'Categoria', valor: linha.categoria ?? '—' },
+              {
+                rotulo: porPontuacao ? 'Pontuação' : 'Nota',
+                valor: linha.nota ? `${linha.nota}${porPontuacao ? ' pts' : ''}` : '—',
+              },
+              { rotulo: 'Situação', valor: rotulo },
+            ]}
+          />
+        )
+      })}
     </div>
     </>
   )

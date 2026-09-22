@@ -81,6 +81,10 @@ export interface CronogramaCustomItem {
   acao?: AcaoJanela
   /** Presente quando uma retificação alterou a data deste marco. */
   retificado?: MarcoRetificado
+  /** Link customizado para lista/resultados do marco */
+  link?: string
+  /** Link para o Diário Oficial referente ao marco */
+  diarioOficialUrl?: string
 }
 
 export type CronogramaItem = CronogramaFaseItem | CronogramaCustomItem
@@ -115,6 +119,10 @@ export interface CronogramaDisplayItem {
   acao?: AcaoJanela
   /** Data anterior à retificação — a página risca esta data ao lado da nova. */
   retificado?: MarcoRetificado
+  /** Link customizado para lista/resultados do marco */
+  link?: string
+  /** Link para o Diário Oficial referente ao marco */
+  diarioOficialUrl?: string
 }
 
 // ── Fases do ciclo de vida do edital (sem RASCUNHO) ─────────────────────────

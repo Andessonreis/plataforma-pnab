@@ -1,5 +1,7 @@
 import { createHash, randomBytes } from 'crypto'
 import { prisma } from '@/lib/db'
+import { parseTemplate, TEMPLATE_PADRAO, type TemplatePdf } from './template'
+import { type TipoDocumento } from './titulos'
 
 /**
  * Emissão verificável de documento oficial.
@@ -15,28 +17,14 @@ import { prisma } from '@/lib/db'
  * consegue dizer se o que está no papel bate com o que o portal gerou.
  */
 
-/** Tipos de documento que o portal emite. O valor vai gravado e aparece na verificação. */
-export const TIPOS_DOCUMENTO = {
-  CLASSIFICACAO: 'Classificação por categoria',
-  LISTA_INSCRICOES: 'Lista de inscrições',
-  LISTA_AGENTES: 'Relação de agentes culturais',
-  LISTA_RESULTADO: 'Resultado do edital',
-  RELATORIO_FINAL: 'Relatório final do edital',
-  RELATORIO_RECURSOS: 'Relatório de recursos interpostos',
-  DOSSIE_INSCRICAO: 'Dossiê da inscrição',
-  PROJETO_COMPLETO: 'Projeto completo',
-  COMPROVANTE_INSCRICAO: 'Comprovante de inscrição',
-  DECLARACAO: 'Declaração',
-} as const
-
-export type TipoDocumento = keyof typeof TIPOS_DOCUMENTO
-
 export interface Emissao {
   codigo: string
   emitidoEm: Date
   /** URL absoluta impressa no rodapé e codificada no QR. */
   urlVerificacao: string
   hashConteudo: string
+  /** Versão de layout com que o documento foi gerado. */
+  template: TemplatePdf
 }
 
 export interface RegistrarEmissaoInput {
@@ -49,6 +37,8 @@ export interface RegistrarEmissaoInput {
   conteudo: unknown
   /** Resumo exibido na verificação (totais, fase). Nunca dado pessoal. */
   metadados?: Record<string, unknown>
+  /** Versão de layout pedida; padrão é a do sistema. */
+  template?: TemplatePdf
 }
 
 // Sem I, O, 0 e 1: o código é lido em voz alta e digitado à mão por quem
@@ -97,6 +87,7 @@ export function urlVerificacao(codigo: string): string {
  */
 export async function registrarEmissao(input: RegistrarEmissaoInput): Promise<Emissao | null> {
   const hash = hashConteudo(input.conteudo)
+  const template = input.template ?? TEMPLATE_PADRAO
 
   for (let tentativa = 0; tentativa < 3; tentativa++) {
     const codigo = gerarCodigo()
@@ -110,14 +101,18 @@ export async function registrarEmissao(input: RegistrarEmissaoInput): Promise<Em
           metadados: (input.metadados ?? {}) as object,
           editalId: input.editalId ?? null,
           emitidoPorId: input.emitidoPorId ?? null,
+          template,
         },
-        select: { codigo: true, emitidoEm: true },
+        select: { codigo: true, emitidoEm: true, template: true },
       })
       return {
         codigo: registro.codigo,
         emitidoEm: registro.emitidoEm,
         urlVerificacao: urlVerificacao(registro.codigo),
         hashConteudo: hash,
+        // O banco é a fonte: se a coluna devolver algo fora de 1/2, o documento
+        // ainda sai, carimbado com o padrão do sistema.
+        template: parseTemplate(registro.template) ?? TEMPLATE_PADRAO,
       }
     } catch (err) {
       // Colisão de código é improvável mas possível — tenta outro.
