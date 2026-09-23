@@ -86,6 +86,26 @@ export async function POST(
     const idxNovo = SEQUENCIA_FASES.indexOf(data.proximoStatus)
     const isRetrocesso = idxNovo < idxAtual
 
+    // RESULTADO_FINAL é o limiar que libera a decisão dos recursos para o
+    // proponente (respostaRecursoLiberada, em lib/edital/fase.ts). Cruzá-lo com
+    // recurso ainda por julgar divulgaria "indeferido" sem que ninguém tenha
+    // indeferido nada, e sem publicação de resultado nenhuma ter acontecido.
+    if (data.proximoStatus === 'RESULTADO_FINAL') {
+      const pendentes = await prisma.recurso.count({
+        where: { inscricao: { editalId: id }, decisao: null },
+      })
+      if (pendentes > 0) {
+        return NextResponse.json(
+          {
+            error: 'RECURSOS_PENDENTES',
+            message: `Ainda há ${pendentes} recurso(s) sem decisão. Julgue todos antes de avançar para o resultado final.`,
+            requestId,
+          },
+          { status: 422, headers: { 'X-Request-Id': requestId, 'Cache-Control': 'no-store' } },
+        )
+      }
+    }
+
     // Atualiza status (e publishedAt se estiver saindo de RASCUNHO pela primeira vez)
     const updateData: Record<string, unknown> = { status: data.proximoStatus }
     if (statusAtual === 'RASCUNHO' && data.proximoStatus !== 'RASCUNHO' && !edital.publishedAt) {

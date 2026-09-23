@@ -104,7 +104,7 @@ describe('POST /api/proponente/inscricoes/[id]/recurso', () => {
     expect(res.status).toBe(409)
   })
 
-  it('cria recurso com urlAnexos → 201 e muda status para RECURSO_ABERTO', async () => {
+  it('cria recurso com urlAnexos → 201 e preserva o status da inscrição', async () => {
     mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'PROPONENTE' } } as never)
     mockPrisma.inscricao.findUnique.mockResolvedValue({
       proponenteId: 'u1',
@@ -139,10 +139,10 @@ describe('POST /api/proponente/inscricoes/[id]/recurso', () => {
         urlAnexos: ['https://storage.example.com/a.pdf', 'https://storage.example.com/b.pdf'],
       },
     })
-    expect(mockPrisma.inscricao.update).toHaveBeenCalledWith({
-      where: { id: 'insc-1' },
-      data: { status: 'RECURSO_ABERTO' },
-    })
+    // O status da inscrição carrega o resultado publicado e não pode ser
+    // sobrescrito por RECURSO_ABERTO: além de apagar esse resultado, carimbava
+    // "Em recurso" ao lado do nome da pessoa na lista pública de classificação.
+    expect(mockPrisma.inscricao.update).not.toHaveBeenCalled()
   })
 
   it('rejeita urlAnexos não-URL → 400', async () => {

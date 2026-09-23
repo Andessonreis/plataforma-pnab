@@ -10,6 +10,7 @@ const ACOES_JANELA: { value: AcaoJanela; label: string; grupo: 'janela' | 'publi
   { value: 'RECURSO_EDITAL_JANELA', label: 'Janela de recurso contra o edital', grupo: 'janela' },
   { value: 'RECURSO_HABILITACAO_JANELA', label: 'Janela de recurso de habilitação', grupo: 'janela' },
   { value: 'RECURSO_RESULTADO_JANELA', label: 'Janela de recurso do resultado preliminar', grupo: 'janela' },
+  { value: 'RECURSO_RESULTADO_FINAL_JANELA', label: 'Janela de recurso do resultado final', grupo: 'janela' },
   { value: 'PUBLICACAO_INSCRITOS', label: 'Publicação da lista de inscritos', grupo: 'publicacao' },
   { value: 'PUBLICACAO_HABILITADOS', label: 'Publicação dos habilitados', grupo: 'publicacao' },
   { value: 'PUBLICACAO_HABILITADOS_POS_RECURSOS', label: 'Publicação dos habilitados após recursos', grupo: 'publicacao' },

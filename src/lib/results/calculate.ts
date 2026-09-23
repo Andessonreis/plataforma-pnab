@@ -51,6 +51,27 @@ export interface CalculateResultsOptions {
  * 5. Ordena por nota final descendente
  * 6. Detecta empates (inscrições com mesma nota final)
  */
+/**
+ * Inscrições que entram no recálculo da classificação.
+ *
+ * Inclui os status pós-publicação (CONTEMPLADA, SUPLENTE, NAO_CONTEMPLADA,
+ * RESULTADO_FINAL) porque publicar é idempotente por natureza: depois de
+ * publicar o preliminar, a comissão julga recursos, corrige notas e publica de
+ * novo. Sem esses status no universo, a segunda publicação enxergaria só as
+ * inscrições ainda não publicadas — recalculando posição e alocação de vagas
+ * sobre um punhado de linhas e deixando o resto da lista com dados velhos.
+ */
+const UNIVERSO_CLASSIFICAVEL = [
+  'HABILITADA',
+  'EM_AVALIACAO',
+  'RESULTADO_PRELIMINAR',
+  'RECURSO_ABERTO',
+  'RESULTADO_FINAL',
+  'CONTEMPLADA',
+  'NAO_CONTEMPLADA',
+  'SUPLENTE',
+] as const
+
 export async function calculateResults(
   editalId: string,
   options?: CalculateResultsOptions,
@@ -78,7 +99,7 @@ export async function calculateResults(
   const inscricoes = await prisma.inscricao.findMany({
     where: {
       editalId,
-      status: { in: ['HABILITADA', 'EM_AVALIACAO', 'RESULTADO_PRELIMINAR', 'RECURSO_ABERTO'] },
+      status: { in: [...UNIVERSO_CLASSIFICAVEL] },
     },
     include: {
       proponente: { select: { nome: true } },
