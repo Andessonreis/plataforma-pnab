@@ -1,6 +1,6 @@
 import { IconInfo } from '@/components/ui'
 import { janelaParaAcao, mensagemJanela } from '@/lib/utils/cronograma-janela'
-import type { AcaoJanela } from '@/types/cronograma'
+import { acaoJanelaDaFase } from '@/lib/edital/recurso-janela'
 import type { InscricaoStatus } from '@prisma/client'
 import { RecursoForm } from './recurso/recurso-form'
 
@@ -12,6 +12,8 @@ interface Props {
   inscricaoId: string
   numero: string
   proponenteNome: string
+  /** Fases em que esta inscrição já tem recurso protocolado. */
+  fasesJaRecorridas: string[]
 }
 
 /** Determina a fase de recurso cabível para o status atual da inscrição. */
@@ -21,13 +23,6 @@ function faseDoRecurso(status: InscricaoStatus): 'HABILITACAO' | 'RESULTADO_PREL
   return 'RESULTADO_FINAL'
 }
 
-/** Ação de janela do cronograma que gateia essa fase (null = sem gate, sempre liberado). */
-function acaoJanelaDaFase(fase: string): AcaoJanela | null {
-  if (fase === 'HABILITACAO') return 'RECURSO_HABILITACAO_JANELA'
-  if (fase === 'RESULTADO_PRELIMINAR') return 'RECURSO_RESULTADO_JANELA'
-  return null
-}
-
 /**
  * Bloco "Interpor Recurso" — só aparece nos status onde recurso cabe, e é
  * gateado pela janela de cronograma da fase correspondente (se configurada).
@@ -35,10 +30,18 @@ function acaoJanelaDaFase(fase: string): AcaoJanela | null {
  * é a única pendência que exige ação do proponente na tela — sinalizada em
  * accent, a exceção pontual da paleta.
  */
-export function InterporRecursoSection({ status, cronograma, inscricaoId, numero, proponenteNome }: Props) {
+export function InterporRecursoSection({
+  status, cronograma, inscricaoId, numero, proponenteNome, fasesJaRecorridas,
+}: Props) {
   if (!FASES_COM_RECURSO.includes(status)) return null
 
   const fase = faseDoRecurso(status)
+  // Protocolar recurso não muda mais o status da inscrição (ele carrega o
+  // resultado publicado), então é o recurso já existente que fecha o form —
+  // senão o proponente reenviaria e levaria 409 depois de subir os anexos.
+  // O recurso em si aparece logo acima, no RecursosCard.
+  if (fasesJaRecorridas.includes(fase)) return null
+
   const acaoJanela = acaoJanelaDaFase(fase)
   const janelaInfo = acaoJanela ? janelaParaAcao(cronograma, acaoJanela) : null
 

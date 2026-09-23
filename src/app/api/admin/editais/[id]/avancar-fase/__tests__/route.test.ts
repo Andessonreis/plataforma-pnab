@@ -200,3 +200,55 @@ describe('POST /api/admin/editais/[id]/avancar-fase', () => {
     expect((updateCall.data as { publishedAt?: Date }).publishedAt).toBeUndefined()
   })
 })
+
+describe('trava de recursos pendentes antes do resultado final', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockLogAudit.mockResolvedValue(undefined)
+    mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
+    mockPrisma.edital.findUnique.mockResolvedValue({
+      id: 'ed-1', status: 'RECURSO', titulo: 'Festival', publishedAt: new Date(),
+    } as never)
+    mockPrisma.edital.update.mockResolvedValue({} as never)
+  })
+
+  it('recurso sem decisão bloqueia a ida para RESULTADO_FINAL → 422', async () => {
+    mockPrisma.recurso.count.mockResolvedValue(2 as never)
+
+    const res = await POST(
+      makeReq({ proximoStatus: 'RESULTADO_FINAL', justificativa: 'encerrando a fase recursal' }),
+      params(),
+    )
+
+    expect(res.status).toBe(422)
+    const body = await res.json()
+    expect(body.error).toBe('RECURSOS_PENDENTES')
+    // RESULTADO_FINAL libera a decisão dos recursos pro proponente: cruzar esse
+    // limiar com recurso por julgar divulgaria decisão que não existe.
+    expect(mockPrisma.edital.update).not.toHaveBeenCalled()
+  })
+
+  it('todos os recursos julgados → avança normalmente', async () => {
+    mockPrisma.recurso.count.mockResolvedValue(0 as never)
+
+    const res = await POST(
+      makeReq({ proximoStatus: 'RESULTADO_FINAL', justificativa: 'recursos todos julgados' }),
+      params(),
+    )
+
+    expect(res.status).toBe(200)
+    expect(mockPrisma.edital.update).toHaveBeenCalled()
+  })
+
+  it('a trava não atrapalha outras transições', async () => {
+    mockPrisma.recurso.count.mockResolvedValue(5 as never)
+
+    const res = await POST(
+      makeReq({ proximoStatus: 'ENCERRADO', justificativa: 'encerramento do edital' }),
+      params(),
+    )
+
+    expect(res.status).toBe(200)
+    expect(mockPrisma.recurso.count).not.toHaveBeenCalled()
+  })
+})

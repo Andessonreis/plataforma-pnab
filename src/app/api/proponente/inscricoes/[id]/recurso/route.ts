@@ -6,7 +6,7 @@ import { prisma } from '@/lib/db'
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
 import { janelaParaAcao, mensagemJanela } from '@/lib/utils/cronograma-janela'
 import { respostaRecursoLiberada } from '@/lib/edital/fase'
-import type { AcaoJanela } from '@/types/cronograma'
+import { acaoJanelaDaFase } from '@/lib/edital/recurso-janela'
 
 export const runtime = 'nodejs'
 
@@ -22,15 +22,6 @@ const STATUS_ALLOWS_RECURSO: Record<string, string[]> = {
   RESULTADO_PRELIMINAR: ['RESULTADO_PRELIMINAR'],
   NAO_CONTEMPLADA: ['RESULTADO_FINAL'],
   SUPLENTE: ['RESULTADO_FINAL'],
-}
-
-// Mapeamento: fase do recurso → ação do cronograma que controla a janela.
-// Se o cronograma do edital tiver um item custom com essa ação, o recurso
-// só é aceito dentro da janela [dataHora, fimEm]. Sem item, aceita sempre
-// (compatibilidade — comportamento antigo).
-const RECURSO_FASE_TO_JANELA: Partial<Record<string, AcaoJanela>> = {
-  HABILITACAO: 'RECURSO_HABILITACAO_JANELA',
-  RESULTADO_PRELIMINAR: 'RECURSO_RESULTADO_JANELA',
 }
 
 // GET — Listar recursos da inscrição
@@ -157,7 +148,7 @@ export async function POST(
 
     // Verifica janela do cronograma (se existir item custom com ação correspondente).
     // Sem item custom configurado, mantém comportamento antigo (aceita sempre).
-    const acaoJanela = RECURSO_FASE_TO_JANELA[data.fase]
+    const acaoJanela = acaoJanelaDaFase(data.fase)
     if (acaoJanela) {
       const info = janelaParaAcao(inscricao.edital.cronograma, acaoJanela)
       if (info && !info.ativa) {
@@ -194,11 +185,12 @@ export async function POST(
       },
     })
 
-    // Atualiza status da inscrição
-    await prisma.inscricao.update({
-      where: { id },
-      data: { status: 'RECURSO_ABERTO' },
-    })
+    // O status da inscrição NÃO muda aqui. Ele carrega o resultado publicado
+    // (CONTEMPLADA/SUPLENTE/NAO_CONTEMPLADA/RESULTADO_PRELIMINAR), e sobrescrevê-lo
+    // por RECURSO_ABERTO apagava esse resultado de forma irrecuperável e ainda
+    // carimbava "Em recurso" ao lado do nome da pessoa na lista pública — quem
+    // recorreu virava informação pública antes de qualquer decisão.
+    // "Tem recurso aberto" agora se deduz da existência do próprio Recurso.
 
     await logAudit({
       userId: session.user.id,

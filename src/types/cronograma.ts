@@ -18,6 +18,9 @@ export interface CronogramaFaseItem {
 //   - RECURSO_EDITAL_JANELA:      libera botão público de recurso contra o edital (pré-inscrição)
 //   - RECURSO_HABILITACAO_JANELA: libera form de recurso fase HABILITACAO
 //   - RECURSO_RESULTADO_JANELA:   libera form de recurso fase RESULTADO_PRELIMINAR
+//   - RECURSO_RESULTADO_FINAL_JANELA: libera form de recurso fase RESULTADO_FINAL
+//     (quem recorre aqui já está CONTEMPLADA/SUPLENTE/NAO_CONTEMPLADA, ou seja,
+//      o edital já alocou vagas — sem esta janela o prazo nunca fecharia)
 //
 // Marcos de publicação (disponibilizam lista pública a partir de dataHora):
 //   - PUBLICACAO_INSCRITOS:                 lista de inscrições com status >= ENVIADA
@@ -29,6 +32,7 @@ export type AcaoJanela =
   | 'RECURSO_EDITAL_JANELA'
   | 'RECURSO_HABILITACAO_JANELA'
   | 'RECURSO_RESULTADO_JANELA'
+  | 'RECURSO_RESULTADO_FINAL_JANELA'
   | 'PUBLICACAO_INSCRITOS'
   | 'PUBLICACAO_HABILITADOS'
   | 'PUBLICACAO_HABILITADOS_POS_RECURSOS'

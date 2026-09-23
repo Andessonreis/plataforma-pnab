@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/db'
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
 import { respostaRecursoLiberada } from '@/lib/edital/fase'
+import { acaoJanelaDaFase } from '@/lib/edital/recurso-janela'
+import { janelaParaAcao, mensagemJanela } from '@/lib/utils/cronograma-janela'
 import { enqueueEmail } from '@/lib/queue'
 import { siteBaseUrl } from '@/lib/utils/site-url'
 import { ServiceError } from './errors'
@@ -25,17 +27,33 @@ async function notifyEquipeRecursoSubmetido(inscricaoId: string, editalTitulo: s
   )
 }
 
-/** Notifica o proponente do resultado do recurso. */
-async function notifyProponenteRecursoDecidido(inscricaoId: string, decisao: string, justificativa: string) {
+/**
+ * Notifica o proponente do resultado do recurso — só depois que a fase do
+ * edital libera a divulgação daquela decisão.
+ *
+ * O e-mail carrega decisão e justificativa, então precisa respeitar o mesmo
+ * portão que `listRecursos` aplica na leitura (`respostaRecursoLiberada`).
+ * Recurso do resultado preliminar é julgado durante a fase RECURSO, enquanto
+ * a comissão ainda corrige notas: avisar no ato da decisão divulgaria o mérito
+ * antes da publicação oficial, e e-mail não tem como ser recolhido depois.
+ * Sem o e-mail, o proponente vê a decisão na sua área assim que a fase liberar.
+ */
+async function notifyProponenteRecursoDecidido(
+  inscricaoId: string,
+  faseRecurso: string,
+  decisao: string,
+  justificativa: string,
+) {
   const inscricao = await prisma.inscricao.findUnique({
     where: { id: inscricaoId },
     select: {
       numero: true,
       proponente: { select: { nome: true, email: true } },
-      edital: { select: { titulo: true } },
+      edital: { select: { titulo: true, status: true } },
     },
   })
   if (!inscricao) return
+  if (!respostaRecursoLiberada(faseRecurso, inscricao.edital.status)) return
 
   const url = `${siteBaseUrl()}/proponente/inscricoes/${inscricaoId}`
   await enqueueEmail({
@@ -89,7 +107,7 @@ async function aplicarDecisao(
   })
 
   try {
-    await notifyProponenteRecursoDecidido(inscricaoId, decisao, justificativa)
+    await notifyProponenteRecursoDecidido(inscricaoId, fase, decisao, justificativa)
   } catch (err) {
     console.error({ message: 'Falha ao enfileirar e-mail de recurso decidido', inscricaoId, err })
   }
@@ -103,7 +121,10 @@ export async function submitRecurso(
 ) {
   const inscricao = await prisma.inscricao.findUnique({
     where: { id: inscricaoId },
-    select: { proponenteId: true, status: true, editalId: true, edital: { select: { titulo: true } } },
+    select: {
+      proponenteId: true, status: true, editalId: true,
+      edital: { select: { titulo: true, cronograma: true } },
+    },
   })
 
   if (!inscricao) throw new ServiceError('NOT_FOUND', 'Inscrição não encontrada.')
@@ -112,6 +133,17 @@ export async function submitRecurso(
   const allowedFases = STATUS_ALLOWS_RECURSO[inscricao.status] ?? []
   if (!allowedFases.includes(data.fase)) {
     throw new ServiceError('BAD_REQUEST', 'Não é possível interpor recurso nesta fase.')
+  }
+
+  // Mesma checagem de prazo que a rota do proponente faz. Faltava aqui, então
+  // o v1 aceitava recurso fora da janela enquanto a tela recusava.
+  const acaoJanela = acaoJanelaDaFase(data.fase)
+  if (acaoJanela) {
+    const janela = janelaParaAcao(inscricao.edital.cronograma, acaoJanela)
+    if (janela && !janela.ativa) {
+      // LOCKED = 422, mesmo status que a rota do proponente devolve.
+      throw new ServiceError('LOCKED', `Recurso fora da janela. ${mensagemJanela(janela)}.`)
+    }
   }
 
   const existing = await prisma.recurso.findFirst({
@@ -128,10 +160,8 @@ export async function submitRecurso(
     },
   })
 
-  await prisma.inscricao.update({
-    where: { id: inscricaoId },
-    data: { status: 'RECURSO_ABERTO' },
-  })
+  // Status da inscrição preservado de propósito — ver a mesma nota na rota
+  // do proponente (`api/proponente/inscricoes/[id]/recurso/route.ts`).
 
   await logAudit({
     userId,

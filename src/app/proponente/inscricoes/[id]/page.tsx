@@ -192,6 +192,7 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
             inscricaoId={inscricao.id}
             numero={inscricao.numero}
             proponenteNome={inscricao.proponente.nome}
+            fasesJaRecorridas={inscricao.recursos.map((r) => r.fase)}
           />
           <DocumentosCard inscricaoId={inscricao.id} status={status} />
           <AcoesCard inscricaoId={inscricao.id} status={status} editalStatus={inscricao.edital.status} />

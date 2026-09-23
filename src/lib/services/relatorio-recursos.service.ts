@@ -35,7 +35,8 @@ const ETAPAS_RECURSO: Record<EtapaRecurso, EtapaConfig> = {
     rotulo: ETAPAS_RECURSO_ROTULO.selecao,
     fase: 'RESULTADO_PRELIMINAR',
     acaoJanela: 'RECURSO_RESULTADO_JANELA',
-    // Inclui RECURSO_ABERTO: submitRecurso move a inscrição para esse status ao registrar o recurso.
+    // Inclui RECURSO_ABERTO por compatibilidade com inscrições de editais
+    // anteriores: submitRecurso já não move a inscrição para esse status.
     universo: PUBLICACAO_STATUS_FILTER.PUBLICACAO_RESULTADO_PRELIMINAR,
     labelUniverso: 'Inscrições classificadas',
   },
