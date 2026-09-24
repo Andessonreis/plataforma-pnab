@@ -7,7 +7,7 @@ import { getEditaisVisiveis } from '@/lib/edital-acesso'
 import { Card, Badge, EmptyState, IconShield } from '@/components/ui'
 import { CabecalhoEdital } from '../cabecalho-edital'
 import { SelecaoEdital } from './edital-picker'
-import { classificarRecurso, whereInscricoesComRecurso } from './filtros'
+import { WHERE_RECURSO_ATIVO, classificarRecurso, whereInscricoesComRecurso } from './filtros'
 
 export const metadata: Metadata = {
   title: 'Recursos — Portal PNAB Irecê',
@@ -16,13 +16,11 @@ export const metadata: Metadata = {
 const ROTULO_SITUACAO = {
   pendentes: 'pendente',
   respondidos: 'respondido',
-  decididos: 'decidido',
 } as const
 
 const VARIANTE_SITUACAO = {
   pendentes: 'warning',
   respondidos: 'success',
-  decididos: 'neutral',
 } as const
 
 interface Props {
@@ -50,7 +48,7 @@ export default async function AvaliadorRecursosPage({ searchParams }: Props) {
 
   const edital = await prisma.edital.findUnique({
     where: { id: editalIdFiltro },
-    select: { titulo: true, ano: true, status: true },
+    select: { titulo: true, ano: true },
   })
   if (!edital) redirect('/avaliador/recursos')
 
@@ -62,11 +60,11 @@ export default async function AvaliadorRecursosPage({ searchParams }: Props) {
       numero: true,
       proponente: { select: { nome: true } },
       recursos: {
+        where: WHERE_RECURSO_ATIVO,
         orderBy: { createdAt: 'desc' },
         select: {
           id: true,
           fase: true,
-          decisao: true,
           respostas: { where: { avaliadorId }, select: { id: true } },
         },
       },
@@ -85,7 +83,7 @@ export default async function AvaliadorRecursosPage({ searchParams }: Props) {
         editalId={editalIdFiltro}
         titulo={edital.titulo}
         ano={edital.ano}
-        ativo={edital.status === 'RECURSO'}
+        ativo={inscricoes.length > 0}
         situacao={
           totalPendentes > 0
             ? `${totalPendentes} ${totalPendentes === 1 ? 'recurso aguarda' : 'recursos aguardam'} sua resposta.`
@@ -98,8 +96,8 @@ export default async function AvaliadorRecursosPage({ searchParams }: Props) {
         <Card>
           <EmptyState
             icon={<IconShield className="h-8 w-8 text-slate-400" />}
-            title="Nenhum recurso neste edital"
-            description="Quando um proponente de uma inscrição sua interpuser recurso, ele aparece aqui para você responder."
+            title="Nenhum recurso em aberto neste edital"
+            description="Quando um proponente de uma inscrição sua interpuser recurso, ele aparece aqui para você responder. Recursos já decididos saem desta lista."
           />
         </Card>
       ) : (
