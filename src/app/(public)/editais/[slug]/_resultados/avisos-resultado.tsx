@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { FaixaSecao } from '@/components/ui/faixa-secao'
-import { hrefResultados } from '@/lib/edital/rotas-resultado'
+import { hrefResultadoRecursos, hrefResultados } from '@/lib/edital/rotas-resultado'
 import { formatDate } from '@/lib/utils/format'
 import type { ResultadoEdital } from './consulta'
 
@@ -67,6 +67,15 @@ export function ComoLer({ dados }: { dados: ResultadoEdital }) {
             A lista publicada antes está no{' '}
             <Link href={hrefResultados(dados.slug, false)} className="font-semibold text-brand-700 underline underline-offset-4">
               resultado preliminar
+            </Link>
+            .
+          </li>
+        )}
+        {!preliminar && (
+          <li>
+            A decisão de cada recurso está em{' '}
+            <Link href={hrefResultadoRecursos(dados.slug)} className="font-semibold text-brand-700 underline underline-offset-4">
+              resultado dos recursos
             </Link>
             .
           </li>

@@ -8,10 +8,10 @@ import { prazoRecursoEncerrado, protocoladoForaDoPrazo } from '@/lib/edital/praz
 import type { RelatorioRecursosData } from '@/lib/pdf/modelo/tipos'
 import { generateRelatorioRecursos, type RelatorioRecursosItem } from '@/lib/pdf/relatorio-recursos'
 import { gerarRelatorioRecursosV1 } from '@/lib/pdf/template-1/relatorio-recursos'
-import { recursoDecisaoLabel } from '@/lib/status-maps'
 import { formatDate } from '@/lib/utils/format'
 import { ServiceError } from './errors'
 import { ETAPAS_RECURSO, faseDaEtapa } from './relatorio-recursos.etapas'
+import { buscarRecursosDaEtapa, situacaoDe } from './recursos-da-etapa'
 
 interface EmitirRelatorioRecursosInput {
   editalId: string
@@ -38,12 +38,6 @@ const GERADORES: Record<TemplatePdf, (dados: RelatorioRecursosData) => Promise<B
   2: generateRelatorioRecursos,
 }
 
-/** Decisão ausente é recurso ainda em análise; valor desconhecido aparece como veio. */
-function situacaoDe(decisao: string | null): string {
-  if (decisao === null) return 'Em análise'
-  return recursoDecisaoLabel[decisao] ?? decisao
-}
-
 /**
  * Emite o extrato dos recursos interpostos numa etapa, com ou sem recurso.
  *
@@ -68,21 +62,7 @@ export async function emitirRelatorioRecursos(
   const { fase, acaoJanela } = faseDaEtapa(edital.cronograma, config)
   const prazo = prazoRecursoEncerrado(edital.cronograma, acaoJanela, config.rotulo)
 
-  const [recursos, totalInscricoes] = await Promise.all([
-    prisma.recurso.findMany({
-      where: { fase, inscricao: { editalId } },
-      // O id desempata protocolos do mesmo instante: sem ele a ordem, e com ela o hash, poderia variar.
-      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
-      select: {
-        createdAt: true,
-        decisao: true,
-        inscricao: {
-          select: { numero: true, proponente: { select: { nome: true, cpfCnpj: true } } },
-        },
-      },
-    }),
-    prisma.inscricao.count({ where: { editalId, status: { in: config.universo } } }),
-  ])
+  const { recursos, totalInscricoes } = await buscarRecursosDaEtapa(editalId, fase, config.universo)
 
   const fora = recursos.map((r) => protocoladoForaDoPrazo(r.createdAt, prazo))
   const totalForaDoPrazo = fora.filter(Boolean).length

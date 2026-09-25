@@ -44,3 +44,31 @@ describe('CronogramaEdital — links de resultado', () => {
     expect(saida).toContain('https://gateway/Ed 2940.pdf')
   })
 })
+
+describe('CronogramaEdital — link do resultado dos recursos', () => {
+  it('o marco do recurso da seleção com link mostra "Ver resultado dos recursos"', () => {
+    const saida = html([
+      marco({ label: 'Período para recursos — seleção', acao: 'RECURSO_RESULTADO_FINAL_JANELA', link: '/editais/festival/resultados-recurso-avaliacao' }),
+      PROXIMO,
+    ])
+    expect(saida).toContain('href="/editais/festival/resultados-recurso-avaliacao"')
+    expect(saida).toContain('Ver resultado dos recursos')
+  })
+
+  it('outros marcos com link continuam com "Ver lista"', () => {
+    const saida = html([marco({ link: '/editais/festival/algum-lugar' }), PROXIMO])
+    expect(saida).toContain('Ver lista')
+    expect(saida).not.toContain('Ver resultado dos recursos')
+  })
+
+  it('marco de recurso com link para outro lugar (ex.: um PDF) continua com "Ver lista"', () => {
+    const saida = html([
+      marco({ label: 'Período para recursos — seleção', acao: 'RECURSO_RESULTADO_FINAL_JANELA', link: 'https://storage/relatorio.pdf' }),
+      PROXIMO,
+    ])
+    expect(saida).toContain('href="https://storage/relatorio.pdf"')
+    expect(saida).toContain('Ver lista')
+    expect(saida).not.toContain('Ver resultado dos recursos')
+  })
+})
+

@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { IconArrowRight, IconDownload } from '@/components/ui/icons'
 import { getCronogramaItemStatus } from '@/lib/utils/cronograma'
 import { isAcaoPublicacao, isAcaoResultado } from '@/types/cronograma'
-import { hrefResultados } from '@/lib/edital/rotas-resultado'
+import { hrefResultadoRecursos, hrefResultados } from '@/lib/edital/rotas-resultado'
 import type { CronogramaDisplayItem } from '@/types/cronograma'
 import { LinhaDatasMarco } from './linha-datas-marco'
 import { RecursoEditalButton } from './recurso-edital-button'
@@ -105,7 +105,7 @@ export function CronogramaEdital({ itens, slug, agora, escuro = false }: Cronogr
                         href={linkDireto}
                         className={`inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] ${corAcao} underline-offset-4 hover:underline`}
                       >
-                        Ver lista
+                        {linkDireto === hrefResultadoRecursos(slug) ? 'Ver resultado dos recursos' : 'Ver lista'}
                         <IconArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
                       </Link>
                     ) : (
