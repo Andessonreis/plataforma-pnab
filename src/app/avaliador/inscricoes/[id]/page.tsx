@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui'
 import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
 import { CRITERIOS_AVALIACAO_PADRAO, type CriterioAvaliacao } from '@/lib/avaliacao-criterios'
 import type { InscricaoStatus } from '@prisma/client'
-import { AvaliacaoForm } from '@/app/admin/inscricoes/[id]/avaliacao-form'
 import { AnexoViewer } from '@/app/admin/inscricoes/[id]/anexo-viewer'
 import { temAcessoEdital } from '@/lib/edital-acesso'
 import { STATUS_BLOQUEADO_PARA_AVALIADOR } from '@/lib/services/avaliacao-buckets'
@@ -17,7 +16,7 @@ import type { CampoFormulario } from '@/types/campo-formulario'
 import type { EtapaCustomizada } from '@/types/etapa-customizada'
 import Link from 'next/link'
 import { exigirSessaoAvaliador } from '@/app/avaliador/sessao-avaliador'
-import { SomenteLeitura } from '@/components/espelho/somente-leitura'
+import { MinhaAvaliacao } from './minha-avaliacao'
 import { RecursosInscricao } from './recursos-inscricao'
 
 interface Props {
@@ -98,6 +97,16 @@ export default async function AvaliadorInscricaoDetailPage({ params }: Props) {
   const etapasCustomizadas = (Array.isArray(inscricao.edital.etapasCustomizadas)
     ? inscricao.edital.etapasCustomizadas : []) as unknown as EtapaCustomizada[]
 
+  const avaliacaoAberta = podeAvaliar(inscricao.edital.status, inscricao.status)
+  const consultaPropriaAvaliacao = !avaliacaoAberta && minhaAvaliacao?.finalizada === true
+  const propsAvaliacao = {
+    inscricao: { id: inscricao.id, numero: inscricao.numero },
+    criterios,
+    avaliacao: minhaAvaliacao,
+    formulaAvaliacao: inscricao.edital.formulaAvaliacao,
+    somenteLeitura: espelho,
+  }
+
   return (
     <section className="space-y-6">
       {/* Header */}
@@ -149,35 +158,17 @@ export default async function AvaliadorInscricaoDetailPage({ params }: Props) {
         }
       />
 
+      {/* Com a avaliação fechada, o avaliador ainda precisa do próprio parecer para julgar o recurso. */}
+      {consultaPropriaAvaliacao && <MinhaAvaliacao {...propsAvaliacao} podeReabrir={false} avaliacaoEncerrada />}
+
       {/* Recursos — responder (apenas avaliador designado desta inscrição) */}
       {minhaAvaliacao && inscricao.recursos.length > 0 && (
         <RecursosInscricao inscricaoId={inscricao.id} recursos={inscricao.recursos} somenteLeitura={espelho} />
       )}
 
       {/* Formulário de avaliação — gateado por fase do edital (#84) */}
-      {podeAvaliar(inscricao.edital.status, inscricao.status) ? (
-        <SomenteLeitura ativo={espelho}>
-          <AvaliacaoForm
-            inscricaoId={inscricao.id}
-            inscricaoNumero={inscricao.numero}
-            criterios={criterios}
-            initialAvaliacao={
-              minhaAvaliacao
-                ? {
-                  id: minhaAvaliacao.id,
-                  notas: minhaAvaliacao.notas as { criterio: string; nota: number; peso: number }[],
-                  parecer: minhaAvaliacao.parecer,
-                  notaTotal: minhaAvaliacao.notaTotal === null ? null : String(minhaAvaliacao.notaTotal),
-                  finalizada: minhaAvaliacao.finalizada,
-                  updatedAt: minhaAvaliacao.updatedAt.toISOString(),
-                }
-                : null
-            }
-            formulaAvaliacao={inscricao.edital.formulaAvaliacao}
-            podeReabrir={podeReabrir}
-            avaliacaoEncerrada={avaliacaoEncerrada}
-          />
-        </SomenteLeitura>
+      {avaliacaoAberta ? (
+        <MinhaAvaliacao {...propsAvaliacao} podeReabrir={podeReabrir} avaliacaoEncerrada={avaliacaoEncerrada} />
       ) : (
         <ForaDaFaseAlert
           mensagem={mensagemForaDaFase(inscricao.edital.status, 'avaliar')}
