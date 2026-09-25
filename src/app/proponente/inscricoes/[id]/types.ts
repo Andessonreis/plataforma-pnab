@@ -10,6 +10,8 @@ export interface AnexoItem {
 
 export interface AvaliacaoItem {
   notaTotal: unknown
+  /** Valores de antes da revisão feita no julgamento do recurso, quando houve. */
+  revisaoRecurso?: unknown
   parecer: string | null
   finalizada: boolean
   createdAt: Date

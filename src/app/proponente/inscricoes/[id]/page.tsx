@@ -89,7 +89,7 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
         // Proponente só vê avaliações finalizadas — rascunhos e placeholders
         // não devem expor "0" como se fosse nota recebida (bug #66).
         where: { finalizada: true },
-        select: { notaTotal: true, parecer: true, finalizada: true, createdAt: true },
+        select: { notaTotal: true, revisaoRecurso: true, parecer: true, finalizada: true, createdAt: true },
       },
       recursos: {
         select: {
@@ -184,7 +184,11 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
         {/* Coluna lateral fina — um único painel de status/metadados dividido
             por seção, não cinco cards empilhados do mesmo peso. */}
         <Card padding="lg" className="h-fit [&>*+*]:mt-5 [&>*+*]:pt-5 [&>*+*]:border-t [&>*+*]:border-slate-100">
-          <AvaliacoesCard avaliacoes={inscricao.avaliacoes} resultadoVisivel={resultadoVisivel} />
+          <AvaliacoesCard
+            avaliacoes={inscricao.avaliacoes}
+            resultadoVisivel={resultadoVisivel}
+            resultadoFinalLiberado={inscricao.edital.resultadoFinalPublicadoEm !== null}
+          />
           <RecursosCard recursos={inscricao.recursos} inscricaoId={inscricao.id} editalStatus={inscricao.edital.status} />
           <InterporRecursoSection
             status={status}
