@@ -4,7 +4,7 @@
  * É a cópia de referência arquivada pela Secretaria e a base do dossiê que
  * recebe os anexos originais mesclados.
  */
-import { maskCpfCnpjParcial } from '@/lib/utils/mask'
+import { formatCpfCnpj } from '@/lib/utils/format'
 import type { CampoFormulario } from '@/types/campo-formulario'
 import type { Emissao } from '@/lib/documentos/emissao'
 import {
@@ -14,7 +14,7 @@ import { criarDocumentoOficial, finalizarDocumento, garantirEspaco } from '../do
 import { CORES, FONTES, LARGURA_UTIL, X_ESQUERDA, LIMITE_CONTEUDO } from '../documento-oficial/tema'
 import { novaPagina } from '../documento-oficial/pagina'
 import {
-  buildCampoKeys, formatAnexoStatus, formatCampoValue, formatTipoProponente,
+  buildCampoKeys, formatCampoValue, formatTipoProponente,
   resolveCampoDef, resolveCampoLabel, STATUS_LABELS,
 } from './formatacao'
 
@@ -116,23 +116,13 @@ export async function generateProjetoCompleto(data: ProjetoCompletoData): Promis
   addCompactSection(doc, 'Proponente')
   addInfoBlock(doc, [
     { label: 'Nome', value: data.proponente.nome },
-    { label: 'CPF/CNPJ', value: maskCpfCnpjParcial(data.proponente.cpfCnpj) },
+    { label: 'CPF/CNPJ', value: formatCpfCnpj(data.proponente.cpfCnpj) },
     { label: 'E-mail', value: data.proponente.email },
     { label: 'Tipo', value: formatTipoProponente(data.proponente.tipoProponente) },
   ])
   addDivider(doc)
 
   desenharCampos(doc, data)
-
-  if (data.anexos.length > 0) {
-    garantirEspaco(doc, 40)
-    addCompactSection(doc, 'Anexos')
-    addInfoBlock(doc, data.anexos.map((anexo) => ({
-      label: anexo.titulo,
-      value: `${anexo.tipo} — ${formatAnexoStatus(anexo.valido)}`,
-    })))
-    addDivider(doc)
-  }
 
   garantirEspaco(doc, 60)
   addCompactSection(doc, 'Inscrição')

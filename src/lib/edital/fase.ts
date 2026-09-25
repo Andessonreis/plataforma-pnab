@@ -56,6 +56,11 @@ export function resultadoDefinitivo(status: string): boolean {
   return FASES_RESULTADO_DEFINITIVO.includes(status)
 }
 
+/** Fases em que já existe classificação para consultar e exportar. */
+export function classificacaoDisponivel(status: string): boolean {
+  return FASES_DO_PRELIMINAR.includes(status) || resultadoDefinitivo(status)
+}
+
 export function respostaRecursoLiberada(faseRecurso: string, editalStatus: EditalStatus): boolean {
   const liberaEm = FASE_LIBERACAO_RECURSO[faseRecurso]
   if (!liberaEm) return false

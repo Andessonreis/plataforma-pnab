@@ -33,13 +33,6 @@ export function formatTipoProponente(tipo: string): string {
   return TIPOS_PROPONENTE[tipo] ?? tipo
 }
 
-/** Status legíveis para anexos. */
-export function formatAnexoStatus(valido: boolean | null | undefined): string {
-  if (valido === true) return 'Válido'
-  if (valido === false) return 'Inválido'
-  return 'Pendente'
-}
-
 /** Definição completa de um campo, buscada pelo nome no formulário do edital. */
 export function resolveCampoDef(
   key: string,
