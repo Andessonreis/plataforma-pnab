@@ -1,14 +1,7 @@
-import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import type { Session } from 'next-auth'
 import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/db'
-
-/** Cookie que guarda qual avaliador o SUPER_ADMIN está acompanhando no modo espelho. */
-export const COOKIE_ESPELHO = 'pnab.espelho-avaliador'
-
-/** Duração do modo espelho; depois disso o SUPER_ADMIN escolhe o avaliador de novo. */
-export const DURACAO_ESPELHO_SEGUNDOS = 60 * 60 * 4
+import { lerEspelho } from '@/lib/espelho/visao'
 
 export interface SessaoAvaliador {
   /** Avaliador cuja visão as telas devem montar: o próprio, ou o espelhado. */
@@ -19,27 +12,17 @@ export interface SessaoAvaliador {
 }
 
 /**
- * Descobre de quem é a visão da área do avaliador.
- *
- * AVALIADOR sempre enxerga a si mesmo, e o cookie do espelho é ignorado para
- * ele: se valesse, qualquer avaliador poderia assumir a visão de outro. Só o
- * SUPER_ADMIN usa o cookie, e o alvo precisa ser um AVALIADOR ativo.
+ * Descobre de quem é a visão da área do avaliador. AVALIADOR sempre enxerga a si
+ * mesmo; só o SUPER_ADMIN passa pelo modo espelho (`lerEspelho`).
  */
 export async function resolverSessaoAvaliador(session: Session | null): Promise<SessaoAvaliador | null> {
   if (!session) return null
 
   const { role, id, name } = session.user
   if (role === 'AVALIADOR') return { avaliadorId: id, nome: name ?? 'Avaliador', espelho: false }
-  if (role !== 'SUPER_ADMIN') return null
 
-  const alvoId = (await cookies()).get(COOKIE_ESPELHO)?.value
-  if (!alvoId) return null
-
-  const alvo = await prisma.user.findFirst({
-    where: { id: alvoId, role: 'AVALIADOR', ativo: true },
-    select: { id: true, nome: true },
-  })
-  return alvo ? { avaliadorId: alvo.id, nome: alvo.nome, espelho: true } : null
+  const alvo = await lerEspelho(session, 'AVALIADOR')
+  return alvo ? { avaliadorId: alvo.usuarioId, nome: alvo.nome, espelho: true } : null
 }
 
 export async function obterSessaoAvaliador(): Promise<SessaoAvaliador | null> {

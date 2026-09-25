@@ -17,7 +17,7 @@ import type { CampoFormulario } from '@/types/campo-formulario'
 import type { EtapaCustomizada } from '@/types/etapa-customizada'
 import Link from 'next/link'
 import { exigirSessaoAvaliador } from '@/app/avaliador/sessao-avaliador'
-import { SomenteLeitura } from '@/app/avaliador/somente-leitura'
+import { SomenteLeitura } from '@/components/espelho/somente-leitura'
 import { RecursosInscricao } from './recursos-inscricao'
 
 interface Props {

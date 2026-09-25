@@ -1,61 +1,23 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { requireRole } from '../require-role'
 import { getEditaisVisiveis } from '@/lib/edital-acesso'
 import { prisma } from '@/lib/db'
-import {
-  Card,
-  Badge,
-  Pagination,
-  EmptyState,
-  FadeIn,
-  IconShield,
-  IconClipboard,
-  IconCheck,
-  IconClose,
-  IconArrowLeft,
-} from '@/components/ui'
-import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
 import { getResumoDivulgacao } from '@/lib/services/divulgacao-habilitacao.service'
 import { AbasStatus } from '@/components/abas-status'
 import { BuscaFiltro } from '@/components/busca-filtro'
-import { EditalPicker, type EditalHabilitacaoCard } from './edital-picker'
+import { SomenteLeitura } from '@/components/espelho/somente-leitura'
 import { DivulgarResultadoPanel } from './divulgar-resultado-panel'
-import type { InscricaoStatus, EditalStatus } from '@prisma/client'
+import { CabecalhoHabilitacao } from './cabecalho-habilitacao'
+import { ListaInscricoes } from './lista-inscricoes'
+import { SelecaoEdital } from './selecao-edital'
+import { AvisoEspelho } from './aviso-espelho'
+import { resolverVisaoHabilitacao } from './visao-habilitacao'
+import { ABAS, STATUS_HABILITACAO, type AbaKey } from './constantes'
 
 export const metadata: Metadata = {
   title: 'Habilitação — Portal PNAB Irecê',
 }
-
-const ABAS = {
-  pendentes: {
-    status: 'ENVIADA' as InscricaoStatus,
-    label: 'Aguardando conferência',
-  },
-  habilitadas: {
-    status: 'HABILITADA' as InscricaoStatus,
-    label: 'Habilitadas / Aptas',
-  },
-  inabilitadas: {
-    status: 'INABILITADA' as InscricaoStatus,
-    label: 'Inabilitadas / Inaptas',
-  },
-} as const
-
-type AbaKey = keyof typeof ABAS
-
-/** Editais que alcançaram (ou já passaram por) a fase de habilitação. */
-const EDITAL_STATUS_COM_HABILITACAO: EditalStatus[] = [
-  'HABILITACAO',
-  'AVALIACAO',
-  'RESULTADO_PRELIMINAR',
-  'RECURSO',
-  'RESULTADO_FINAL',
-  'ENCERRADO',
-]
-
-const STATUS_HABILITACAO: InscricaoStatus[] = ['ENVIADA', 'HABILITADA', 'INABILITADA']
 
 interface Props {
   searchParams: Promise<{
@@ -68,17 +30,20 @@ interface Props {
 
 export default async function AdminHabilitacaoPage({ searchParams }: Props) {
   const session = await requireRole('HABILITADOR', 'ADMIN')
-  const isHabilitador = session.user.role === 'HABILITADOR'
-  const editaisVisiveis = isHabilitador
-    ? await getEditaisVisiveis(session.user.id, 'HABILITADOR')
-    : null
+  const { escopoId, espelho } = await resolverVisaoHabilitacao(session)
+  const editaisVisiveis = escopoId ? await getEditaisVisiveis(escopoId, 'HABILITADOR') : null
 
   const params = await searchParams
   const editalIdFilter = params.editalId || undefined
 
   // Sem edital escolhido → tela de seleção, mesmo havendo só um edital.
   if (!editalIdFilter) {
-    return renderPicker(editaisVisiveis)
+    return (
+      <>
+        <AvisoEspelho nome={espelho} />
+        <SelecaoEdital editaisVisiveis={editaisVisiveis} />
+      </>
+    )
   }
 
   const abaParam = (params.aba ?? 'pendentes') as AbaKey
@@ -131,9 +96,11 @@ export default async function AdminHabilitacaoPage({ searchParams }: Props) {
   ])
 
   const countMap = Object.fromEntries(contagens.map((c) => [c.status, c._count._all]))
-  const totalPendentes = countMap['ENVIADA'] ?? 0
-  const totalHabilitadas = countMap['HABILITADA'] ?? 0
-  const totalInabilitadas = countMap['INABILITADA'] ?? 0
+  const abasCount: Record<AbaKey, number> = {
+    pendentes: countMap['ENVIADA'] ?? 0,
+    habilitadas: countMap['HABILITADA'] ?? 0,
+    inabilitadas: countMap['INABILITADA'] ?? 0,
+  }
 
   const totalPages = Math.ceil(total / pageSize)
   const ativo = edital.status === 'HABILITACAO'
@@ -146,20 +113,6 @@ export default async function AdminHabilitacaoPage({ searchParams }: Props) {
     return `/admin/habilitacao?${sp.toString()}`
   }
 
-  const baseUrl = (() => {
-    const sp = new URLSearchParams()
-    sp.set('editalId', edital.id)
-    sp.set('aba', abaAtiva)
-    if (searchQuery) sp.set('search', searchQuery)
-    return `/admin/habilitacao?${sp.toString()}`
-  })()
-
-  const abasCount: Record<AbaKey, number> = {
-    pendentes: totalPendentes,
-    habilitadas: totalHabilitadas,
-    inabilitadas: totalInabilitadas,
-  }
-
   function detalheHref(inscricaoId: string) {
     const sp = new URLSearchParams()
     sp.set('editalId', edital!.id)
@@ -169,58 +122,13 @@ export default async function AdminHabilitacaoPage({ searchParams }: Props) {
 
   return (
     <section>
-      <FadeIn>
-        {/* Cabeçalho institucional — escopado no edital escolhido */}
-        <header className="mb-6 sm:mb-8">
-          <Link
-            href="/admin/habilitacao"
-            className="inline-flex items-center gap-1 text-sm text-brand-600 hover:text-brand-700 font-medium mb-3"
-          >
-            <IconArrowLeft className="h-4 w-4" />
-            Trocar edital
-          </Link>
+      <AvisoEspelho nome={espelho} />
 
-          <div className="flex items-start gap-3 sm:gap-4">
-            <div className="flex items-center justify-center h-11 w-11 sm:h-12 sm:w-12 rounded-xl bg-brand-50 text-brand-700 shrink-0 ring-1 ring-brand-100">
-              <IconShield className="h-6 w-6" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 leading-tight">
-                {edital.titulo}
-              </h1>
-              <p className="text-sm sm:text-base text-slate-600 mt-1">
-                Edição {edital.ano} <span className="text-slate-400">·</span> Conferência e Validação documental
-              </p>
-            </div>
-          </div>
+      <CabecalhoHabilitacao titulo={edital.titulo} ano={edital.ano} ativo={ativo} />
 
-          {/* Status da etapa */}
-          {ativo ? (
-            <div className="mt-5 flex flex-wrap items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-600" />
-              </span>
-              <p className="text-sm text-emerald-900">
-                <strong className="font-semibold">Fase aberta de conferência</strong> — confira a
-                documentação enviada e valide as inscrições para habilitação e análise da comissão.
-              </p>
-            </div>
-          ) : (
-            <div className="mt-5 flex items-start gap-2.5 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
-              <svg className="h-4 w-4 mt-0.5 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <p className="text-sm text-slate-600">
-                A fase de conferência deste edital já foi encerrada. As inscrições abaixo refletem o
-                histórico da conferência.
-              </p>
-            </div>
-          )}
-        </header>
-      </FadeIn>
-
-      <DivulgarResultadoPanel editalId={edital.id} resumo={resumoDivulgacao} />
+      <SomenteLeitura ativo={espelho !== null}>
+        <DivulgarResultadoPanel editalId={edital.id} resumo={resumoDivulgacao} />
+      </SomenteLeitura>
 
       <AbasStatus
         abas={(Object.keys(ABAS) as AbaKey[]).map((aba) => ({
@@ -245,197 +153,15 @@ export default async function AdminHabilitacaoPage({ searchParams }: Props) {
         />
       )}
 
-      {/* Conteúdo principal */}
-      {inscricoes.length === 0 ? (
-        <Card padding="md">
-          <EmptyState
-            icon={
-              abaAtiva === 'pendentes' ? (
-                <IconClipboard className="h-8 w-8 text-slate-400" />
-              ) : abaAtiva === 'habilitadas' ? (
-                <IconCheck className="h-8 w-8 text-slate-400" />
-              ) : (
-                <IconClose className="h-8 w-8 text-slate-400" />
-              )
-            }
-            title={
-              abaAtiva === 'pendentes'
-                ? ativo
-                  ? 'Nada para conferir no momento'
-                  : 'Sem inscrições pendentes'
-                : abaAtiva === 'habilitadas'
-                ? 'Nenhuma inscrição habilitada ainda'
-                : 'Nenhuma inscrição inabilitada'
-            }
-            description={
-              abaAtiva === 'pendentes'
-                ? 'Quando novas inscrições forem enviadas e a fase estiver aberta, elas aparecerão aqui.'
-                : 'Ajuste os filtros acima ou troque de aba para ver outras inscrições.'
-            }
-          />
-        </Card>
-      ) : (
-        <>
-          {/* Mobile: lista de cards */}
-          <ul className="sm:hidden space-y-3" aria-label="Inscrições">
-            {inscricoes.map((inscricao) => (
-              <li key={inscricao.id}>
-                <Link
-                  href={detalheHref(inscricao.id)}
-                  className="block rounded-lg border border-slate-200 bg-white p-4 hover:border-brand-300 hover:shadow-sm transition-all"
-                >
-                  <div className="flex items-start justify-between gap-2 mb-1.5">
-                    <p className="text-sm font-semibold text-slate-900 leading-snug">
-                      {inscricao.proponente.nome}
-                    </p>
-                    <Badge variant={inscricaoStatusVariant[inscricao.status as InscricaoStatus]}>
-                      {inscricaoStatusLabel[inscricao.status as InscricaoStatus]}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center justify-between text-[11px] text-slate-500">
-                    <span className="font-mono">{inscricao.numero}</span>
-                    <div className="flex items-center gap-3">
-                      <span>
-                        {inscricao._count.anexos} {inscricao._count.anexos === 1 ? 'doc.' : 'docs.'}
-                      </span>
-                      <span>
-                        {inscricao.submittedAt
-                          ? new Date(inscricao.submittedAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
-                          : '—'}
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
-
-          {/* Desktop: tabela */}
-          <div className="hidden sm:block rounded-xl border border-slate-200 bg-white overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-200">
-                  <th className="text-left py-3 px-4 font-semibold text-slate-700 text-xs uppercase tracking-wider">Número</th>
-                  <th className="text-left py-3 px-4 font-semibold text-slate-700 text-xs uppercase tracking-wider">Proponente</th>
-                  <th className="text-left py-3 px-4 font-semibold text-slate-700 text-xs uppercase tracking-wider">Docs.</th>
-                  <th className="text-left py-3 px-4 font-semibold text-slate-700 text-xs uppercase tracking-wider">Enviada em</th>
-                  <th className="text-right py-3 px-4 font-semibold text-slate-700 text-xs uppercase tracking-wider">Ação</th>
-                </tr>
-              </thead>
-              <tbody>
-                {inscricoes.map((inscricao) => (
-                  <tr key={inscricao.id} className="border-t border-slate-100 hover:bg-slate-50/60 transition-colors">
-                    <td className="py-3.5 px-4 font-mono text-xs text-slate-700">{inscricao.numero}</td>
-                    <td className="py-3.5 px-4">
-                      <p className="font-medium text-slate-900">{inscricao.proponente.nome}</p>
-                      <p className="text-xs text-slate-500 font-mono mt-0.5">{inscricao.proponente.cpfCnpj}</p>
-                    </td>
-                    <td className="py-3.5 px-4 text-slate-700 tabular-nums">{inscricao._count.anexos}</td>
-                    <td className="py-3.5 px-4 text-slate-600">
-                      {inscricao.submittedAt
-                        ? new Date(inscricao.submittedAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
-                        : '—'}
-                    </td>
-                    <td className="py-3.5 px-4 text-right">
-                      <Link
-                        href={detalheHref(inscricao.id)}
-                        className="inline-flex items-center gap-1 text-brand-700 hover:text-brand-800 font-medium text-sm"
-                      >
-                        {abaAtiva === 'pendentes' ? 'Conferir documentos' : 'Ver detalhes'}
-                        <span aria-hidden>→</span>
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <Pagination
-            currentPage={page}
-            totalPages={totalPages}
-            baseUrl={baseUrl}
-            className="mt-5 sm:mt-6"
-          />
-        </>
-      )}
+      <ListaInscricoes
+        inscricoes={inscricoes}
+        abaAtiva={abaAtiva}
+        ativo={ativo}
+        detalheHref={detalheHref}
+        page={page}
+        totalPages={totalPages}
+        baseUrl={hrefAba(abaAtiva)}
+      />
     </section>
   )
-}
-
-/** Tela de seleção de edital — sempre aparece, mesmo com um edital só. */
-async function renderPicker(editaisVisiveis: string[] | null) {
-  const editais = await prisma.edital.findMany({
-    where: {
-      status: { in: EDITAL_STATUS_COM_HABILITACAO },
-      ...(editaisVisiveis ? { id: { in: editaisVisiveis } } : {}),
-    },
-    select: { id: true, titulo: true, ano: true, status: true },
-  })
-
-  const contagens = editais.length
-    ? await prisma.inscricao.groupBy({
-        by: ['editalId', 'status'],
-        where: {
-          editalId: { in: editais.map((e) => e.id) },
-          status: { in: STATUS_HABILITACAO },
-        },
-        _count: { _all: true },
-      })
-    : []
-
-  const tally = new Map<string, { pendentes: number; habilitadas: number; inabilitadas: number }>()
-  for (const e of editais) tally.set(e.id, { pendentes: 0, habilitadas: 0, inabilitadas: 0 })
-  for (const c of contagens) {
-    const t = tally.get(c.editalId)
-    if (!t) continue
-    const n = c._count._all
-    if (c.status === 'ENVIADA') t.pendentes += n
-    else if (c.status === 'HABILITADA') t.habilitadas += n
-    else if (c.status === 'INABILITADA') t.inabilitadas += n
-  }
-
-  // Editais na fase ativa sempre aparecem; encerrados só quando têm histórico.
-  const cards: EditalHabilitacaoCard[] = editais
-    .map((e) => ({ ...e, ...tally.get(e.id)! }))
-    .filter((c) => c.status === 'HABILITACAO' || c.pendentes + c.habilitadas + c.inabilitadas > 0)
-    .sort((a, b) => {
-      const ativoA = a.status === 'HABILITACAO' ? 0 : 1
-      const ativoB = b.status === 'HABILITACAO' ? 0 : 1
-      if (ativoA !== ativoB) return ativoA - ativoB
-      return b.ano - a.ano
-    })
-
-  if (cards.length === 0) {
-    return (
-      <section>
-        <FadeIn>
-          <header className="mb-6 sm:mb-8">
-            <div className="flex items-start gap-3 sm:gap-4">
-              <div className="flex items-center justify-center h-11 w-11 sm:h-12 sm:w-12 rounded-xl bg-brand-50 text-brand-700 shrink-0 ring-1 ring-brand-100">
-                <IconShield className="h-6 w-6" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 leading-tight">
-                  Conferência e Habilitação Documental
-                </h1>
-                <p className="text-sm sm:text-base text-slate-600 mt-1 max-w-2xl">
-                  Confira a documentação enviada pelos proponentes e valide as inscrições para análise e avaliação.
-                </p>
-              </div>
-            </div>
-          </header>
-        </FadeIn>
-        <Card padding="md">
-          <EmptyState
-            icon={<IconShield className="h-8 w-8 text-slate-400" />}
-            title="Nenhum edital em habilitação"
-            description="Quando um edital entrar na fase de habilitação, ele aparecerá aqui para conferência."
-          />
-        </Card>
-      </section>
-    )
-  }
-
-  return <EditalPicker editais={cards} />
 }

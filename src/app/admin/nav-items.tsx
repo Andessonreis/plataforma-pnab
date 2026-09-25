@@ -180,6 +180,12 @@ export const navSections: NavSection[] = [
         icon: <IconStar className="h-5 w-5" />,
       },
       {
+        label: 'Ver como habilitador',
+        href: '/admin/habilitacao/espelho',
+        roles: ['SUPER_ADMIN'],
+        icon: <IconShield className="h-5 w-5" />,
+      },
+      {
         label: 'Logs de Auditoria',
         href: '/admin/logs',
         roles: ['SUPER_ADMIN'],

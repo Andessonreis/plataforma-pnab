@@ -1,7 +1,7 @@
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { AvaliadorSidebar } from './sidebar'
-import { FaixaEspelho } from './faixa-espelho'
+import { FaixaEspelho } from '@/components/espelho/faixa-espelho'
 import { resolverSessaoAvaliador } from './sessao-avaliador'
 import { getRoleTheme } from '@/app/admin/role-theme'
 import { IconMenu, UserAvatar } from '@/components/ui'
@@ -28,7 +28,7 @@ export default async function AvaliadorLayout({ children }: { children: React.Re
       <AvaliadorSidebar userName={nome} />
 
       <div className="flex-1 min-w-0 lg:ml-64">
-        {sessaoAvaliador?.espelho && <FaixaEspelho nome={sessaoAvaliador.nome} />}
+        {sessaoAvaliador?.espelho && <FaixaEspelho papel="AVALIADOR" nome={sessaoAvaliador.nome} />}
 
         <header className="lg:sticky lg:top-0 z-30 flex items-center justify-between bg-white/90 backdrop-blur-sm border-b border-tinta-900/10 shadow-sm px-4 py-2 lg:px-6 lg:py-3">
           <label

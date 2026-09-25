@@ -45,8 +45,8 @@ export const AUDIT_ACTIONS = {
   // Super admin — visibilidade da nota bônus
   BONUS_VISIBILIDADE_ALTERADA: 'BONUS_VISIBILIDADE_ALTERADA',
 
-  // Super admin — acompanha a área do avaliador como se fosse ele, só leitura
-  ESPELHO_AVALIADOR_INICIADO: 'ESPELHO_AVALIADOR_INICIADO',
+  // Super admin — acompanha a área de um avaliador ou habilitador como se fosse ele, só leitura
+  ESPELHO_INICIADO: 'ESPELHO_INICIADO',
 
   // Comissão — itens de bonificação validados por inscrição
   BONUS_ITENS_ALTERADOS: 'BONUS_ITENS_ALTERADOS',
@@ -165,7 +165,7 @@ export const ACTION_LABELS: Record<string, string> = {
   MEMBRO_EDITAL_ADICIONADO: 'Membro adicionado ao edital',
   MEMBRO_EDITAL_REMOVIDO: 'Membro removido do edital',
   BONUS_VISIBILIDADE_ALTERADA: 'Visibilidade da nota bônus alterada',
-  ESPELHO_AVALIADOR_INICIADO: 'Área do avaliador acompanhada em modo espelho',
+  ESPELHO_INICIADO: 'Modo espelho iniciado',
   BONUS_ITENS_ALTERADOS: 'Itens de bonificação da inscrição alterados',
   AVALIACAO_FASE_ENCERRADA: 'Fase de avaliação encerrada para os pareceristas',
   AVALIACAO_FASE_REABERTA: 'Fase de avaliação reaberta para os pareceristas',

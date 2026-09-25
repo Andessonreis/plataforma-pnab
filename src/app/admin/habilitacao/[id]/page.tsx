@@ -4,17 +4,21 @@ import { redirect, notFound } from 'next/navigation'
 import { requireRole } from '../../require-role'
 import { getEditaisVisiveis } from '@/lib/edital-acesso'
 import { prisma } from '@/lib/db'
-import { Card, Badge, IconArrowLeft, IconShield, IconClock } from '@/components/ui'
-import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
+import { IconArrowLeft } from '@/components/ui'
 import type { InscricaoStatus } from '@prisma/client'
 import type { CampoFormulario } from '@/types/campo-formulario'
 import type { EtapaCustomizada } from '@/types/etapa-customizada'
-import { HabilitacaoActions } from '../../inscricoes/[id]/habilitacao-actions'
 import { AnexoViewer } from '../../inscricoes/[id]/anexo-viewer'
-import { RecursoDecision } from '../../inscricoes/[id]/recurso-decision'
 import { DadosInscricaoView } from '@/components/inscricao/dados-inscricao-view'
 import { calcularAnexosPendentes } from '@/lib/inscricoes/anexos-pendentes'
 import { podeHabilitar } from '@/lib/edital/fase'
+import { STATUS_HABILITACAO } from '../constantes'
+import { AvisoEspelho } from '../aviso-espelho'
+import { resolverVisaoHabilitacao } from '../visao-habilitacao'
+import { filtrarConteudoSensivel } from './conteudo-sensivel'
+import { CabecalhoInscricao } from './cabecalho-inscricao'
+import { RecursosHabilitacao } from './recursos-habilitacao'
+import { LateralInscricao } from './lateral-inscricao'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -26,10 +30,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: `Habilitação ${id} — Portal PNAB Irecê` }
 }
 
-const STATUSES_HABILITACAO: InscricaoStatus[] = ['ENVIADA', 'HABILITADA', 'INABILITADA']
+/** `campos` chega como objeto, ou como texto JSON em inscrições antigas. */
+function lerCampos(bruto: unknown): Record<string, unknown> {
+  if (typeof bruto === 'string') {
+    try {
+      return JSON.parse(bruto)
+    } catch {
+      return {}
+    }
+  }
+  return bruto && typeof bruto === 'object' && !Array.isArray(bruto) ? (bruto as Record<string, unknown>) : {}
+}
 
 export default async function AdminHabilitacaoDetailPage({ params, searchParams }: Props) {
   const session = await requireRole('HABILITADOR', 'ADMIN')
+  const { escopoId, espelho } = await resolverVisaoHabilitacao(session)
 
   const { id } = await params
   const { editalId, aba } = await searchParams
@@ -70,28 +85,14 @@ export default async function AdminHabilitacaoDetailPage({ params, searchParams 
 
   // Habilitador só entra em inscrição de edital atribuído a ele — mesmo
   // resultado do não encontrado, não vaza que o edital existe.
-  if (session.user.role === 'HABILITADOR') {
-    const visiveis = await getEditaisVisiveis(session.user.id, 'HABILITADOR')
+  if (escopoId) {
+    const visiveis = await getEditaisVisiveis(escopoId, 'HABILITADOR')
     if (visiveis && !visiveis.includes(inscricao.editalId)) notFound()
   }
 
-  if (!STATUSES_HABILITACAO.includes(inscricao.status as InscricaoStatus)) {
+  if (!STATUS_HABILITACAO.includes(inscricao.status as InscricaoStatus)) {
     redirect(`/admin/inscricoes/${inscricao.id}`)
   }
-
-  const rawCampos = inscricao.campos
-  const campos: Record<string, unknown> =
-    typeof rawCampos === 'string'
-      ? (() => {
-          try {
-            return JSON.parse(rawCampos)
-          } catch {
-            return {}
-          }
-        })()
-      : rawCampos && typeof rawCampos === 'object' && !Array.isArray(rawCampos)
-        ? (rawCampos as Record<string, unknown>)
-        : {}
 
   const podeHabilitarAgora = podeHabilitar(inscricao.edital.status)
 
@@ -101,36 +102,28 @@ export default async function AdminHabilitacaoDetailPage({ params, searchParams 
   const etapasCustomizadas = (Array.isArray(inscricao.edital.etapasCustomizadas)
     ? inscricao.edital.etapasCustomizadas
     : []) as unknown as EtapaCustomizada[]
-  const etapasOrdenadasTodas = [...etapasCustomizadas].sort((a, b) => a.ordem - b.ordem)
 
-  // Plano de Trabalho e Planilha Orçamentária são conteúdo de mérito do projeto —
-  // a conferência documental não precisa deles. Só SUPER_ADMIN vê aqui (o
-  // AVALIADOR enxerga pela tela de avaliação, não por esta).
-  const normalizarTexto = (t: string) =>
-    t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
-  const CONTEUDO_SENSIVEL = ['plano de trabalho', 'planilha orcamentaria']
-  const podeVerConteudoSensivel = session.user.role === 'SUPER_ADMIN'
-  const etapasOrdenadas = podeVerConteudoSensivel
-    ? etapasOrdenadasTodas
-    : etapasOrdenadasTodas.filter(
-        (e) => !CONTEUDO_SENSIVEL.some((s) => normalizarTexto(e.titulo).includes(s)),
-      )
-  const anexosVisiveis = podeVerConteudoSensivel
-    ? inscricao.anexos
-    : inscricao.anexos.filter(
-        (a) => !CONTEUDO_SENSIVEL.some(
-          (s) => normalizarTexto(a.tipo).includes(s) || normalizarTexto(a.titulo).includes(s),
-        ),
-      )
-  // Documentos previstos no edital que não vieram — listados como "Não informado"
-  // (mesmo filtro de conteúdo sensível se aplica ao que é listado como pendente).
-  const anexosPendentes = calcularAnexosPendentes(inscricao.edital.tiposAnexo, inscricao.anexos)
-    .filter((p) => podeVerConteudoSensivel || !CONTEUDO_SENSIVEL.some(
-      (s) => normalizarTexto(p.tipo).includes(s) || normalizarTexto(p.label).includes(s),
-    ))
+  // Só o SUPER_ADMIN vê o conteúdo de mérito aqui (o AVALIADOR enxerga pela tela
+  // de avaliação). No espelho ele vê como o habilitador, então também fica sem.
+  // Documentos previstos e não enviados entram como "Não informado", com o mesmo filtro.
+  const podeVerConteudoSensivel = session.user.role === 'SUPER_ADMIN' && !espelho
+  const {
+    etapas: etapasOrdenadas,
+    anexos: anexosVisiveis,
+    pendentes: anexosPendentes,
+  } = filtrarConteudoSensivel(
+    {
+      etapas: [...etapasCustomizadas].sort((a, b) => a.ordem - b.ordem),
+      anexos: inscricao.anexos,
+      pendentes: calcularAnexosPendentes(inscricao.edital.tiposAnexo, inscricao.anexos),
+    },
+    podeVerConteudoSensivel,
+  )
 
   return (
     <section>
+      <AvisoEspelho nome={espelho} />
+
       {/* Voltar */}
       <Link
         href={voltarHref}
@@ -140,27 +133,12 @@ export default async function AdminHabilitacaoDetailPage({ params, searchParams 
         Voltar para habilitação
       </Link>
 
-      {/* Cabeçalho institucional */}
-      <header className="mb-6 sm:mb-8">
-        <div className="flex items-start gap-3 sm:gap-4">
-          <div className="flex items-center justify-center h-11 w-11 sm:h-12 sm:w-12 rounded-xl bg-brand-50 text-brand-700 shrink-0 ring-1 ring-brand-100">
-            <IconShield className="h-6 w-6" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2 mb-1">
-              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 leading-tight font-mono">
-                {inscricao.numero}
-              </h1>
-              <Badge variant={inscricaoStatusVariant[inscricao.status as InscricaoStatus]}>
-                {inscricaoStatusLabel[inscricao.status as InscricaoStatus]}
-              </Badge>
-            </div>
-            <p className="text-sm sm:text-base text-slate-600">
-              {inscricao.edital.titulo} <span className="text-slate-400">·</span> {inscricao.edital.ano}
-            </p>
-          </div>
-        </div>
-      </header>
+      <CabecalhoInscricao
+        numero={inscricao.numero}
+        status={inscricao.status}
+        editalTitulo={inscricao.edital.titulo}
+        editalAno={inscricao.edital.ano}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-12 gap-4 sm:gap-6">
         {/* Coluna principal — dados + anexos */}
@@ -168,7 +146,7 @@ export default async function AdminHabilitacaoDetailPage({ params, searchParams 
           <DadosInscricaoView
             proponente={inscricao.proponente}
             categoria={inscricao.categoria}
-            campos={campos}
+            campos={lerCampos(inscricao.campos)}
             camposFormulario={camposFormulario}
             etapasCustomizadas={etapasOrdenadas}
             anexos={
@@ -195,119 +173,27 @@ export default async function AdminHabilitacaoDetailPage({ params, searchParams 
 
           {/* Recursos de habilitação (se houver) */}
           {inscricao.recursos.length > 0 && (
-            <Card padding="sm" className="sm:p-6">
-              <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">
-                Recursos de habilitação ({inscricao.recursos.length})
-              </h2>
-              <div className="space-y-3 sm:space-y-4">
-                {inscricao.recursos.map((recurso) => (
-                  <div key={recurso.id} className="p-3 sm:p-4 border border-slate-200 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <Badge variant="info">{recurso.fase}</Badge>
-                      {recurso.decisao && (
-                        <Badge variant={recurso.decisao === 'DEFERIDO' ? 'success' : 'error'}>
-                          {recurso.decisao}
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-sm text-slate-700 mt-2 break-words">{recurso.texto}</p>
-                    {recurso.justificativa && (
-                      <div className="mt-3 p-3 bg-slate-50 rounded-lg">
-                        <p className="text-xs font-medium text-slate-500 mb-1">Justificativa:</p>
-                        <p className="text-sm text-slate-700 break-words">{recurso.justificativa}</p>
-                      </div>
-                    )}
-                    <p className="text-xs text-slate-400 mt-2">
-                      {new Date(recurso.createdAt).toLocaleDateString('pt-BR', {
-                        timeZone: 'America/Sao_Paulo',
-                      })}
-                    </p>
-                    {!recurso.decisao && podeHabilitarAgora && (
-                      <div className="mt-3">
-                        <RecursoDecision
-                          inscricaoId={inscricao.id}
-                          recursoId={recurso.id}
-                          fase={recurso.fase}
-                        />
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </Card>
+            <RecursosHabilitacao
+              inscricaoId={inscricao.id}
+              recursos={inscricao.recursos}
+              podeDecidir={podeHabilitarAgora}
+              somenteLeitura={espelho !== null}
+            />
           )}
         </div>
 
-        {/* Coluna lateral */}
-        <aside className="xl:col-span-4 2xl:col-span-3 space-y-4 sm:space-y-6">
-          {/* Resumo */}
-          <Card padding="sm" className="sm:p-6">
-            <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-3">
-              Resumo
-            </h2>
-            <dl className="space-y-3 text-sm">
-              <div>
-                <dt className="text-xs font-medium text-slate-500">Número</dt>
-                <dd className="text-slate-900 font-mono mt-0.5">{inscricao.numero}</dd>
-              </div>
-              <div>
-                <dt className="text-xs font-medium text-slate-500">Enviada em</dt>
-                <dd className="text-slate-900 mt-0.5">
-                  {inscricao.submittedAt
-                    ? new Date(inscricao.submittedAt).toLocaleDateString('pt-BR', {
-                        day: '2-digit',
-                        month: 'long',
-                        year: 'numeric',
-                        timeZone: 'America/Sao_Paulo',
-                      })
-                    : 'Não enviada'}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs font-medium text-slate-500">Documentos enviados</dt>
-                <dd className="text-slate-900 mt-0.5">
-                  {inscricao.anexos.length} {inscricao.anexos.length === 1 ? 'documento' : 'documentos'}
-                </dd>
-              </div>
-            </dl>
-          </Card>
-
-          {/* Ações de habilitação — só quando edital está na fase HABILITACAO */}
-          {podeHabilitarAgora ? (
-            <HabilitacaoActions
-              inscricaoId={inscricao.id}
-              currentStatus={inscricao.status as InscricaoStatus}
-              motivoAtual={inscricao.motivoInabilitacao ?? ''}
-            />
-          ) : (
-            <Card padding="sm" className="sm:p-6 border-slate-200 bg-slate-50/60">
-              <div className="flex items-start gap-2.5">
-                <IconClock className="h-5 w-5 text-slate-500 shrink-0 mt-0.5" />
-                <div>
-                  <h2 className="text-sm font-semibold text-slate-900 mb-1">
-                    Fora da fase de habilitação
-                  </h2>
-                  <p className="text-sm text-slate-600 leading-relaxed">
-                    A habilitação só pode ser registrada enquanto o edital estiver na fase de
-                    habilitação. Aguarde a abertura da fase para conferir e decidir.
-                  </p>
-                </div>
-              </div>
-            </Card>
-          )}
-
-          {/* Motivo da inabilitação — quando já existe */}
-          {inscricao.motivoInabilitacao && (
-            <Card padding="sm" className="sm:p-6 border-rose-200 bg-rose-50">
-              <h2 className="text-sm font-semibold text-rose-900 uppercase tracking-wider mb-2">
-                Motivo da inabilitação
-              </h2>
-              <p className="text-sm text-rose-800 break-words leading-relaxed">
-                {inscricao.motivoInabilitacao}
-              </p>
-            </Card>
-          )}
-        </aside>
+        <LateralInscricao
+          inscricao={{
+            id: inscricao.id,
+            numero: inscricao.numero,
+            status: inscricao.status,
+            submittedAt: inscricao.submittedAt,
+            motivoInabilitacao: inscricao.motivoInabilitacao,
+            totalAnexos: inscricao.anexos.length,
+          }}
+          podeHabilitarAgora={podeHabilitarAgora}
+          somenteLeitura={espelho !== null}
+        />
       </div>
     </section>
   )

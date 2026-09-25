@@ -2,7 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { cookies } from 'next/headers'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { COOKIE_ESPELHO, exigirSessaoAvaliador, obterSessaoAvaliador } from '../sessao-avaliador'
+import { ESPELHO } from '@/lib/espelho/papeis'
+import { exigirSessaoAvaliador, obterSessaoAvaliador } from '../sessao-avaliador'
 
 vi.mock('next/headers', () => ({ cookies: vi.fn() }))
 vi.mock('next/navigation', () => ({
@@ -21,7 +22,7 @@ function sessao(role: string, id = 'user-1', name = 'Fulano') {
 
 function cookieEspelho(valor?: string) {
   mockCookies.mockResolvedValue({
-    get: (nome: string) => (nome === COOKIE_ESPELHO && valor ? { value: valor } : undefined),
+    get: (nome: string) => (nome === ESPELHO.AVALIADOR.cookie && valor ? { value: valor } : undefined),
   })
 }
 

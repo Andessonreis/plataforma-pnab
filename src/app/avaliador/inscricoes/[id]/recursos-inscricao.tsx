@@ -2,7 +2,7 @@ import type { Prisma } from '@prisma/client'
 import { Card, Badge } from '@/components/ui'
 import { RecursoRespostaAvaliador } from '@/app/admin/inscricoes/[id]/recurso-resposta-avaliador'
 import { RecursoAnexos } from '@/components/recurso/recurso-anexos'
-import { SomenteLeitura } from '@/app/avaliador/somente-leitura'
+import { SomenteLeitura } from '@/components/espelho/somente-leitura'
 
 /** Recurso com as respostas já filtradas para o avaliador dono da visão. */
 export type RecursoComMinhaResposta = Prisma.RecursoGetPayload<{ include: { respostas: true } }>
