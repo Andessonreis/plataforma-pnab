@@ -77,17 +77,18 @@ const STATUS_ALLOWS_RECURSO: Record<string, string[]> = {
   SUPLENTE: ['RESULTADO_FINAL'],
 }
 
-type InscricaoStatusDecisao = 'HABILITADA' | 'INABILITADA' | 'RESULTADO_PRELIMINAR' | 'NAO_CONTEMPLADA'
-
-function statusAposDecisao(fase: string, decisao: string): InscricaoStatusDecisao {
-  if (decisao === 'DEFERIDO') {
-    return fase === 'HABILITACAO' ? 'HABILITADA' : 'RESULTADO_PRELIMINAR'
-  }
-  if (fase === 'HABILITACAO') return 'INABILITADA'
-  if (fase === 'RESULTADO_FINAL') return 'NAO_CONTEMPLADA'
-  return 'RESULTADO_PRELIMINAR'
-}
-
+/**
+ * Só o recurso da habilitação move o status da inscrição: deferido devolve à
+ * fila de avaliação, indeferido encerra. O resultado dessa fase tem divulgação
+ * própria, e a tela do proponente já esconde o status até ela.
+ *
+ * Nos recursos do resultado o status é a classificação publicada (CONTEMPLADA,
+ * SUPLENTE, NAO_CONTEMPLADA), que o proponente e a lista pública leem. Trocá-lo
+ * no ato da decisão divulgaria o julgamento antes do Diário Oficial e ainda
+ * rebaixaria um suplente cujo recurso foi indeferido. A decisão fica gravada só
+ * no Recurso; a classificação muda quando a comissão corrige as notas e publica
+ * o resultado, que recalcula o status de todas as inscrições.
+ */
 async function aplicarDecisao(
   inscricaoId: string,
   recursoId: string,
@@ -101,10 +102,12 @@ async function aplicarDecisao(
     data: { decisao, justificativa, decididoPor: por, decidedAt: new Date() },
   })
 
-  await prisma.inscricao.update({
-    where: { id: inscricaoId },
-    data: { status: statusAposDecisao(fase, decisao) },
-  })
+  if (fase === 'HABILITACAO') {
+    await prisma.inscricao.update({
+      where: { id: inscricaoId },
+      data: { status: decisao === 'DEFERIDO' ? 'HABILITADA' : 'INABILITADA' },
+    })
+  }
 
   try {
     await notifyProponenteRecursoDecidido(inscricaoId, fase, decisao, justificativa)
