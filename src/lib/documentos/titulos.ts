@@ -39,6 +39,9 @@ export interface EditalTitulo {
   ano: number
 }
 
+/** Prévia de trabalho, resultado consolidado no sistema ou resultado final depois dos recursos. */
+export type SituacaoClassificacao = 'PREVIA' | 'CONSOLIDADA' | 'FINAL'
+
 /** Documentos cujo nome é montado aqui — listas e relatórios do edital. */
 export type TipoTitulavel =
   | 'LISTA_INSCRICOES'
@@ -58,7 +61,7 @@ export type EntradaTitulo =
       tituloDocumento?: string | null
     }
   | { tipo: 'LISTA_AGENTES'; titulo?: string | null }
-  | { tipo: 'CLASSIFICACAO'; edital: EditalTitulo; consolidado: boolean }
+  | { tipo: 'CLASSIFICACAO'; edital: EditalTitulo; situacao: SituacaoClassificacao }
   | { tipo: 'RELATORIO_FINAL'; edital: EditalTitulo }
   | { tipo: 'RELATORIO_RECURSOS'; edital: EditalTitulo; etapa: string }
 
@@ -69,6 +72,12 @@ export const ROTULO_DO_CROMO: Record<TipoTitulavel, string> = {
   CLASSIFICACAO: 'Classificação',
   RELATORIO_FINAL: 'Relatório final',
   RELATORIO_RECURSOS: 'Recursos',
+}
+
+const TITULO_CLASSIFICACAO: Record<SituacaoClassificacao, string> = {
+  PREVIA: 'Classificação — Prévia de Trabalho',
+  CONSOLIDADA: 'Classificação por Categoria',
+  FINAL: 'Relação de Contemplados',
 }
 
 /** Título da lista de inscrições: o status manda, salvo título fixado na geração. */
@@ -92,7 +101,7 @@ export function tituloDocumento(entrada: EntradaTitulo): string {
     case 'LISTA_AGENTES':
       return entrada.titulo || 'Agentes Culturais Cadastrados'
     case 'CLASSIFICACAO':
-      return entrada.consolidado ? 'Classificação por Categoria' : 'Classificação — Prévia de Trabalho'
+      return TITULO_CLASSIFICACAO[entrada.situacao]
     case 'RELATORIO_FINAL':
       return 'Relatório Final de Resultado'
     case 'RELATORIO_RECURSOS':

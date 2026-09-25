@@ -8,7 +8,6 @@
  * Segue o mesmo layout da relação de inscritos (mesmo header, mesma tabela)
  * para que as peças publicadas do edital tenham a mesma aparência.
  */
-import { maskCpfCnpjParcial } from '@/lib/utils/mask'
 import {
   addInfoBlock,
   addDivider,
@@ -21,57 +20,17 @@ import {
   addTableRow,
   calculateRowHeight,
   checkPageBreak,
-  type ColumnDef,
 } from './table-helpers'
 import { criarDocumentoOficial, finalizarDocumento } from './documento-oficial'
 import { CORES, FONTES, LARGURA_UTIL, X_ESQUERDA } from './documento-oficial/tema'
 import type { RelatorioRecursosData, RelatorioRecursosItem } from './modelo/tipos'
-
-// ─── Tipos ───────────────────────────────────────────────────────────────────
+import {
+  avisoLegalRecursos, SEM_RECURSO, colunasRecursos, conclusao, descreverPrazo,
+  identificacaoRecursos, valoresDoRecurso,
+} from './modelo/relatorio-recursos'
 
 export type { RelatorioRecursosData, RelatorioRecursosItem }
-
-// ─── Colunas ─────────────────────────────────────────────────────────────────
-
-// Somam LARGURA_UTIL (495,28pt) — a tabela ocupa a largura útil da página.
-const COLUNAS: ColumnDef[] = [
-  { label: 'Nº', width: 24 },
-  { label: 'Inscrição', width: 74 },
-  { label: 'Proponente', width: 155 },
-  { label: 'CPF/CNPJ', width: 68 },
-  { label: 'Protocolado em', width: 84.28 },
-  { label: 'Situação', width: 90 },
-]
-
-// ─── Formatação ──────────────────────────────────────────────────────────────
-
-const TZ = 'America/Sao_Paulo'
-
-function formatData(data: Date): string {
-  return data.toLocaleDateString('pt-BR', { timeZone: TZ })
-}
-
-function formatDataHora(data: Date): string {
-  const hora = data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: TZ })
-  return `${formatData(data)} ${hora}`
-}
-
-/** Data por extenso no corpo do texto: "08/09/2026, às 23h59". */
-function formatDataPorExtenso(data: Date): string {
-  const hora = data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: TZ })
-  return `${formatData(data)}, às ${hora.replace(':', 'h')}`
-}
-
-function descreverPrazo(prazo: RelatorioRecursosData['prazo']): string {
-  if (!prazo) return 'não fixado no cronograma'
-  return `${formatData(prazo.inicio)} a ${formatData(prazo.fim)}`
-}
-
-/** Encerrado só quando a janela do cronograma já passou. */
-function descreverSituacaoPrazo(prazo: RelatorioRecursosData['prazo']): string {
-  if (!prazo) return '—'
-  return prazo.fim.getTime() < Date.now() ? 'Encerrado' : 'Em curso'
-}
+export { conclusao }
 
 // ─── Geração do PDF ──────────────────────────────────────────────────────────
 
@@ -83,30 +42,23 @@ export async function generateRelatorioRecursos(data: RelatorioRecursosData): Pr
     emissao: data.emissao ?? null,
   })
   const total = data.recursos.length
+  const colunas = colunasRecursos(data)
 
-  addInfoBlock(doc, [
-    { label: 'Edital', value: data.edital.titulo },
-    { label: 'Ano', value: String(data.edital.ano) },
-    { label: 'Etapa', value: data.etapa },
-    { label: 'Prazo para interposição', value: descreverPrazo(data.prazo) },
-    { label: 'Situação do prazo', value: descreverSituacaoPrazo(data.prazo) },
-    { label: data.labelTotalInscricoes, value: String(data.totalInscricoes) },
-    { label: 'Recursos interpostos', value: String(total) },
-  ])
+  addInfoBlock(doc, identificacaoRecursos(data))
   addDivider(doc)
 
   addCompactSection(doc, 'Recursos interpostos')
-  addTableHeader(doc, COLUNAS)
+  addTableHeader(doc, colunas)
 
   if (total === 0) {
-    addTableEmptyRow(doc, 'Não consta recurso interposto no prazo.')
+    addTableEmptyRow(doc, SEM_RECURSO)
   } else {
-    for (let i = 0; i < total; i++) {
-      const values = buildRowValues(data.recursos[i])
-      const rowHeight = calculateRowHeight(doc, COLUNAS, values)
+    for (const recurso of data.recursos) {
+      const values = valoresDoRecurso(recurso, data)
+      const rowHeight = calculateRowHeight(doc, colunas, values)
 
-      checkPageBreak(doc, rowHeight + 2, COLUNAS)
-      addTableRow(doc, COLUNAS, values, rowHeight)
+      checkPageBreak(doc, rowHeight + 2, colunas)
+      addTableRow(doc, colunas, values, rowHeight)
     }
   }
 
@@ -123,12 +75,7 @@ export async function generateRelatorioRecursos(data: RelatorioRecursosData): Pr
     })
 
   checkPageBreak(doc, 50)
-  addLegalNotice(
-    doc,
-    'Documento oficial gerado pela plataforma Portal PNAB Irecê. Relaciona os recursos ' +
-    'registrados no sistema na etapa e no prazo indicados acima, conforme os dados existentes ' +
-    'na data e hora de geração.',
-  )
+  addLegalNotice(doc, avisoLegalRecursos(data))
 
   return finalizarDocumento(doc, [
     { rotulo: 'Documento', valor: 'Relatório de recursos interpostos' },
@@ -137,37 +84,4 @@ export async function generateRelatorioRecursos(data: RelatorioRecursosData): Pr
     { rotulo: 'Prazo', valor: descreverPrazo(data.prazo) },
     { rotulo: 'Recursos', valor: String(total) },
   ])
-}
-
-// ─── Helpers privados ────────────────────────────────────────────────────────
-
-export function conclusao({ etapa, prazo, recursos, foraDoPrazo = 0 }: RelatorioRecursosData): string {
-  const total = recursos.length
-  const janela = prazo
-    ? ` — de ${formatData(prazo.inicio)} a ${formatDataPorExtenso(prazo.fim)} —`
-    : ''
-
-  if (total === 0) {
-    return (
-      `Encerrado o prazo recursal previsto no cronograma do edital para a etapa "${etapa}"${janela}, ` +
-      'não consta recurso interposto nos registros da plataforma.'
-    )
-  }
-
-  const abertura = foraDoPrazo > 0
-    ? `Encerrado o prazo recursal previsto no cronograma do edital para a etapa "${etapa}"`
-    : `No prazo recursal previsto no cronograma do edital para a etapa "${etapa}"`
-  const ressalva = foraDoPrazo > 0 ? `, dos quais ${foraDoPrazo} protocolado(s) fora desse prazo` : ''
-  return `${abertura}${janela}, foram registrados ${total} recurso(s), relacionados acima${ressalva}.`
-}
-
-function buildRowValues(item: RelatorioRecursosItem): string[] {
-  return [
-    String(item.posicao),
-    item.numero,
-    item.nome,
-    maskCpfCnpjParcial(item.cpfCnpj),
-    formatDataHora(item.protocoladoEm),
-    item.situacao,
-  ]
 }

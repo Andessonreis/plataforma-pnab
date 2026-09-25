@@ -46,6 +46,16 @@ const FASE_LIBERACAO_RECURSO: Record<string, EditalStatus> = {
   RESULTADO_FINAL: 'RESULTADO_FINAL',
 }
 
+/** Fases em que a lista atual ainda é a do resultado preliminar. */
+export const FASES_DO_PRELIMINAR: readonly string[] = ['RESULTADO_PRELIMINAR', 'RECURSO']
+
+/** Fases em que o resultado já não muda mais — sai o rótulo de "preliminar". */
+const FASES_RESULTADO_DEFINITIVO: readonly string[] = ['RESULTADO_FINAL', 'ENCERRADO']
+
+export function resultadoDefinitivo(status: string): boolean {
+  return FASES_RESULTADO_DEFINITIVO.includes(status)
+}
+
 export function respostaRecursoLiberada(faseRecurso: string, editalStatus: EditalStatus): boolean {
   const liberaEm = FASE_LIBERACAO_RECURSO[faseRecurso]
   if (!liberaEm) return false

@@ -1,7 +1,9 @@
 import { vi } from 'vitest'
 import { prisma } from '@/lib/db'
 import { registrarEmissao, type Emissao } from '@/lib/documentos/emissao'
+import { templatePreferido } from '@/lib/documentos/preferencia'
 import { generateRelatorioRecursos } from '@/lib/pdf/relatorio-recursos'
+import { gerarRelatorioRecursosV1 } from '@/lib/pdf/template-1/relatorio-recursos'
 
 export const JANELA_HABILITACAO = {
   tipo: 'custom',
@@ -17,6 +19,15 @@ export const JANELA_SELECAO = {
   dataHora: '2026-09-29T00:00:00',
   fimEm: '2026-09-30T23:59:00',
   acao: 'RECURSO_RESULTADO_JANELA',
+}
+
+/** Janela do recurso contra o resultado final, a única que o Festival cadastra na seleção. */
+export const JANELA_SELECAO_FINAL = {
+  tipo: 'custom',
+  label: 'Período para recursos — resultado final',
+  dataHora: '2026-10-08T00:00:00',
+  fimEm: '2026-10-09T23:59:00',
+  acao: 'RECURSO_RESULTADO_FINAL_JANELA',
 }
 
 export function edital(cronograma: unknown[] = [JANELA_HABILITACAO, JANELA_SELECAO]) {
@@ -59,7 +70,8 @@ export function recursoDoBanco(
 
 /**
  * Relógio em 21/09/2026, com o prazo de habilitação já encerrado, e as
- * dependências devolvendo o caso sem recurso. Os módulos de emissão e de PDF
+ * dependências devolvendo o caso sem recurso e a preferência de layout na
+ * versão 2. Os módulos de emissão, de preferência e dos dois geradores de PDF
  * precisam estar mockados no arquivo de teste que chama isto.
  */
 export function prepararCenarioPadrao() {
@@ -71,5 +83,7 @@ export function prepararCenarioPadrao() {
   vi.mocked(prisma.recurso.findMany).mockResolvedValue([] as never)
   vi.mocked(prisma.inscricao.count).mockResolvedValue(15 as never)
   vi.mocked(registrarEmissao).mockResolvedValue(EMISSAO)
+  vi.mocked(templatePreferido).mockResolvedValue(2)
   vi.mocked(generateRelatorioRecursos).mockResolvedValue(Buffer.from('%PDF-fake'))
+  vi.mocked(gerarRelatorioRecursosV1).mockResolvedValue(Buffer.from('%PDF-fake-v1'))
 }

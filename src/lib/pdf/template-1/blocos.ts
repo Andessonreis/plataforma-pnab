@@ -19,6 +19,7 @@ const LARGURA_ROTULO = 150
 const LARGURA_VALOR = LARGURA_UTIL - LARGURA_ROTULO
 const ALTURA_LINHA = 16
 const RESPIRO_SECAO = 6
+const RECUO_AVISO = 8
 
 /**
  * Par rótulo/valor numa linha só.
@@ -82,4 +83,24 @@ export function desenharAvisoLegal(doc: PDFKit.PDFDocument, texto: string): void
 
   doc.font('Helvetica-Oblique').fontSize(7.5).fillColor(COLORS.textLight)
     .text(texto, MARGINS.left, doc.y, { width: LARGURA_UTIL, align: 'justify' })
+}
+
+/**
+ * Faixa de alerta na abertura do documento, como a da prévia de trabalho. A
+ * borda âmbar chama a atenção, mas o rótulo em negrito basta para a leitura
+ * quando o documento é impresso em preto e branco.
+ */
+export function desenharAvisoDestaque(doc: PDFKit.PDFDocument, texto: string): void {
+  const largura = LARGURA_UTIL - RECUO_AVISO * 2
+  doc.font('Helvetica').fontSize(8)
+  const altura = doc.heightOfString(texto, { width: largura, align: 'justify' }) + 22
+  const y = doc.y
+
+  doc.rect(MARGINS.left, y, LARGURA_UTIL, altura).fillAndStroke(COLORS.background, COLORS.accent)
+  doc.font('Helvetica-Bold').fontSize(8).fillColor(COLORS.text)
+    .text('ATENÇÃO', MARGINS.left + RECUO_AVISO, y + 5, { width: largura, lineBreak: false })
+  doc.font('Helvetica').fontSize(8).fillColor(COLORS.text)
+    .text(texto, MARGINS.left + RECUO_AVISO, y + 16, { width: largura, align: 'justify' })
+
+  doc.y = y + altura + 6
 }

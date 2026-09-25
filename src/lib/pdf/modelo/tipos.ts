@@ -1,5 +1,9 @@
 import type { AgenteRow, CampoAgente } from '@/lib/agentes/campos'
 import type { Emissao } from '@/lib/documentos/emissao'
+import type { SituacaoClassificacao } from '@/lib/documentos/titulos'
+import type { ItensBonusConfig } from '@/types/bonus-config'
+
+export type { SituacaoClassificacao }
 
 /**
  * Dados de entrada das listas e relatórios do edital.
@@ -58,8 +62,11 @@ export interface LinhaClassificacao {
   notaBonus: number
   notaFinal: number
   cotista: boolean
-  status: 'CONTEMPLADA' | 'SUPLENTE' | 'NAO_CONTEMPLADA'
+  /** `NAO_SE_APLICA`: inscrição fora das categorias do edital — aparece na lista sem posição nem nota. */
+  status: 'CONTEMPLADA' | 'SUPLENTE' | 'NAO_CONTEMPLADA' | 'NAO_SE_APLICA'
   semAvaliacao: boolean
+  /** Itens de bonificação validados pela comissão (chaves de `ItensBonusConfig`). */
+  bonusItens?: string[]
 }
 
 export interface CategoriaClassificacao {
@@ -73,9 +80,11 @@ export interface CategoriaClassificacao {
 export interface ListaClassificacaoData {
   edital: { titulo: string; ano: number }
   categorias: CategoriaClassificacao[]
-  /** Falso enquanto o resultado não foi consolidado — carimba a marca d'água. */
-  consolidado: boolean
+  /** Prévia carimba a marca d'água; consolidada e final são peças publicáveis. */
+  situacao: SituacaoClassificacao
   mostraBonus: boolean
+  /** Itens de bonificação do edital; a versão 1 os abre em colunas B1, B2, B3... */
+  bonus?: ItensBonusConfig | null
   geradoEm: Date
   /** Obrigatória de propósito: quem gera a classificação tem que decidir se há
    *  registro de emissão, nem que seja para passar null. */
@@ -127,6 +136,8 @@ export interface RelatorioRecursosData {
   recursos: RelatorioRecursosItem[]
   /** Recursos protocolados fora da janela; a conclusão do documento os cita. */
   foraDoPrazo?: number
+  /** Tira a coluna "Protocolado em"; sem as datas na tabela, a conclusão não afirma que foi tudo no prazo. */
+  ocultarProtocolo?: boolean
   emissao?: Emissao | null
 }
 

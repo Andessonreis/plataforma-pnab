@@ -108,8 +108,78 @@ describe('GET /api/admin/editais/[id]/relatorio-recursos', () => {
     expect(mockEmitir).toHaveBeenCalledWith({
       editalId: 'ed-1',
       etapa: 'selecao',
+      template: undefined,
+      ocultarProtocolo: false,
       userId: 'admin-1',
       ip: '203.0.113.7',
+    })
+  })
+
+  describe('?template=', () => {
+    beforeEach(() => {
+      comoAdmin()
+      mockEmitir.mockResolvedValue({ buffer: Buffer.from('%PDF-fake'), filename: 'extrato.pdf', emissao: null })
+    })
+
+    it.each([['1', 1], ['2', 2]])('template=%s → repassa a versão %i ao serviço', async (valor, versao) => {
+      const res = await GET(makeReq(`?etapa=selecao&template=${valor}`), params())
+
+      expect(res.status).toBe(200)
+      expect(mockEmitir).toHaveBeenCalledWith(expect.objectContaining({ etapa: 'selecao', template: versao }))
+    })
+
+    it('sem template → o serviço decide pela preferência de quem emite', async () => {
+      await GET(makeReq('?etapa=selecao'), params())
+
+      expect(mockEmitir).toHaveBeenCalledWith(expect.objectContaining({ template: undefined }))
+    })
+
+    it.each(['0', '3', '01', '1.0', 'v1', ''])('template=%s inválido → 400 sem emitir', async (valor) => {
+      const res = await GET(makeReq(`?etapa=selecao&template=${valor}`), params())
+
+      expect(res.status).toBe(400)
+      expect(await res.json()).toMatchObject({ error: 'BAD_REQUEST', message: expect.stringContaining('template') })
+      expect(mockEmitir).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('?semProtocolo=', () => {
+    beforeEach(() => {
+      comoAdmin()
+      mockEmitir.mockResolvedValue({ buffer: Buffer.from('%PDF-fake'), filename: 'extrato.pdf', emissao: null })
+    })
+
+    it('semProtocolo=1 → pede ao serviço o extrato sem a coluna de protocolo', async () => {
+      const res = await GET(makeReq('?etapa=habilitacao&semProtocolo=1'), params())
+
+      expect(res.status).toBe(200)
+      expect(mockEmitir).toHaveBeenCalledWith(expect.objectContaining({ ocultarProtocolo: true }))
+    })
+
+    it.each(['?etapa=habilitacao', '?etapa=habilitacao&semProtocolo='])(
+      'sem o parâmetro ou vazio (%s) → o extrato sai com o protocolo',
+      async (query) => {
+        const res = await GET(makeReq(query), params())
+
+        expect(res.status).toBe(200)
+        expect(mockEmitir).toHaveBeenCalledWith(expect.objectContaining({ ocultarProtocolo: false }))
+      },
+    )
+
+    it('combina com o template', async () => {
+      await GET(makeReq('?etapa=selecao&template=1&semProtocolo=1'), params())
+
+      expect(mockEmitir).toHaveBeenCalledWith(
+        expect.objectContaining({ etapa: 'selecao', template: 1, ocultarProtocolo: true }),
+      )
+    })
+
+    it.each(['0', 'true', 'sim', '2', '01', '1 '])('semProtocolo=%s inválido → 400 sem emitir', async (valor) => {
+      const res = await GET(makeReq(`?etapa=habilitacao&semProtocolo=${encodeURIComponent(valor)}`), params())
+
+      expect(res.status).toBe(400)
+      expect(await res.json()).toMatchObject({ error: 'BAD_REQUEST', message: expect.stringContaining('semProtocolo') })
+      expect(mockEmitir).not.toHaveBeenCalled()
     })
   })
 })

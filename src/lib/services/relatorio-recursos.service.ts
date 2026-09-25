@@ -1,52 +1,27 @@
-import type { InscricaoStatus } from '@prisma/client'
 import { prisma } from '@/lib/db'
 import { logAudit } from '@/lib/audit'
 import { descartarEmissao, registrarEmissao, type Emissao } from '@/lib/documentos/emissao'
-import { ETAPAS_RECURSO_ROTULO, type EtapaRecurso } from '@/lib/edital/etapas-recurso'
+import { templatePreferido } from '@/lib/documentos/preferencia'
+import type { TemplatePdf } from '@/lib/documentos/template'
+import type { EtapaRecurso } from '@/lib/edital/etapas-recurso'
 import { prazoRecursoEncerrado, protocoladoForaDoPrazo } from '@/lib/edital/prazo-recurso'
-import { PUBLICACAO_STATUS_FILTER } from '@/lib/edital/publicacoes'
+import type { RelatorioRecursosData } from '@/lib/pdf/modelo/tipos'
 import { generateRelatorioRecursos, type RelatorioRecursosItem } from '@/lib/pdf/relatorio-recursos'
+import { gerarRelatorioRecursosV1 } from '@/lib/pdf/template-1/relatorio-recursos'
 import { recursoDecisaoLabel } from '@/lib/status-maps'
 import { formatDate } from '@/lib/utils/format'
-import type { AcaoJanela } from '@/types/cronograma'
 import { ServiceError } from './errors'
-
-interface EtapaConfig {
-  rotulo: string
-  /** Valor de `Recurso.fase` que pertence à etapa. */
-  fase: 'HABILITACAO' | 'RESULTADO_PRELIMINAR'
-  /** Item do cronograma que delimita o prazo de interposição. */
-  acaoJanela: AcaoJanela
-  /** Status das inscrições que entraram na etapa. */
-  universo: InscricaoStatus[]
-  /** Rótulo curto: rótulos longos quebram a linha da tabela de dados do PDF. */
-  labelUniverso: string
-}
-
-const ETAPAS_RECURSO: Record<EtapaRecurso, EtapaConfig> = {
-  habilitacao: {
-    rotulo: ETAPAS_RECURSO_ROTULO.habilitacao,
-    fase: 'HABILITACAO',
-    acaoJanela: 'RECURSO_HABILITACAO_JANELA',
-    universo: PUBLICACAO_STATUS_FILTER.PUBLICACAO_HABILITADOS,
-    labelUniverso: 'Inscrições analisadas',
-  },
-  selecao: {
-    rotulo: ETAPAS_RECURSO_ROTULO.selecao,
-    fase: 'RESULTADO_PRELIMINAR',
-    acaoJanela: 'RECURSO_RESULTADO_JANELA',
-    // Inclui RECURSO_ABERTO por compatibilidade com inscrições de editais
-    // anteriores: submitRecurso já não move a inscrição para esse status.
-    universo: PUBLICACAO_STATUS_FILTER.PUBLICACAO_RESULTADO_PRELIMINAR,
-    labelUniverso: 'Inscrições classificadas',
-  },
-}
+import { ETAPAS_RECURSO, faseDaEtapa } from './relatorio-recursos.etapas'
 
 interface EmitirRelatorioRecursosInput {
   editalId: string
   etapa: EtapaRecurso
   userId: string
   ip?: string
+  /** Versão de layout pedida; sem ela vale a última que quem emite usou no edital. */
+  template?: TemplatePdf
+  /** Tira do extrato a coluna de data e hora do protocolo. */
+  ocultarProtocolo?: boolean
 }
 
 export interface RelatorioRecursosEmitido {
@@ -57,6 +32,11 @@ export interface RelatorioRecursosEmitido {
 }
 
 const SUFIXO_FORA_DO_PRAZO = ' (fora do prazo)'
+
+const GERADORES: Record<TemplatePdf, (dados: RelatorioRecursosData) => Promise<Buffer>> = {
+  1: gerarRelatorioRecursosV1,
+  2: generateRelatorioRecursos,
+}
 
 /** Decisão ausente é recurso ainda em análise; valor desconhecido aparece como veio. */
 function situacaoDe(decisao: string | null): string {
@@ -75,7 +55,7 @@ function situacaoDe(decisao: string | null): string {
  * extrato marcado e contado, porque a rota de interposição não barra por data.
  */
 export async function emitirRelatorioRecursos(
-  { editalId, etapa, userId, ip }: EmitirRelatorioRecursosInput,
+  { editalId, etapa, userId, ip, template: templatePedido, ocultarProtocolo }: EmitirRelatorioRecursosInput,
 ): Promise<RelatorioRecursosEmitido> {
   const config = ETAPAS_RECURSO[etapa]
 
@@ -85,11 +65,12 @@ export async function emitirRelatorioRecursos(
   })
   if (!edital) throw new ServiceError('NOT_FOUND', 'Edital não encontrado.')
 
-  const prazo = prazoRecursoEncerrado(edital.cronograma, config.acaoJanela, config.rotulo)
+  const { fase, acaoJanela } = faseDaEtapa(edital.cronograma, config)
+  const prazo = prazoRecursoEncerrado(edital.cronograma, acaoJanela, config.rotulo)
 
   const [recursos, totalInscricoes] = await Promise.all([
     prisma.recurso.findMany({
-      where: { fase: config.fase, inscricao: { editalId } },
+      where: { fase, inscricao: { editalId } },
       // O id desempata protocolos do mesmo instante: sem ele a ordem, e com ela o hash, poderia variar.
       orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
       select: {
@@ -115,11 +96,14 @@ export async function emitirRelatorioRecursos(
     situacao: situacaoDe(r.decisao) + (fora[i] ? SUFIXO_FORA_DO_PRAZO : ''),
   }))
 
+  const template = templatePedido ?? await templatePreferido(userId, editalId)
+
   const emissao = await registrarEmissao({
     tipo: 'RELATORIO_RECURSOS',
     titulo: `Relatório de recursos — ${config.rotulo} — ${edital.titulo} (${edital.ano})`,
     editalId,
     emitidoPorId: userId,
+    template,
     conteudo: {
       edital: edital.titulo,
       ano: edital.ano,
@@ -138,12 +122,13 @@ export async function emitirRelatorioRecursos(
       [config.labelUniverso]: totalInscricoes,
       'Recursos interpostos': itens.length,
       ...(totalForaDoPrazo > 0 ? { 'Fora do prazo': totalForaDoPrazo } : {}),
+      ...(ocultarProtocolo ? { 'Coluna de protocolo': 'oculta' } : {}),
     },
   })
 
   let buffer: Buffer
   try {
-    buffer = await generateRelatorioRecursos({
+    buffer = await GERADORES[template]({
       edital: { titulo: edital.titulo, ano: edital.ano },
       etapa: config.rotulo,
       prazo,
@@ -151,6 +136,7 @@ export async function emitirRelatorioRecursos(
       labelTotalInscricoes: config.labelUniverso,
       recursos: itens,
       foraDoPrazo: totalForaDoPrazo,
+      ocultarProtocolo,
       emissao,
     })
   } catch (err) {

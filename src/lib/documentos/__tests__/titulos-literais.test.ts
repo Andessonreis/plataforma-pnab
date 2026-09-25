@@ -54,7 +54,6 @@ const LITERAIS_PENDENTES = [
   'src/lib/services/relatorio-recursos.service.ts',           // T3
   'src/app/api/admin/agentes/export/route.ts',                // T3
   'src/app/api/admin/editais/[id]/listas/route.ts',           // T3
-  'src/app/api/admin/editais/[id]/classificacao/route.ts',    // T3
   'src/app/api/admin/editais/[id]/relatorio-final/route.ts',  // T3
 ]
 
