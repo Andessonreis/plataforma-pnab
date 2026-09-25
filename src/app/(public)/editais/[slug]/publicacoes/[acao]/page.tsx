@@ -7,6 +7,7 @@ import { IconArrowLeft, IconDownload, IconClock } from '@/components/ui/icons'
 import { formatDateTime } from '@/lib/utils/format'
 import { maskCpfCnpj, maskName } from '@/lib/utils/mask'
 import { getPublicacao } from '@/lib/edital/publicacoes'
+import { hrefResultados } from '@/lib/edital/rotas-resultado'
 import { isAcaoPublicacao, isAcaoResultado } from '@/types/cronograma'
 import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
 
@@ -33,7 +34,7 @@ export default async function PublicacaoPage({ params }: Props) {
 
   // Publicações de resultado redirecionam para o quadro completo de classificação
   if (isAcaoResultado(acao)) {
-    redirect(`/editais/${slug}/resultados`)
+    redirect(hrefResultados(slug, acao === 'PUBLICACAO_RESULTADO_FINAL'))
   }
 
   const edital = await prisma.edital.findUnique({

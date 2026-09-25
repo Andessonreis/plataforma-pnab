@@ -1,9 +1,11 @@
 import { CampoValorCard } from '../campo-valor-card'
-import type { LinhaClassificacao, SituacaoClassificada } from './consulta'
+import type { LinhaResultadoPublico, SituacaoClassificada } from '@/lib/results/resultado-publico'
 
 interface TabelaClassificacaoProps {
-  linhas: LinhaClassificacao[]
+  linhas: LinhaResultadoPublico[]
   porPontuacao: boolean
+  /** Categoria da tabela, lida pelo leitor de tela como legenda. */
+  categoria: string
 }
 
 const ROTULO_SITUACAO: Record<SituacaoClassificada, string> = {
@@ -25,8 +27,8 @@ const CARIMBO_SITUACAO: Record<SituacaoClassificada, string> = {
   RECURSO_ABERTO: 'bg-turquesa-700 text-papel-50',
 }
 
-function resolverSituacao(linha: LinhaClassificacao): { rotulo: string; estilo: string } {
-  if (linha.numero === 'PNAB-2026-0046' || (linha.nota === null && linha.posicao === null)) {
+function resolverSituacao(linha: LinhaResultadoPublico): { rotulo: string; estilo: string } {
+  if (linha.nota === null && linha.posicao === null) {
     return {
       rotulo: 'Não se aplica',
       estilo: 'bg-tinta-900/10 text-tinta-700',
@@ -50,13 +52,13 @@ function resolverSituacao(linha: LinhaClassificacao): { rotulo: string; estilo: 
  * num scroll escondido — por isso vira um cartão por proposta, com a
  * mesma marcação de contemplada na borda.
  */
-export function TabelaClassificacao({ linhas, porPontuacao }: TabelaClassificacaoProps) {
+export function TabelaClassificacao({ linhas, porPontuacao, categoria }: TabelaClassificacaoProps) {
   return (
     <>
     <div className="hidden overflow-x-auto border-2 border-tinta-900 bg-papel-50 sm:block">
-      <table className="w-full min-w-[38rem] border-collapse text-left">
+      <table className="w-full min-w-[32rem] border-collapse text-left">
         <caption className="sr-only">
-          Classificação das propostas, da maior para a menor pontuação
+          Classificação da categoria {categoria}, da maior para a menor pontuação
         </caption>
         <thead>
           <tr className="border-b-2 border-tinta-900 bg-tinta-900 text-papel-50">
@@ -65,9 +67,6 @@ export function TabelaClassificacao({ linhas, porPontuacao }: TabelaClassificaca
             </th>
             <th scope="col" className="px-4 py-3 text-xs font-bold uppercase tracking-[0.12em]">
               Proponente
-            </th>
-            <th scope="col" className="px-4 py-3 text-xs font-bold uppercase tracking-[0.12em]">
-              Categoria
             </th>
             <th scope="col" className="px-4 py-3 text-xs font-bold uppercase tracking-[0.12em]">
               {porPontuacao ? 'Pontuação' : 'Nota'}
@@ -83,7 +82,7 @@ export function TabelaClassificacao({ linhas, porPontuacao }: TabelaClassificaca
             const { rotulo, estilo } = resolverSituacao(linha)
             return (
               <tr
-                key={linha.id}
+                key={linha.numero}
                 className={`border-b border-tinta-900/15 last:border-b-0 ${
                   contemplada ? 'bg-oliva-700/10' : ''
                 }`}
@@ -99,13 +98,10 @@ export function TabelaClassificacao({ linhas, porPontuacao }: TabelaClassificaca
                   <div className={contemplada ? 'font-bold underline decoration-oliva-700/60 decoration-1 underline-offset-2' : ''}>
                     {linha.proponente}
                   </div>
-                  {linha.numero && (
-                    <div className="text-xs font-normal text-tinta-600 tabular-nums">
-                      {linha.numero}
-                    </div>
-                  )}
+                  <div className="text-xs font-normal text-tinta-600 tabular-nums">
+                    {linha.numero}
+                  </div>
                 </td>
-                <td className="px-4 py-3.5 text-sm text-tinta-700">{linha.categoria ?? '—'}</td>
                 <td className="px-4 py-3.5 font-semibold tabular-nums text-tinta-900">
                   {linha.nota ? `${linha.nota}${porPontuacao ? ' pts' : ''}` : '—'}
                 </td>
@@ -129,12 +125,11 @@ export function TabelaClassificacao({ linhas, porPontuacao }: TabelaClassificaca
         const { rotulo } = resolverSituacao(linha)
         return (
           <CampoValorCard
-            key={linha.id}
+            key={linha.numero}
             titulo={linha.posicao != null ? `${linha.posicao}º · ${linha.proponente}` : linha.proponente}
             destaque={contemplada}
             pares={[
-              ...(linha.numero ? [{ rotulo: 'Inscrição', valor: linha.numero }] : []),
-              { rotulo: 'Categoria', valor: linha.categoria ?? '—' },
+              { rotulo: 'Inscrição', valor: linha.numero },
               {
                 rotulo: porPontuacao ? 'Pontuação' : 'Nota',
                 valor: linha.nota ? `${linha.nota}${porPontuacao ? ' pts' : ''}` : '—',

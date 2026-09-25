@@ -6,6 +6,8 @@ import { prisma } from '@/lib/db'
 import { logAudit } from '@/lib/audit'
 import { calculateResults, saveResults } from '@/lib/results/calculate'
 import { viewNotaFinal } from '@/lib/services/resultado-view'
+import { guardarResultadoPreliminar } from '@/lib/results/resultado-publico'
+import { hrefResultados } from '@/lib/edital/rotas-resultado'
 import { enqueueEmail } from '@/lib/queue'
 
 export const runtime = 'nodejs'
@@ -161,6 +163,10 @@ export async function POST(
         : null,
     })
 
+    // A página do preliminar lê esta cópia: depois do recurso as inscrições já não a refletem.
+    // Vem antes de mudar o status: se falhar, o edital continua na fase e a publicação se repete.
+    if (fase === 'RESULTADO_PRELIMINAR') await guardarResultadoPreliminar(id)
+
     // Atualiza status do edital
     const editalStatus = fase === 'RESULTADO_FINAL' ? 'RESULTADO_FINAL' : 'RESULTADO_PRELIMINAR'
     await prisma.edital.update({
@@ -184,7 +190,7 @@ export async function POST(
         template,
         data: {
           edital: edital.titulo,
-          url: `${baseUrl}/editais/${edital.slug}/resultados`,
+          url: `${baseUrl}${hrefResultados(edital.slug, fase === 'RESULTADO_FINAL')}`,
         },
       })
     }

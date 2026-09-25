@@ -1,3 +1,6 @@
+import { resultadoDefinitivo } from '@/lib/edital/fase'
+import { hrefResultados } from '@/lib/edital/rotas-resultado'
+
 /**
  * Quando o resultado de um edital passa a ser público.
  *
@@ -15,9 +18,6 @@ const FASES_COM_RESULTADO = [
   'ENCERRADO',
 ] as const
 
-/** Fases em que o resultado já não muda mais — sai o rótulo de "preliminar". */
-const FASES_FINAIS = ['RESULTADO_FINAL', 'ENCERRADO'] as const
-
 export interface ResultadoPublicado {
   href: string
   /** "Resultado final" ou "Resultado preliminar". */
@@ -29,10 +29,10 @@ export interface ResultadoPublicado {
 export function resultadoPublicado(status: string, slug: string): ResultadoPublicado | null {
   if (!FASES_COM_RESULTADO.includes(status as (typeof FASES_COM_RESULTADO)[number])) return null
 
-  const preliminar = !FASES_FINAIS.includes(status as (typeof FASES_FINAIS)[number])
+  const preliminar = !resultadoDefinitivo(status)
 
   return {
-    href: `/editais/${slug}/resultados`,
+    href: hrefResultados(slug, !preliminar),
     titulo: preliminar ? 'Resultado preliminar' : 'Resultado final',
     preliminar,
   }

@@ -62,6 +62,7 @@ export async function consultarEdital(slug: string): Promise<EditalAberto | null
 
   const edital = await prisma.edital.findUnique({
     where: { slug },
+    omit: { resultadoPreliminar: true },
     include: {
       arquivos: { orderBy: { createdAt: 'asc' } },
       faqItems: { where: { publicado: true }, orderBy: { ordem: 'asc' } },

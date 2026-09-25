@@ -19,7 +19,7 @@ function resumir(texto: string, limite: number): string {
   return (ultimoEspaco > 0 ? corte.slice(0, ultimoEspaco) : corte) + '...'
 }
 
-type EditalPrisma = Awaited<ReturnType<typeof prisma.edital.findMany>>[number]
+type EditalPrisma = Omit<Awaited<ReturnType<typeof prisma.edital.findMany>>[number], 'resultadoPreliminar'>
 
 function paraListagem(edital: EditalPrisma): EditalListado {
   const prazo = getNextDeadline(edital.cronograma)
@@ -76,12 +76,14 @@ export async function consultarEditais(
     // os abertos do portal inteiro, não os da aba. A aba decide o que exibir.
     prisma.edital.findMany({
       where: { status: { in: OPEN_STATUSES } },
+      omit: { resultadoPreliminar: true },
       orderBy: [{ createdAt: 'desc' }],
     }),
     aba === 'abertos'
       ? Promise.resolve([])
       : prisma.edital.findMany({
           where: whereDemais,
+          omit: { resultadoPreliminar: true },
           orderBy: [{ createdAt: 'desc' }],
           skip: (pagina - 1) * PAGE_SIZE,
           take: PAGE_SIZE,

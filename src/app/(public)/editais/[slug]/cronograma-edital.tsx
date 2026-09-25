@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { IconArrowRight, IconDownload } from '@/components/ui/icons'
 import { getCronogramaItemStatus } from '@/lib/utils/cronograma'
 import { isAcaoPublicacao, isAcaoResultado } from '@/types/cronograma'
+import { hrefResultados } from '@/lib/edital/rotas-resultado'
 import type { CronogramaDisplayItem } from '@/types/cronograma'
 import { LinhaDatasMarco } from './linha-datas-marco'
 import { RecursoEditalButton } from './recurso-edital-button'
@@ -50,6 +51,7 @@ export function CronogramaEdital({ itens, slug, agora, escuro = false }: Cronogr
           const cumprido = situacao === 'past'
           const emCurso = situacao === 'current'
           const data = caixaDeData(item.dataHora)
+          const linkDireto = isAcaoResultado(item.acao) ? null : item.link
 
           return (
             <li
@@ -97,10 +99,10 @@ export function CronogramaEdital({ itens, slug, agora, escuro = false }: Cronogr
 
                 {(cumprido || emCurso) && (
                   <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2">
-                    {/* Link direto configurado no marco */}
-                    {item.link ? (
+                    {/* Link direto configurado no marco; o de resultado segue a fase, não um endereço salvo */}
+                    {linkDireto ? (
                       <Link
-                        href={item.link}
+                        href={linkDireto}
                         className={`inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] ${corAcao} underline-offset-4 hover:underline`}
                       >
                         Ver lista
@@ -113,7 +115,7 @@ export function CronogramaEdital({ itens, slug, agora, escuro = false }: Cronogr
                             <Link
                               href={
                                 isAcaoResultado(item.acao)
-                                  ? `/editais/${slug}/resultados`
+                                  ? hrefResultados(slug, item.acao === 'PUBLICACAO_RESULTADO_FINAL')
                                   : `/editais/${slug}/publicacoes/${item.acao}`
                               }
                               className={`inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] ${corAcao} underline-offset-4 hover:underline`}
@@ -135,7 +137,7 @@ export function CronogramaEdital({ itens, slug, agora, escuro = false }: Cronogr
 
                         {(item.fase === 'RESULTADO_PRELIMINAR' || item.fase === 'RESULTADO_FINAL') && (
                           <Link
-                            href={`/editais/${slug}/resultados`}
+                            href={hrefResultados(slug, item.fase === 'RESULTADO_FINAL')}
                             className={`inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] ${corAcao} underline-offset-4 hover:underline`}
                           >
                             Ver resultados

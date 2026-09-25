@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { logAudit } from '@/lib/audit'
+import { congelarPreliminarAoAvancar } from '@/lib/results/congelar-preliminar'
 import { notifyEquipeHabilitacaoAberta } from '@/lib/edital/notify-habilitacao-aberta'
 import { notifyEquipeInscricaoEncerrada } from '@/lib/edital/notify-inscricao-encerrada'
 import type { EditalStatus } from '@prisma/client'
@@ -64,7 +65,7 @@ export async function POST(
 
     const edital = await prisma.edital.findUnique({
       where: { id },
-      select: { id: true, status: true, titulo: true, publishedAt: true },
+      select: { id: true, status: true, titulo: true, publishedAt: true, resultadoPreliminar: true },
     })
 
     if (!edital) {
@@ -105,6 +106,8 @@ export async function POST(
         )
       }
     }
+
+    await congelarPreliminarAoAvancar(edital, statusAtual, data.proximoStatus)
 
     // Atualiza status (e publishedAt se estiver saindo de RASCUNHO pela primeira vez)
     const updateData: Record<string, unknown> = { status: data.proximoStatus }
