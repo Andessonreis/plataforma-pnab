@@ -34,11 +34,11 @@ const CASOS = [
   },
   {
     consolidadas: 4, status: 'RESULTADO_FINAL', situacao: 'FINAL',
-    arquivo: 'relacao-contemplados', titulo: 'Relação de Contemplados', rotulo: 'Resultado final após recursos',
+    arquivo: 'resultado-final', titulo: 'Resultado Final da Classificação', rotulo: 'Resultado final após recursos',
   },
   {
     consolidadas: 4, status: 'ENCERRADO', situacao: 'FINAL',
-    arquivo: 'relacao-contemplados', titulo: 'Relação de Contemplados', rotulo: 'Resultado final após recursos',
+    arquivo: 'resultado-final', titulo: 'Resultado Final da Classificação', rotulo: 'Resultado final após recursos',
   },
 ]
 
