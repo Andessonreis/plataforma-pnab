@@ -27,39 +27,36 @@ function extensaoDe(url: string): string {
   return (semQuery.split('.').pop() ?? '').toLowerCase()
 }
 
+/** Acrescenta ao documento as páginas de um anexo já baixado (PDF ou imagem). */
+async function incorporarArquivo(doc: PDFDocument, ext: string, bytes: Buffer): Promise<void> {
+  if (ext === 'pdf') {
+    const anexoDoc = await PDFDocument.load(bytes, { ignoreEncryption: true })
+    const paginas = await doc.copyPages(anexoDoc, anexoDoc.getPageIndices())
+    paginas.forEach((p) => doc.addPage(p))
+  } else if (EXT_IMAGEM.has(ext)) {
+    const imagem = ext === 'png' ? await doc.embedPng(bytes) : await doc.embedJpg(bytes)
+    const pagina = doc.addPage([imagem.width, imagem.height])
+    pagina.drawImage(imagem, { x: 0, y: 0, width: imagem.width, height: imagem.height })
+  }
+  // outras extensões: não deveriam existir (upload já restringe a pdf/png/jpg)
+}
+
 /**
  * Baixa cada anexo do storage e acrescenta suas páginas ao final do documento.
- * Anexo que não é PDF/imagem (ex.: link de vídeo) ou que não pôde ser lido é
- * pulado, sem interromper os demais.
+ * Anexo que não é PDF/imagem (ex.: link de vídeo), que não baixa ou cujo
+ * arquivo está corrompido é pulado, sem interromper os demais: um arquivo
+ * ruim de um proponente não pode derrubar o lote inteiro.
  */
 async function anexarArquivos(doc: PDFDocument, anexos: AnexoParaMesclar[]): Promise<void> {
   for (const anexo of anexos) {
     const path = extractStoragePath('propostas', anexo.url)
     if (!path) continue // link externo (vídeo) — sem arquivo pra baixar
 
-    const ext = extensaoDe(path)
-    let bytes: Buffer
     try {
-      bytes = await downloadFile('propostas', path)
+      await incorporarArquivo(doc, extensaoDe(path), await downloadFile('propostas', path))
     } catch (err) {
-      console.error({ message: 'Falha ao baixar anexo pro dossiê completo', anexo: anexo.titulo, err })
-      continue
+      console.error({ message: 'Anexo não pôde ser incorporado ao dossiê completo', anexo: anexo.titulo, err })
     }
-
-    if (ext === 'pdf') {
-      const anexoDoc = await PDFDocument.load(bytes, { ignoreEncryption: true }).catch(() => null)
-      if (!anexoDoc) {
-        console.error({ message: 'Anexo declarado como PDF não pôde ser lido', anexo: anexo.titulo })
-        continue
-      }
-      const paginas = await doc.copyPages(anexoDoc, anexoDoc.getPageIndices())
-      paginas.forEach((p) => doc.addPage(p))
-    } else if (EXT_IMAGEM.has(ext)) {
-      const imagem = ext === 'png' ? await doc.embedPng(bytes) : await doc.embedJpg(bytes)
-      const pagina = doc.addPage([imagem.width, imagem.height])
-      pagina.drawImage(imagem, { x: 0, y: 0, width: imagem.width, height: imagem.height })
-    }
-    // outras extensões: não deveriam existir (upload já restringe a pdf/png/jpg)
   }
 }
 

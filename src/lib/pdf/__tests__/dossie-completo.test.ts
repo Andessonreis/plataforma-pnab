@@ -87,6 +87,22 @@ describe('juntarProjetos', () => {
     expect(await paginasDe(resultado)).toBe(2)
   })
 
+  it('imagem corrompida não derruba o lote: os demais anexos e projetos seguem', async () => {
+    mockDownload.mockImplementation(async (_bucket, path) => {
+      if (path === 'truncada.jpg') return Buffer.from('\xff\xd8\xff\xe0 truncada')
+      return PNG_1X1
+    })
+    const lote = deLista([
+      { pdf: await pdfComPaginas(1), anexos: [{ titulo: 'Truncada', url: 'truncada.jpg' }, { titulo: 'Foto', url: 'foto.png' }] },
+      { pdf: await pdfComPaginas(1), anexos: [{ titulo: 'Outra', url: 'outra.png' }] },
+    ])
+
+    const resultado = await juntarProjetos(lote, true)
+
+    // Dados + foto do primeiro projeto, dados + foto do segundo.
+    expect(await paginasDe(resultado)).toBe(4)
+  })
+
   it('consome os projetos um a um, sem gerar o seguinte antes de terminar o atual', async () => {
     const ordem: string[] = []
     async function* lote(): AsyncGenerator<ProjetoDoLote> {
