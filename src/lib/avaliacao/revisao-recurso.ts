@@ -33,6 +33,19 @@ export function lerRevisaoRecurso(bruto: unknown): RevisaoRecurso | null {
   return { revisadoEm, notasAnteriores: notasAnteriores.filter(ehNota), notaTotalAnterior }
 }
 
+/**
+ * Duas notas valem o mesmo quando diferem menos que meio centésimo: a nota
+ * final é gravada com duas casas, e a média calculada na hora não.
+ */
+export function mesmaNota(a: number, b: number): boolean {
+  return Math.abs(a - b) < 0.006
+}
+
+/** A revisão mudou a média: há valor de antes e ele difere do atual. */
+export function mediaMudou(antes: number | null, atual: number | null): boolean {
+  return antes !== null && atual !== null && !mesmaNota(antes, atual)
+}
+
 /** Nota que o critério tinha antes da revisão, só quando ela mudou; senão null. */
 export function notaAnteriorDoCriterio(
   revisao: RevisaoRecurso | null,

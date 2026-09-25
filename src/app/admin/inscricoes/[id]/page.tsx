@@ -20,6 +20,8 @@ import { JuntarDocumento } from './juntar-documento'
 import { DistribuicaoAvaliadores } from './distribuicao-avaliadores'
 import { AvaliacoesComparativo } from './avaliacoes-comparativo'
 import { lerRevisaoRecurso } from '@/lib/avaliacao/revisao-recurso'
+import { notaFinalRevisada } from '@/lib/avaliacao/resumo'
+import { PontuacaoFinal } from './pontuacao-final'
 import { DadosInscricaoView } from '@/components/inscricao/dados-inscricao-view'
 import { HistoricoProcesso } from '@/components/inscricao/historico-processo'
 import { calcularAnexosPendentes } from '@/lib/inscricoes/anexos-pendentes'
@@ -445,13 +447,11 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
                 const notaExibida = viewNotaFinal(inscricao, userRole, inscricao.edital.bonusVisivelParaAdmin)
                 if (notaExibida === null) return null
                 return (
-                  <div>
-                    <dt className="text-xs font-medium text-slate-500 uppercase">{hasFormula ? 'Pontuação Final' : 'Nota Final'}</dt>
-                    <dd className="text-2xl font-bold text-brand-700 tabular-nums">
-                      {notaExibida.toFixed(hasFormula ? 2 : 1)}
-                      {hasFormula && <span className="text-sm font-normal text-slate-400 ml-1">pts</span>}
-                    </dd>
-                  </div>
+                  <PontuacaoFinal
+                    nota={notaExibida}
+                    hasFormula={hasFormula}
+                    revisao={isAvaliador ? null : notaFinalRevisada(notaExibida, inscricao.avaliacoes)}
+                  />
                 )
               })()}
             </dl>

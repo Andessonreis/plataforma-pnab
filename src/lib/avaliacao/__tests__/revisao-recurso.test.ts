@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest'
-import { lerRevisaoRecurso, mediaAnterior, notaAnteriorDoCriterio, type RevisaoRecurso } from '../revisao-recurso'
+import {
+  lerRevisaoRecurso, mediaAnterior, mediaMudou, mesmaNota, notaAnteriorDoCriterio, type RevisaoRecurso,
+} from '../revisao-recurso'
 
 const REVISAO: RevisaoRecurso = {
   revisadoEm: '2026-09-25T19:04:00.000Z',
@@ -52,5 +54,19 @@ describe('mediaAnterior', () => {
 
   it('não calcula com pontuação faltando', () => {
     expect(mediaAnterior([{ pontuacao: null, anterior: null }, { pontuacao: 98, anterior: 90 }])).toBeNull()
+  })
+})
+
+describe('mesmaNota e mediaMudou', () => {
+  it('a nota gravada com duas casas vale a média calculada na hora', () => {
+    expect(mesmaNota(92.33, 277 / 3)).toBe(true)
+    expect(mesmaNota(92.33, 95)).toBe(false)
+  })
+
+  it('só há mudança quando existem os dois valores e eles diferem', () => {
+    expect(mediaMudou(92.33, 95)).toBe(true)
+    expect(mediaMudou(95, 95)).toBe(false)
+    expect(mediaMudou(null, 95)).toBe(false)
+    expect(mediaMudou(92.33, null)).toBe(false)
   })
 })
