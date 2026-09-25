@@ -14,22 +14,12 @@ interface PropsPagina {
   fase: FaseResultado
 }
 
-const TITULO_DA_FASE: Record<FaseResultado, string> = {
-  preliminar: 'Resultado preliminar',
-  definitivo: 'Resultado final',
-}
-
-const FOTOS = [
-  '/images/galeria/foto-03.png', // arraiá no coreto
-  '/images/cidade/panoramica-irece.jpg', // a cidade ao entardecer
-]
-
 export async function metadataResultados({ slug, fase }: PropsPagina): Promise<Metadata> {
   const dados = await consultarResultado(slug, fase)
   if (!dados) return { title: 'Resultados' }
 
   return {
-    title: `${TITULO_DA_FASE[fase]} — ${dados.titulo}`,
+    title: `${dados.template.titulos[fase]} — ${dados.titulo}`,
     description: dados.disponivel ? `Classificação das propostas do edital ${dados.titulo}.` : undefined,
   }
 }
@@ -48,7 +38,8 @@ function apoioDaCapa(dados: ResultadoEdital): string {
  * É a página que o proponente mais procura depois que o prazo fecha. O
  * preliminar e o definitivo compartilham este corpo e mudam só a lista lida e
  * os avisos: o preliminar mostra a cópia do que foi publicado, o definitivo, a
- * classificação depois dos recursos.
+ * classificação depois dos recursos. Fotos, títulos e rótulos vêm do template do
+ * edital (`TemplateResultado`), e o padrão reproduz o layout do Festival.
  */
 export async function PaginaResultados({ slug, fase }: PropsPagina) {
   const dados = await consultarResultado(slug, fase)
@@ -57,10 +48,10 @@ export async function PaginaResultados({ slug, fase }: PropsPagina) {
   return (
     <div className="tema-secult font-questrial">
       <FolhaDeRosto
-        fotos={FOTOS}
+        fotos={dados.template.fotos}
         trilha="Resultados"
         chamada={`Edital de ${dados.ano}`}
-        titulo={TITULO_DA_FASE[fase]}
+        titulo={dados.template.titulos[fase]}
         apoio={apoioDaCapa(dados)}
         compacto
       >
@@ -114,7 +105,11 @@ export async function PaginaResultados({ slug, fase }: PropsPagina) {
                     </a>
                   </div>
                 )}
-                <ClassificacaoPorCategoria categorias={dados.categorias} porPontuacao={dados.porPontuacao} />
+                <ClassificacaoPorCategoria
+                  categorias={dados.categorias}
+                  porPontuacao={dados.porPontuacao}
+                  rotulos={dados.template.rotulos}
+                />
               </>
             )}
           </FaixaSecao>

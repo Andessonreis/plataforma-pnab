@@ -2,6 +2,7 @@ import { prisma } from '@/lib/db'
 import { logAudit } from '@/lib/audit'
 import { descartarEmissao, registrarEmissao, type Emissao } from '@/lib/documentos/emissao'
 import { identificacaoEdital, NOME_DO_TIPO } from '@/lib/documentos/titulos'
+import { resolverTemplateResultado } from '@/lib/edital/template-resultado'
 import {
   INCLUDE_PROJETO_COMPLETO, montarDadosProjeto, type InscricaoDoProjeto,
 } from '@/lib/inscricoes/projeto-completo-dados'
@@ -9,7 +10,6 @@ import { juntarProjetos, type ProjetoDoLote } from '@/lib/pdf/dossie-completo'
 import { generateProjetoCompleto } from '@/lib/pdf/projeto-completo'
 import { montarClassificacao } from '@/lib/results/classificacao'
 import { bonusVisivelPara, opcoesDaClassificacao } from '@/lib/results/classificacao-opcoes'
-import { INSCRICOES_FORA_DA_CLASSIFICACAO } from '@/lib/results/resultado-publico'
 import { ServiceError } from './errors'
 
 interface EmitirProjetosContempladosInput {
@@ -63,6 +63,7 @@ export async function emitirProjetosContemplados(
     select: {
       titulo: true, ano: true, slug: true,
       vagasSuplentes: true, notaMinima: true, categoriasConfig: true, bonusVisivelParaAdmin: true,
+      resultadoTemplate: true,
     },
   })
   if (!edital) throw new ServiceError('NOT_FOUND', 'Edital não encontrado.')
@@ -71,9 +72,10 @@ export async function emitirProjetosContemplados(
     editalId,
     opcoesDaClassificacao(edital, bonusVisivelPara(role, edital)),
   )
+  const { foraDaClassificacao } = resolverTemplateResultado(edital.resultadoTemplate)
   const ids = categorias
     .flatMap((categoria) => categoria.linhas)
-    .filter((linha) => linha.status === 'CONTEMPLADA' && !INSCRICOES_FORA_DA_CLASSIFICACAO.includes(linha.numero))
+    .filter((linha) => linha.status === 'CONTEMPLADA' && !foraDaClassificacao.includes(linha.numero))
     .map((linha) => linha.inscricaoId)
   if (ids.length === 0) {
     throw new ServiceError('BAD_REQUEST', 'Nenhum projeto contemplado na classificação deste edital.')

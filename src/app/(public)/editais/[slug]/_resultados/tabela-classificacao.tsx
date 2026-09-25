@@ -1,4 +1,5 @@
 import { CampoValorCard } from '../campo-valor-card'
+import type { TemplateResultado } from '@/lib/edital/template-resultado'
 import type { LinhaResultadoPublico, SituacaoClassificada } from '@/lib/results/resultado-publico'
 
 interface TabelaClassificacaoProps {
@@ -6,15 +7,17 @@ interface TabelaClassificacaoProps {
   porPontuacao: boolean
   /** Categoria da tabela, lida pelo leitor de tela como legenda. */
   categoria: string
+  rotulos: TemplateResultado['rotulos']
 }
 
-const ROTULO_SITUACAO: Record<SituacaoClassificada, string> = {
-  RESULTADO_PRELIMINAR: 'Classificado',
-  RESULTADO_FINAL: 'Classificado',
-  CONTEMPLADA: 'Classificado',
-  NAO_CONTEMPLADA: 'Desclassificado',
-  SUPLENTE: 'Suplente',
-  RECURSO_ABERTO: 'Em recurso',
+/** Qual rótulo do template diz cada situação; o texto vem de `TemplateResultado.rotulos`. */
+const ROTULO_DA_SITUACAO: Record<SituacaoClassificada, keyof TemplateResultado['rotulos']> = {
+  RESULTADO_PRELIMINAR: 'classificado',
+  RESULTADO_FINAL: 'classificado',
+  CONTEMPLADA: 'classificado',
+  NAO_CONTEMPLADA: 'desclassificado',
+  SUPLENTE: 'suplente',
+  RECURSO_ABERTO: 'emRecurso',
 }
 
 /** Carimbo por situação. Sem depender de cor: o rótulo diz o mesmo. */
@@ -27,15 +30,19 @@ const CARIMBO_SITUACAO: Record<SituacaoClassificada, string> = {
   RECURSO_ABERTO: 'bg-turquesa-700 text-papel-50',
 }
 
-function resolverSituacao(linha: LinhaResultadoPublico): { rotulo: string; estilo: string } {
+function resolverSituacao(
+  linha: LinhaResultadoPublico,
+  rotulos: TemplateResultado['rotulos'],
+): { rotulo: string; estilo: string } {
   if (linha.nota === null && linha.posicao === null) {
     return {
-      rotulo: 'Não se aplica',
+      rotulo: rotulos.naoSeAplica,
       estilo: 'bg-tinta-900/10 text-tinta-700',
     }
   }
+  const chave = ROTULO_DA_SITUACAO[linha.situacao]
   return {
-    rotulo: ROTULO_SITUACAO[linha.situacao] ?? linha.situacao,
+    rotulo: chave ? rotulos[chave] : linha.situacao,
     estilo: CARIMBO_SITUACAO[linha.situacao] ?? 'bg-tinta-900/10 text-tinta-700',
   }
 }
@@ -52,7 +59,7 @@ function resolverSituacao(linha: LinhaResultadoPublico): { rotulo: string; estil
  * num scroll escondido — por isso vira um cartão por proposta, com a
  * mesma marcação de contemplada na borda.
  */
-export function TabelaClassificacao({ linhas, porPontuacao, categoria }: TabelaClassificacaoProps) {
+export function TabelaClassificacao({ linhas, porPontuacao, categoria, rotulos }: TabelaClassificacaoProps) {
   return (
     <>
     <div className="hidden overflow-x-auto border-2 border-tinta-900 bg-papel-50 sm:block">
@@ -79,7 +86,7 @@ export function TabelaClassificacao({ linhas, porPontuacao, categoria }: TabelaC
         <tbody>
           {linhas.map((linha) => {
             const contemplada = linha.situacao === 'CONTEMPLADA'
-            const { rotulo, estilo } = resolverSituacao(linha)
+            const { rotulo, estilo } = resolverSituacao(linha, rotulos)
             return (
               <tr
                 key={linha.numero}
@@ -122,7 +129,7 @@ export function TabelaClassificacao({ linhas, porPontuacao, categoria }: TabelaC
     <div className="grid gap-3 sm:hidden">
       {linhas.map((linha) => {
         const contemplada = linha.situacao === 'CONTEMPLADA'
-        const { rotulo } = resolverSituacao(linha)
+        const { rotulo } = resolverSituacao(linha, rotulos)
         return (
           <CampoValorCard
             key={linha.numero}

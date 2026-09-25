@@ -10,7 +10,7 @@ import { gerarListaClassificacaoV1 } from '@/lib/pdf/template-1/lista-classifica
 import { TEXTOS_POR_SITUACAO } from '@/lib/pdf/modelo/lista-classificacao'
 import type { ListaClassificacaoData } from '@/lib/pdf/modelo/tipos'
 import { resultadoDefinitivo } from '@/lib/edital/fase'
-import { INSCRICOES_FORA_DA_CLASSIFICACAO } from '@/lib/results/resultado-publico'
+import { resolverTemplateResultado } from '@/lib/edital/template-resultado'
 import { registrarEmissao } from '@/lib/documentos/emissao'
 import { templatePreferido } from '@/lib/documentos/preferencia'
 import type { TemplatePdf } from '@/lib/documentos/template'
@@ -69,7 +69,7 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
       select: {
         titulo: true, ano: true, slug: true, status: true,
         vagasSuplentes: true, notaMinima: true,
-        categoriasConfig: true, bonusVisivelParaAdmin: true, itensBonus: true,
+        categoriasConfig: true, bonusVisivelParaAdmin: true, itensBonus: true, resultadoTemplate: true,
       },
     })
     if (!edital) return erro(404, 'NOT_FOUND', 'Edital não encontrado.', requestId)
@@ -87,6 +87,7 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
       return erro(422, 'SEM_DADOS', 'Nenhuma inscrição avaliada para classificar ainda.', requestId)
     }
 
+    const { foraDaClassificacao } = resolverTemplateResultado(edital.resultadoTemplate)
     const total = categorias.reduce((soma, c) => soma + c.linhas.length, 0)
     const template = query.data.template ?? await templatePreferido(session.user.id, editalId)
 
@@ -117,7 +118,7 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
         valorPorProjeto: c.valorPorProjeto,
         linhas: c.linhas.map((l) => {
           // A lista oficial não classifica quem o resultado preliminar publicou fora da classificação.
-          const fora = INSCRICOES_FORA_DA_CLASSIFICACAO.includes(l.numero)
+          const fora = foraDaClassificacao.includes(l.numero)
           return {
             posicao: l.posicao,
             numero: l.numero,

@@ -9,6 +9,7 @@ vi.mock('@/lib/db', () => ({
 }))
 
 import { prisma } from '@/lib/db'
+import { TEMPLATE_RESULTADO_PADRAO } from '@/lib/edital/template-resultado'
 import { consultarResultado } from '../consulta'
 
 const ATUAL = {
@@ -24,10 +25,10 @@ const COPIA = {
   }],
 }
 
-function edital(status: string, resultadoPreliminar: unknown = null) {
+function edital(status: string, resultadoPreliminar: unknown = null, resultadoTemplate: unknown = null) {
   vi.mocked(prisma.edital.findUnique).mockResolvedValue({
     id: 'ed-1', titulo: 'Festival', ano: 2026, status, formulaAvaliacao: null,
-    cronograma: [], categoriasConfig: null, resultadoPreliminar,
+    cronograma: [], categoriasConfig: null, resultadoPreliminar, resultadoTemplate,
   } as never)
 }
 
@@ -102,4 +103,52 @@ describe('consultarResultado — definitivo', () => {
 it('devolve null para edital inexistente', async () => {
   vi.mocked(prisma.edital.findUnique).mockResolvedValue(null as never)
   expect(await consultarResultado('nao-existe', 'preliminar')).toBeNull()
+})
+
+describe('consultarResultado — template do edital', () => {
+  it('edital sem template usa o padrão', async () => {
+    edital('RESULTADO_PRELIMINAR')
+    const dados = await consultarResultado('festival', 'preliminar')
+
+    expect(dados?.template).toEqual(TEMPLATE_RESULTADO_PADRAO)
+  })
+
+  it('devolve o template configurado, com o que faltar no padrão', async () => {
+    edital('RESULTADO_PRELIMINAR', null, { titulos: { preliminar: 'Classificação preliminar' } })
+    const dados = await consultarResultado('festival', 'preliminar')
+
+    expect(dados?.template.titulos).toEqual({ preliminar: 'Classificação preliminar', definitivo: 'Resultado final' })
+  })
+
+  it('o resultado final tira da lista quem o template deixa fora da classificação', async () => {
+    edital('RESULTADO_FINAL', null, { foraDaClassificacao: ['PNAB-2026-0046'] })
+    vi.mocked(prisma.inscricao.findMany).mockResolvedValue([
+      ATUAL,
+      { ...ATUAL, numero: 'PNAB-2026-0046', posicao: 2, notaFinal: 67.17 },
+    ] as never)
+    const dados = await consultarResultado('festival', 'definitivo')
+
+    expect(dados?.categorias[0].linhas).toEqual([
+      expect.objectContaining({ numero: 'PNAB-2026-0139', posicao: 1 }),
+      expect.objectContaining({ numero: 'PNAB-2026-0046', posicao: null, nota: null }),
+    ])
+  })
+
+  it('sem a lista no template a mesma inscrição sai classificada', async () => {
+    edital('RESULTADO_FINAL')
+    vi.mocked(prisma.inscricao.findMany).mockResolvedValue([
+      { ...ATUAL, numero: 'PNAB-2026-0046', posicao: 2, notaFinal: 67.17 },
+    ] as never)
+    const dados = await consultarResultado('festival', 'definitivo')
+
+    expect(dados?.categorias[0].linhas[0]).toMatchObject({ posicao: 2, nota: '67.17' })
+  })
+
+  it('o preliminar com cópia guardada mostra a cópia como foi publicada, sem reaplicar a lista do template', async () => {
+    edital('RESULTADO_FINAL', COPIA, { foraDaClassificacao: ['PNAB-2026-0139'] })
+    const dados = await consultarResultado('festival', 'preliminar')
+
+    expect(dados?.categorias[0].linhas[0]).toMatchObject({ numero: 'PNAB-2026-0139', posicao: 4, nota: '92.33' })
+    expect(prisma.inscricao.findMany).not.toHaveBeenCalled()
+  })
 })

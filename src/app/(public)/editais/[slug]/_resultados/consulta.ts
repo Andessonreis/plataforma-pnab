@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/db'
 import { FASES_DO_PRELIMINAR, resultadoDefinitivo } from '@/lib/edital/fase'
+import { resolverTemplateResultado, type TemplateResultado } from '@/lib/edital/template-resultado'
 import {
   lerResultadoPreliminar, linhasDoResultado, type LinhaResultadoPublico,
 } from '@/lib/results/resultado-publico'
@@ -21,6 +22,8 @@ export interface ResultadoEdital {
   disponivel: boolean
   /** Dia em que o preliminar foi publicado; só existe quando a cópia foi guardada. */
   publicadoEm: Date | null
+  /** Fotos, títulos e rótulos das páginas de resultado deste edital. */
+  template: TemplateResultado
   /** Verdadeiro quando o edital usa fórmula — muda o rótulo da coluna. */
   porPontuacao: boolean
   diarioOficialUrl: string | null
@@ -34,9 +37,12 @@ export interface ResultadoEdital {
 async function linhasDaFase(
   fase: FaseResultado,
   edital: { id: string; status: string; resultadoPreliminar: unknown },
+  foraDaClassificacao: readonly string[],
 ): Promise<{ linhas: LinhaResultadoPublico[]; publicadoEm: Date | null } | null> {
   if (fase === 'definitivo') {
-    return resultadoDefinitivo(edital.status) ? { linhas: await linhasDoResultado(edital.id), publicadoEm: null } : null
+    return resultadoDefinitivo(edital.status)
+      ? { linhas: await linhasDoResultado(edital.id, foraDaClassificacao), publicadoEm: null }
+      : null
   }
 
   // Edital que voltou a uma fase anterior à publicação não expõe a cópia: o resultado deixou de ser público.
@@ -45,7 +51,7 @@ async function linhasDaFase(
 
   // Edital que ainda está na fase do preliminar e não guardou a cópia: a lista atual é a do preliminar.
   return FASES_DO_PRELIMINAR.includes(edital.status)
-    ? { linhas: await linhasDoResultado(edital.id), publicadoEm: null }
+    ? { linhas: await linhasDoResultado(edital.id, foraDaClassificacao), publicadoEm: null }
     : null
 }
 
@@ -54,12 +60,13 @@ export async function consultarResultado(slug: string, fase: FaseResultado): Pro
     where: { slug },
     select: {
       id: true, titulo: true, ano: true, status: true, formulaAvaliacao: true,
-      cronograma: true, categoriasConfig: true, resultadoPreliminar: true,
+      cronograma: true, categoriasConfig: true, resultadoPreliminar: true, resultadoTemplate: true,
     },
   })
   if (!edital) return null
 
-  const dados = await linhasDaFase(fase, edital)
+  const template = resolverTemplateResultado(edital.resultadoTemplate)
+  const dados = await linhasDaFase(fase, edital, template.foraDaClassificacao)
 
   // Só o preliminar recorre ao arquivo do edital: um "Diário Oficial" anexado
   // ali é, em regra, o da primeira publicação, e não pode passar pela lista final.
@@ -89,6 +96,7 @@ export async function consultarResultado(slug: string, fase: FaseResultado): Pro
     slug,
     fase,
     disponivel: dados !== null,
+    template,
     publicadoEm: dados?.publicadoEm ?? null,
     porPontuacao: Boolean(edital.formulaAvaliacao),
     diarioOficialUrl,
