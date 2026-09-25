@@ -1,9 +1,11 @@
+import type { TemplateResultado } from '@/lib/edital/template-resultado'
 import type { CategoriaResultado } from './agrupar-por-categoria'
 import { TabelaClassificacao } from './tabela-classificacao'
 
 interface ClassificacaoPorCategoriaProps {
   categorias: CategoriaResultado[]
   porPontuacao: boolean
+  rotulos: TemplateResultado['rotulos']
 }
 
 /**
@@ -14,7 +16,7 @@ interface ClassificacaoPorCategoriaProps {
  * os 2º, e quem procurava a sua área tinha que ler a coluna "Categoria" linha
  * a linha. Aqui cada categoria é um bloco, e o índice no topo leva direto a ele.
  */
-export function ClassificacaoPorCategoria({ categorias, porPontuacao }: ClassificacaoPorCategoriaProps) {
+export function ClassificacaoPorCategoria({ categorias, porPontuacao, rotulos }: ClassificacaoPorCategoriaProps) {
   return (
     <>
       <nav aria-label="Categorias deste resultado" className="mb-10 border-2 border-tinta-900/15 bg-papel-50 p-5">
@@ -49,7 +51,7 @@ export function ClassificacaoPorCategoria({ categorias, porPontuacao }: Classifi
               <p className="mt-2 text-sm leading-relaxed text-tinta-700">{categoria.quadroDeVagas}</p>
             )}
             <div className="mt-4">
-              <TabelaClassificacao linhas={categoria.linhas} porPontuacao={porPontuacao} categoria={categoria.nome} />
+              <TabelaClassificacao linhas={categoria.linhas} porPontuacao={porPontuacao} categoria={categoria.nome} rotulos={rotulos} />
             </div>
           </section>
         ))}

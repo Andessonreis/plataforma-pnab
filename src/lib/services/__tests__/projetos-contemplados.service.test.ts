@@ -38,6 +38,7 @@ const EDITAL = {
   notaMinima: null,
   categoriasConfig: null,
   bonusVisivelParaAdmin: false,
+  resultadoTemplate: { foraDaClassificacao: ['PNAB-2026-0046'] },
 }
 
 function linha(numero: string, status: CategoriaClassificada['linhas'][number]['status']) {

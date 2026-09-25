@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db'
+import { resolverTemplateResultado } from '@/lib/edital/template-resultado'
 
 /**
  * Lista de classificação como o portal a expõe ao público.
@@ -22,14 +23,6 @@ export const SITUACOES_CLASSIFICADAS = [
 
 export type SituacaoClassificada = (typeof SITUACOES_CLASSIFICADAS)[number]
 
-/**
- * Inscrições que aparecem na lista mas ficam fora da classificação: sem posição
- * nem nota, com a situação "Não se aplica". A PNAB-2026-0046 é pessoa jurídica
- * inscrita numa categoria que o edital do Festival não tem; o resultado
- * preliminar a publicou assim, e recalcular as notas a promoveria a contemplada.
- */
-export const INSCRICOES_FORA_DA_CLASSIFICACAO: readonly string[] = ['PNAB-2026-0046']
-
 export interface LinhaResultadoPublico {
   numero: string
   /** Posição na categoria; nula para quem ficou fora da classificação. */
@@ -45,8 +38,15 @@ export interface ResultadoPreliminarGuardado {
   linhas: LinhaResultadoPublico[]
 }
 
-/** Lista atual do edital, agrupável por categoria: categoria, depois posição. */
-export async function linhasDoResultado(editalId: string): Promise<LinhaResultadoPublico[]> {
+/**
+ * Lista atual do edital, agrupável por categoria: categoria, depois posição.
+ * `foraDaClassificacao` são os números que saem sem posição nem nota (ver
+ * `TemplateResultado`); é obrigatório para ninguém esquecer de passá-lo.
+ */
+export async function linhasDoResultado(
+  editalId: string,
+  foraDaClassificacao: readonly string[],
+): Promise<LinhaResultadoPublico[]> {
   const inscricoes = await prisma.inscricao.findMany({
     where: { editalId, status: { in: [...SITUACOES_CLASSIFICADAS] } },
     select: {
@@ -65,13 +65,13 @@ export async function linhasDoResultado(editalId: string): Promise<LinhaResultad
   })
 
   return inscricoes.map((i) => {
-    const foraDaClassificacao = INSCRICOES_FORA_DA_CLASSIFICACAO.includes(i.numero)
+    const fora = foraDaClassificacao.includes(i.numero)
     return {
       numero: i.numero,
-      posicao: foraDaClassificacao ? null : i.posicao,
+      posicao: fora ? null : i.posicao,
       proponente: i.proponente.nome.toUpperCase(),
       categoria: i.categoria,
-      nota: !foraDaClassificacao && i.notaFinal ? Number(i.notaFinal).toFixed(2) : null,
+      nota: !fora && i.notaFinal ? Number(i.notaFinal).toFixed(2) : null,
       situacao: i.status as SituacaoClassificada,
     }
   })
@@ -79,9 +79,11 @@ export async function linhasDoResultado(editalId: string): Promise<LinhaResultad
 
 /** Congela a lista atual como o resultado preliminar publicado do edital. */
 export async function guardarResultadoPreliminar(editalId: string, publicadoEm: Date = new Date()): Promise<void> {
+  const edital = await prisma.edital.findUnique({ where: { id: editalId }, select: { resultadoTemplate: true } })
+  const { foraDaClassificacao } = resolverTemplateResultado(edital?.resultadoTemplate)
   const guardado: ResultadoPreliminarGuardado = {
     publicadoEm: publicadoEm.toISOString(),
-    linhas: await linhasDoResultado(editalId),
+    linhas: await linhasDoResultado(editalId, foraDaClassificacao),
   }
   await prisma.edital.update({ where: { id: editalId }, data: { resultadoPreliminar: guardado as object } })
 }

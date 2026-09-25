@@ -327,6 +327,9 @@ model Edital {
   // Lista do resultado preliminar como foi publicada: { publicadoEm, linhas }.
   // Guardada porque depois do recurso as inscrições mudam de nota e de status.
   resultadoPreliminar            Json?
+  // Template das páginas públicas de resultado (fotos, títulos, rótulos e
+  // inscrições fora da classificação). Vazio = padrão; ver template-resultado.ts.
+  resultadoTemplate              Json?
   // Momento em que a Secretaria encerrou a fase de avaliação. Preenchido =
   // avaliador não lança nem reabre nota neste edital; a equipe interna
   // continua editando, porque o trabalho dela (bonificação, conferência,
