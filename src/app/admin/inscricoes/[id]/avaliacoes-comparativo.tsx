@@ -1,6 +1,6 @@
 import { Card } from '@/components/ui'
 import { SeloRevisadaNoRecurso, ValorRevisado } from '@/components/avaliacao/valor-revisado'
-import { brutasAnteriores, mediaAnterior, type RevisaoRecurso } from '@/lib/avaliacao/revisao-recurso'
+import { brutasAnteriores, mediaAnterior, mediaMudou, type RevisaoRecurso } from '@/lib/avaliacao/revisao-recurso'
 import { FragmentBloco } from './bloco-criterios'
 import { RodapeTotais } from './rodape-totais'
 
@@ -88,7 +88,6 @@ export function AvaliacoesComparativo({ criterios, avaliacoes, hasFormula }: Pro
       anterior: hasFormula ? brutasAntes[i] : a.revisao?.notaTotalAnterior ?? null,
     })),
   )
-  const mediaMudou = mediaAntes !== null && media !== null && Math.abs(mediaAntes - media) > 0.004
 
   const temNotas = criterios.length > 0 && avaliacoes.some((a) => a.notas.length > 0)
 
@@ -104,7 +103,7 @@ export function AvaliacoesComparativo({ criterios, avaliacoes, hasFormula }: Pro
               {hasFormula ? 'Pontuação média' : 'Nota média'}
             </p>
             <p className="text-lg font-bold text-brand-700 tabular-nums leading-none">
-              {mediaMudou && mediaAntes !== null
+              {mediaMudou(mediaAntes, media) && mediaAntes !== null && media !== null
                 ? <ValorRevisado anterior={mediaAntes.toFixed(decimals)} atual={media.toFixed(decimals)} />
                 : media.toFixed(decimals)}
               {hasFormula && <span className="text-xs font-semibold text-slate-400"> pts</span>}
