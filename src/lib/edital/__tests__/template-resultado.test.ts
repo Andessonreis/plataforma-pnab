@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { resolverTemplateResultado, TEMPLATE_RESULTADO_PADRAO } from '../template-resultado'
 
 describe('resolverTemplateResultado', () => {
@@ -33,12 +33,15 @@ describe('resolverTemplateResultado', () => {
 
   it('aceita fotos do próprio portal, de uma a quatro', () => {
     expect(resolverTemplateResultado({ fotos: ['/images/outra.jpg'] }).fotos).toEqual(['/images/outra.jpg'])
-    expect(resolverTemplateResultado({ fotos: ['/a.png', '/b.webp', '/c.jpeg', '/d.avif'] }).fotos).toHaveLength(4)
+    expect(resolverTemplateResultado({ fotos: ['/images/a.png', '/images/b.webp', '/images/c.jpeg', '/images/d.avif'] }).fotos)
+      .toHaveLength(4)
   })
 
   it.each([
     [[]],
-    [['/a.png', '/b.png', '/c.png', '/d.png', '/e.png']],
+    [['/images/a.png', '/images/b.png', '/images/c.png', '/images/d.png', '/images/e.png']],
+    [['/foto.png']],
+    [['/api/admin/alguma-rota.png']],
     [['https://outro.site/foto.jpg']],
     [['//outro.site/foto.jpg']],
     [['/images/../segredo.png']],
@@ -69,11 +72,57 @@ describe('resolverTemplateResultado', () => {
     expect(template.foraDaClassificacao).toEqual(['PNAB-2026-0046', 'PNAB-2026-0099'])
   })
 
-  it('lista de exceções que não é lista vira vazia', () => {
-    expect(resolverTemplateResultado({ foraDaClassificacao: 'PNAB-2026-0046' }).foraDaClassificacao).toEqual([])
-  })
-
   it('ignora campos que o template não conhece', () => {
     expect(resolverTemplateResultado({ qualquerCoisa: 1, fotos: ['/images/x.png'] })).not.toHaveProperty('qualquerCoisa')
+  })
+
+  it('o número da exceção é normalizado para caixa alta', () => {
+    expect(resolverTemplateResultado({ foraDaClassificacao: [' pnab-2026-0046 '] }).foraDaClassificacao)
+      .toEqual(['PNAB-2026-0046'])
+  })
+
+  it('a lista de exceções tem limite de tamanho, da lista e de cada número', () => {
+    const muitas = Array.from({ length: 300 }, (_, i) => `PNAB-2026-${String(i).padStart(4, '0')}`)
+
+    expect(resolverTemplateResultado({ foraDaClassificacao: muitas }).foraDaClassificacao).toHaveLength(200)
+    expect(resolverTemplateResultado({ foraDaClassificacao: ['X'.repeat(33), 'PNAB-2026-0046'] }).foraDaClassificacao)
+      .toEqual(['PNAB-2026-0046'])
+  })
+
+  it('lista de exceções que não é lista vira vazia e é registrada no log', () => {
+    const aviso = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    expect(resolverTemplateResultado({ foraDaClassificacao: 'PNAB-2026-0046' }).foraDaClassificacao).toEqual([])
+    expect(aviso).toHaveBeenCalledWith(expect.objectContaining({ campo: 'foraDaClassificacao' }))
+
+    aviso.mockClear()
+    resolverTemplateResultado({})
+    resolverTemplateResultado({ foraDaClassificacao: null })
+    expect(aviso).not.toHaveBeenCalled()
+    aviso.mockRestore()
+  })
+
+  it('quem recebe o template pode alterá-lo sem mudar o padrão dos outros editais', () => {
+    const primeiro = resolverTemplateResultado(null)
+    primeiro.fotos.push('/images/intrusa.jpg')
+    primeiro.foraDaClassificacao.push('PNAB-2026-0001')
+    primeiro.rotulos.suplente = 'Alterado'
+
+    const segundo = resolverTemplateResultado(undefined)
+    expect(segundo).toEqual({
+      fotos: ['/images/galeria/foto-03.png', '/images/cidade/panoramica-irece.jpg'],
+      titulos: { preliminar: 'Resultado preliminar', definitivo: 'Resultado final' },
+      rotulos: expect.objectContaining({ suplente: 'Suplente' }),
+      foraDaClassificacao: [],
+    })
+    expect(TEMPLATE_RESULTADO_PADRAO.fotos).toHaveLength(2)
+  })
+
+  it('campo ausente também devolve cópia, não o objeto do padrão', () => {
+    const template = resolverTemplateResultado({ foraDaClassificacao: ['PNAB-2026-0046'] })
+
+    expect(template.fotos).not.toBe(TEMPLATE_RESULTADO_PADRAO.fotos)
+    expect(template.titulos).not.toBe(TEMPLATE_RESULTADO_PADRAO.titulos)
+    expect(template.rotulos).not.toBe(TEMPLATE_RESULTADO_PADRAO.rotulos)
   })
 })

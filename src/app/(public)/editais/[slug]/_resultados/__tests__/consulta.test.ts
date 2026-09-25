@@ -143,4 +143,12 @@ describe('consultarResultado — template do edital', () => {
 
     expect(dados?.categorias[0].linhas[0]).toMatchObject({ posicao: 2, nota: '67.17' })
   })
+
+  it('o preliminar com cópia guardada mostra a cópia como foi publicada, sem reaplicar a lista do template', async () => {
+    edital('RESULTADO_FINAL', COPIA, { foraDaClassificacao: ['PNAB-2026-0139'] })
+    const dados = await consultarResultado('festival', 'preliminar')
+
+    expect(dados?.categorias[0].linhas[0]).toMatchObject({ numero: 'PNAB-2026-0139', posicao: 4, nota: '92.33' })
+    expect(prisma.inscricao.findMany).not.toHaveBeenCalled()
+  })
 })

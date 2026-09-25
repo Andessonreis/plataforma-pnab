@@ -39,6 +39,14 @@ describe('PaginaResultados — template padrão', () => {
     for (const rotulo of ['Classificado', 'Suplente', 'Desclassificado', 'Não se aplica']) expect(html).toContain(rotulo)
   })
 
+  it('a inscrição sem posição nem nota sai como "Não se aplica", e não como classificada', async () => {
+    const html = await renderizar(resultado(TEMPLATE_RESULTADO_PADRAO))
+    const linha = html.split('PNAB-2026-0046')[1].slice(0, 400)
+
+    expect(linha).toContain('Não se aplica')
+    expect(linha).not.toContain('Classificado')
+  })
+
   it('o definitivo usa o título "Resultado final"', async () => {
     const html = await renderizar(resultado(TEMPLATE_RESULTADO_PADRAO, { fase: 'definitivo' }), 'definitivo')
 
