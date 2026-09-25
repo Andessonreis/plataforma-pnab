@@ -1,6 +1,6 @@
 import { ServiceError } from '@/lib/services/errors'
 import { migrateLegacyCronograma } from '@/lib/utils/cronograma'
-import { janelaParaAcaoFromItems } from '@/lib/utils/cronograma-janela'
+import { janelaParaAcaoFromItems, type JanelaInfo } from '@/lib/utils/cronograma-janela'
 import { formatDate } from '@/lib/utils/format'
 import type { AcaoJanela } from '@/types/cronograma'
 
@@ -10,6 +10,19 @@ export interface PrazoRecurso {
 }
 
 const SO_APOS_ENCERRAR = 'O extrato só pode ser emitido depois do encerramento.'
+
+/**
+ * Janela cadastrada para a ação, ou null. Item da mesma ação sem `fimEm` é
+ * marco pontual, não prazo: se entrasse na escolha, o mais recente dele
+ * ocultaria a janela real, já encerrada. O extrato em PDF e a página pública
+ * do resultado dos recursos leem o prazo por aqui, para mostrarem o mesmo.
+ */
+export function janelaDoRecurso(cronograma: unknown, acaoJanela: AcaoJanela): JanelaInfo | null {
+  const itens = migrateLegacyCronograma(cronograma).filter(
+    (item) => !(item.tipo === 'custom' && item.acao === acaoJanela && !item.fimEm),
+  )
+  return janelaParaAcaoFromItems(itens, acaoJanela)
+}
 
 /**
  * Prazo de interposição da etapa, desde que já tenha terminado.
@@ -25,12 +38,7 @@ export function prazoRecursoEncerrado(
 ): PrazoRecurso {
   const etapa = rotuloEtapa.toLowerCase()
 
-  // Item da mesma ação sem `fimEm` é marco pontual, não prazo. Se entrasse na
-  // escolha, o mais recente dele ocultaria a janela real, já encerrada.
-  const itens = migrateLegacyCronograma(cronograma).filter(
-    (item) => !(item.tipo === 'custom' && item.acao === acaoJanela && !item.fimEm),
-  )
-  const janela = janelaParaAcaoFromItems(itens, acaoJanela)
+  const janela = janelaDoRecurso(cronograma, acaoJanela)
 
   if (!janela?.fim) {
     throw new ServiceError(
