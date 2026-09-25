@@ -44,6 +44,12 @@ const cronogramaCustomSchema = z.object({
     'PUBLICACAO_RESULTADO_FINAL',
   ]).optional(),
   retificado: marcoRetificadoSchema.optional(),
+  // Sem estes dois, o salvamento do edital pelo admin apaga os botões
+  // "Ver lista" e "Diário Oficial" que o cronograma público mostra no marco.
+  // Valor fora do formato é descartado em vez de reprovar o item: reprovado, o
+  // marco cairia no schema legado e perderia tipo, fimEm e acao.
+  link: z.string().regex(/^\/(?!\/)/).optional().catch(undefined),
+  diarioOficialUrl: z.string().url().regex(/^https:\/\//i).optional().catch(undefined),
 })
 
 const cronogramaLegacySchema = z.object({

@@ -52,6 +52,36 @@ describe('cronogramaItemSchema', () => {
   })
 })
 
+describe('cronogramaItemSchema — botões do marco', () => {
+  const marco = {
+    tipo: 'custom',
+    label: 'Publicação dos Projetos Selecionados',
+    dataHora: '2026-09-22T00:00:00',
+    acao: 'PUBLICACAO_RESULTADO_FINAL',
+    link: '/editais/festival/resultados',
+    diarioOficialUrl: 'https://procede.api.br/pdfGateway/irece/publicacoes/Ed%202935.pdf',
+  }
+
+  it('preserva link e Diário Oficial ao salvar o marco', () => {
+    const result = cronogramaItemSchema.parse(marco)
+    expect(result).toMatchObject({ link: marco.link, diarioOficialUrl: marco.diarioOficialUrl })
+  })
+
+  it.each([
+    ['link fora do portal', { link: 'https://outro.site/x' }],
+    ['link sem barra inicial', { link: 'javascript:alert(1)' }],
+    ['link de protocolo relativo', { link: '//outro.site/x' }],
+    ['Diário Oficial que não é https', { diarioOficialUrl: 'javascript:alert(1)' }],
+    ['Diário Oficial em http', { diarioOficialUrl: 'http://gateway/Ed 2935.pdf' }],
+    ['Diário Oficial que não é endereço', { diarioOficialUrl: 'edição 2935' }],
+  ])('descarta %s sem tirar o tipo nem a ação do marco', (_nome, invalido) => {
+    const result = cronogramaItemSchema.parse({ ...marco, ...invalido })
+    expect(result).toMatchObject({ tipo: 'custom', acao: 'PUBLICACAO_RESULTADO_FINAL' })
+    // O que chega ao banco é o JSON: chave com valor indefinido não é gravada.
+    expect(JSON.parse(JSON.stringify(result))).not.toHaveProperty(Object.keys(invalido)[0])
+  })
+})
+
 describe('editalSchema', () => {
   const valido = {
     titulo: 'Chamamento Público Cultura Viva',
