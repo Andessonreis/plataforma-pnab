@@ -1,10 +1,10 @@
 'use server'
 
-import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { temAcessoEdital } from '@/lib/edital-acesso'
 import { retificacaoVigente, retificacoesOrdenadas } from '@/lib/utils/retificacao'
 import type { Retificacao } from '@/types/retificacao'
+import { obterSessaoAvaliador } from './sessao-avaliador'
 
 export interface EditalInfoAvaliador {
   titulo: string
@@ -22,10 +22,10 @@ export interface EditalInfoAvaliador {
  * Mesmo escopo de acesso da fila de avaliação (`temAcessoEdital`).
  */
 export async function getEditalInfoParaAvaliador(editalId: string): Promise<EditalInfoAvaliador | null> {
-  const session = await auth()
-  if (!session || session.user.role !== 'AVALIADOR') return null
+  const sessao = await obterSessaoAvaliador()
+  if (!sessao) return null
 
-  const temAcesso = await temAcessoEdital(session.user.id, editalId, 'AVALIADOR')
+  const temAcesso = await temAcessoEdital(sessao.avaliadorId, editalId, 'AVALIADOR')
   if (!temAcesso) return null
 
   const edital = await prisma.edital.findUnique({

@@ -1,6 +1,8 @@
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { AvaliadorSidebar } from './sidebar'
+import { FaixaEspelho } from './faixa-espelho'
+import { resolverSessaoAvaliador } from './sessao-avaliador'
 import { getRoleTheme } from '@/app/admin/role-theme'
 import { IconMenu, UserAvatar } from '@/components/ui'
 import { variaveisDeFonte } from '../fontes'
@@ -11,9 +13,11 @@ export default async function AvaliadorLayout({ children }: { children: React.Re
   const session = await auth()
 
   if (!session) redirect('/login')
-  if (session.user.role !== 'AVALIADOR') redirect('/')
+  // SUPER_ADMIN passa para poder abrir o modo espelho; as páginas decidem o resto.
+  if (session.user.role !== 'AVALIADOR' && session.user.role !== 'SUPER_ADMIN') redirect('/')
 
-  const nome = session.user.name ?? 'Avaliador'
+  const sessaoAvaliador = await resolverSessaoAvaliador(session)
+  const nome = sessaoAvaliador?.nome ?? session.user.name ?? 'Avaliador'
 
   return (
     // Mesmo wrapper do resto do backoffice: .tema-secult resolve --brand-*/
@@ -24,6 +28,8 @@ export default async function AvaliadorLayout({ children }: { children: React.Re
       <AvaliadorSidebar userName={nome} />
 
       <div className="flex-1 min-w-0 lg:ml-64">
+        {sessaoAvaliador?.espelho && <FaixaEspelho nome={sessaoAvaliador.nome} />}
+
         <header className="lg:sticky lg:top-0 z-30 flex items-center justify-between bg-white/90 backdrop-blur-sm border-b border-tinta-900/10 shadow-sm px-4 py-2 lg:px-6 lg:py-3">
           <label
             htmlFor="admin-sidebar-toggle"

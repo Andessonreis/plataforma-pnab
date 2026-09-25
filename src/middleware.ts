@@ -52,7 +52,8 @@ export default auth((req) => {
     if (!session) {
       return NextResponse.redirect(new URL('/login', req.url))
     }
-    if (role !== 'AVALIADOR') {
+    // SUPER_ADMIN entra para o modo espelho (ver como avaliador, só leitura).
+    if (role !== 'AVALIADOR' && role !== 'SUPER_ADMIN') {
       return NextResponse.redirect(new URL('/', req.url))
     }
   }

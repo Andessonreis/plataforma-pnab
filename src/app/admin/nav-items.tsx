@@ -174,6 +174,12 @@ export const navSections: NavSection[] = [
         icon: <IconUsers className="h-5 w-5" />,
       },
       {
+        label: 'Ver como avaliador',
+        href: '/avaliador/espelho',
+        roles: ['SUPER_ADMIN'],
+        icon: <IconStar className="h-5 w-5" />,
+      },
+      {
         label: 'Logs de Auditoria',
         href: '/admin/logs',
         roles: ['SUPER_ADMIN'],

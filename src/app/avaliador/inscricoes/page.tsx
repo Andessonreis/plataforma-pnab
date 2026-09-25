@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { getEditaisVisiveis } from '@/lib/edital-acesso'
 import { viewNotaTotal } from '@/lib/services/avaliacao-view'
@@ -15,6 +14,7 @@ import {
   IconStar,
 } from '@/components/ui'
 import { CabecalhoEdital } from '../cabecalho-edital'
+import { exigirSessaoAvaliador } from '../sessao-avaliador'
 import { SelecaoEdital } from './edital-picker'
 import { ListaInscricoes, type LinhaInscricao } from './lista-inscricoes'
 import {
@@ -34,10 +34,7 @@ interface Props {
 }
 
 export default async function AvaliadorInscricoesPage({ searchParams }: Props) {
-  const session = await auth()
-  if (!session || session.user.role !== 'AVALIADOR') redirect('/login')
-
-  const avaliadorId = session.user.id
+  const { avaliadorId } = await exigirSessaoAvaliador()
   // AVALIADOR nunca cai no null de compatibilidade: só vê edital em que a
   // equipe do edital o inclui.
   const editaisVisiveis = (await getEditaisVisiveis(avaliadorId, 'AVALIADOR')) ?? []

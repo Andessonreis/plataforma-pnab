@@ -1,15 +1,12 @@
 import type { Metadata } from 'next'
-import { auth } from '@/lib/auth'
 import { redirect, notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
-import { Card, Badge } from '@/components/ui'
+import { Badge } from '@/components/ui'
 import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
 import { CRITERIOS_AVALIACAO_PADRAO, type CriterioAvaliacao } from '@/lib/avaliacao-criterios'
 import type { InscricaoStatus } from '@prisma/client'
 import { AvaliacaoForm } from '@/app/admin/inscricoes/[id]/avaliacao-form'
 import { AnexoViewer } from '@/app/admin/inscricoes/[id]/anexo-viewer'
-import { RecursoRespostaAvaliador } from '@/app/admin/inscricoes/[id]/recurso-resposta-avaliador'
-import { RecursoAnexos } from '@/components/recurso/recurso-anexos'
 import { temAcessoEdital } from '@/lib/edital-acesso'
 import { STATUS_BLOQUEADO_PARA_AVALIADOR } from '@/lib/services/avaliacao-buckets'
 import { DadosInscricaoView } from '@/components/inscricao/dados-inscricao-view'
@@ -19,6 +16,9 @@ import { resultadoPreliminarConsolidado } from '@/lib/results/consolidacao'
 import type { CampoFormulario } from '@/types/campo-formulario'
 import type { EtapaCustomizada } from '@/types/etapa-customizada'
 import Link from 'next/link'
+import { exigirSessaoAvaliador } from '@/app/avaliador/sessao-avaliador'
+import { SomenteLeitura } from '@/app/avaliador/somente-leitura'
+import { RecursosInscricao } from './recursos-inscricao'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -30,8 +30,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function AvaliadorInscricaoDetailPage({ params }: Props) {
-  const session = await auth()
-  if (!session || session.user.role !== 'AVALIADOR') redirect('/login')
+  const { avaliadorId, espelho } = await exigirSessaoAvaliador()
 
   const { id } = await params
 
@@ -56,7 +55,7 @@ export default async function AvaliadorInscricaoDetailPage({ params }: Props) {
       },
       recursos: {
         include: {
-          respostas: { where: { avaliadorId: session.user.id } },
+          respostas: { where: { avaliadorId } },
         },
         orderBy: { createdAt: 'desc' },
       },
@@ -66,7 +65,7 @@ export default async function AvaliadorInscricaoDetailPage({ params }: Props) {
   if (!inscricao) notFound()
 
   // Verificar se o avaliador tem acesso ao edital (via equipe ou compat quando sem equipe)
-  const hasAcesso = await temAcessoEdital(session.user.id, inscricao.editalId, 'AVALIADOR')
+  const hasAcesso = await temAcessoEdital(avaliadorId, inscricao.editalId, 'AVALIADOR')
   if (!hasAcesso) {
     redirect('/avaliador/inscricoes?aviso=nao-atribuido')
   }
@@ -78,7 +77,7 @@ export default async function AvaliadorInscricaoDetailPage({ params }: Props) {
   }
 
   // Avaliação existente do usuário (pode não existir ainda — será criada no primeiro submit)
-  const minhaAvaliacao = inscricao.avaliacoes.find((a) => a.avaliadorId === session.user.id)
+  const minhaAvaliacao = inscricao.avaliacoes.find((a) => a.avaliadorId === avaliadorId)
 
   const avaliacaoEncerrada = inscricao.edital.avaliacaoEncerradaEm != null
 
@@ -152,92 +151,33 @@ export default async function AvaliadorInscricaoDetailPage({ params }: Props) {
 
       {/* Recursos — responder (apenas avaliador designado desta inscrição) */}
       {minhaAvaliacao && inscricao.recursos.length > 0 && (
-        <Card>
-          <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Recursos</h2>
-          <div className="space-y-4">
-            {inscricao.recursos.map((recurso) => {
-              const minha = recurso.respostas[0]
-              return (
-                <div key={recurso.id} className="p-3 sm:p-4 border border-slate-200 rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <Badge variant="info">{recurso.fase}</Badge>
-                    {recurso.decisao && (
-                      <Badge variant={recurso.decisao === 'DEFERIDO' ? 'success' : 'error'}>
-                        {recurso.decisao}
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="text-sm text-slate-700 break-words whitespace-pre-wrap">{recurso.texto}</p>
-                  {recurso.urlAnexos.length > 0 && (
-                    <div className="mt-3">
-                      <p className="text-xs font-medium text-slate-500 mb-1">Anexos do recurso</p>
-                      <RecursoAnexos
-                        urls={recurso.urlAnexos}
-                        inscricaoId={inscricao.id}
-                        recursoId={recurso.id}
-                        scope="admin"
-                      />
-                    </div>
-                  )}
-
-                  {recurso.decisao ? (
-                    <p className="text-xs text-slate-500 mt-3">
-                      Recurso já decidido. Sua resposta foi registrada.
-                    </p>
-                  ) : (
-                    <div className="mt-3">
-                      {minha && (
-                        <div className="mb-3 p-3 bg-slate-50 rounded-lg">
-                          <div className="flex items-center justify-between mb-1">
-                            <p className="text-xs font-medium text-slate-500">Sua resposta</p>
-                            <Badge variant={minha.decisao === 'DEFERIDO' ? 'success' : 'error'}>
-                              {minha.decisao}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-slate-700 break-words whitespace-pre-wrap">{minha.justificativa}</p>
-                          <p className="text-xs text-slate-400 mt-2">
-                            Você pode revisar enquanto o recurso não for decidido.
-                          </p>
-                        </div>
-                      )}
-                      <RecursoRespostaAvaliador
-                        inscricaoId={inscricao.id}
-                        recursoId={recurso.id}
-                        fase={recurso.fase}
-                        initialDecisao={(minha?.decisao as 'DEFERIDO' | 'INDEFERIDO' | undefined) ?? null}
-                        initialJustificativa={minha?.justificativa ?? ''}
-                      />
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        </Card>
+        <RecursosInscricao inscricaoId={inscricao.id} recursos={inscricao.recursos} somenteLeitura={espelho} />
       )}
 
       {/* Formulário de avaliação — gateado por fase do edital (#84) */}
       {podeAvaliar(inscricao.edital.status, inscricao.status) ? (
-        <AvaliacaoForm
-          inscricaoId={inscricao.id}
-          inscricaoNumero={inscricao.numero}
-          criterios={criterios}
-          initialAvaliacao={
-            minhaAvaliacao
-              ? {
-                id: minhaAvaliacao.id,
-                notas: minhaAvaliacao.notas as { criterio: string; nota: number; peso: number }[],
-                parecer: minhaAvaliacao.parecer,
-                notaTotal: minhaAvaliacao.notaTotal === null ? null : String(minhaAvaliacao.notaTotal),
-                finalizada: minhaAvaliacao.finalizada,
-                updatedAt: minhaAvaliacao.updatedAt.toISOString(),
-              }
-              : null
-          }
-          formulaAvaliacao={inscricao.edital.formulaAvaliacao}
-          podeReabrir={podeReabrir}
-          avaliacaoEncerrada={avaliacaoEncerrada}
-        />
+        <SomenteLeitura ativo={espelho}>
+          <AvaliacaoForm
+            inscricaoId={inscricao.id}
+            inscricaoNumero={inscricao.numero}
+            criterios={criterios}
+            initialAvaliacao={
+              minhaAvaliacao
+                ? {
+                  id: minhaAvaliacao.id,
+                  notas: minhaAvaliacao.notas as { criterio: string; nota: number; peso: number }[],
+                  parecer: minhaAvaliacao.parecer,
+                  notaTotal: minhaAvaliacao.notaTotal === null ? null : String(minhaAvaliacao.notaTotal),
+                  finalizada: minhaAvaliacao.finalizada,
+                  updatedAt: minhaAvaliacao.updatedAt.toISOString(),
+                }
+                : null
+            }
+            formulaAvaliacao={inscricao.edital.formulaAvaliacao}
+            podeReabrir={podeReabrir}
+            avaliacaoEncerrada={avaliacaoEncerrada}
+          />
+        </SomenteLeitura>
       ) : (
         <ForaDaFaseAlert
           mensagem={mensagemForaDaFase(inscricao.edital.status, 'avaliar')}

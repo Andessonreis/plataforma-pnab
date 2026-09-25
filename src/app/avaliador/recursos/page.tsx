@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { getEditaisVisiveis } from '@/lib/edital-acesso'
 import { Card, Badge, EmptyState, IconShield } from '@/components/ui'
 import { CabecalhoEdital } from '../cabecalho-edital'
+import { exigirSessaoAvaliador } from '../sessao-avaliador'
 import { SelecaoEdital } from './edital-picker'
 import { WHERE_RECURSO_ATIVO, classificarRecurso, whereInscricoesComRecurso } from './filtros'
 
@@ -28,10 +28,7 @@ interface Props {
 }
 
 export default async function AvaliadorRecursosPage({ searchParams }: Props) {
-  const session = await auth()
-  if (!session || session.user.role !== 'AVALIADOR') redirect('/login')
-
-  const avaliadorId = session.user.id
+  const { avaliadorId } = await exigirSessaoAvaliador()
   const editaisVisiveis = (await getEditaisVisiveis(avaliadorId, 'AVALIADOR')) ?? []
 
   const params = await searchParams
