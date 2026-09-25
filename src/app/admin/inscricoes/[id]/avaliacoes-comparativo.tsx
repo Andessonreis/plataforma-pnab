@@ -1,4 +1,8 @@
 import { Card } from '@/components/ui'
+import { SeloRevisadaNoRecurso, ValorRevisado } from '@/components/avaliacao/valor-revisado'
+import { brutasAnteriores, mediaAnterior, type RevisaoRecurso } from '@/lib/avaliacao/revisao-recurso'
+import { FragmentBloco } from './bloco-criterios'
+import { RodapeTotais } from './rodape-totais'
 
 interface NotaItem {
   criterio: string
@@ -14,6 +18,8 @@ export interface AvaliacaoView {
   notas: NotaItem[]
   parecer: string | null
   data: string
+  /** Valores de antes da revisão feita no julgamento do recurso, quando houve. */
+  revisao: RevisaoRecurso | null
 }
 
 export interface CriterioView {
@@ -28,16 +34,6 @@ interface Props {
   criterios: CriterioView[]
   avaliacoes: AvaliacaoView[]
   hasFormula: boolean
-}
-
-function fmtNota(n: number): string {
-  return Number.isInteger(n) ? String(n) : n.toFixed(1)
-}
-
-function notaChipClass(pct: number): string {
-  if (pct >= 0.7) return 'bg-emerald-50 text-emerald-700 ring-emerald-200'
-  if (pct >= 0.5) return 'bg-amber-50 text-amber-700 ring-amber-200'
-  return 'bg-red-50 text-red-700 ring-red-200'
 }
 
 export function AvaliacoesComparativo({ criterios, avaliacoes, hasFormula }: Props) {
@@ -68,6 +64,10 @@ export function AvaliacoesComparativo({ criterios, avaliacoes, hasFormula }: Pro
 
   const decimals = hasFormula ? 2 : 1
 
+  // Valores de antes da revisão feita no julgamento do recurso — só existem nas avaliações revisadas.
+  const brutasAntes = brutasAnteriores(criterios.map((c) => c.criterio), notaMaps, avaliacoes.map((a) => a.revisao))
+  const revisadoEm = avaliacoes.find((a) => a.revisao)?.revisao?.revisadoEm
+
   // Quando o edital tem fórmula própria, a "Nota média" é a média das
   // pontuações brutas (o que a equipe realmente compara entre si), não da
   // nota já transformada pela fórmula — essa é interna de cada avaliador.
@@ -81,6 +81,14 @@ export function AvaliacoesComparativo({ criterios, avaliacoes, hasFormula }: Pro
     const totais = avaliacoes.map((a) => a.notaTotal).filter((n): n is number => n !== null)
     media = totais.length > 0 ? totais.reduce((a, n) => a + n, 0) / totais.length : null
   }
+
+  const mediaAntes = mediaAnterior(
+    avaliacoes.map((a, i) => ({
+      pontuacao: hasFormula ? pontuacoesBrutas[i] : a.notaTotal,
+      anterior: hasFormula ? brutasAntes[i] : a.revisao?.notaTotalAnterior ?? null,
+    })),
+  )
+  const mediaMudou = mediaAntes !== null && media !== null && Math.abs(mediaAntes - media) > 0.004
 
   const temNotas = criterios.length > 0 && avaliacoes.some((a) => a.notas.length > 0)
 
@@ -96,7 +104,9 @@ export function AvaliacoesComparativo({ criterios, avaliacoes, hasFormula }: Pro
               {hasFormula ? 'Pontuação média' : 'Nota média'}
             </p>
             <p className="text-lg font-bold text-brand-700 tabular-nums leading-none">
-              {media.toFixed(decimals)}
+              {mediaMudou && mediaAntes !== null
+                ? <ValorRevisado anterior={mediaAntes.toFixed(decimals)} atual={media.toFixed(decimals)} />
+                : media.toFixed(decimals)}
               {hasFormula && <span className="text-xs font-semibold text-slate-400"> pts</span>}
             </p>
           </div>
@@ -108,6 +118,13 @@ export function AvaliacoesComparativo({ criterios, avaliacoes, hasFormula }: Pro
           Pontuação bruta é a soma direta dos critérios mostrados na tabela, por avaliador.
           Pontuação média é a média dessas somas entre os avaliadores — visão interna da equipe,
           não é o que aparece pro proponente nem pro público antes do resultado ser publicado.
+        </p>
+      )}
+
+      {revisadoEm && (
+        <p className="text-xs text-slate-500 mb-3 sm:mb-4 leading-relaxed">
+          Os valores riscados são os da avaliação original. A comissão os revisou ao julgar o recurso,
+          em {new Date(revisadoEm).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}.
         </p>
       )}
 
@@ -132,6 +149,7 @@ export function AvaliacoesComparativo({ criterios, avaliacoes, hasFormula }: Pro
                     >
                       {a.finalizada ? 'Finalizada' : 'Pendente'}
                     </span>
+                    {a.revisao && <SeloRevisadaNoRecurso className="mt-1 block w-fit mx-auto" />}
                   </th>
                 ))}
               </tr>
@@ -148,35 +166,13 @@ export function AvaliacoesComparativo({ criterios, avaliacoes, hasFormula }: Pro
                 />
               ))}
             </tbody>
-            <tfoot>
-              {hasFormula ? (
-                <tr>
-                  <td className="sticky left-0 z-10 bg-slate-50 py-2.5 px-3 text-xs font-bold uppercase tracking-wide text-slate-700 border-t-2 border-slate-200">
-                    Pontuação bruta
-                  </td>
-                  {pontuacoesBrutas.map((pontos, i) => (
-                    <td key={avaliacoes[i].id} className="py-2.5 px-3 text-center border-t-2 border-slate-200 bg-slate-50">
-                      <span className="text-base font-bold text-brand-700 tabular-nums">
-                        {fmtNota(pontos)} pts
-                      </span>
-                    </td>
-                  ))}
-                </tr>
-              ) : (
-                <tr>
-                  <td className="sticky left-0 z-10 bg-slate-50 py-2.5 px-3 text-xs font-bold uppercase tracking-wide text-slate-700 border-t-2 border-slate-200">
-                    Nota final
-                  </td>
-                  {avaliacoes.map((a) => (
-                    <td key={a.id} className="py-2.5 px-3 text-center border-t-2 border-slate-200 bg-slate-50">
-                      <span className="text-base font-bold text-brand-700 tabular-nums">
-                        {a.notaTotal === null ? '—' : a.notaTotal.toFixed(decimals)}
-                      </span>
-                    </td>
-                  ))}
-                </tr>
-              )}
-            </tfoot>
+            <RodapeTotais
+              avaliacoes={avaliacoes}
+              pontuacoesBrutas={pontuacoesBrutas}
+              brutasAntes={brutasAntes}
+              hasFormula={hasFormula}
+              decimals={decimals}
+            />
           </table>
         </div>
       )}
@@ -198,62 +194,5 @@ export function AvaliacoesComparativo({ criterios, avaliacoes, hasFormula }: Pro
         ))}
       </div>
     </Card>
-  )
-}
-
-function FragmentBloco({
-  bloco,
-  items,
-  avaliacoes,
-  notaMaps,
-  colSpan,
-}: {
-  bloco: string
-  items: CriterioView[]
-  avaliacoes: AvaliacaoView[]
-  notaMaps: Map<string, number>[]
-  colSpan: number
-}) {
-  return (
-    <>
-      {bloco && (
-        <tr>
-          <td
-            colSpan={colSpan}
-            className="sticky left-0 bg-slate-50/80 py-1.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500 border-b border-slate-100"
-          >
-            {bloco}
-          </td>
-        </tr>
-      )}
-      {items.map((c) => (
-        <tr key={c.criterio} className="hover:bg-slate-50/50">
-          <td className="sticky left-0 z-10 bg-white py-2.5 px-3 border-b border-slate-100">
-            <span className="block text-sm font-medium text-slate-800 leading-snug">{c.criterio}</span>
-            <span className="block text-[11px] text-slate-400">peso {c.peso}</span>
-          </td>
-          {avaliacoes.map((a, i) => {
-            const nota = notaMaps[i].get(c.criterio)
-            const max = c.notaMax || 10
-            return (
-              <td key={a.id} className="py-2.5 px-3 text-center border-b border-slate-100">
-                {nota === undefined ? (
-                  <span className="text-slate-300">—</span>
-                ) : (
-                  <span
-                    className={[
-                      'inline-flex items-center justify-center min-w-[2.5rem] px-2 py-0.5 rounded-md text-sm font-semibold tabular-nums ring-1 ring-inset',
-                      notaChipClass(nota / max),
-                    ].join(' ')}
-                  >
-                    {fmtNota(nota)}
-                  </span>
-                )}
-              </td>
-            )
-          })}
-        </tr>
-      ))}
-    </>
   )
 }

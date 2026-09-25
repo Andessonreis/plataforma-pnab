@@ -19,6 +19,7 @@ import { AnexoViewer } from './anexo-viewer'
 import { JuntarDocumento } from './juntar-documento'
 import { DistribuicaoAvaliadores } from './distribuicao-avaliadores'
 import { AvaliacoesComparativo } from './avaliacoes-comparativo'
+import { lerRevisaoRecurso } from '@/lib/avaliacao/revisao-recurso'
 import { DadosInscricaoView } from '@/components/inscricao/dados-inscricao-view'
 import { HistoricoProcesso } from '@/components/inscricao/historico-processo'
 import { calcularAnexosPendentes } from '@/lib/inscricoes/anexos-pendentes'
@@ -283,6 +284,7 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
                   : [],
                 parecer: a.parecer,
                 data: new Date(a.createdAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+                revisao: lerRevisaoRecurso(a.revisaoRecurso),
               }))}
             />
           )}

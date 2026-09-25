@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { categoriaLongaDeTeste, linhaDeClassificacao, listaClassificacaoDeTeste } from '@/lib/pdf/__tests__/apoio-pdf'
 import { AVISO_PREVIA } from '@/lib/pdf/modelo/lista-classificacao'
-import type { ListaClassificacaoData } from '@/lib/pdf/modelo/tipos'
 import { gerarListaClassificacaoV1 } from '../lista-classificacao'
 import { lerPdf, semEspacos } from './primitivas.fixtures'
 
@@ -67,47 +66,21 @@ describe('carimbo de prévia', () => {
 
 })
 
-describe('relação de contemplados (resultado final)', () => {
-  function categoriasComDesclassificado(): ListaClassificacaoData['categorias'] {
-    const [musica] = listaClassificacaoDeTeste().categorias
-    return [
-      { ...musica, linhas: [...musica.linhas, linhaDeClassificacao(4, { status: 'NAO_CONTEMPLADA', notaFinal: 30, notaBonus: 0 })] },
-      { ...musica, nome: 'Dança', linhas: [linhaDeClassificacao(1, { status: 'NAO_CONTEMPLADA', notaFinal: 20, notaBonus: 0 })] },
-    ]
-  }
-
-  it('leva o título de relação de contemplados e o aviso de encerramento dos recursos', async () => {
+describe('resultado final', () => {
+  it('imprime o título e o aviso de encerramento dos recursos, sem esconder ninguém da lista', async () => {
     const [primeira] = await textoPorPagina(listaClassificacaoDeTeste({ situacao: 'FINAL' }))
 
-    expect(primeira).toContain('Relação de Contemplados')
-    expect(semEspacos(primeira)).toContain(semEspacos('Relação de contemplados e suplentes consolidada'))
+    expect(primeira).toContain('Resultado Final da Classificação')
+    expect(semEspacos(primeira)).toContain(semEspacos('Resultado final consolidado no sistema'))
+    expect(primeira).toContain('Classificado')
+    expect(primeira).toContain('Total de Propostas')
   })
 
-  it('chama de "Contemplado" quem as outras versões chamam de "Classificado"', async () => {
-    const [final] = await textoPorPagina(listaClassificacaoDeTeste({ situacao: 'FINAL' }))
-    const [consolidada] = await textoPorPagina(listaClassificacaoDeTeste({ situacao: 'CONSOLIDADA' }))
+  it('lista quem foi desclassificado', async () => {
+    const [musica] = listaClassificacaoDeTeste().categorias
+    const categorias = [{ ...musica, linhas: [...musica.linhas, linhaDeClassificacao(4, { status: 'NAO_CONTEMPLADA', notaFinal: 30, notaBonus: 0 })] }]
+    const [primeira] = await textoPorPagina(listaClassificacaoDeTeste({ situacao: 'FINAL', categorias }))
 
-    expect(final).toContain('Contemplado')
-    expect(final).not.toContain('Classificado')
-    expect(consolidada).toContain('Classificado')
-  })
-
-  it('não lista desclassificados nem a categoria que ficou sem linha', async () => {
-    const [final] = await textoPorPagina(listaClassificacaoDeTeste({ situacao: 'FINAL', categorias: categoriasComDesclassificado() }))
-    const [consolidada] = await textoPorPagina(listaClassificacaoDeTeste({ situacao: 'CONSOLIDADA', categorias: categoriasComDesclassificado() }))
-
-    expect(final).not.toContain('Desclassificado')
-    expect(final).not.toContain('Dança')
-    expect(consolidada).toContain('Desclassificado')
-    expect(consolidada).toContain('Dança')
-  })
-
-  it('mantém a inscrição fora da classificação e conta contemplados e suplentes na abertura', async () => {
-    const [final] = await textoPorPagina(listaClassificacaoDeTeste({ situacao: 'FINAL', categorias: categoriasComDesclassificado() }))
-
-    expect(final).toContain('Não se aplica')
-    expect(final).toMatch(/Contemplados\s+1\b/)
-    expect(final).toMatch(/Suplentes\s+1\b/)
-    expect(final).not.toContain('Total de Propostas')
+    expect(primeira).toContain('Desclassificado')
   })
 })

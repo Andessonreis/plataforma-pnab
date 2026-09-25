@@ -65,9 +65,9 @@ describe('tituloDocumento — demais tipos', () => {
       .toBe('Classificação — Prévia de Trabalho')
   })
 
-  it('a classificação do resultado final sai como relação de contemplados', () => {
+  it('classificação do resultado final leva "Resultado Final" no título', () => {
     expect(tituloDocumento({ tipo: 'CLASSIFICACAO', edital: EDITAL, situacao: 'FINAL' }))
-      .toBe('Relação de Contemplados')
+      .toBe('Resultado Final da Classificação')
   })
 
   it('relatório final', () => {

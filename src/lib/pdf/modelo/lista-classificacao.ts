@@ -13,27 +13,6 @@ export const SITUACAO_DA_LINHA: Record<LinhaClassificacao['status'], string> = {
   NAO_SE_APLICA: 'Não se aplica',
 }
 
-/** O resultado final chama de "Contemplado" quem as demais versões da lista chamam de "Classificado". */
-export function rotuloDaSituacao(status: LinhaClassificacao['status'], situacao: SituacaoClassificacao): string {
-  if (situacao === 'FINAL' && status === 'CONTEMPLADA') return 'Contemplado'
-  return SITUACAO_DA_LINHA[status]
-}
-
-/**
- * Categorias como o documento as imprime. A relação do resultado final lista
- * contemplados e suplentes: quem foi desclassificado sai, e a categoria que
- * ficar sem linha também.
- */
-export function categoriasDoDocumento(
-  categorias: CategoriaClassificacao[],
-  situacao: SituacaoClassificacao,
-): CategoriaClassificacao[] {
-  if (situacao !== 'FINAL') return categorias
-  return categorias
-    .map((categoria) => ({ ...categoria, linhas: categoria.linhas.filter((l) => l.status !== 'NAO_CONTEMPLADA') }))
-    .filter((categoria) => categoria.linhas.length > 0)
-}
-
 export const AVISO_PREVIA =
   'Documento de trabalho — não publicar. A conferência da bonificação e o lançamento de notas podem '
   + 'estar em andamento, portanto esta classificação pode mudar. Nenhum resultado foi consolidado no sistema.'
@@ -54,9 +33,8 @@ export const TEXTOS_POR_SITUACAO: Record<SituacaoClassificacao, { rodape: string
   },
   FINAL: {
     rodape:
-      'Relação de contemplados e suplentes consolidada no sistema da plataforma Portal PNAB Irecê, após '
-      + 'o julgamento dos recursos, conforme as notas lançadas pela comissão avaliadora e a bonificação '
-      + 'prevista no edital.',
+      'Resultado final consolidado no sistema da plataforma Portal PNAB Irecê, após o julgamento dos '
+      + 'recursos, conforme as notas lançadas pela comissão avaliadora e a bonificação prevista no edital.',
     situacao: 'Resultado final após recursos',
   },
 }

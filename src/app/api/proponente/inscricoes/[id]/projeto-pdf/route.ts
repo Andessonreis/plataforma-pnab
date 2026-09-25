@@ -5,21 +5,10 @@ import { prisma } from '@/lib/db'
 import { generateProjetoCompleto } from '@/lib/pdf/projeto-completo'
 import { mesclarAnexosNoPdf } from '@/lib/pdf/dossie-completo'
 import { statusVisivelParaProponente } from '@/lib/edital/resultado-habilitacao'
-import type { CampoFormulario } from '@/types/campo-formulario'
 import { registrarEmissao } from '@/lib/documentos/emissao'
+import { INCLUDE_PROJETO_COMPLETO, montarDadosProjeto } from '@/lib/inscricoes/projeto-completo-dados'
 
 export const runtime = 'nodejs'
-
-/** Prisma Json pode retornar string em vez de objeto — parsear com segurança */
-function parseCampos(raw: unknown): Record<string, unknown> {
-  if (typeof raw === 'string') {
-    try { return JSON.parse(raw) } catch { return {} }
-  }
-  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
-    return raw as Record<string, unknown>
-  }
-  return {}
-}
 
 export async function GET(
   req: NextRequest,
@@ -41,17 +30,7 @@ export async function GET(
 
     const inscricao = await prisma.inscricao.findUnique({
       where: { id },
-      include: {
-        proponente: {
-          select: { id: true, nome: true, cpfCnpj: true, email: true, tipoProponente: true },
-        },
-        edital: {
-          select: { titulo: true, ano: true, camposFormulario: true },
-        },
-        anexos: {
-          select: { titulo: true, tipo: true, valido: true, url: true },
-        },
-      },
+      include: INCLUDE_PROJETO_COMPLETO,
     })
 
     if (!inscricao) {
@@ -79,11 +58,6 @@ export async function GET(
       )
     }
 
-    // Parsear camposFormulario do edital (Json do Prisma)
-    const camposFormulario = Array.isArray(inscricao.edital.camposFormulario)
-      ? (inscricao.edital.camposFormulario as unknown as CampoFormulario[])
-      : []
-
     // Dono da inscrição só vê o status real depois de liberado — mesma
     // máscara da tela e das demais rotas (ver resultado-habilitacao.ts).
     const statusPdf = isAdmin
@@ -99,23 +73,9 @@ export async function GET(
       metadados: { Inscrição: inscricao.numero },
     })
 
-    let pdfBuffer = await generateProjetoCompleto({
-      emissao,
-      numero: inscricao.numero,
-      status: statusPdf,
-      proponente: {
-        nome: inscricao.proponente.nome,
-        cpfCnpj: inscricao.proponente.cpfCnpj ?? '',
-        email: inscricao.proponente.email,
-        tipoProponente: inscricao.proponente.tipoProponente ?? 'PF',
-      },
-      edital: { titulo: inscricao.edital.titulo, ano: inscricao.edital.ano },
-      categoria: inscricao.categoria,
-      campos: parseCampos(inscricao.campos),
-      camposFormulario,
-      anexos: inscricao.anexos,
-      submittedAt: inscricao.submittedAt ?? inscricao.createdAt,
-    })
+    let pdfBuffer = await generateProjetoCompleto(
+      montarDadosProjeto(inscricao, { status: statusPdf, emissao }),
+    )
 
     // Modo "dossiê completo" — mescla os arquivos de anexo reais no PDF.
     // Restrito a ADMIN: é um relatório de arquivamento da Secretaria, mais

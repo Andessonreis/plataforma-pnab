@@ -28,6 +28,7 @@ export const NOME_DO_TIPO = {
   RELATORIO_RECURSOS: 'Relatório de recursos interpostos',
   DOSSIE_INSCRICAO: 'Dossiê da inscrição',
   PROJETO_COMPLETO: 'Projeto completo',
+  PROJETOS_CONTEMPLADOS: 'Projetos completos dos contemplados',
   COMPROVANTE_INSCRICAO: 'Comprovante de inscrição',
   DECLARACAO: 'Declaração',
 } as const
@@ -77,7 +78,7 @@ export const ROTULO_DO_CROMO: Record<TipoTitulavel, string> = {
 const TITULO_CLASSIFICACAO: Record<SituacaoClassificacao, string> = {
   PREVIA: 'Classificação — Prévia de Trabalho',
   CONSOLIDADA: 'Classificação por Categoria',
-  FINAL: 'Relação de Contemplados',
+  FINAL: 'Resultado Final da Classificação',
 }
 
 /** Título da lista de inscrições: o status manda, salvo título fixado na geração. */

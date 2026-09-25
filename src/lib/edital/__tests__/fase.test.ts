@@ -5,6 +5,7 @@ import {
   podeAtribuirAvaliador,
   podeAcao,
   mensagemForaDaFase,
+  classificacaoDisponivel,
 } from '../fase'
 
 describe('podeHabilitar', () => {
@@ -109,4 +110,20 @@ describe('mensagemForaDaFase', () => {
     expect(mensagemForaDaFase('HABILITACAO', 'atribuir_avaliador')).toBe('Avaliação ainda não iniciada')
     expect(mensagemForaDaFase('RESULTADO_FINAL', 'atribuir_avaliador')).toBe('Período de avaliação encerrado')
   })
+})
+
+describe('classificacaoDisponivel', () => {
+  it.each(['RESULTADO_PRELIMINAR', 'RECURSO', 'RESULTADO_FINAL', 'ENCERRADO'] as const)(
+    'existe classificação em %s',
+    (status) => {
+      expect(classificacaoDisponivel(status)).toBe(true)
+    },
+  )
+
+  it.each(['RASCUNHO', 'INSCRICOES_ABERTAS', 'HABILITACAO', 'AVALIACAO'] as const)(
+    'ainda não existe classificação em %s',
+    (status) => {
+      expect(classificacaoDisponivel(status)).toBe(false)
+    },
+  )
 })

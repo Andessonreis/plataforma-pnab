@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { logAudit } from '@/lib/audit'
 import { montarClassificacao } from '@/lib/results/classificacao'
+import { bonusVisivelPara, opcoesDaClassificacao } from '@/lib/results/classificacao-opcoes'
 import { generateListaClassificacao, type SituacaoClassificacao } from '@/lib/pdf/lista-classificacao'
 import { gerarListaClassificacaoV1 } from '@/lib/pdf/template-1/lista-classificacao'
 import { TEXTOS_POR_SITUACAO } from '@/lib/pdf/modelo/lista-classificacao'
@@ -16,7 +17,6 @@ import type { TemplatePdf } from '@/lib/documentos/template'
 import { MENSAGEM_TEMPLATE_INVALIDO, templateDaUrl } from '@/lib/documentos/template-query'
 import { tituloRegistro } from '@/lib/documentos/titulos'
 import { parseItensBonus } from '@/types/bonus-config'
-import type { CategoriaConfig } from '@/types/categoria-config'
 
 export const runtime = 'nodejs'
 
@@ -27,7 +27,7 @@ interface RouteContext {
 const PREFIXO_DO_ARQUIVO: Record<SituacaoClassificacao, string> = {
   PREVIA: 'classificacao-previa',
   CONSOLIDADA: 'classificacao',
-  FINAL: 'relacao-contemplados',
+  FINAL: 'resultado-final',
 }
 
 const GERADORES: Record<TemplatePdf, (dados: ListaClassificacaoData) => Promise<Buffer>> = {
@@ -74,21 +74,14 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
     })
     if (!edital) return erro(404, 'NOT_FOUND', 'Edital não encontrado.', requestId)
 
-    const mostraBonus = role === 'SUPER_ADMIN' || edital.bonusVisivelParaAdmin
+    const mostraBonus = bonusVisivelPara(role, edital)
     const consolidado =
       (await prisma.inscricao.count({ where: { editalId, notaFinal: { not: null } } })) > 0
     const situacao: SituacaoClassificacao = !consolidado
       ? 'PREVIA'
       : resultadoDefinitivo(edital.status) ? 'FINAL' : 'CONSOLIDADA'
 
-    const categorias = await montarClassificacao(editalId, {
-      incluirBonus: mostraBonus,
-      notaMinima: edital.notaMinima != null ? Number(edital.notaMinima) : null,
-      maxSuplentes: edital.vagasSuplentes,
-      categoriasConfig: Array.isArray(edital.categoriasConfig)
-        ? (edital.categoriasConfig as unknown as CategoriaConfig[])
-        : null,
-    })
+    const categorias = await montarClassificacao(editalId, opcoesDaClassificacao(edital, mostraBonus))
 
     if (categorias.length === 0) {
       return erro(422, 'SEM_DADOS', 'Nenhuma inscrição avaliada para classificar ainda.', requestId)

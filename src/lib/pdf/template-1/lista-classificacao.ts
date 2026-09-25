@@ -1,7 +1,7 @@
 import { tituloDocumento } from '@/lib/documentos/titulos'
 import { desenharMarcaDagua } from '@/lib/pdf/documento-oficial/marca-dagua'
 import {
-  AVISO_PREVIA, TEXTOS_POR_SITUACAO, categoriasDoDocumento, descreverQuadroVagas, rotuloDaSituacao, semNota,
+  AVISO_PREVIA, SITUACAO_DA_LINHA, TEXTOS_POR_SITUACAO, descreverQuadroVagas, semNota,
 } from '@/lib/pdf/modelo/lista-classificacao'
 import type {
   CategoriaClassificacao, LinhaClassificacao, ListaClassificacaoData,
@@ -96,7 +96,7 @@ function linhaDaTabela(linha: LinhaClassificacao, data: ListaClassificacaoData):
     }
   }
 
-  valores.push(sem ? '—' : linha.notaFinal.toFixed(2), rotuloDaSituacao(linha.status, data.situacao))
+  valores.push(sem ? '—' : linha.notaFinal.toFixed(2), SITUACAO_DA_LINHA[linha.status])
   celulas.push(destaque, destaque)
 
   return { valores, celulas, destaque: classificada ? COLORS.destaque : undefined }
@@ -126,25 +126,6 @@ function desenharQuadro(doc: PDFKit.PDFDocument, categoria: CategoriaClassificac
   doc.y = y
 }
 
-function contar(categorias: CategoriaClassificacao[], status: LinhaClassificacao['status']): number {
-  return categorias.reduce((soma, c) => soma + c.linhas.filter((l) => l.status === status).length, 0)
-}
-
-/** Totais que abrem a lista: a relação final conta contemplados e suplentes; as demais, as propostas avaliadas. */
-function totaisDaLista(
-  categorias: CategoriaClassificacao[],
-  situacao: ListaClassificacaoData['situacao'],
-): Array<{ label: string; value: string }> {
-  if (situacao === 'FINAL') {
-    return [
-      { label: 'Contemplados', value: String(contar(categorias, 'CONTEMPLADA')) },
-      { label: 'Suplentes', value: String(contar(categorias, 'SUPLENTE')) },
-    ]
-  }
-  const total = categorias.reduce((soma, c) => soma + c.linhas.length, 0)
-  return [{ label: 'Total de Propostas', value: `${total} inscrições avaliadas` }]
-}
-
 export async function gerarListaClassificacaoV1(data: ListaClassificacaoData): Promise<Buffer> {
   const titulo = tituloDocumento({ tipo: 'CLASSIFICACAO', edital: data.edital, situacao: data.situacao })
   const previa = data.situacao === 'PREVIA'
@@ -163,11 +144,11 @@ export async function gerarListaClassificacaoV1(data: ListaClassificacaoData): P
   if (previa) desenharAvisoDestaque(doc, AVISO_PREVIA)
 
   const bonus = data.mostraBonus ? data.bonus ?? null : null
-  const categorias = categoriasDoDocumento(data.categorias, data.situacao)
+  const total = data.categorias.reduce((soma, categoria) => soma + categoria.linhas.length, 0)
   desenharBlocoInfo(doc, [
     { label: 'Edital', value: data.edital.titulo },
     { label: 'Ano', value: String(data.edital.ano) },
-    ...totaisDaLista(categorias, data.situacao),
+    { label: 'Total de Propostas', value: `${total} inscrições avaliadas` },
     ...(bonus ? [{
       label: 'Critérios de Bonificação',
       value: `${descreverCriterios(bonus, ':')} · Teto: ${tetoDoBonus(bonus)} pts`,
@@ -178,7 +159,7 @@ export async function gerarListaClassificacaoV1(data: ListaClassificacaoData): P
   const legenda = bonus ? `Bonificação: ${descreverCriterios(bonus, ' =')} · Limite máx.: ${tetoDoBonus(bonus)} pts` : null
   const colunas = colunasDaTabela(data)
 
-  for (const categoria of categorias) {
+  for (const categoria of data.categorias) {
     garantirEspaco(doc, ALTURA_TARJA + ALTURA_QUADRO + ALTURA_LEGENDA + 60)
     desenharTarja(doc, categoria.nome)
     desenharQuadro(doc, categoria, legenda)

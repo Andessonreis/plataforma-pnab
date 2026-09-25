@@ -14,7 +14,8 @@ import {
   IconCheck,
   IconUsers,
 } from '@/components/ui'
-import { viewNotaTotal } from '@/lib/services/avaliacao-view'
+import { resumoAvaliacoes } from '@/lib/avaliacao/resumo'
+import { ValorRevisado } from '@/components/avaliacao/valor-revisado'
 import {
   whereBucket,
   classificarInscricao,
@@ -101,7 +102,7 @@ export default async function AdminAvaliacaoPage({ searchParams }: Props) {
         include: {
           edital: { select: { titulo: true, ano: true } },
           proponente: { select: { nome: true, cpfCnpj: true } },
-          avaliacoes: { select: { finalizada: true, notaTotal: true } },
+          avaliacoes: { select: { finalizada: true, notaTotal: true, revisaoRecurso: true } },
         },
       }),
       prisma.inscricao.count({ where }),
@@ -269,7 +270,7 @@ export default async function AdminAvaliacaoPage({ searchParams }: Props) {
           {/* Mobile: lista de cards */}
           <ul className="sm:hidden space-y-3" aria-label="Inscrições">
             {inscricoes.map((inscricao) => {
-              const { atribuidos, finalizadas, media } = resumoAvaliacoes(inscricao.avaliacoes)
+              const { atribuidos, finalizadas, media, mediaAnterior } = resumoAvaliacoes(inscricao.avaliacoes)
               return (
                 <li key={inscricao.id}>
                   <Link
@@ -287,7 +288,7 @@ export default async function AdminAvaliacaoPage({ searchParams }: Props) {
                       <div className="flex items-center gap-3">
                         <span>{finalizadas}/{atribuidos} avaliações</span>
                         <span className="font-semibold text-brand-700">
-                          {media === null ? '—' : `méd. ${media}`}
+                          {media === null ? '—' : mediaAnterior === null ? `méd. ${media}` : <>méd. <ValorRevisado anterior={mediaAnterior} atual={media} /></>}
                         </span>
                       </div>
                     </div>
@@ -311,7 +312,7 @@ export default async function AdminAvaliacaoPage({ searchParams }: Props) {
               </thead>
               <tbody>
                 {inscricoes.map((inscricao) => {
-                  const { atribuidos, finalizadas, media } = resumoAvaliacoes(inscricao.avaliacoes)
+                  const { atribuidos, finalizadas, media, mediaAnterior } = resumoAvaliacoes(inscricao.avaliacoes)
                   const completo = atribuidos > 0 && finalizadas === atribuidos
                   return (
                     <tr key={inscricao.id} className="border-t border-slate-100 hover:bg-slate-50/60 transition-colors">
@@ -330,7 +331,9 @@ export default async function AdminAvaliacaoPage({ searchParams }: Props) {
                         )}
                       </td>
                       <td className="py-3.5 px-4 font-semibold text-brand-700 tabular-nums">
-                        {media === null ? <span className="text-slate-400 font-normal">—</span> : media}
+                        {media === null
+                          ? <span className="text-slate-400 font-normal">—</span>
+                          : mediaAnterior === null ? media : <ValorRevisado anterior={mediaAnterior} atual={media} />}
                       </td>
                       <td className="py-3.5 px-4 text-right">
                         <Link
@@ -437,16 +440,3 @@ async function renderPicker() {
   return <EditalPicker editais={cards} />
 }
 
-/** Resumo das avaliações de uma inscrição: atribuídos, finalizadas e nota média (só finalizadas). */
-function resumoAvaliacoes(avaliacoes: { finalizada: boolean; notaTotal: unknown }[]) {
-  const atribuidos = avaliacoes.length
-  const finalizadas = avaliacoes.filter((a) => a.finalizada).length
-  const notas = avaliacoes
-    .map((a) => viewNotaTotal(a))
-    .filter((n): n is number => n !== null)
-  const media =
-    notas.length > 0
-      ? (notas.reduce((acc, n) => acc + n, 0) / notas.length).toFixed(2)
-      : null
-  return { atribuidos, finalizadas, media }
-}

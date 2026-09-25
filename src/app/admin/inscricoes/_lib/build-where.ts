@@ -2,6 +2,14 @@ import { getEditaisVisiveis } from '@/lib/edital-acesso'
 import { categoriaWhere } from '@/lib/inscricoes/area-filter'
 import type { UserRole } from '@prisma/client'
 
+/**
+ * Chave da aba "Com recurso". É a única que não filtra por status: o recurso
+ * não altera mais o status da inscrição (ele guarda o resultado publicado), então
+ * "tem recurso" se deduz da existência do próprio Recurso. Filtrar por
+ * `status = RECURSO_ABERTO` devolveria sempre lista vazia.
+ */
+export const ABA_COM_RECURSO = 'RECURSO_ABERTO'
+
 interface FiltrosAtivos {
   statusFilter?: string
   editalIdFilter?: string
@@ -23,13 +31,17 @@ export async function buildInscricoesWhere(
   const isAvaliador = role === 'AVALIADOR'
   const isHabilitador = role === 'HABILITADOR'
 
+  const comRecurso = statusFilter === ABA_COM_RECURSO
+  const status = comRecurso ? undefined : statusFilter
+
   const where: Record<string, unknown> = {}
-  if (statusFilter) where.status = statusFilter
+  if (status) where.status = status
+  if (comRecurso) where.recursos = { some: {} }
   if (editalIdFilter) where.editalId = editalIdFilter
   if (isHabilitador) {
     // Rascunho não foi enviado — não há o que habilitar nele. Bloqueado mesmo
     // que o filtro de status peça RASCUNHO explicitamente pela URL.
-    where.status = statusFilter === 'RASCUNHO' ? { in: [] } : statusFilter || { not: 'RASCUNHO' }
+    where.status = status === 'RASCUNHO' ? { in: [] } : status || { not: 'RASCUNHO' }
   }
   const recorteArea = categoriaWhere(areaFilter)
   if (recorteArea !== undefined) where.categoria = recorteArea

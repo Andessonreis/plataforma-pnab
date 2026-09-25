@@ -1,6 +1,7 @@
 import { FilterTabs } from '@/components/ui'
 import { inscricaoStatusLabel } from '@/lib/status-maps'
 import type { InscricaoStatus } from '@prisma/client'
+import { ABA_COM_RECURSO } from '../_lib/build-where'
 
 const ALL_STATUSES: InscricaoStatus[] = [
   'ENVIADA', 'HABILITADA', 'INABILITADA', 'EM_AVALIACAO',
@@ -33,7 +34,7 @@ export function StatusTabs({ activeStatus, outrosParams, ocultarRascunho }: Stat
     { key: TODOS_KEY, label: 'Todos', href: buildHref(outrosParams) },
     ...statuses.map((status) => ({
       key: status,
-      label: inscricaoStatusLabel[status],
+      label: status === ABA_COM_RECURSO ? 'Com recurso' : inscricaoStatusLabel[status],
       href: buildHref(outrosParams, status),
     })),
   ]

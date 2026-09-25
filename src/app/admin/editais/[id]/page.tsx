@@ -19,12 +19,14 @@ import {
   IconTag,
 } from '@/components/ui'
 import { editalStatusLabel, editalStatusVariant } from '@/lib/status-maps'
+import { classificacaoDisponivel } from '@/lib/edital/fase'
 import { formatCurrency } from '@/lib/utils/format'
 import { marcosEditaveis, retificacoesOrdenadas } from '@/lib/utils/retificacao'
 import { GerarListasModal } from '../gerar-listas-modal'
 import { ToggleAvaliacaoButton } from './toggle-avaliacao-button'
 import { RelatorioFinalButton } from './relatorio-final-button'
 import { RelatorioRecursosButtons } from './relatorio-recursos-buttons'
+import { ProjetosContempladosButtons } from './projetos-contemplados-buttons'
 import { AvancarFasePanel } from './avancar-fase-panel'
 import { RetificacaoPanel } from './retificacao-panel'
 import { EditalFaseStepper } from './edital-fase-stepper'
@@ -195,6 +197,7 @@ export default async function EditalOverviewPage({ params }: Props) {
           <GerarListasModal editalId={edital.id} editalTitulo={edital.titulo} editalStatus={status} />
           {statusFinal.includes(status) && <RelatorioFinalButton editalId={edital.id} />}
           <RelatorioRecursosButtons editalId={edital.id} status={status} />
+          {classificacaoDisponivel(status) && <ProjetosContempladosButtons editalId={edital.id} />}
         </div>
       </FadeIn>
 

@@ -19,7 +19,7 @@ import type {
   CategoriaClassificacao, LinhaClassificacao, ListaClassificacaoData, SituacaoClassificacao,
 } from './modelo/tipos'
 import {
-  AVISO_PREVIA, TEXTOS_POR_SITUACAO, categoriasDoDocumento, descreverQuadroVagas, rotuloDaSituacao, semNota,
+  AVISO_PREVIA, SITUACAO_DA_LINHA, TEXTOS_POR_SITUACAO, descreverQuadroVagas, semNota,
 } from './modelo/lista-classificacao'
 
 export type { CategoriaClassificacao, LinhaClassificacao, ListaClassificacaoData, SituacaoClassificacao }
@@ -55,7 +55,7 @@ function valoresDaLinha(linha: LinhaClassificacao, data: ListaClassificacaoData)
   const sem = semNota(linha)
   const posicao = sem ? '—' : `${linha.posicao}º`
   const notaFinal = sem ? '—' : linha.notaFinal.toFixed(2)
-  const situacao = rotuloDaSituacao(linha.status, data.situacao)
+  const situacao = SITUACAO_DA_LINHA[linha.status]
 
   if (!mostraBonus) return [posicao, linha.numero, nome, notaFinal, situacao]
 
@@ -81,9 +81,7 @@ export async function generateListaClassificacao(data: ListaClassificacaoData): 
 
   const colunas = data.mostraBonus ? COLUNAS_COM_BONUS : COLUNAS_SEM_BONUS
 
-  const categorias = categoriasDoDocumento(data.categorias, data.situacao)
-
-  for (const categoria of categorias) {
+  for (const categoria of data.categorias) {
     garantirEspaco(doc, 80)
     tarjaSecao(doc, categoria.nome)
     desenharQuadroVagas(doc, categoria)
@@ -99,7 +97,7 @@ export async function generateListaClassificacao(data: ListaClassificacaoData): 
     doc.y += 12
   }
 
-  const totalPropostas = categorias.reduce((soma, categoria) => soma + categoria.linhas.length, 0)
+  const totalPropostas = data.categorias.reduce((soma, categoria) => soma + categoria.linhas.length, 0)
 
   checkPageBreak(doc, 60)
   addLegalNotice(doc, rodape)
@@ -107,7 +105,7 @@ export async function generateListaClassificacao(data: ListaClassificacaoData): 
   return finalizarDocumento(doc, [
     { rotulo: 'Documento', valor: titulo },
     { rotulo: 'Edital', valor: `${data.edital.titulo} (${data.edital.ano})` },
-    { rotulo: 'Categorias', valor: String(categorias.length) },
+    { rotulo: 'Categorias', valor: String(data.categorias.length) },
     { rotulo: 'Propostas', valor: String(totalPropostas) },
     { rotulo: 'Bonificação', valor: data.mostraBonus ? 'Incluída na nota final' : 'Não exibida' },
     { rotulo: 'Situação', valor: situacao },
