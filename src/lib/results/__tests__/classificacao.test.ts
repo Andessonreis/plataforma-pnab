@@ -58,6 +58,25 @@ describe('montarClassificacao', () => {
     expect(cat.linhas[0]).toMatchObject({ notaBase: 85, notaBonus: 0, notaFinal: 85 })
   })
 
+  it('leva os itens de bonificação de cada inscrição quando o bônus está incluído', async () => {
+    calculateResults.mockResolvedValue([
+      resultado({ inscricaoId: 'a', notaFinal: 95, notaBonus: 10, bonusItens: ['pcd', 'etnico_racial'] }),
+      resultado({ inscricaoId: 'b', notaFinal: 80, bonusItens: undefined }),
+    ])
+    const [cat] = await montarClassificacao('e1', {
+      incluirBonus: true, notaMinima: 40, maxSuplentes: null, categoriasConfig,
+    })
+    expect(cat.linhas.map((l) => l.bonusItens)).toEqual([['pcd', 'etnico_racial'], []])
+  })
+
+  it('sem bônus incluído, nenhum item de bonificação sai na linha', async () => {
+    calculateResults.mockResolvedValue([resultado({ notaFinal: 85, bonusItens: ['pcd'] })])
+    const [cat] = await montarClassificacao('e1', {
+      incluirBonus: false, notaMinima: 40, maxSuplentes: null, categoriasConfig,
+    })
+    expect(cat.linhas[0].bonusItens).toEqual([])
+  })
+
   it('aplica a nota mínima do edital', async () => {
     calculateResults.mockResolvedValue([
       resultado({ inscricaoId: 'ok', notaFinal: 40 }),

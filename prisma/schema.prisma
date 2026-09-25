@@ -324,6 +324,9 @@ model Edital {
   // problema que `Inscricao.resultadoLiberadoEm` já resolve pra habilitação.
   resultadoPreliminarPublicadoEm DateTime?
   resultadoFinalPublicadoEm      DateTime?
+  // Lista do resultado preliminar como foi publicada: { publicadoEm, linhas }.
+  // Guardada porque depois do recurso as inscrições mudam de nota e de status.
+  resultadoPreliminar            Json?
   // Momento em que a Secretaria encerrou a fase de avaliação. Preenchido =
   // avaliador não lança nem reabre nota neste edital; a equipe interna
   // continua editando, porque o trabalho dela (bonificação, conferência,

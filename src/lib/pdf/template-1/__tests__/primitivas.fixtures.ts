@@ -106,3 +106,11 @@ export async function lerPdf(buffer: Buffer): Promise<PdfLido> {
     paginas: pdf.getPages().map((pagina) => textoDaPagina(pagina.node.Contents() as PDFRawStream)),
   }
 }
+
+/**
+ * O texto justificado sai palavra por palavra, sem espaço entre elas no fluxo
+ * do PDF; para conferir uma frase inteira, compara-se tudo sem os espaços.
+ */
+export function semEspacos(texto: string): string {
+  return texto.replace(/\s+/g, '')
+}

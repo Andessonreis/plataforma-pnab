@@ -5,6 +5,8 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { logAudit } from '@/lib/audit'
 
+vi.mock('@/lib/results/congelar-preliminar', () => ({ congelarPreliminarAoAvancar: vi.fn() }))
+
 const mockAuth = vi.mocked(auth)
 const mockPrisma = vi.mocked(prisma)
 const mockLogAudit = vi.mocked(logAudit)

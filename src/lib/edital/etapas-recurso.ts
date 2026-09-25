@@ -10,9 +10,13 @@ import { CRONOGRAMA_FASES_ORDENADAS } from '@/types/cronograma'
  * valor, então o sistema não recebe recurso naquele prazo e o extrato não teria
  * o que comprovar.
  *
- * Os recursos da fase `RESULTADO_FINAL` também não entram em extrato algum: o
- * cronograma não tem janela para eles e, sem prazo cadastrado, o extrato não
- * tem como ser emitido.
+ * A etapa de seleção cobre `RESULTADO_PRELIMINAR` e `RESULTADO_FINAL`: o extrato
+ * usa a fase cuja janela o cronograma cadastrou (`RECURSO_RESULTADO_JANELA` ou
+ * `RECURSO_RESULTADO_FINAL_JANELA`), como no Festival, que só tem a segunda.
+ *
+ * Limitação: quando o edital cadastra as duas janelas, a etapa `selecao` emite
+ * só o extrato do resultado preliminar (a primeira fase com janela); os recursos
+ * contra o resultado final não têm extrato próprio nesse caso.
  */
 export const ETAPAS_RECURSO_ROTULO = {
   habilitacao: 'Habilitação',

@@ -8,6 +8,8 @@ import { entrada, prepararCenarioPadrao, recursoDoBanco } from './relatorio-recu
 
 vi.mock('@/lib/documentos/emissao', () => ({ registrarEmissao: vi.fn(), descartarEmissao: vi.fn() }))
 vi.mock('@/lib/pdf/relatorio-recursos', () => ({ generateRelatorioRecursos: vi.fn() }))
+vi.mock('@/lib/pdf/template-1/relatorio-recursos', () => ({ gerarRelatorioRecursosV1: vi.fn() }))
+vi.mock('@/lib/documentos/preferencia', () => ({ templatePreferido: vi.fn() }))
 
 const mockPrisma = vi.mocked(prisma)
 const mockRegistrarEmissao = vi.mocked(registrarEmissao)

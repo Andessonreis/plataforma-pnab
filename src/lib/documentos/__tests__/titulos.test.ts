@@ -59,10 +59,15 @@ describe('tituloDocumento — demais tipos', () => {
   })
 
   it('classificação distingue consolidado de prévia', () => {
-    expect(tituloDocumento({ tipo: 'CLASSIFICACAO', edital: EDITAL, consolidado: true }))
+    expect(tituloDocumento({ tipo: 'CLASSIFICACAO', edital: EDITAL, situacao: 'CONSOLIDADA' }))
       .toBe('Classificação por Categoria')
-    expect(tituloDocumento({ tipo: 'CLASSIFICACAO', edital: EDITAL, consolidado: false }))
+    expect(tituloDocumento({ tipo: 'CLASSIFICACAO', edital: EDITAL, situacao: 'PREVIA' }))
       .toBe('Classificação — Prévia de Trabalho')
+  })
+
+  it('a classificação do resultado final sai como relação de contemplados', () => {
+    expect(tituloDocumento({ tipo: 'CLASSIFICACAO', edital: EDITAL, situacao: 'FINAL' }))
+      .toBe('Relação de Contemplados')
   })
 
   it('relatório final', () => {
@@ -94,7 +99,7 @@ describe('tituloRegistro', () => {
   })
 
   it('classificação e relatório final usam o mesmo nome do papel', () => {
-    expect(tituloRegistro({ tipo: 'CLASSIFICACAO', edital: EDITAL, consolidado: true }))
+    expect(tituloRegistro({ tipo: 'CLASSIFICACAO', edital: EDITAL, situacao: 'CONSOLIDADA' }))
       .toBe('Classificação por Categoria — Festival de Arte e Cultura (2026)')
     expect(tituloRegistro({ tipo: 'RELATORIO_FINAL', edital: EDITAL }))
       .toBe('Relatório Final de Resultado — Festival de Arte e Cultura (2026)')

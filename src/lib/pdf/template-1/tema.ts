@@ -21,6 +21,12 @@ export const COLORS = {
   border: '#e2e8f0',
   background: '#f8fafc',
   white: '#ffffff',
+  /** Fundo e borda do que se destaca na tabela (classificadas) e cor do texto sobre ele. */
+  destaque: '#ecfdf5',
+  destaqueBorda: '#bbf7d0',
+  sucesso: '#15803d',
+  /** Zero e traço: o valor que existe só para manter a coluna alinhada. */
+  apagado: '#94a3b8',
 } as const
 
 export const MARGINS = {

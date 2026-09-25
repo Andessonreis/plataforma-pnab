@@ -13,6 +13,7 @@ export async function createEdital(data: EditalInput, userId: string, ip?: strin
   }
 
   const edital = await prisma.edital.create({
+    omit: { resultadoPreliminar: true },
     data: {
       titulo: data.titulo,
       slug,
@@ -61,6 +62,7 @@ export async function updateEdital(id: string, data: EditalInput, userId: string
 
   const edital = await prisma.edital.update({
     where: { id },
+    omit: { resultadoPreliminar: true },
     data: {
       titulo: data.titulo,
       slug,
@@ -94,6 +96,7 @@ export async function updateEdital(id: string, data: EditalInput, userId: string
 export async function getEditalById(id: string) {
   const edital = await prisma.edital.findUnique({
     where: { id },
+    omit: { resultadoPreliminar: true },
     include: { arquivos: true },
   })
   if (!edital) throw new ServiceError('NOT_FOUND', 'Edital não encontrado.')
@@ -103,6 +106,7 @@ export async function getEditalById(id: string) {
 export async function getEditalBySlug(slug: string) {
   const edital = await prisma.edital.findUnique({
     where: { slug },
+    omit: { resultadoPreliminar: true },
     include: { arquivos: true, faqItems: { where: { publicado: true }, orderBy: { ordem: 'asc' } } },
   })
   if (!edital) throw new ServiceError('NOT_FOUND', 'Edital não encontrado.')
@@ -114,6 +118,7 @@ export async function listEditais(page: number, pageSize: number, status?: strin
   const [data, total] = await Promise.all([
     prisma.edital.findMany({
       where,
+      omit: { resultadoPreliminar: true },
       skip: (page - 1) * pageSize,
       take: pageSize,
       orderBy: { createdAt: 'desc' },

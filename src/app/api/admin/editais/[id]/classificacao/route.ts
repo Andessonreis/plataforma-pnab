@@ -4,14 +4,35 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { logAudit } from '@/lib/audit'
 import { montarClassificacao } from '@/lib/results/classificacao'
-import { generateListaClassificacao } from '@/lib/pdf/lista-classificacao'
+import { generateListaClassificacao, type SituacaoClassificacao } from '@/lib/pdf/lista-classificacao'
+import { gerarListaClassificacaoV1 } from '@/lib/pdf/template-1/lista-classificacao'
+import { TEXTOS_POR_SITUACAO } from '@/lib/pdf/modelo/lista-classificacao'
+import type { ListaClassificacaoData } from '@/lib/pdf/modelo/tipos'
+import { resultadoDefinitivo } from '@/lib/edital/fase'
+import { INSCRICOES_FORA_DA_CLASSIFICACAO } from '@/lib/results/resultado-publico'
 import { registrarEmissao } from '@/lib/documentos/emissao'
+import { templatePreferido } from '@/lib/documentos/preferencia'
+import type { TemplatePdf } from '@/lib/documentos/template'
+import { MENSAGEM_TEMPLATE_INVALIDO, templateDaUrl } from '@/lib/documentos/template-query'
+import { tituloRegistro } from '@/lib/documentos/titulos'
+import { parseItensBonus } from '@/types/bonus-config'
 import type { CategoriaConfig } from '@/types/categoria-config'
 
 export const runtime = 'nodejs'
 
 interface RouteContext {
   params: Promise<{ id: string }>
+}
+
+const PREFIXO_DO_ARQUIVO: Record<SituacaoClassificacao, string> = {
+  PREVIA: 'classificacao-previa',
+  CONSOLIDADA: 'classificacao',
+  FINAL: 'relacao-contemplados',
+}
+
+const GERADORES: Record<TemplatePdf, (dados: ListaClassificacaoData) => Promise<Buffer>> = {
+  1: gerarListaClassificacaoV1,
+  2: generateListaClassificacao,
 }
 
 function erro(status: number, error: string, message: string, requestId: string) {
@@ -25,7 +46,8 @@ function erro(status: number, error: string, message: string, requestId: string)
 // Sai do mesmo cálculo da tela (montarClassificacao). Enquanto o resultado não
 // estiver consolidado, o PDF é carimbado como prévia: a bonificação e as notas
 // ainda podem mudar, e um documento sem esse carimbo vira lista oficial na mão
-// de quem receber.
+// de quem receber. `?template=1|2` escolhe o layout; sem ele vale a última
+// versão que quem emite usou naquele edital.
 export async function GET(req: NextRequest, ctx: RouteContext) {
   const requestId = randomUUID()
   const start = Date.now()
@@ -37,14 +59,17 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
       return erro(403, 'FORBIDDEN', 'Acesso negado.', requestId)
     }
 
+    const query = templateDaUrl(req.url)
+    if (!query.success) return erro(400, 'BAD_REQUEST', MENSAGEM_TEMPLATE_INVALIDO, requestId)
+
     const { id: editalId } = await ctx.params
 
     const edital = await prisma.edital.findUnique({
       where: { id: editalId },
       select: {
-        titulo: true, ano: true, slug: true,
+        titulo: true, ano: true, slug: true, status: true,
         vagasSuplentes: true, notaMinima: true,
-        categoriasConfig: true, bonusVisivelParaAdmin: true,
+        categoriasConfig: true, bonusVisivelParaAdmin: true, itensBonus: true,
       },
     })
     if (!edital) return erro(404, 'NOT_FOUND', 'Edital não encontrado.', requestId)
@@ -52,6 +77,9 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
     const mostraBonus = role === 'SUPER_ADMIN' || edital.bonusVisivelParaAdmin
     const consolidado =
       (await prisma.inscricao.count({ where: { editalId, notaFinal: { not: null } } })) > 0
+    const situacao: SituacaoClassificacao = !consolidado
+      ? 'PREVIA'
+      : resultadoDefinitivo(edital.status) ? 'FINAL' : 'CONSOLIDADA'
 
     const categorias = await montarClassificacao(editalId, {
       incluirBonus: mostraBonus,
@@ -67,24 +95,26 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
     }
 
     const total = categorias.reduce((soma, c) => soma + c.linhas.length, 0)
+    const template = query.data.template ?? await templatePreferido(session.user.id, editalId)
 
     // O hash sai dos dados da classificação, não do PDF: reemitir o mesmo
     // conteúdo precisa dar o mesmo identificador.
     const emissao = await registrarEmissao({
       tipo: 'CLASSIFICACAO',
-      titulo: `Classificação — ${edital.titulo} (${edital.ano})`,
+      titulo: tituloRegistro({ tipo: 'CLASSIFICACAO', edital, situacao }),
       editalId,
       emitidoPorId: session.user.id,
+      template,
       conteudo: categorias,
       metadados: {
         Categorias: categorias.length,
         Propostas: total,
         Bonificação: mostraBonus ? 'incluída na nota final' : 'não exibida',
-        Situação: consolidado ? 'resultado consolidado' : 'prévia de trabalho',
+        Situação: TEXTOS_POR_SITUACAO[situacao].situacao,
       },
     })
 
-    const buffer = await generateListaClassificacao({
+    const buffer = await GERADORES[template]({
       edital: { titulo: edital.titulo, ano: edital.ano },
       emissao,
       categorias: categorias.map((c) => ({
@@ -92,20 +122,26 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
         vagasAmplaConcorrencia: c.vagasAmplaConcorrencia,
         cotas: c.cotas.map((cota) => ({ label: cota.label, vagas: cota.vagas })),
         valorPorProjeto: c.valorPorProjeto,
-        linhas: c.linhas.map((l) => ({
-          posicao: l.posicao,
-          numero: l.numero,
-          proponente: l.proponenteNome,
-          notaBase: l.notaBase,
-          notaBonus: l.notaBonus,
-          notaFinal: l.notaFinal,
-          cotista: l.cotista,
-          status: l.status,
-          semAvaliacao: l.semAvaliacao,
-        })),
+        linhas: c.linhas.map((l) => {
+          // A lista oficial não classifica quem o resultado preliminar publicou fora da classificação.
+          const fora = INSCRICOES_FORA_DA_CLASSIFICACAO.includes(l.numero)
+          return {
+            posicao: l.posicao,
+            numero: l.numero,
+            proponente: l.proponenteNome,
+            notaBase: l.notaBase,
+            notaBonus: l.notaBonus,
+            notaFinal: l.notaFinal,
+            cotista: l.cotista,
+            bonusItens: l.bonusItens,
+            status: fora ? 'NAO_SE_APLICA' : l.status,
+            semAvaliacao: fora || l.semAvaliacao,
+          }
+        }),
       })),
-      consolidado,
+      situacao,
       mostraBonus,
+      bonus: mostraBonus ? parseItensBonus(edital.itensBonus) : null,
       geradoEm: new Date(),
     })
 
@@ -114,12 +150,12 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
       action: 'EXPORTACAO_CLASSIFICACAO_PDF',
       entity: 'Edital',
       entityId: editalId,
-      details: { total, categorias: categorias.length, consolidado, comBonus: mostraBonus, codigo: emissao?.codigo ?? null },
+      details: { total, categorias: categorias.length, consolidado, situacao, comBonus: mostraBonus, codigo: emissao?.codigo ?? null },
       ip: req.headers.get('x-forwarded-for') ?? undefined,
     })
 
     const data = new Date().toISOString().slice(0, 10)
-    const nome = `classificacao${consolidado ? '' : '-previa'}_${edital.slug}_${data}.pdf`
+    const nome = `${PREFIXO_DO_ARQUIVO[situacao]}_${edital.slug}_${data}.pdf`
 
     console.log({ requestId, method: 'GET', path: `/api/admin/editais/${editalId}/classificacao`, status: 200, durationMs: Date.now() - start })
 

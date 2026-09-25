@@ -1,39 +1,13 @@
 import { describe, it, expect, vi } from 'vitest'
-import { conclusao, generateRelatorioRecursos, type RelatorioRecursosData } from '../relatorio-recursos'
+import { conclusao, generateRelatorioRecursos } from '../relatorio-recursos'
 import { criarDocumentoOficial } from '../documento-oficial'
+import { recursosDeTeste as recursos, relatorioRecursosDeTeste as relatorio } from './apoio-pdf'
 
 // Gera o PDF de verdade e só observa com que título o documento foi aberto.
 vi.mock('../documento-oficial', async (importOriginal) => {
   const real = await importOriginal<typeof import('../documento-oficial')>()
   return { ...real, criarDocumentoOficial: vi.fn(real.criarDocumentoOficial) }
 })
-
-function relatorio(parcial: Partial<RelatorioRecursosData> = {}): RelatorioRecursosData {
-  return {
-    edital: { titulo: 'Edital de teste', ano: 2026 },
-    etapa: 'Habilitação',
-    prazo: {
-      inicio: new Date('2026-09-16T00:00:00-03:00'),
-      fim: new Date('2026-09-18T23:59:00-03:00'),
-    },
-    totalInscricoes: 15,
-    labelTotalInscricoes: 'Inscrições analisadas',
-    recursos: [],
-    emissao: null,
-    ...parcial,
-  }
-}
-
-function recursos(quantidade: number): RelatorioRecursosData['recursos'] {
-  return Array.from({ length: quantidade }, (_, i) => ({
-    posicao: i + 1,
-    numero: `PNAB-2026-000${i + 1}`,
-    nome: 'Maria da Silva',
-    cpfCnpj: '12345678901',
-    protocoladoEm: new Date('2026-09-17T13:00:00Z'),
-    situacao: 'Deferido',
-  }))
-}
 
 describe('título do documento', () => {
   it.each(['Habilitação', 'Seleção'])('leva a etapa %s no título e mantém o subtítulo', async (etapa) => {

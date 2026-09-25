@@ -19,15 +19,26 @@ export interface ColunaTabela {
   negrito?: boolean
 }
 
+/** Aparência própria de uma célula, no lugar da padrão da coluna. */
+export interface EstiloCelula {
+  cor?: string
+  negrito?: boolean
+  sublinhado?: boolean
+}
+
 export interface LinhaTabela {
   valores: string[]
   /** Fundo próprio da linha, no lugar da zebra (ex.: destacar contempladas). */
   destaque?: string
+  /** Estilo por célula, na ordem das colunas; célula sem entrada usa o padrão. */
+  celulas?: (EstiloCelula | undefined)[]
 }
 
 export interface OpcoesTabela {
   /** Texto da linha única impressa quando não há registro; sem ele, nada é desenhado. */
   vazio?: string
+  /** Separa as linhas por um fio fino em vez de zebrar. */
+  fios?: boolean
 }
 
 const ALTURA_LINHA = 18
@@ -85,11 +96,12 @@ function desenharLinha(
   doc: PDFKit.PDFDocument,
   colunas: ColunaTabela[],
   linha: LinhaTabela,
-  zebra: boolean,
+  fundoPadrao: string | null,
   altura: number,
+  fio: boolean,
 ): void {
   const y = doc.y
-  const fundo = linha.destaque ?? (zebra ? COLORS.background : null)
+  const fundo = linha.destaque ?? fundoPadrao
 
   if (fundo) {
     doc.rect(MARGINS.left, y, LARGURA_UTIL, altura).fill(fundo)
@@ -97,12 +109,18 @@ function desenharLinha(
 
   let x = MARGINS.left
   colunas.forEach((col, i) => {
-    doc.font(col.negrito ? 'Helvetica-Bold' : 'Helvetica').fontSize(CORPO).fillColor(COLORS.text)
+    const estilo = linha.celulas?.[i]
+    const negrito = estilo?.negrito ?? col.negrito
+    doc.font(negrito ? 'Helvetica-Bold' : 'Helvetica').fontSize(CORPO).fillColor(estilo?.cor ?? COLORS.text)
       .text(linha.valores[i] ?? '—', x + 3, y + 4, {
-        width: col.width - RESPIRO_CELULA, align: col.align,
+        width: col.width - RESPIRO_CELULA, align: col.align, underline: estilo?.sublinhado,
       })
     x += col.width
   })
+
+  if (fio) {
+    doc.rect(MARGINS.left, y + altura - 0.3, LARGURA_UTIL, 0.3).fill(COLORS.border)
+  }
 
   doc.y = y + altura
 }
@@ -148,6 +166,7 @@ export function desenharTabela(
   linhas.forEach((linha, i) => {
     const altura = calcularAlturaLinha(doc, colunas, linha.valores)
     if (garantirEspaco(doc, altura + 2)) desenharCabecalhoTabela(doc, colunas)
-    desenharLinha(doc, colunas, linha, i % 2 === 0, altura)
+    const zebra = !opcoes.fios && i % 2 === 0
+    desenharLinha(doc, colunas, linha, zebra ? COLORS.background : null, altura, opcoes.fios === true)
   })
 }
