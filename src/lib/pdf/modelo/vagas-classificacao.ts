@@ -101,3 +101,9 @@ export function modalidadesDaLinha(linha: LinhaClassificacao, cotas: CategoriaCl
   const optadas = cotas.filter((c) => c.key && linha.cotasOptIn?.includes(c.key)).map((c) => nomeDaCota(c.label))
   return optadas.length === 0 ? 'Ampla concorrência' : `Ampla e cota ${optadas.join(', ')}`
 }
+
+/** "3 vagas", "1 vaga + 1 remanejada": o total do grupo como a lista impressa e a página mostram. */
+export function rotuloDeVagas(grupo: Pick<GrupoDeVaga, 'vagas' | 'recebidas'>): string {
+  const vagas = `${grupo.vagas} ${grupo.vagas === 1 ? 'vaga' : 'vagas'}`
+  return grupo.recebidas > 0 ? `${vagas} + ${grupo.recebidas} remanejada${grupo.recebidas === 1 ? '' : 's'}` : vagas
+}

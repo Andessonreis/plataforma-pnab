@@ -60,7 +60,7 @@ export async function consultarResultado(slug: string, fase: FaseResultado): Pro
     where: { slug },
     select: {
       id: true, titulo: true, ano: true, status: true, formulaAvaliacao: true,
-      cronograma: true, categoriasConfig: true, resultadoPreliminar: true, resultadoTemplate: true,
+      cronograma: true, categoriasConfig: true, resultadoPreliminar: true, resultadoTemplate: true, notaMinima: true,
     },
   })
   if (!edital) return null
@@ -92,6 +92,18 @@ export async function consultarResultado(slug: string, fase: FaseResultado): Pro
     ? (edital.categoriasConfig as unknown as CategoriaConfig[])
     : null
 
+  // As cotas não entram na lista publicada; saem daqui só para refazer a vaga de cada contemplado.
+  const cotas = dados
+    ? await prisma.inscricao.findMany({
+      where: { editalId: edital.id, numero: { in: dados.linhas.map((l) => l.numero) } },
+      select: { numero: true, cotasOptIn: true },
+    })
+    : []
+  const vagas = {
+    cotasPorNumero: new Map(cotas.map((i) => [i.numero, i.cotasOptIn])),
+    notaMinima: edital.notaMinima == null ? null : Number(edital.notaMinima),
+  }
+
   return {
     titulo: edital.titulo,
     ano: edital.ano,
@@ -104,6 +116,6 @@ export async function consultarResultado(slug: string, fase: FaseResultado): Pro
     diarioOficialUrl,
     definitivoPublicado: resultadoDefinitivo(edital.status),
     total: dados?.linhas.length ?? 0,
-    categorias: dados ? agruparPorCategoria(dados.linhas, categoriasConfig) : [],
+    categorias: dados ? agruparPorCategoria(dados.linhas, categoriasConfig, vagas) : [],
   }
 }

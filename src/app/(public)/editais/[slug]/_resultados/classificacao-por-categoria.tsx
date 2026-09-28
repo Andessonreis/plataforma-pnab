@@ -1,5 +1,6 @@
 import type { TemplateResultado } from '@/lib/edital/template-resultado'
 import type { CategoriaResultado } from './agrupar-por-categoria'
+import { ClassificacaoPorVaga } from './classificacao-por-vaga'
 import { TabelaClassificacao } from './tabela-classificacao'
 
 interface ClassificacaoPorCategoriaProps {
@@ -51,7 +52,11 @@ export function ClassificacaoPorCategoria({ categorias, porPontuacao, rotulos }:
               <p className="mt-2 text-sm leading-relaxed text-tinta-700">{categoria.quadroDeVagas}</p>
             )}
             <div className="mt-4">
-              <TabelaClassificacao linhas={categoria.linhas} porPontuacao={porPontuacao} categoria={categoria.nome} rotulos={rotulos} />
+              {categoria.porVaga ? (
+                <ClassificacaoPorVaga categoria={categoria.nome} porVaga={categoria.porVaga} porPontuacao={porPontuacao} rotulos={rotulos} />
+              ) : (
+                <TabelaClassificacao linhas={categoria.linhas} porPontuacao={porPontuacao} categoria={categoria.nome} rotulos={rotulos} />
+              )}
             </div>
           </section>
         ))}

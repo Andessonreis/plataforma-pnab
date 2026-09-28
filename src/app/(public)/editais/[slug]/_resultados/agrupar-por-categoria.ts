@@ -2,6 +2,7 @@ import { slugify } from '@/lib/utils/slug'
 import { descreverQuadroVagas } from '@/lib/pdf/modelo/lista-classificacao'
 import type { LinhaResultadoPublico } from '@/lib/results/resultado-publico'
 import type { CategoriaConfig } from '@/types/categoria-config'
+import { separarResultadoPorVaga, type CategoriaPorVaga } from './separar-por-vaga'
 
 export interface CategoriaResultado {
   /** Âncora estável para o índice de categorias da página. */
@@ -10,6 +11,14 @@ export interface CategoriaResultado {
   /** Vagas e valor da categoria, do quadro de vagas do edital; nulo se o edital não a configura. */
   quadroDeVagas: string | null
   linhas: LinhaResultadoPublico[]
+  /** A mesma lista separada por ampla concorrência e cotas; nula quando a categoria não tem cota. */
+  porVaga: CategoriaPorVaga | null
+}
+
+export interface OpcoesDeVaga {
+  /** Cotas em que cada inscrição concorre, pelo número. */
+  cotasPorNumero: ReadonlyMap<string, string[]>
+  notaMinima: number | null
 }
 
 const SEM_CATEGORIA = 'Sem categoria'
@@ -22,10 +31,12 @@ function ancoraDe(nome: string): string {
  * Separa a lista em categorias, em ordem alfabética como no PDF da
  * classificação, e junta a cada uma o quadro de vagas do edital. Dentro de cada
  * categoria vale a ordem em que as linhas chegam (já vêm por posição).
+ * Categoria com cota também sai separada por vaga (ver `separar-por-vaga`).
  */
 export function agruparPorCategoria(
   linhas: LinhaResultadoPublico[],
   categoriasConfig: CategoriaConfig[] | null,
+  vagas: OpcoesDeVaga = { cotasPorNumero: new Map(), notaMinima: null },
 ): CategoriaResultado[] {
   const grupos = new Map<string, LinhaResultadoPublico[]>()
   for (const linha of linhas) {
@@ -40,6 +51,7 @@ export function agruparPorCategoria(
       nome,
       quadroDeVagas: config ? descreverQuadroVagas(config) : null,
       linhas: grupo,
+      porVaga: separarResultadoPorVaga(grupo, config, vagas.cotasPorNumero, vagas.notaMinima),
     }
   })
 }

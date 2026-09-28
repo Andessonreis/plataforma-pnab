@@ -1,5 +1,5 @@
 import {
-  modalidadesDaLinha, nomeDaCota, type ClassificacaoPorVaga, type GrupoDeVaga,
+  modalidadesDaLinha, nomeDaCota, rotuloDeVagas, type ClassificacaoPorVaga, type GrupoDeVaga,
 } from '@/lib/pdf/modelo/vagas-classificacao'
 import type { CategoriaClassificacao, ListaClassificacaoData } from '@/lib/pdf/modelo/tipos'
 import { fio } from '@/lib/pdf/documento-oficial/tema'
@@ -59,8 +59,7 @@ function desenharTituloDoGrupo(doc: PDFKit.PDFDocument, grupo: GrupoDeVaga): voi
   garantirEspaco(doc, 60)
   doc.y += 4
   const y = doc.y
-  const vagas = `${grupo.vagas} ${grupo.vagas === 1 ? 'vaga' : 'vagas'}`
-    + (grupo.recebidas > 0 ? ` + ${grupo.recebidas} remanejada${grupo.recebidas === 1 ? '' : 's'}` : '')
+  const vagas = rotuloDeVagas(grupo)
   doc.font('Helvetica-Bold').fontSize(9.5).fillColor(COLORS.text)
     .text(grupo.titulo, MARGINS.left, y, { width: LARGURA_UTIL - 150, lineBreak: false })
   doc.font('Helvetica-Bold').fontSize(8).fillColor(COLORS.brandDark)

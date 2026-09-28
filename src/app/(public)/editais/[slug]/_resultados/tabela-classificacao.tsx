@@ -8,6 +8,8 @@ interface TabelaClassificacaoProps {
   /** Categoria da tabela, lida pelo leitor de tela como legenda. */
   categoria: string
   rotulos: TemplateResultado['rotulos']
+  /** Modalidade em que cada suplente concorre, pelo número; aparece sob o número da inscrição. */
+  modalidades?: ReadonlyMap<string, string>
 }
 
 /** Qual rótulo do template diz cada situação; o texto vem de `TemplateResultado.rotulos`. */
@@ -59,7 +61,7 @@ function resolverSituacao(
  * num scroll escondido — por isso vira um cartão por proposta, com a
  * mesma marcação de contemplada na borda.
  */
-export function TabelaClassificacao({ linhas, porPontuacao, categoria, rotulos }: TabelaClassificacaoProps) {
+export function TabelaClassificacao({ linhas, porPontuacao, categoria, rotulos, modalidades }: TabelaClassificacaoProps) {
   return (
     <>
     <div className="hidden overflow-x-auto border-2 border-tinta-900 bg-papel-50 sm:block">
@@ -75,10 +77,10 @@ export function TabelaClassificacao({ linhas, porPontuacao, categoria, rotulos }
             <th scope="col" className="px-4 py-3 text-xs font-bold uppercase tracking-[0.12em]">
               Proponente
             </th>
-            <th scope="col" className="px-4 py-3 text-xs font-bold uppercase tracking-[0.12em]">
+            <th scope="col" className="w-36 px-4 py-3 text-xs font-bold uppercase tracking-[0.12em]">
               {porPontuacao ? 'Pontuação' : 'Nota'}
             </th>
-            <th scope="col" className="px-4 py-3 text-xs font-bold uppercase tracking-[0.12em]">
+            <th scope="col" className="w-36 px-4 py-3 text-xs font-bold uppercase tracking-[0.12em]">
               Situação
             </th>
           </tr>
@@ -108,6 +110,9 @@ export function TabelaClassificacao({ linhas, porPontuacao, categoria, rotulos }
                   <div className="text-xs font-normal text-tinta-600 tabular-nums">
                     {linha.numero}
                   </div>
+                  {modalidades?.get(linha.numero) && (
+                    <div className="text-xs font-normal text-tinta-700">Concorre por: {modalidades.get(linha.numero)}</div>
+                  )}
                 </td>
                 <td className="px-4 py-3.5 font-semibold tabular-nums text-tinta-900">
                   {linha.nota ? `${linha.nota}${porPontuacao ? ' pts' : ''}` : '—'}
@@ -137,6 +142,7 @@ export function TabelaClassificacao({ linhas, porPontuacao, categoria, rotulos }
             destaque={contemplada}
             pares={[
               { rotulo: 'Inscrição', valor: linha.numero },
+              ...(modalidades?.get(linha.numero) ? [{ rotulo: 'Concorre por', valor: modalidades.get(linha.numero)! }] : []),
               {
                 rotulo: porPontuacao ? 'Pontuação' : 'Nota',
                 valor: linha.nota ? `${linha.nota}${porPontuacao ? ' pts' : ''}` : '—',
