@@ -33,13 +33,13 @@ describe('separarPorVaga', () => {
     expect(negras.linhas.map((l) => l.numero)).toEqual(['E'])
     expect(negras.observacao).toBeNull()
     expect(indigenas.linhas.map((l) => l.numero)).toEqual(['F'])
-    expect(indigenas.observacao).toContain('à cota Pessoas Negras')
+    expect(indigenas.observacao).toContain('optante da cota Pessoas Negras')
   })
 
   it('sem destino para outras cotas, a vaga vazia vai à ampla e a observação diz isso', () => {
     const [, , indigenas] = separarPorVaga(categoria())!.contempladas
     expect(indigenas.linhas.map((l) => l.numero)).toEqual(['D'])
-    expect(indigenas.observacao).toContain('à ampla concorrência')
+    expect(indigenas.observacao).toContain('pela ampla concorrência')
   })
 
   it('suplentes trazem a modalidade em que concorrem', () => {

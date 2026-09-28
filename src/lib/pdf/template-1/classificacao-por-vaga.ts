@@ -41,24 +41,23 @@ function desenharQuadroDeVagas(doc: PDFKit.PDFDocument, categoria: CategoriaClas
   const ampla = categoria.vagasAmplaConcorrencia ?? 0
   const total = ampla + cotas.reduce((soma, c) => soma + c.vagas, 0)
   const cartoes = [
-    { numero: total, rotulo: total === 1 ? 'vaga no total' : 'vagas no total', total: true },
+    {
+      numero: total,
+      rotulo: `${total === 1 ? 'vaga' : 'vagas'}${categoria.valorPorProjeto ? ` · ${brl(categoria.valorPorProjeto)} cada` : ' no total'}`,
+      total: true,
+    },
     { numero: ampla, rotulo: 'Ampla concorrência', total: false },
     ...cotas.map((c) => ({ numero: c.vagas, rotulo: `Cota — ${nomeDaCota(c.label)}`, total: false })),
   ]
   const largura = (LARGURA_UTIL - ESPACO_CARTAO * (cartoes.length - 1)) / cartoes.length
   const y = doc.y + 6
   cartoes.forEach((c, i) => desenharCartao(doc, MARGINS.left + i * (largura + ESPACO_CARTAO), y, largura, c.numero, c.rotulo, c.total))
-  doc.y = y + ALTURA_CARTAO + 4
-
-  if (categoria.valorPorProjeto) {
-    doc.font('Helvetica').fontSize(7.5).fillColor(COLORS.textLight)
-      .text(`Valor de cada premiação: ${brl(categoria.valorPorProjeto)}`, MARGINS.left, doc.y, { width: LARGURA_UTIL })
-  }
+  doc.y = y + ALTURA_CARTAO
 }
 
 function desenharTituloDoGrupo(doc: PDFKit.PDFDocument, grupo: GrupoDeVaga): void {
   garantirEspaco(doc, 60)
-  doc.y += 6
+  doc.y += 4
   const y = doc.y
   const vagas = `${grupo.vagas} ${grupo.vagas === 1 ? 'vaga' : 'vagas'}`
   doc.font('Helvetica-Bold').fontSize(9.5).fillColor(COLORS.text)
@@ -83,11 +82,10 @@ function desenharObservacao(doc: PDFKit.PDFDocument, texto: string): void {
 
 function desenharComoLer(doc: PDFKit.PDFDocument): void {
   const itens = [
-    'A posição (Pos.) é a da classificação geral da categoria, da maior para a menor nota final.',
-    'Quem optou por cota concorre ao mesmo tempo à ampla concorrência. Se a nota alcança uma vaga de ampla '
-      + 'concorrência, entra por ela, e a vaga da cota fica para o próximo optante da cota.',
-    'Por isso uma proposta com nota maior pode ficar como suplente enquanto outra, com nota menor, é contemplada '
-      + 'numa vaga de cota: a vaga de cota só pode ser ocupada por quem optou por ela.',
+    'A posição (Pos.) é a da classificação geral da categoria, pela nota final.',
+    'Quem optou por cota concorre também à ampla concorrência: se a nota alcança uma vaga de ampla, entra por ela, '
+      + 'e a vaga da cota fica para o próximo optante. Por isso uma nota maior pode ficar como suplente enquanto '
+      + 'outra, menor, é contemplada numa vaga de cota — só quem optou pela cota pode ocupá-la.',
     'Em caso de desistência ou impedimento, as suplentes são chamadas na ordem de classificação, respeitada a '
       + 'modalidade da vaga aberta.',
   ]
@@ -118,7 +116,7 @@ export function desenharCategoriaPorVaga(
   }
 
   if (separada.suplentes.length > 0) {
-    doc.y += 8
+    doc.y += 2
     garantirEspaco(doc, 70)
     desenharSecao(doc, 'Suplentes — em ordem de classificação')
     desenharTabela(
@@ -129,7 +127,7 @@ export function desenharCategoriaPorVaga(
   }
 
   if (separada.demais.length > 0) {
-    doc.y += 8
+    doc.y += 2
     garantirEspaco(doc, 70)
     desenharSecao(doc, 'Não classificados')
     desenharTabela(doc, colunas, separada.demais.map((l) => linhaDaTabela(l, data)), { fios: true })

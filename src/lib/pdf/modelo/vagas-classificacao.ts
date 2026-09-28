@@ -36,16 +36,21 @@ function plural(n: number, singular: string, plural: string): string {
   return `${n} ${n === 1 ? singular : plural}`
 }
 
-/** Como cada quem ocupa a vaga sem ter optado por aquela cota chegou lá. */
+/** Explica por que quem ocupa a vaga não é optante daquela cota — sem isso a linha parece erro. */
 function descreverRemanejamento(cota: Cota, linhas: LinhaClassificacao[], cotas: Cota[]): string | null {
   const vindas = linhas.filter((l) => !l.cotasOptIn?.includes(cota.key))
   if (vindas.length === 0) return null
 
-  const destinos = [...new Set(vindas.map((l) => {
+  const nome = nomeDaCota(cota.label)
+  const frases = vindas.map((l) => {
     const outra = cotas.find((c) => c.key !== cota.key && l.cotasOptIn?.includes(c.key))
-    return outra ? `à cota ${nomeDaCota(outra.label)}` : 'à ampla concorrência'
-  }))]
-  return `Não houve proposta apta optante desta cota. Como prevê o edital, a vaga foi destinada ${destinos.join(' e ')}.`
+    return outra
+      ? `${l.proponente} (${l.numero}) é optante da cota ${nomeDaCota(outra.label)} e ocupa esta vaga porque o edital `
+        + 'manda a vaga de cota sem inscrito apto primeiro para a outra categoria de cotas, na ordem de classificação.'
+      : `${l.proponente} (${l.numero}) ocupa esta vaga pela ampla concorrência, porque o edital devolve à ampla `
+        + 'concorrência a vaga de cota que não tem inscrito apto.'
+  })
+  return `Nenhuma proposta apta se inscreveu na cota ${nome}. ${frases.join(' ')}`
 }
 
 function observacaoDaCota(cota: Cota, linhas: LinhaClassificacao[], cotas: Cota[]): string | null {
