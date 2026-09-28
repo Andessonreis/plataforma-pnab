@@ -47,7 +47,8 @@ describe('consultarResultado — preliminar', () => {
     expect(dados?.categorias[0].linhas[0]).toMatchObject({ posicao: 4, nota: '92.33', situacao: 'SUPLENTE' })
     expect(dados?.definitivoPublicado).toBe(true)
     expect(dados?.publicadoEm).toEqual(new Date('2026-09-22T17:16:50.000Z'))
-    expect(prisma.inscricao.findMany).not.toHaveBeenCalled()
+    // Só a leitura das cotas (para separar por vaga) toca as inscrições; a lista não é remontada.
+    expect(vi.mocked(prisma.inscricao.findMany).mock.calls.every(([args]) => !('status' in (args?.where ?? {})))).toBe(true)
   })
 
   it('não expõe a cópia quando o edital voltou a uma fase anterior à publicação', async () => {
@@ -159,6 +160,7 @@ describe('consultarResultado — template do edital', () => {
     const dados = await consultarResultado('festival', 'preliminar')
 
     expect(dados?.categorias[0].linhas[0]).toMatchObject({ numero: 'PNAB-2026-0139', posicao: 4, nota: '92.33' })
-    expect(prisma.inscricao.findMany).not.toHaveBeenCalled()
+    // Só a leitura das cotas (para separar por vaga) toca as inscrições; a lista não é remontada.
+    expect(vi.mocked(prisma.inscricao.findMany).mock.calls.every(([args]) => !('status' in (args?.where ?? {})))).toBe(true)
   })
 })
