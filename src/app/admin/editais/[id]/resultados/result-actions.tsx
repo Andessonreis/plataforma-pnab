@@ -21,6 +21,8 @@ export function ResultActions({
   const [loading, setLoading] = useState<string | null>(null)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [confirmAction, setConfirmAction] = useState<string | null>(null)
+  // O preliminar não avisa ninguém por padrão: circula pelo Diário Oficial e pela página do edital.
+  const [avisarPorEmail, setAvisarPorEmail] = useState(false)
 
   async function handlePublish(fase: 'RESULTADO_PRELIMINAR' | 'RESULTADO_FINAL') {
     setLoading(fase)
@@ -30,7 +32,7 @@ export function ResultActions({
       const res = await fetch(`/api/admin/editais/${editalId}/resultados`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fase }),
+        body: JSON.stringify(fase === 'RESULTADO_PRELIMINAR' ? { fase, avisarPorEmail } : { fase }),
       })
 
       const data = await res.json()
@@ -40,7 +42,8 @@ export function ResultActions({
         return
       }
 
-      setMessage({ type: 'success', text: data.message })
+      const avisos: string[] = data.avisos ?? []
+      setMessage({ type: 'success', text: [data.message, ...avisos].join(' ') })
       setConfirmAction(null)
       // Recarrega a página para refletir mudanças
       setTimeout(() => window.location.reload(), 1500)
@@ -105,26 +108,39 @@ export function ResultActions({
         {canPublishPreliminar && (
           <>
             {confirmAction === 'RESULTADO_PRELIMINAR' ? (
-              <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
-                <span className="text-sm text-amber-800">
-                  Confirma publicação do resultado preliminar?
-                </span>
-                <Button
-                  size="sm"
-                  variant="primary"
-                  onClick={() => handlePublish('RESULTADO_PRELIMINAR')}
-                  disabled={!!loading}
-                >
-                  {loading === 'RESULTADO_PRELIMINAR' ? 'Publicando...' : 'Confirmar'}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setConfirmAction(null)}
-                  disabled={!!loading}
-                >
-                  Cancelar
-                </Button>
+              <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
+                <p className="text-sm text-amber-800">
+                  Confirma a publicação do resultado preliminar? Ela grava a classificação (classificados, suplentes e
+                  desclassificados), abre a página pública do resultado e libera a nota e o parecer para cada proponente.
+                </p>
+                <label className="flex items-center gap-2 text-sm text-amber-900">
+                  <input
+                    type="checkbox"
+                    checked={avisarPorEmail}
+                    onChange={(e) => setAvisarPorEmail(e.target.checked)}
+                    disabled={!!loading}
+                    className="h-4 w-4"
+                  />
+                  Avisar os proponentes por e-mail
+                </label>
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="primary"
+                    onClick={() => handlePublish('RESULTADO_PRELIMINAR')}
+                    disabled={!!loading}
+                  >
+                    {loading === 'RESULTADO_PRELIMINAR' ? 'Publicando...' : 'Confirmar'}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setConfirmAction(null)}
+                    disabled={!!loading}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
               </div>
             ) : (
               <Button

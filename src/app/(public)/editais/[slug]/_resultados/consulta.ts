@@ -76,6 +76,8 @@ export async function consultarResultado(slug: string, fase: FaseResultado): Pro
     const arquivoDiario = await prisma.arquivoEdital.findFirst({
       where: {
         editalId: edital.id,
+        // O PDF do próprio edital também sai do Diário e leva "(Diário Oficial)" no título, mas não é a publicação do resultado.
+        tipo: { not: 'PDF_EDITAL' },
         OR: [
           { titulo: { contains: 'Diário Oficial', mode: 'insensitive' } },
           { url: { contains: 'pdfGateway', mode: 'insensitive' } },

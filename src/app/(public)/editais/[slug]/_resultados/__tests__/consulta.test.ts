@@ -98,6 +98,16 @@ describe('consultarResultado — definitivo', () => {
     expect((await consultarResultado('festival', 'definitivo'))?.diarioOficialUrl).toBeNull()
     expect((await consultarResultado('festival', 'preliminar'))?.diarioOficialUrl).toBe('https://gateway/Ed 2935.pdf')
   })
+
+  it('não toma o PDF do próprio edital, que também leva "(Diário Oficial)" no título, pelo Diário do resultado', async () => {
+    edital('RESULTADO_PRELIMINAR', COPIA)
+
+    await consultarResultado('festival', 'preliminar')
+
+    expect(prisma.arquivoEdital.findFirst).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({ editalId: 'ed-1', tipo: { not: 'PDF_EDITAL' } }),
+    }))
+  })
 })
 
 it('devolve null para edital inexistente', async () => {

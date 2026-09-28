@@ -1,3 +1,4 @@
+import type { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/db'
 import { resolverTemplateResultado } from '@/lib/edital/template-resultado'
 
@@ -10,6 +11,9 @@ import { resolverTemplateResultado } from '@/lib/edital/template-resultado'
  * (`resultadoPreliminar`) e a página do preliminar lê a cópia, enquanto a do
  * resultado definitivo lê as inscrições como estão.
  */
+
+/** Banco ou transação: a publicação precisa ler o que acabou de gravar na própria transação. */
+type ClienteBanco = Pick<Prisma.TransactionClient, 'edital' | 'inscricao'>
 
 /** Situações que já entram na lista pública de classificação. */
 export const SITUACOES_CLASSIFICADAS = [
@@ -46,8 +50,9 @@ export interface ResultadoPreliminarGuardado {
 export async function linhasDoResultado(
   editalId: string,
   foraDaClassificacao: readonly string[],
+  db: ClienteBanco = prisma,
 ): Promise<LinhaResultadoPublico[]> {
-  const inscricoes = await prisma.inscricao.findMany({
+  const inscricoes = await db.inscricao.findMany({
     where: { editalId, status: { in: [...SITUACOES_CLASSIFICADAS] } },
     select: {
       numero: true,
@@ -78,14 +83,18 @@ export async function linhasDoResultado(
 }
 
 /** Congela a lista atual como o resultado preliminar publicado do edital. */
-export async function guardarResultadoPreliminar(editalId: string, publicadoEm: Date = new Date()): Promise<void> {
-  const edital = await prisma.edital.findUnique({ where: { id: editalId }, select: { resultadoTemplate: true } })
+export async function guardarResultadoPreliminar(
+  editalId: string,
+  publicadoEm: Date = new Date(),
+  db: ClienteBanco = prisma,
+): Promise<void> {
+  const edital = await db.edital.findUnique({ where: { id: editalId }, select: { resultadoTemplate: true } })
   const { foraDaClassificacao } = resolverTemplateResultado(edital?.resultadoTemplate)
   const guardado: ResultadoPreliminarGuardado = {
     publicadoEm: publicadoEm.toISOString(),
-    linhas: await linhasDoResultado(editalId, foraDaClassificacao),
+    linhas: await linhasDoResultado(editalId, foraDaClassificacao, db),
   }
-  await prisma.edital.update({ where: { id: editalId }, data: { resultadoPreliminar: guardado as object } })
+  await db.edital.update({ where: { id: editalId }, data: { resultadoPreliminar: guardado as object } })
 }
 
 /** Lê a cópia guardada; devolve null quando não existe ou não tem a forma esperada. */

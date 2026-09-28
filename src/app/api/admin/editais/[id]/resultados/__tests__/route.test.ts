@@ -98,7 +98,7 @@ describe('POST /api/admin/editais/[id]/resultados', () => {
     expect(res.status).toBe(404)
   })
 
-  it('sem inscrições avaliadas → 400', async () => {
+  it.each(['RESULTADO_PRELIMINAR', 'RESULTADO_FINAL'])('sem inscrições avaliadas (%s) → 400', async (fase) => {
     mockAuth.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } } as never)
     mockPrisma.edital.findUnique.mockResolvedValue({
       id: 'ed-1',
@@ -113,7 +113,7 @@ describe('POST /api/admin/editais/[id]/resultados', () => {
 
     vi.spyOn(calcModule, 'calculateResults').mockResolvedValue([])
 
-    const res = await POST(makePostRequest({ fase: 'RESULTADO_PRELIMINAR' }), makeParams())
+    const res = await POST(makePostRequest({ fase }), makeParams())
 
     expect(res.status).toBe(400)
   })

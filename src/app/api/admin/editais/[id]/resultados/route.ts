@@ -5,16 +5,29 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { logAudit } from '@/lib/audit'
 import { calculateResults, saveResults } from '@/lib/results/calculate'
+import { avisarProponentesDoResultado } from '@/lib/results/avisar-resultado'
 import { viewNotaFinal } from '@/lib/services/resultado-view'
-import { guardarResultadoPreliminar } from '@/lib/results/resultado-publico'
-import { hrefResultados } from '@/lib/edital/rotas-resultado'
-import { enqueueEmail } from '@/lib/queue'
+import { publicarResultadoPreliminar } from '@/lib/services/publicar-preliminar.service'
+import { ServiceError } from '@/lib/services/errors'
 
 export const runtime = 'nodejs'
 
 const publishSchema = z.object({
   fase: z.enum(['RESULTADO_PRELIMINAR', 'RESULTADO_FINAL']),
+  // Só vale para o preliminar, que por padrão não avisa ninguém; o resultado final sempre avisa.
+  avisarPorEmail: z.boolean().default(false),
 })
+
+function respostaDaPublicacao(
+  requestId: string, start: number, editalId: string,
+  corpo: { message: string; totalInscrições: number; hasEmpates: boolean; avisos?: string[] },
+) {
+  const res = NextResponse.json({ ...corpo, requestId })
+  res.headers.set('X-Request-Id', requestId)
+  res.headers.set('Cache-Control', 'no-store')
+  console.log({ requestId, method: 'POST', path: `/api/admin/editais/${editalId}/resultados`, status: 200, durationMs: Date.now() - start })
+  return res
+}
 
 // GET — Consultar resultados de um edital
 export async function GET(
@@ -124,7 +137,19 @@ export async function POST(
 
     const { id } = await params
     const body = await req.json()
-    const { fase } = publishSchema.parse(body)
+    const { fase, avisarPorEmail } = publishSchema.parse(body)
+    const ip = req.headers.get('x-forwarded-for') ?? undefined
+
+    // O preliminar grava a classificação (classificados, suplentes e desclassificados) e congela a lista.
+    if (fase === 'RESULTADO_PRELIMINAR') {
+      const publicado = await publicarResultadoPreliminar({ editalId: id, userId: session.user.id, ip, avisarPorEmail })
+      return respostaDaPublicacao(requestId, start, id, {
+        message: 'Resultado preliminar publicado com sucesso.',
+        totalInscrições: publicado.total,
+        hasEmpates: publicado.hasEmpates,
+        avisos: publicado.avisos,
+      })
+    }
 
     const edital = await prisma.edital.findUnique({
       where: { id },
@@ -150,11 +175,8 @@ export async function POST(
       )
     }
 
-    // Detecta empates na resposta
-    const hasEmpates = resultados.some(r => r.empatados && r.empatados.length > 0)
-
     // Salva notas e atualiza status das inscrições
-    await saveResults(resultados, fase, {
+    await saveResults(resultados, 'RESULTADO_FINAL', {
       contemplados: edital.vagasContemplados,
       suplentes: edital.vagasSuplentes,
       notaMinima: edital.notaMinima ? Number(edital.notaMinima) : null,
@@ -163,67 +185,40 @@ export async function POST(
         : null,
     })
 
-    // A página do preliminar lê esta cópia: depois do recurso as inscrições já não a refletem.
-    // Vem antes de mudar o status: se falhar, o edital continua na fase e a publicação se repete.
-    if (fase === 'RESULTADO_PRELIMINAR') await guardarResultadoPreliminar(id)
-
-    // Atualiza status do edital
-    const editalStatus = fase === 'RESULTADO_FINAL' ? 'RESULTADO_FINAL' : 'RESULTADO_PRELIMINAR'
     await prisma.edital.update({
       where: { id },
-      data: { status: editalStatus },
+      data: { status: 'RESULTADO_FINAL' },
     })
 
-    // Notifica proponentes por e-mail
-    const inscricoes = await prisma.inscricao.findMany({
-      where: { id: { in: resultados.map((r) => r.inscricaoId) } },
-      include: { proponente: { select: { email: true, nome: true } } },
+    await avisarProponentesDoResultado({
+      inscricaoIds: resultados.map((r) => r.inscricaoId), editalTitulo: edital.titulo, slug: edital.slug, final: true,
     })
-
-    const template = fase === 'RESULTADO_FINAL' ? 'resultado_final' : 'resultado_preliminar'
-    const baseUrl = process.env.NEXTAUTH_URL ?? 'http://localhost:3000'
-
-    for (const inscricao of inscricoes) {
-      await enqueueEmail({
-        to: inscricao.proponente.email,
-        subject: `${fase === 'RESULTADO_FINAL' ? 'Resultado Final' : 'Resultado Preliminar'} — ${edital.titulo}`,
-        template,
-        data: {
-          edital: edital.titulo,
-          url: `${baseUrl}${hrefResultados(edital.slug, fase === 'RESULTADO_FINAL')}`,
-        },
-      })
-    }
-
-    // Audit
-    const auditAction = fase === 'RESULTADO_FINAL'
-      ? 'RESULTADO_FINAL_PUBLICADO'
-      : 'RESULTADO_PRELIMINAR_PUBLICADO'
 
     await logAudit({
       userId: session.user.id,
-      action: auditAction,
+      action: 'RESULTADO_FINAL_PUBLICADO',
       entity: 'Edital',
       entityId: id,
       details: { fase, totalInscrições: resultados.length },
-      ip: req.headers.get('x-forwarded-for') ?? undefined,
+      ip,
     })
 
-    const res = NextResponse.json({
-      message: `${fase === 'RESULTADO_FINAL' ? 'Resultado final' : 'Resultado preliminar'} publicado com sucesso.`,
+    return respostaDaPublicacao(requestId, start, id, {
+      message: 'Resultado final publicado com sucesso.',
       totalInscrições: resultados.length,
-      hasEmpates,
-      requestId,
+      hasEmpates: resultados.some((r) => r.empatados && r.empatados.length > 0),
     })
-    res.headers.set('X-Request-Id', requestId)
-    res.headers.set('Cache-Control', 'no-store')
-    console.log({ requestId, method: 'POST', path: `/api/admin/editais/${id}/resultados`, status: 200, durationMs: Date.now() - start })
-    return res
   } catch (err) {
     if (err instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'VALIDATION_ERROR', message: 'Fase inválida.', requestId },
         { status: 400 },
+      )
+    }
+    if (err instanceof ServiceError) {
+      return NextResponse.json(
+        { error: err.code, message: err.message, requestId },
+        { status: err.httpStatus },
       )
     }
     console.error({ requestId, error: err instanceof Error ? err.message : 'Unknown' })
