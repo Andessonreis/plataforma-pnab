@@ -10,6 +10,14 @@ export interface CotaConfig {
   pontosBonus?: number
 }
 
+/**
+ * Para onde vai a vaga de cota sem optantes aptos:
+ * - `AMPLA` (padrão): direto para a ampla concorrência (item 5.4 do edital do Festival).
+ * - `OUTRAS_COTAS`: antes, para os optantes das demais cotas; só o que sobrar vai
+ *   para a ampla concorrência (itens 6.7 e 6.7.1 do edital dos Mestres).
+ */
+export type DestinoVagaDeCotaVazia = 'AMPLA' | 'OUTRAS_COTAS'
+
 export interface CategoriaConfig {
   nome: string
   // null = sem limite discreto de vagas (ex.: categorias de pessoa jurídica
@@ -18,6 +26,7 @@ export interface CategoriaConfig {
   cotas: CotaConfig[]
   valorPorProjeto: number | null
   valorTotalCategoria: number
+  destinoVagaDeCotaVazia?: DestinoVagaDeCotaVazia
 }
 
 /** Retorna as chaves de `cotasOptIn` que não existem nas cotas configuradas para `categoria`. */

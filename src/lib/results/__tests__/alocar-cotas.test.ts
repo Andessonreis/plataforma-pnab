@@ -71,6 +71,53 @@ describe('alocarVagasCategoria', () => {
     expect(r.find((x) => x.inscricaoId === 'd')?.status).toBe('NAO_CONTEMPLADA')
   })
 
+  describe('vaga de cota sem optantes, com duas cotas', () => {
+    const duasCotas = (overrides: Partial<CategoriaConfig> = {}) => config({
+      vagasAmplaConcorrencia: 1,
+      cotas: [
+        { key: 'negros', label: 'Cotas Pessoas Negras', vagas: 1 },
+        { key: 'indigena_pcd', label: 'Cotas Indígenas e/ou PCD', vagas: 1 },
+      ],
+      ...overrides,
+    })
+    // Ninguém optou pela cota indígena/PCD: a vaga dela fica livre.
+    const candidatos = [
+      candidato('a', 90),
+      candidato('b', 85),              // ampla, fora da cota
+      candidato('c', 70, ['negros']),  // ocupa a vaga da cota negros
+      candidato('d', 50, ['negros']),  // segundo optante da cota negros
+    ]
+    const statusDe = (r: ReturnType<typeof alocarVagasCategoria>, id: string) =>
+      r.find((x) => x.inscricaoId === id)?.status
+
+    it('padrão: a vaga livre volta direto pra ampla concorrência', () => {
+      const r = alocarVagasCategoria(candidatos, duasCotas(), null, 0)
+      expect(statusDe(r, 'b')).toBe('CONTEMPLADA')
+      expect(statusDe(r, 'd')).toBe('NAO_CONTEMPLADA')
+    })
+
+    it('OUTRAS_COTAS: a vaga livre vai antes pro próximo optante de outra cota', () => {
+      const r = alocarVagasCategoria(candidatos, duasCotas({ destinoVagaDeCotaVazia: 'OUTRAS_COTAS' }), null, 0)
+      expect(statusDe(r, 'c')).toBe('CONTEMPLADA')
+      expect(statusDe(r, 'd')).toBe('CONTEMPLADA')
+      expect(statusDe(r, 'b')).toBe('NAO_CONTEMPLADA')
+    })
+
+    it('OUTRAS_COTAS: sem optante nas outras cotas, a vaga volta pra ampla concorrência', () => {
+      const semOptantes = [candidato('a', 90), candidato('b', 85), candidato('c', 70)]
+      const r = alocarVagasCategoria(semOptantes, duasCotas({ destinoVagaDeCotaVazia: 'OUTRAS_COTAS' }), null, 0)
+      expect(statusDe(r, 'a')).toBe('CONTEMPLADA')
+      expect(statusDe(r, 'b')).toBe('CONTEMPLADA')
+      expect(statusDe(r, 'c')).toBe('CONTEMPLADA')
+    })
+
+    it('OUTRAS_COTAS: optante abaixo da nota mínima não recebe a vaga', () => {
+      const r = alocarVagasCategoria(candidatos, duasCotas({ destinoVagaDeCotaVazia: 'OUTRAS_COTAS' }), 60, 0)
+      expect(statusDe(r, 'd')).toBe('NAO_CONTEMPLADA')
+      expect(statusDe(r, 'b')).toBe('CONTEMPLADA')
+    })
+  })
+
   it('zero optantes de cota em categoria só com cota (sem ampla): tudo remanejado', () => {
     const candidatos = [candidato('a', 90), candidato('b', 80)]
     const r = alocarVagasCategoria(

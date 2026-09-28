@@ -25,6 +25,8 @@ export interface ResultadoAlocacao {
  *    por ordem de nota.
  * 3. Vagas de cota não preenchidas (falta de optantes aptos) voltam pro pool de
  *    ampla concorrência, preenchidas pelos próximos melhor colocados não alocados.
+ *    Quando a categoria define `destinoVagaDeCotaVazia: 'OUTRAS_COTAS'`, essas vagas
+ *    são oferecidas antes aos optantes das demais cotas ainda não alocados.
  * 4. Suplentes: próximos colocados não alocados, até `maxSuplentes` (null = sem teto).
  *
  * Categoria sem vagas discretas configuradas (`vagasAmplaConcorrencia === null`
@@ -80,17 +82,30 @@ export function alocarVagasCategoria(
   }
 
   // 3. Remanejamento — vagas de cota não preenchidas voltam pra ampla concorrência
+  // (ou, conforme o edital, passam antes pelos optantes das outras cotas)
+  const chavesDeCota = new Set(config.cotas.map((cota) => cota.key))
+  const optaPorAlgumaCota = (c: CandidatoAlocacao): boolean => c.cotasOptIn.some((key) => chavesDeCota.has(key))
+
+  const remanejar = (vagas: number, podeReceber: (c: CandidatoAlocacao) => boolean): number => {
+    for (const c of candidatos) {
+      if (vagas <= 0) break
+      if (alocados.has(c.inscricaoId)) continue
+      if (!elegivel(c)) continue
+      if (!podeReceber(c)) continue
+      alocados.add(c.inscricaoId)
+      vagas--
+    }
+    return vagas
+  }
+
   let vagasRemanejadas = 0
   for (const restante of vagasRestantesPorCota.values()) {
     vagasRemanejadas += Math.max(0, restante)
   }
-  for (const c of candidatos) {
-    if (vagasRemanejadas <= 0) break
-    if (alocados.has(c.inscricaoId)) continue
-    if (!elegivel(c)) continue
-    alocados.add(c.inscricaoId)
-    vagasRemanejadas--
+  if (config.destinoVagaDeCotaVazia === 'OUTRAS_COTAS') {
+    vagasRemanejadas = remanejar(vagasRemanejadas, optaPorAlgumaCota)
   }
+  remanejar(vagasRemanejadas, () => true)
 
   // 4. Suplentes — próximos colocados não alocados, até o teto (null = sem teto)
   const suplentes = new Set<string>()

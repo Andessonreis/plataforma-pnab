@@ -59,6 +59,7 @@ const categoriaConfigSchema = z.object({
   })).default([]),
   valorPorProjeto: z.number().min(0).nullable(),
   valorTotalCategoria: z.number().min(0),
+  destinoVagaDeCotaVazia: z.enum(['AMPLA', 'OUTRAS_COTAS']).optional(),
 })
 
 const editalSchema = z.object({
