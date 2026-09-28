@@ -1,5 +1,6 @@
 import type { Prisma } from '@prisma/client'
 import type { Emissao } from '@/lib/documentos/emissao'
+import type { VersaoProjeto } from '@/lib/documentos/titulos'
 import type { ProjetoCompletoData } from '@/lib/pdf/projeto-completo'
 import type { CampoFormulario } from '@/types/campo-formulario'
 
@@ -27,16 +28,23 @@ function parseCampos(raw: unknown): Record<string, unknown> {
   return {}
 }
 
+/** Quem foi contemplado tem o projeto apresentado como "Projeto contemplado". */
+export function versaoDoProjeto(status: string): VersaoProjeto {
+  return status === 'CONTEMPLADA' ? 'contemplado' : 'completo'
+}
+
 interface OpcoesProjeto {
   /** Situação impressa no PDF; quem chama decide o que o leitor pode ver. */
   status: string
   emissao: Emissao | null
+  /** Padrão: a cópia do próprio proponente. */
+  versao?: VersaoProjeto
 }
 
 /** Monta os dados do PDF do projeto completo a partir da inscrição carregada. */
 export function montarDadosProjeto(
   inscricao: InscricaoDoProjeto,
-  { status, emissao }: OpcoesProjeto,
+  { status, emissao, versao }: OpcoesProjeto,
 ): ProjetoCompletoData {
   const camposFormulario = Array.isArray(inscricao.edital.camposFormulario)
     ? (inscricao.edital.camposFormulario as unknown as CampoFormulario[])
@@ -44,6 +52,7 @@ export function montarDadosProjeto(
 
   return {
     emissao,
+    versao,
     numero: inscricao.numero,
     status,
     proponente: {

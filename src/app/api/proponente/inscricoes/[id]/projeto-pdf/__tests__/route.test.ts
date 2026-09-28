@@ -3,14 +3,19 @@ import { GET } from '../route'
 import { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { generateProjetoCompleto } from '@/lib/pdf/projeto-completo'
 
 // Mock do gerador de PDF
 vi.mock('@/lib/pdf/projeto-completo', () => ({
   generateProjetoCompleto: vi.fn().mockResolvedValue(Buffer.from('fake-pdf')),
 }))
+vi.mock('@/lib/pdf/dossie-completo', () => ({
+  mesclarAnexosNoPdf: vi.fn().mockResolvedValue(Buffer.from('fake-dossie')),
+}))
 
 const mockAuth = vi.mocked(auth)
 const mockPrisma = vi.mocked(prisma)
+const mockGerar = vi.mocked(generateProjetoCompleto)
 
 function makeRequest() {
   return new NextRequest('http://localhost:3000/api/proponente/inscricoes/insc-1/projeto-pdf', {
@@ -102,6 +107,30 @@ describe('GET /api/proponente/inscricoes/[id]/projeto-pdf', () => {
     expect(res.headers.get('Content-Disposition')).toContain('projeto-INS-001.pdf')
     expect(res.headers.get('X-Request-Id')).toBeTruthy()
     expect(res.headers.get('Cache-Control')).toBe('no-store')
+  })
+
+  it('inscrição contemplada sai como projeto contemplado; as demais, como projeto completo', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'admin-1', role: 'ADMIN' } } as never)
+
+    mockPrisma.inscricao.findUnique.mockResolvedValue({ ...baseInscricao, status: 'CONTEMPLADA' } as never)
+    await GET(makeRequest(), makeParams())
+    mockPrisma.inscricao.findUnique.mockResolvedValue(baseInscricao as never)
+    await GET(makeRequest(), makeParams())
+
+    expect(mockGerar.mock.calls.map(([dados]) => dados.versao)).toEqual(['contemplado', 'completo'])
+  })
+
+  it('dossiê completo de inscrição contemplada leva o nome de projeto contemplado no arquivo', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'admin-1', role: 'ADMIN' } } as never)
+    const req = new NextRequest('http://localhost:3000/api/proponente/inscricoes/insc-1/projeto-pdf?completo=1')
+
+    mockPrisma.inscricao.findUnique.mockResolvedValue({ ...baseInscricao, status: 'CONTEMPLADA' } as never)
+    const contemplada = await GET(req, makeParams())
+    mockPrisma.inscricao.findUnique.mockResolvedValue(baseInscricao as never)
+    const outra = await GET(req, makeParams())
+
+    expect(contemplada.headers.get('Content-Disposition')).toContain('dossie-contemplado-INS-001.pdf')
+    expect(outra.headers.get('Content-Disposition')).toContain('dossie-completo-INS-001.pdf')
   })
 
   it('admin pode baixar PDF de outro proponente → 200', async () => {

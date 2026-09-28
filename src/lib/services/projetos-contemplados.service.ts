@@ -41,7 +41,7 @@ async function* projetosDoLote(
 ): AsyncGenerator<ProjetoDoLote> {
   for (const inscricao of inscricoes) {
     const pdf = await generateProjetoCompleto(
-      montarDadosProjeto(inscricao, { status: inscricao.status, emissao }),
+      montarDadosProjeto(inscricao, { status: inscricao.status, emissao, versao: 'contemplado' }),
     )
     yield { pdf, anexos: inscricao.anexos }
   }

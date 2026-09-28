@@ -6,7 +6,10 @@ import { generateProjetoCompleto } from '@/lib/pdf/projeto-completo'
 import { mesclarAnexosNoPdf } from '@/lib/pdf/dossie-completo'
 import { statusVisivelParaProponente } from '@/lib/edital/resultado-habilitacao'
 import { registrarEmissao } from '@/lib/documentos/emissao'
-import { INCLUDE_PROJETO_COMPLETO, montarDadosProjeto } from '@/lib/inscricoes/projeto-completo-dados'
+import { NOME_DO_PROJETO } from '@/lib/documentos/titulos'
+import {
+  INCLUDE_PROJETO_COMPLETO, montarDadosProjeto, versaoDoProjeto,
+} from '@/lib/inscricoes/projeto-completo-dados'
 
 export const runtime = 'nodejs'
 
@@ -64,9 +67,11 @@ export async function GET(
       ? inscricao.status
       : statusVisivelParaProponente(inscricao.status, inscricao.resultadoLiberadoEm !== null)
 
+    const versao = versaoDoProjeto(statusPdf)
+
     const emissao = await registrarEmissao({
       tipo: 'PROJETO_COMPLETO',
-      titulo: `Projeto completo — inscrição ${inscricao.numero}`,
+      titulo: `${NOME_DO_PROJETO[versao].rotulo} — inscrição ${inscricao.numero}`,
       editalId: inscricao.editalId,
       emitidoPorId: session.user.id,
       conteudo: { numero: inscricao.numero, categoria: inscricao.categoria },
@@ -74,7 +79,7 @@ export async function GET(
     })
 
     let pdfBuffer = await generateProjetoCompleto(
-      montarDadosProjeto(inscricao, { status: statusPdf, emissao }),
+      montarDadosProjeto(inscricao, { status: statusPdf, emissao, versao }),
     )
 
     // Modo "dossiê completo" — mescla os arquivos de anexo reais no PDF.
@@ -84,7 +89,7 @@ export async function GET(
     let filename = `projeto-${inscricao.numero}.pdf`
     if (completo && isAdmin) {
       pdfBuffer = await mesclarAnexosNoPdf(pdfBuffer, inscricao.anexos)
-      filename = `dossie-completo-${inscricao.numero}.pdf`
+      filename = `dossie-${versao}-${inscricao.numero}.pdf`
     }
 
     console.log({

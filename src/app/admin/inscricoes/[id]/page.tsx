@@ -25,6 +25,7 @@ import { PontuacaoFinal } from './pontuacao-final'
 import { DadosInscricaoView } from '@/components/inscricao/dados-inscricao-view'
 import { HistoricoProcesso } from '@/components/inscricao/historico-processo'
 import { calcularAnexosPendentes } from '@/lib/inscricoes/anexos-pendentes'
+import { versaoDoProjeto } from '@/lib/inscricoes/projeto-completo-dados'
 import { viewNotaTotal, viewNotaTotalSemBonusCriterio } from '@/lib/services/avaliacao-view'
 import { viewNotaFinal } from '@/lib/services/resultado-view'
 import { podeAvaliar, podeHabilitar, mensagemForaDaFase } from '@/lib/edital/fase'
@@ -477,7 +478,9 @@ export default async function AdminInscricaoDetailPage({ params, searchParams }:
                     download
                   >
                     <IconClipboard className="h-4 w-4" />
-                    Dossiê Completo (com anexos)
+                    {versaoDoProjeto(inscricao.status) === 'contemplado'
+                      ? 'Dossiê do Projeto Contemplado (com anexos)'
+                      : 'Dossiê Completo (com anexos)'}
                   </a>
                 )}
               </div>

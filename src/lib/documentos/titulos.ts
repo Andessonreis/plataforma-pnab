@@ -28,12 +28,23 @@ export const NOME_DO_TIPO = {
   RELATORIO_RECURSOS: 'Relatório de recursos interpostos',
   DOSSIE_INSCRICAO: 'Dossiê da inscrição',
   PROJETO_COMPLETO: 'Projeto completo',
-  PROJETOS_CONTEMPLADOS: 'Projetos completos dos contemplados',
+  PROJETOS_CONTEMPLADOS: 'Projetos contemplados',
   COMPROVANTE_INSCRICAO: 'Comprovante de inscrição',
   DECLARACAO: 'Declaração',
 } as const
 
 export type TipoDocumento = keyof typeof NOME_DO_TIPO
+
+/**
+ * Como o PDF do projeto se apresenta: a cópia do proponente ("completo") ou a do
+ * projeto de quem foi contemplado, que a Secretaria arquiva e circula.
+ */
+export const NOME_DO_PROJETO = {
+  completo: { rotulo: 'Projeto completo', titulo: 'Projeto Completo' },
+  contemplado: { rotulo: 'Projeto contemplado', titulo: 'Projeto Contemplado' },
+} as const
+
+export type VersaoProjeto = keyof typeof NOME_DO_PROJETO
 
 export interface EditalTitulo {
   titulo: string

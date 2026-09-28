@@ -141,12 +141,25 @@ describe('emitirProjetosContemplados', () => {
     ])
   })
 
+  it('gera cada projeto do lote na versão de projeto contemplado', async () => {
+    mockJuntar.mockImplementation(async (projetos: AsyncIterable<ProjetoDoLote>) => {
+      const recebidos: ProjetoDoLote[] = []
+      for await (const projeto of projetos) recebidos.push(projeto)
+      return Buffer.from('lote')
+    })
+
+    await emitirProjetosContemplados(entrada)
+
+    expect(mockGerar).toHaveBeenCalledTimes(3)
+    expect(mockGerar.mock.calls.map(([dados]) => dados.versao)).toEqual(['contemplado', 'contemplado', 'contemplado'])
+  })
+
   it('registra a emissão com só números de protocolo no conteúdo e os totais na verificação', async () => {
     await emitirProjetosContemplados(entrada)
 
     expect(mockRegistrar).toHaveBeenCalledWith(expect.objectContaining({
       tipo: 'PROJETOS_CONTEMPLADOS',
-      titulo: 'Projetos completos dos contemplados — Festival de Arte e Cultura (2026)',
+      titulo: 'Projetos contemplados — Festival de Arte e Cultura (2026)',
       editalId: 'ed-1',
       emitidoPorId: 'admin-1',
       conteudo: expect.objectContaining({ projetos: ['PNAB-2026-0001', 'PNAB-2026-0003', 'PNAB-2026-0010'] }),

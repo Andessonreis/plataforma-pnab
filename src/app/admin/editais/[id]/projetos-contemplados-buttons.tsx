@@ -22,14 +22,14 @@ export function ProjetosContempladosButtons({ editalId }: ProjetosContempladosBu
         url={url}
         nomePadrao="projetos-contemplados.pdf"
         rotulo="Projetos dos contemplados"
-        ariaLabel="Baixar em PDF o projeto completo de todos os contemplados, sem anexos"
+        ariaLabel="Baixar em PDF os projetos contemplados, sem anexos"
         onErro={setErro}
       />
       <BotaoBaixarPdf
         url={`${url}?anexos=1`}
         nomePadrao="dossies-contemplados.pdf"
         rotulo="Projetos dos contemplados (com anexos)"
-        ariaLabel="Baixar em PDF o projeto completo de todos os contemplados, com fotos e anexos"
+        ariaLabel="Baixar em PDF os projetos contemplados, com fotos e anexos"
         onErro={setErro}
       />
       {erro && (
