@@ -60,10 +60,11 @@ function desenharTituloDoGrupo(doc: PDFKit.PDFDocument, grupo: GrupoDeVaga): voi
   doc.y += 4
   const y = doc.y
   const vagas = `${grupo.vagas} ${grupo.vagas === 1 ? 'vaga' : 'vagas'}`
+    + (grupo.recebidas > 0 ? ` + ${grupo.recebidas} remanejada${grupo.recebidas === 1 ? '' : 's'}` : '')
   doc.font('Helvetica-Bold').fontSize(9.5).fillColor(COLORS.text)
-    .text(grupo.titulo, MARGINS.left, y, { width: LARGURA_UTIL - 90, lineBreak: false })
+    .text(grupo.titulo, MARGINS.left, y, { width: LARGURA_UTIL - 150, lineBreak: false })
   doc.font('Helvetica-Bold').fontSize(8).fillColor(COLORS.brandDark)
-    .text(vagas, MARGINS.left + LARGURA_UTIL - 90, y + 1, { width: 90, align: 'right', lineBreak: false })
+    .text(vagas, MARGINS.left + LARGURA_UTIL - 150, y + 1, { width: 150, align: 'right', lineBreak: false })
   fio(doc, y + 14, { espessura: 0.8, cor: COLORS.brand })
   doc.y = y + 18
 }
@@ -111,7 +112,10 @@ export function desenharCategoriaPorVaga(
   const colunas = colunasDaTabela(data)
   for (const grupo of separada.contempladas) {
     desenharTituloDoGrupo(doc, grupo)
-    desenharTabela(doc, colunas, grupo.linhas.map((l) => linhaDaTabela(l, data)), { fios: true, vazio: 'Vaga não preenchida.' })
+    // Vaga que foi para outra modalidade não tem ocupante aqui: a observação diz para onde foi.
+    if (grupo.linhas.length > 0 || !grupo.observacao) {
+      desenharTabela(doc, colunas, grupo.linhas.map((l) => linhaDaTabela(l, data)), { fios: true, vazio: 'Vaga não preenchida.' })
+    }
     if (grupo.observacao) desenharObservacao(doc, grupo.observacao)
   }
 

@@ -30,15 +30,17 @@ describe('separarPorVaga', () => {
   it('optante com nota de ampla entra pela ampla e a cota fica para o próximo optante', () => {
     const [ampla, negras, indigenas] = separarPorVaga(categoria('OUTRAS_COTAS'))!.contempladas
     expect(ampla.linhas.map((l) => l.numero)).toEqual(['A', 'B', 'C'])
-    expect(negras.linhas.map((l) => l.numero)).toEqual(['E'])
+    expect(negras.linhas.map((l) => l.numero)).toEqual(['E', 'F'])
+    expect(negras.recebidas).toBe(1)
     expect(negras.observacao).toBeNull()
-    expect(indigenas.linhas.map((l) => l.numero)).toEqual(['F'])
+    expect(indigenas.linhas).toEqual([])
     expect(indigenas.observacao).toContain('à cota Pessoas Negras')
   })
 
   it('sem destino para outras cotas, a vaga vazia vai à ampla e a observação diz isso', () => {
-    const [, , indigenas] = separarPorVaga(categoria())!.contempladas
-    expect(indigenas.linhas.map((l) => l.numero)).toEqual(['D'])
+    const [ampla, , indigenas] = separarPorVaga(categoria())!.contempladas
+    expect(ampla.linhas.map((l) => l.numero)).toEqual(['A', 'B', 'C', 'D'])
+    expect(indigenas.linhas).toEqual([])
     expect(indigenas.observacao).toContain('à ampla concorrência')
   })
 

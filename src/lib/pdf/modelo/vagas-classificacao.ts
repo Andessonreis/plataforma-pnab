@@ -13,6 +13,8 @@ import type { CategoriaClassificacao, LinhaClassificacao } from './tipos'
 export interface GrupoDeVaga {
   titulo: string
   vagas: number
+  /** Vagas de outra cota que vieram para este grupo pelo remanejamento. */
+  recebidas: number
   linhas: LinhaClassificacao[]
   /** Remanejamento ou vaga que ficou vazia; nulo quando a vaga foi preenchida como previsto. */
   observacao: string | null
@@ -70,22 +72,24 @@ export function separarPorVaga(categoria: CategoriaClassificacao): Classificacao
   if (contempladas.some((l) => !l.vaga)) return null
 
   const ocupantes = (vaga: string) => contempladas.filter((l) => l.vaga === vaga)
-  const ampla = ocupantes(VAGA_AMPLA)
+
+  // Quem ocupa vaga remanejada aparece no grupo da modalidade em que se inscreveu (a outra cota ou a ampla); o
+  // grupo que cedeu a vaga fica só com a observação.
+  const grupoDaLinha = (l: LinhaClassificacao): string => {
+    if (l.vaga === VAGA_AMPLA || l.cotasOptIn?.includes(l.vaga!)) return l.vaga!
+    return cotas.find((c) => l.cotasOptIn?.includes(c.key))?.key ?? VAGA_AMPLA
+  }
+  const grupo = (chave: string, titulo: string, vagas: number, observacao: string | null): GrupoDeVaga => {
+    const linhas = contempladas.filter((l) => grupoDaLinha(l) === chave)
+    return { titulo, vagas, recebidas: linhas.filter((l) => l.vaga !== chave).length, linhas, observacao }
+  }
 
   return {
     contempladas: [
-      {
-        titulo: 'Ampla concorrência',
-        vagas: categoria.vagasAmplaConcorrencia,
-        linhas: ampla,
-        observacao: null,
-      },
-      ...cotas.map((cota) => ({
-        titulo: `Cota — ${nomeDaCota(cota.label)}`,
-        vagas: cota.vagas,
-        linhas: ocupantes(cota.key),
-        observacao: observacaoDaCota(cota, ocupantes(cota.key), cotas),
-      })),
+      grupo(VAGA_AMPLA, 'Ampla concorrência', categoria.vagasAmplaConcorrencia, null),
+      ...cotas.map((cota) => grupo(
+        cota.key, `Cota — ${nomeDaCota(cota.label)}`, cota.vagas, observacaoDaCota(cota, ocupantes(cota.key), cotas),
+      )),
     ],
     suplentes: categoria.linhas.filter((l) => l.status === 'SUPLENTE'),
     demais: categoria.linhas.filter((l) => l.status === 'NAO_CONTEMPLADA' || l.status === 'NAO_SE_APLICA'),
