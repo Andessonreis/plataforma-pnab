@@ -20,6 +20,10 @@ export interface LinhaClassificada {
   notaBonus: number
   notaFinal: number
   cotista: boolean
+  /** Chaves das cotas a que a inscrição concorre. */
+  cotasOptIn: string[]
+  /** Vaga ocupada pela contemplada (ver `ResultadoAlocacao.vaga`). */
+  vaga: string | null
   /** Itens de bonificação validados pela comissão; vazio quando o bônus não é exibido. */
   bonusItens: string[]
   status: StatusAlocacao
@@ -111,6 +115,8 @@ export async function montarClassificacao(
           notaBonus: bonus,
           notaFinal: r.notaFinal,
           cotista: (r.cotasOptIn ?? []).length > 0,
+          cotasOptIn: r.cotasOptIn ?? [],
+          vaga: alocacao[i].vaga,
           bonusItens: incluirBonus ? r.bonusItens ?? [] : [],
           status: alocacao[i].status,
           finalizadas: r.totalAvaliacoes,

@@ -9,10 +9,18 @@ export interface CandidatoAlocacao {
   cotasOptIn: string[]
 }
 
+/** Vaga de ampla concorrência; as de cota usam a chave da cota. */
+export const VAGA_AMPLA = 'AMPLA'
+
 export interface ResultadoAlocacao {
   inscricaoId: string
   status: StatusAlocacao
   posicaoCategoria: number
+  /**
+   * Vaga que a contemplada ocupou: `VAGA_AMPLA` ou a chave da cota dona da vaga — também quando a vaga foi
+   * remanejada e quem a ocupa não optou por aquela cota. Nula fora das contempladas e sem vagas discretas.
+   */
+  vaga: string | null
 }
 
 /**
@@ -53,32 +61,34 @@ export function alocarVagasCategoria(
       inscricaoId: c.inscricaoId,
       status: elegivel(c) ? 'CONTEMPLADA' : 'NAO_CONTEMPLADA',
       posicaoCategoria: i + 1,
+      vaga: null,
     }))
   }
 
-  const alocados = new Set<string>()
+  // Inscrição → vaga ocupada (ver `ResultadoAlocacao.vaga`).
+  const alocados = new Map<string, string>()
 
   // 1. Ampla concorrência
   const vagasAmpla = config.vagasAmplaConcorrencia ?? Infinity
   for (const c of candidatos) {
     if (alocados.size >= vagasAmpla) break
     if (!elegivel(c)) continue
-    alocados.add(c.inscricaoId)
+    alocados.set(c.inscricaoId, VAGA_AMPLA)
   }
 
   // 2. Cotas — por ordem de nota, entre optantes ainda não alocados
-  const vagasRestantesPorCota = new Map(config.cotas.map((cota) => [cota.key, cota.vagas]))
+  const vagasSobrando: string[] = []
   for (const cota of config.cotas) {
-    let vagas = vagasRestantesPorCota.get(cota.key) ?? 0
+    let vagas = cota.vagas
     for (const c of candidatos) {
       if (vagas <= 0) break
       if (alocados.has(c.inscricaoId)) continue
       if (!elegivel(c)) continue
       if (!c.cotasOptIn.includes(cota.key)) continue
-      alocados.add(c.inscricaoId)
+      alocados.set(c.inscricaoId, cota.key)
       vagas--
     }
-    vagasRestantesPorCota.set(cota.key, vagas)
+    for (; vagas > 0; vagas--) vagasSobrando.push(cota.key)
   }
 
   // 3. Remanejamento — vagas de cota não preenchidas voltam pra ampla concorrência
@@ -86,22 +96,19 @@ export function alocarVagasCategoria(
   const chavesDeCota = new Set(config.cotas.map((cota) => cota.key))
   const optaPorAlgumaCota = (c: CandidatoAlocacao): boolean => c.cotasOptIn.some((key) => chavesDeCota.has(key))
 
-  const remanejar = (vagas: number, podeReceber: (c: CandidatoAlocacao) => boolean): number => {
+  const remanejar = (vagas: string[], podeReceber: (c: CandidatoAlocacao) => boolean): string[] => {
+    const restantes = [...vagas]
     for (const c of candidatos) {
-      if (vagas <= 0) break
+      if (restantes.length === 0) break
       if (alocados.has(c.inscricaoId)) continue
       if (!elegivel(c)) continue
       if (!podeReceber(c)) continue
-      alocados.add(c.inscricaoId)
-      vagas--
+      alocados.set(c.inscricaoId, restantes.shift()!)
     }
-    return vagas
+    return restantes
   }
 
-  let vagasRemanejadas = 0
-  for (const restante of vagasRestantesPorCota.values()) {
-    vagasRemanejadas += Math.max(0, restante)
-  }
+  let vagasRemanejadas = vagasSobrando
   if (config.destinoVagaDeCotaVazia === 'OUTRAS_COTAS') {
     vagasRemanejadas = remanejar(vagasRemanejadas, optaPorAlgumaCota)
   }
@@ -120,6 +127,6 @@ export function alocarVagasCategoria(
     let status: StatusAlocacao = 'NAO_CONTEMPLADA'
     if (alocados.has(c.inscricaoId)) status = 'CONTEMPLADA'
     else if (suplentes.has(c.inscricaoId)) status = 'SUPLENTE'
-    return { inscricaoId: c.inscricaoId, status, posicaoCategoria: i + 1 }
+    return { inscricaoId: c.inscricaoId, status, posicaoCategoria: i + 1, vaga: alocados.get(c.inscricaoId) ?? null }
   })
 }

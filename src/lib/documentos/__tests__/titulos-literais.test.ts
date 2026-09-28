@@ -65,6 +65,7 @@ const PADROES = [
   /Agentes Culturais Cadastrados/,
   /Classificação —/,
   /Classificação por Categoria/,
+  /Resultado Preliminar — Relação de Contemplados/,
   /Relatório Final de Resultado/,
   /Relatório final —/,
   /Relatório final do edital/,

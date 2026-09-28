@@ -30,7 +30,7 @@ const CASOS = [
   },
   {
     consolidadas: 4, status: 'RESULTADO_PRELIMINAR', situacao: 'CONSOLIDADA',
-    arquivo: 'classificacao', titulo: 'Classificação por Categoria', rotulo: 'Resultado consolidado',
+    arquivo: 'classificacao', titulo: 'Resultado Preliminar — Relação de Contemplados', rotulo: 'Resultado consolidado',
   },
   {
     consolidadas: 4, status: 'RESULTADO_FINAL', situacao: 'FINAL',

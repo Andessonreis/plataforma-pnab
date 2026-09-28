@@ -17,24 +17,29 @@ export const AVISO_PREVIA =
   'Documento de trabalho — não publicar. A conferência da bonificação e o lançamento de notas podem '
   + 'estar em andamento, portanto esta classificação pode mudar. Nenhum resultado foi consolidado no sistema.'
 
-/** Aviso que fecha o documento e situação impressa no protocolo, por estado da classificação. */
-export const TEXTOS_POR_SITUACAO: Record<SituacaoClassificacao, { rodape: string; situacao: string }> = {
+const FECHO_DA_BONIFICACAO = ' e a bonificação prevista no edital'
+
+/**
+ * Aviso que fecha o documento e situação impressa no protocolo, por estado da classificação. O aviso só cita a
+ * bonificação quando a lista a mostra: edital sem bonificação não pode sair dizendo que ela foi aplicada.
+ */
+export const TEXTOS_POR_SITUACAO: Record<SituacaoClassificacao, { rodape: (comBonus: boolean) => string; situacao: string }> = {
   PREVIA: {
-    rodape:
+    rodape: () =>
       'Prévia de conferência gerada pela plataforma Portal PNAB Irecê. Não constitui resultado '
       + 'e não deve ser publicada nem compartilhada fora da Secretaria.',
     situacao: 'Prévia — não publicável',
   },
   CONSOLIDADA: {
-    rodape:
+    rodape: (comBonus) =>
       'Classificação consolidada no sistema da plataforma Portal PNAB Irecê, conforme as notas '
-      + 'lançadas pela comissão avaliadora e a bonificação prevista no edital.',
+      + `lançadas pela comissão avaliadora${comBonus ? FECHO_DA_BONIFICACAO : ''}.`,
     situacao: 'Resultado consolidado',
   },
   FINAL: {
-    rodape:
+    rodape: (comBonus) =>
       'Resultado final consolidado no sistema da plataforma Portal PNAB Irecê, após o julgamento dos '
-      + 'recursos, conforme as notas lançadas pela comissão avaliadora e a bonificação prevista no edital.',
+      + `recursos, conforme as notas lançadas pela comissão avaliadora${comBonus ? FECHO_DA_BONIFICACAO : ''}.`,
     situacao: 'Resultado final após recursos',
   },
 }

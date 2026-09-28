@@ -88,7 +88,7 @@ export const ROTULO_DO_CROMO: Record<TipoTitulavel, string> = {
 
 const TITULO_CLASSIFICACAO: Record<SituacaoClassificacao, string> = {
   PREVIA: 'Classificação — Prévia de Trabalho',
-  CONSOLIDADA: 'Classificação por Categoria',
+  CONSOLIDADA: 'Resultado Preliminar — Relação de Contemplados',
   FINAL: 'Resultado Final da Classificação',
 }
 

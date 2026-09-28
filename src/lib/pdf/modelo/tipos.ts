@@ -62,6 +62,10 @@ export interface LinhaClassificacao {
   notaBonus: number
   notaFinal: number
   cotista: boolean
+  /** Chaves das cotas a que concorre; sem elas a lista não sabe separar as vagas. */
+  cotasOptIn?: string[]
+  /** Vaga ocupada pela contemplada: `AMPLA` ou a chave da cota dona da vaga. */
+  vaga?: string | null
   /** `NAO_SE_APLICA`: inscrição fora das categorias do edital — aparece na lista sem posição nem nota. */
   status: 'CONTEMPLADA' | 'SUPLENTE' | 'NAO_CONTEMPLADA' | 'NAO_SE_APLICA'
   semAvaliacao: boolean
@@ -72,7 +76,7 @@ export interface LinhaClassificacao {
 export interface CategoriaClassificacao {
   nome: string
   vagasAmplaConcorrencia: number | null
-  cotas: { label: string; vagas: number }[]
+  cotas: { key?: string; label: string; vagas: number }[]
   valorPorProjeto: number | null
   linhas: LinhaClassificacao[]
 }

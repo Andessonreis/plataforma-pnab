@@ -46,8 +46,15 @@ export function desenharCabecalhoCompacto(doc: PDFKit.PDFDocument, titulo: strin
     .font('Helvetica').fontSize(8).fillColor(COLORS.textLight)
     .text(`  —  ${NOME_ORGAO}`, { align: 'left' })
 
-  doc.font('Helvetica-Bold').fontSize(15).fillColor(COLORS.text)
-    .text(titulo, MARGINS.left, topo + 14, { width: LARGURA_UTIL, align: 'center' })
+  // Centrado entre as margens, o título longo passava por baixo da logo: reduz o corpo até caber no vão livre.
+  const vaoLivre = LARGURA_UTIL - LARGURA_CIDADES * 2
+  let corpo = 15
+  doc.font('Helvetica-Bold')
+  while (corpo > 11 && doc.fontSize(corpo).widthOfString(titulo) > vaoLivre) corpo -= 0.5
+  doc.fontSize(corpo).fillColor(COLORS.text)
+    .text(titulo, MARGINS.left + LARGURA_CIDADES, topo + 14 + (15 - corpo) / 2, {
+      width: vaoLivre, align: 'center', height: 20, ellipsis: true,
+    })
 
   const cidades = carregarMarca(MARCAS.cidades)
   if (cidades) {

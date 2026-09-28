@@ -114,7 +114,7 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
       categorias: categorias.map((c) => ({
         nome: c.nome,
         vagasAmplaConcorrencia: c.vagasAmplaConcorrencia,
-        cotas: c.cotas.map((cota) => ({ label: cota.label, vagas: cota.vagas })),
+        cotas: c.cotas.map((cota) => ({ key: cota.key, label: cota.label, vagas: cota.vagas })),
         valorPorProjeto: c.valorPorProjeto,
         linhas: c.linhas.map((l) => {
           // A lista oficial não classifica quem o resultado preliminar publicou fora da classificação.
@@ -127,6 +127,8 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
             notaBonus: l.notaBonus,
             notaFinal: l.notaFinal,
             cotista: l.cotista,
+            cotasOptIn: l.cotasOptIn,
+            vaga: fora ? null : l.vaga,
             bonusItens: l.bonusItens,
             status: fora ? 'NAO_SE_APLICA' : l.status,
             semAvaliacao: fora || l.semAvaliacao,

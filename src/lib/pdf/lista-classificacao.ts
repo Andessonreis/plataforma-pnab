@@ -100,7 +100,7 @@ export async function generateListaClassificacao(data: ListaClassificacaoData): 
   const totalPropostas = data.categorias.reduce((soma, categoria) => soma + categoria.linhas.length, 0)
 
   checkPageBreak(doc, 60)
-  addLegalNotice(doc, rodape)
+  addLegalNotice(doc, rodape(data.mostraBonus))
 
   return finalizarDocumento(doc, [
     { rotulo: 'Documento', valor: titulo },
