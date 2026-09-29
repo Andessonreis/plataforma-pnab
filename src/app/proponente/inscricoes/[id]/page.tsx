@@ -11,7 +11,7 @@ import type { EtapaCustomizada } from '@/types/etapa-customizada'
 import type { InscricaoStatus } from '@prisma/client'
 import { SubmissionSuccessBanner } from './submission-success-banner'
 import { InscricaoHeader } from './inscricao-header'
-import { StatusTimeline } from './status-timeline'
+import { StatusTimeline, STATUS_TIMELINE, timelineIndex } from './status-timeline'
 import { statusVisivelParaProponente } from '@/lib/edital/resultado-habilitacao'
 import { InformacoesGeraisCard } from './informacoes-gerais-card'
 import { AnexosCard } from './anexos-card'
@@ -19,6 +19,7 @@ import { MotivoInabilitacaoCard } from './motivo-inabilitacao-card'
 import { AvaliacoesCard } from './avaliacoes-card'
 import { RecursosCard } from './recursos-card'
 import { InterporRecursoSection } from './interpor-recurso-section'
+import { situacaoRecurso } from '@/lib/edital/recurso-proponente'
 import { DocumentosCard } from './documentos-card'
 import { AcoesCard } from './acoes-card'
 
@@ -30,26 +31,6 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params
   return { title: `Inscrição ${id} — Portal PNAB Irecê` }
-}
-
-// Ordem esperada da timeline de status — status terminais (CONTEMPLADA, etc.)
-// são mapeados à parte em `statusIndexMap` porque não aparecem aqui.
-const STATUS_TIMELINE: InscricaoStatus[] = [
-  'RASCUNHO',
-  'ENVIADA',
-  'HABILITADA',
-  'EM_AVALIACAO',
-  'RESULTADO_PRELIMINAR',
-  'RESULTADO_FINAL',
-]
-
-/** Posição da inscrição na timeline visual, cobrindo status terminais que não estão na régua. */
-function timelineIndex(status: InscricaoStatus): number {
-  const terminaisPosAvaliacao: InscricaoStatus[] = ['CONTEMPLADA', 'NAO_CONTEMPLADA', 'SUPLENTE']
-  if (terminaisPosAvaliacao.includes(status)) return STATUS_TIMELINE.length
-  if (status === 'INABILITADA') return 1 // passou por RASCUNHO e ENVIADA, não por HABILITADA
-  if (status === 'RECURSO_ABERTO') return STATUS_TIMELINE.indexOf('RESULTADO_PRELIMINAR')
-  return STATUS_TIMELINE.indexOf(status)
 }
 
 /** Prisma `Json` pode voltar como string em vez de objeto — parseia com segurança. */
@@ -127,6 +108,15 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
     || inscricao.edital.resultadoFinalPublicadoEm !== null
   const retificacaoAtual = retificacaoVigente(inscricao.edital.retificacoes)
   const mostrarSucesso = enviada === 'true' && status === 'ENVIADA'
+  const recurso = situacaoRecurso(status, inscricao.edital.cronograma, inscricao.recursos.map((r) => r.fase))
+  const recursoSection = recurso && (
+    <InterporRecursoSection
+      situacao={recurso}
+      inscricaoId={inscricao.id}
+      numero={inscricao.numero}
+      proponenteNome={inscricao.proponente.nome}
+    />
+  )
 
   return (
     <section>
@@ -150,6 +140,14 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
       {retificacaoAtual && <AvisoRetificacao retificacao={retificacaoAtual} />}
 
       <StatusTimeline steps={STATUS_TIMELINE} currentIndex={timelineIndex(status)} currentStatus={status} />
+
+      {/* Prazo aberto: o formulário vem antes de tudo. Na coluna lateral ele
+          ficava abaixo dos pareceres e, no celular, no fim da página. */}
+      {recurso?.aberto && (
+        <Card id="interpor-recurso" padding="lg" className="mb-6 border-t-2 border-t-accent-500">
+          {recursoSection}
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Corpo principal — flui como um único documento (mesma linguagem
@@ -190,14 +188,7 @@ export default async function InscricaoDetailPage({ params, searchParams }: Prop
             resultadoFinalLiberado={inscricao.edital.resultadoFinalPublicadoEm !== null}
           />
           <RecursosCard recursos={inscricao.recursos} inscricaoId={inscricao.id} editalStatus={inscricao.edital.status} />
-          <InterporRecursoSection
-            status={status}
-            cronograma={inscricao.edital.cronograma}
-            inscricaoId={inscricao.id}
-            numero={inscricao.numero}
-            proponenteNome={inscricao.proponente.nome}
-            fasesJaRecorridas={inscricao.recursos.map((r) => r.fase)}
-          />
+          {recurso && !recurso.aberto && recursoSection}
           <DocumentosCard inscricaoId={inscricao.id} status={status} />
           <AcoesCard inscricaoId={inscricao.id} status={status} editalStatus={inscricao.edital.status} />
         </Card>

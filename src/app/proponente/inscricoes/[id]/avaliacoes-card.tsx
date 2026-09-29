@@ -1,6 +1,7 @@
 import { formatDate } from '@/lib/utils/format'
 import { formatNotaTotal, viewNotaTotal } from '@/lib/services/avaliacao-view'
 import { lerRevisaoRecurso } from '@/lib/avaliacao/revisao-recurso'
+import { parecerParaProponente } from '@/lib/avaliacao/parecer-proponente'
 import { SeloRevisadaNoRecurso, ValorRevisado } from '@/components/avaliacao/valor-revisado'
 import type { AvaliacaoItem } from './types'
 
@@ -47,7 +48,7 @@ export function AvaliacoesCard({ avaliacoes, resultadoVisivel, resultadoFinalLib
               <SeloRevisadaNoRecurso className="mt-1" />
             )}
             {avaliacao.parecer && (
-              <p className="text-xs text-slate-500 mt-1 break-words">{avaliacao.parecer}</p>
+              <p className="text-xs text-slate-500 mt-1 break-words">{parecerParaProponente(avaliacao.parecer)}</p>
             )}
             <p className="text-xs text-slate-500 mt-1">{formatDate(avaliacao.createdAt)}</p>
           </li>

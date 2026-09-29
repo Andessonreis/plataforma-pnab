@@ -5,6 +5,7 @@ import { Button, IconCheck } from '@/components/ui'
 import { useRecursoEvidencias, EvidenciaUploadError } from './use-recurso-evidencias'
 import { RecursoContextSummary } from './recurso-context-summary'
 import { RecursoEvidenciasField } from './recurso-evidencias-field'
+import { ROTULO_FASE_RECURSO } from '@/lib/edital/recurso-proponente'
 
 interface Contexto {
   entidadeNome: string
@@ -17,12 +18,6 @@ interface RecursoFormProps {
   fase: string
   contexto: Contexto
   onSuccess?: () => void
-}
-
-const FASE_LABELS: Record<string, string> = {
-  HABILITACAO: 'Habilitação',
-  RESULTADO_PRELIMINAR: 'Resultado Preliminar',
-  RESULTADO_FINAL: 'Resultado Final',
 }
 
 export function RecursoForm({ inscricaoId, fase, contexto, onSuccess }: RecursoFormProps) {
@@ -77,7 +72,7 @@ export function RecursoForm({ inscricaoId, fase, contexto, onSuccess }: RecursoF
       <div>
         <h3 className="text-base font-semibold text-slate-900 mb-1">Interpor Recurso</h3>
         <p className="text-sm text-slate-500">
-          Fase: <strong className="text-slate-900 font-medium">{FASE_LABELS[fase] ?? fase}</strong>
+          Fase: <strong className="text-slate-900 font-medium">{ROTULO_FASE_RECURSO[fase] ?? fase}</strong>
         </p>
       </div>
 

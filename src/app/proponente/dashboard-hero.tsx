@@ -1,6 +1,6 @@
 import { Button, IconArrowRight, IconCalendar, IconClock } from '@/components/ui'
 import { FundoFotos } from '@/components/ui/fundo-fotos'
-import { formatDate } from '@/lib/utils/format'
+import { formatDate, formatDateTime } from '@/lib/utils/format'
 import { DashboardGreeting } from './dashboard-greeting'
 import { HeroPrazosPanel } from './hero-prazos-panel'
 import { TourButton } from './tour-button'
@@ -19,6 +19,12 @@ interface DraftHighlight {
   editalTitulo: string
 }
 
+interface RecursoPendente {
+  inscricaoId: string
+  editalTitulo: string
+  fim: Date
+}
+
 interface DashboardHeroProps {
   firstName: string
   today: string
@@ -27,6 +33,7 @@ interface DashboardHeroProps {
   draftCount: number
   nearestDraft: DraftHighlight | null
   editaisAbertosCount: number
+  recursoPendente: RecursoPendente | null
 }
 
 interface CtaAlvo {
@@ -35,9 +42,12 @@ interface CtaAlvo {
 }
 
 // Resolve qual é a única coisa que mais importa agora pro proponente: prazo
-// mais próximo > rascunho pendente > editais abertos genéricos. O CTA
-// primário do painel segue a mesma prioridade.
-function resolverCta({ nearestDeadline, draftCount, nearestDraft }: DashboardHeroProps): CtaAlvo {
+// de recurso aberto > prazo mais próximo > rascunho pendente > editais abertos
+// genéricos. O CTA primário do painel segue a mesma prioridade.
+function resolverCta({ recursoPendente, nearestDeadline, draftCount, nearestDraft }: DashboardHeroProps): CtaAlvo {
+  if (recursoPendente) {
+    return { label: 'Enviar recurso', href: `/proponente/inscricoes/${recursoPendente.inscricaoId}#interpor-recurso` }
+  }
   if (nearestDeadline) return { label: 'Ver edital', href: `/editais/${nearestDeadline.slug}` }
   if (draftCount > 0 && nearestDraft) {
     return { label: 'Continuar rascunho', href: `/proponente/inscricoes/${nearestDraft.id}/editar` }
@@ -45,7 +55,22 @@ function resolverCta({ nearestDeadline, draftCount, nearestDraft }: DashboardHer
   return { label: 'Ver editais', href: '/editais' }
 }
 
-function UrgentHighlight({ nearestDeadline, draftCount, nearestDraft, editaisAbertosCount }: DashboardHeroProps) {
+function UrgentHighlight({ recursoPendente, nearestDeadline, draftCount, nearestDraft, editaisAbertosCount }: DashboardHeroProps) {
+  if (recursoPendente) {
+    return (
+      <div className="mt-6 flex items-start gap-3">
+        <IconClock className="mt-0.5 h-5 w-5 shrink-0 text-accent-400" />
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-papel-50">Prazo de recurso aberto</p>
+          <p className="text-sm text-papel-300/70 truncate">{recursoPendente.editalTitulo}</p>
+          <p className="mt-1 text-sm font-semibold text-accent-400">
+            Envie até {formatDateTime(recursoPendente.fim)}
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   if (nearestDeadline) {
     return (
       <div className="mt-6 flex items-start gap-3">

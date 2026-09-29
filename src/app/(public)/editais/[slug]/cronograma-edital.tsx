@@ -6,6 +6,9 @@ import { hrefResultadoRecursos, hrefResultados } from '@/lib/edital/rotas-result
 import type { CronogramaDisplayItem } from '@/types/cronograma'
 import { LinhaDatasMarco } from './linha-datas-marco'
 import { RecursoEditalButton } from './recurso-edital-button'
+import { RECURSO_FASE_TO_JANELA } from '@/lib/edital/recurso-janela'
+
+const RECURSO_NA_INSCRICAO = new Set<string>(Object.values(RECURSO_FASE_TO_JANELA))
 
 interface CronogramaEditalProps {
   itens: CronogramaDisplayItem[]
@@ -161,6 +164,18 @@ export function CronogramaEdital({ itens, slug, agora, escuro = false }: Cronogr
 
                     {emCurso && item.acao === 'RECURSO_EDITAL_JANELA' && (
                       <RecursoEditalButton slug={slug} />
+                    )}
+
+                    {/* O recurso contra habilitação ou seleção é protocolado na
+                        área do proponente, dentro da inscrição. */}
+                    {emCurso && item.acao && RECURSO_NA_INSCRICAO.has(item.acao) && (
+                      <Link
+                        href="/proponente/inscricoes"
+                        className={`inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] ${corAcao} underline-offset-4 hover:underline`}
+                      >
+                        Enviar recurso
+                        <IconArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                      </Link>
                     )}
                   </div>
                 )}

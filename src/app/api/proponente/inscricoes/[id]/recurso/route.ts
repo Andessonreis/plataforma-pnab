@@ -7,6 +7,7 @@ import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
 import { janelaParaAcao, mensagemJanela } from '@/lib/utils/cronograma-janela'
 import { respostaRecursoLiberada } from '@/lib/edital/fase'
 import { acaoJanelaDaFase } from '@/lib/edital/recurso-janela'
+import { faseDoRecurso } from '@/lib/edital/recurso-proponente'
 
 export const runtime = 'nodejs'
 
@@ -15,14 +16,6 @@ const recursoSchema = z.object({
   texto: z.string().min(20, 'O texto do recurso deve ter no mínimo 20 caracteres').max(5000, 'O texto do recurso deve ter no máximo 5000 caracteres'),
   urlAnexos: z.array(z.string().url()).max(5).default([]),
 })
-
-// Mapeamento: status da inscrição → fases que permitem recurso
-const STATUS_ALLOWS_RECURSO: Record<string, string[]> = {
-  INABILITADA: ['HABILITACAO'],
-  RESULTADO_PRELIMINAR: ['RESULTADO_PRELIMINAR'],
-  NAO_CONTEMPLADA: ['RESULTADO_FINAL'],
-  SUPLENTE: ['RESULTADO_FINAL'],
-}
 
 // GET — Listar recursos da inscrição
 export async function GET(
@@ -138,8 +131,7 @@ export async function POST(
     }
 
     // Verifica se o status atual permite recurso na fase solicitada
-    const allowedFases = STATUS_ALLOWS_RECURSO[inscricao.status] ?? []
-    if (!allowedFases.includes(data.fase)) {
+    if (faseDoRecurso(inscricao.status) !== data.fase) {
       return NextResponse.json(
         { error: 'BAD_REQUEST', message: 'Não é possível interpor recurso nesta fase.', requestId },
         { status: 400 },

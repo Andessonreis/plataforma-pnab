@@ -8,6 +8,26 @@ interface Props {
   currentStatus: InscricaoStatus
 }
 
+// Ordem esperada da timeline de status — status terminais (CONTEMPLADA, etc.)
+// são mapeados à parte em `statusIndexMap` porque não aparecem aqui.
+export const STATUS_TIMELINE: InscricaoStatus[] = [
+  'RASCUNHO',
+  'ENVIADA',
+  'HABILITADA',
+  'EM_AVALIACAO',
+  'RESULTADO_PRELIMINAR',
+  'RESULTADO_FINAL',
+]
+
+/** Posição da inscrição na timeline visual, cobrindo status terminais que não estão na régua. */
+export function timelineIndex(status: InscricaoStatus): number {
+  const terminaisPosAvaliacao: InscricaoStatus[] = ['CONTEMPLADA', 'NAO_CONTEMPLADA', 'SUPLENTE']
+  if (terminaisPosAvaliacao.includes(status)) return STATUS_TIMELINE.length
+  if (status === 'INABILITADA') return 1 // passou por RASCUNHO e ENVIADA, não por HABILITADA
+  if (status === 'RECURSO_ABERTO') return STATUS_TIMELINE.indexOf('RESULTADO_PRELIMINAR')
+  return STATUS_TIMELINE.indexOf(status)
+}
+
 /**
  * Painel de andamento — elemento dominante da página: etapa atual em
  * destaque (brand) seguida da régua de progresso. Em telas estreitas mostra

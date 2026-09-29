@@ -2,12 +2,7 @@ import { Badge } from '@/components/ui'
 import { RecursoAnexos } from '@/components/recurso/recurso-anexos'
 import { formatDate } from '@/lib/utils/format'
 import type { RecursoItem } from './types'
-
-const FASE_LABEL: Record<string, string> = {
-  HABILITACAO: 'Habilitação',
-  RESULTADO_PRELIMINAR: 'Resultado Preliminar',
-  RESULTADO_FINAL: 'Resultado Final',
-}
+import { ROTULO_FASE_RECURSO } from '@/lib/edital/recurso-proponente'
 
 function decisaoBadgeVariant(decisao: string) {
   return decisao === 'DEFERIDO' ? 'success' : 'error'
@@ -23,7 +18,7 @@ export function RecursoItemCard({ recurso, inscricaoId, liberada }: Props) {
   return (
     <div>
       <div className="flex items-center justify-between gap-2 mb-1">
-        <span className="text-xs font-medium text-slate-500">{FASE_LABEL[recurso.fase] ?? recurso.fase}</span>
+        <span className="text-xs font-medium text-slate-500">{ROTULO_FASE_RECURSO[recurso.fase] ?? recurso.fase}</span>
         {recurso.decisao && liberada ? (
           <Badge variant={decisaoBadgeVariant(recurso.decisao)}>{recurso.decisao}</Badge>
         ) : (

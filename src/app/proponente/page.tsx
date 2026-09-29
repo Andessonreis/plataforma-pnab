@@ -9,6 +9,7 @@ import {
   STATUS_POS_HABILITACAO_NAO_DIVULGADO,
 } from '@/lib/edital/resultado-habilitacao'
 import type { InscricaoStatus } from '@prisma/client'
+import { situacaoRecurso } from '@/lib/edital/recurso-proponente'
 import { DashboardHero } from './dashboard-hero'
 import { OpenEditaisBanner } from './open-editais-banner'
 import { DashboardStats } from './dashboard-stats'
@@ -36,6 +37,7 @@ export default async function ProponenteDashboardPage() {
     openEditais,
     recentNotifications,
     unreadNotificationsCount,
+    inscricoesComRecurso,
   ] = await Promise.all([
     prisma.inscricao.count({ where: { proponenteId: userId } }),
     // "Pendente" pro proponente é o que ele ainda vê como "Em análise" — inclui
@@ -81,6 +83,19 @@ export default async function ProponenteDashboardPage() {
       take: 4,
     }),
     prisma.notification.count({ where: { userId, lidaEm: null } }),
+    prisma.inscricao.findMany({
+      where: {
+        proponenteId: userId,
+        status: { in: ['INABILITADA', 'RESULTADO_PRELIMINAR', 'NAO_CONTEMPLADA', 'SUPLENTE'] },
+        resultadoLiberadoEm: { not: null },
+      },
+      select: {
+        id: true,
+        status: true,
+        edital: { select: { titulo: true, cronograma: true } },
+        recursos: { select: { fase: true } },
+      },
+    }),
   ])
 
   const today = new Date().toLocaleDateString('pt-BR', {
@@ -110,6 +125,14 @@ export default async function ProponenteDashboardPage() {
     .slice(0, 3)
 
   const nearestDeadline = upcomingDeadlines[0] ?? null
+  // Inscrição com prazo de recurso aberto e ainda sem recurso: é a pendência
+  // mais urgente do painel, porque o prazo é curto e só o proponente age.
+  const recursoAberto = inscricoesComRecurso
+    .map((i) => ({ i, situacao: situacaoRecurso(i.status, i.edital.cronograma, i.recursos.map((r) => r.fase)) }))
+    .find(({ situacao }) => situacao?.aberto && situacao.janela?.fim)
+  const recursoPendente = recursoAberto
+    ? { inscricaoId: recursoAberto.i.id, editalTitulo: recursoAberto.i.edital.titulo, fim: recursoAberto.situacao!.janela!.fim! }
+    : null
   const nearestDraft = draftInscricoes[0]
     ? { id: draftInscricoes[0].id, editalTitulo: draftInscricoes[0].edital.titulo }
     : null
@@ -124,6 +147,7 @@ export default async function ProponenteDashboardPage() {
         draftCount={draftCount}
         nearestDraft={nearestDraft}
         editaisAbertosCount={editaisAbertosCount}
+        recursoPendente={recursoPendente}
       />
 
       <OpenEditaisBanner
