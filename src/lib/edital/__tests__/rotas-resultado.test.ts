@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { hrefResultadoRecursos, hrefResultados } from '../rotas-resultado'
+import { hrefHabilitacao, hrefResultadoRecursos, hrefResultados } from '../rotas-resultado'
 
 describe('hrefResultados', () => {
   it('cada fase tem endereço próprio', () => {
@@ -13,3 +13,10 @@ describe('hrefResultadoRecursos', () => {
     expect(hrefResultadoRecursos('festival')).toBe('/editais/festival/resultados-recurso-avaliacao')
   })
 })
+
+describe('hrefHabilitacao', () => {
+  it('aponta para a página própria de habilitação', () => {
+    expect(hrefHabilitacao('festival')).toBe('/editais/festival/habilitacao')
+  })
+})
+

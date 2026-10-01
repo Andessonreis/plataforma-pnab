@@ -12,3 +12,9 @@ export function hrefResultados(slug: string, definitivo: boolean): string {
 export function hrefResultadoRecursos(slug: string): string {
   return `/editais/${slug}/resultados-recurso-avaliacao`
 }
+
+/** Página pública da fase de habilitação documental. */
+export function hrefHabilitacao(slug: string): string {
+  return `/editais/${slug}/habilitacao`
+}
+

@@ -43,6 +43,14 @@ describe('CronogramaEdital — links de resultado', () => {
     expect(saida).toContain('Diário Oficial')
     expect(saida).toContain('https://gateway/Ed 2940.pdf')
   })
+
+  it('o marco de publicação dos habilitados leva à página /habilitacao', () => {
+    const saida = html([
+      marco({ acao: 'PUBLICACAO_HABILITADOS', label: 'Publicação dos Projetos Habilitados' }),
+      PROXIMO,
+    ])
+    expect(saida).toContain('href="/editais/festival/habilitacao"')
+  })
 })
 
 describe('CronogramaEdital — link do resultado dos recursos', () => {

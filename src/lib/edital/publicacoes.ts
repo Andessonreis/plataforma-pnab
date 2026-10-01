@@ -4,6 +4,7 @@ import { cumulativeStatuses } from '@/lib/status-maps'
 import { parseBrazilDateTime } from '@/lib/utils/format'
 import type { AcaoPublicacao, CronogramaItem } from '@/types/cronograma'
 import { isAcaoPublicacao, isAcaoResultado } from '@/types/cronograma'
+import { isEditalFestival, CATEGORIAS_HABILITACAO_FESTIVAL } from './dados-habilitados-festival'
 
 // Status que cada tipo de publicação enumera.
 //
@@ -83,7 +84,7 @@ export interface PublicacaoResult {
 function findMarco(
   cronograma: unknown,
   acao: AcaoPublicacao,
-): { dataHora: string } | null {
+): { dataHora: string; diarioOficialUrl?: string } | null {
   const raw = (typeof cronograma === 'string'
     ? safeParseJson(cronograma)
     : cronograma) as CronogramaItem[] | null
@@ -101,7 +102,12 @@ function findMarco(
       && typeof item.dataHora === 'string'
       && item.dataHora.trim() !== ''
     ) {
-      return { dataHora: item.dataHora }
+      return {
+        dataHora: item.dataHora,
+        diarioOficialUrl: 'diarioOficialUrl' in item && typeof item.diarioOficialUrl === 'string'
+          ? item.diarioOficialUrl.trim()
+          : undefined,
+      }
     }
   }
 
@@ -139,6 +145,31 @@ export async function getPublicacao(
   const marco = findMarco(edital.cronograma, acao)
   if (!marco) {
     return { exists: false, visivel: false, dataPublicacao: null, label, items: [] }
+  }
+
+  // Festival de Arte e Cultura: fase com inversão de etapas. Os habilitados
+  // são os 36 convocados da fase de seleção (34 habilitadas, 2 inabilitadas).
+  // A visibilidade oficial é liberada quando o Diário Oficial for informado.
+  if (isEditalFestival(slug) && (acao === 'PUBLICACAO_HABILITADOS' || acao === 'PUBLICACAO_HABILITADOS_POS_RECURSOS')) {
+    const visivel = Boolean(marco.diarioOficialUrl)
+    const items: PublicacaoItem[] = CATEGORIAS_HABILITACAO_FESTIVAL.flatMap((cat) =>
+      cat.propostas.map((p) => ({
+        numero: p.numero,
+        nome: p.nome,
+        cpfCnpj: p.cpfCnpj,
+        categoria: cat.nome,
+        status: (p.habilitado ? 'HABILITADA' : 'INABILITADA') as InscricaoStatus,
+        posicao: p.posicao,
+        notaFinal: p.notaFinal,
+      }))
+    )
+    return {
+      exists: true,
+      visivel,
+      dataPublicacao: marco.dataHora,
+      label,
+      items: visivel ? items : [],
+    }
   }
 
   const dataMarco = parseBrazilDateTime(marco.dataHora)

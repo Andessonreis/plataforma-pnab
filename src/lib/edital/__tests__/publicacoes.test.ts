@@ -121,6 +121,56 @@ describe('getPublicacao', () => {
     expect(call?.where?.status?.in).not.toContain('ENVIADA')
   })
 
+  it('PUBLICACAO_HABILITADOS para o Festival retorna os 36 convocados quando Diário Oficial está presente', async () => {
+    vi.mocked(prisma.edital.findUnique).mockResolvedValueOnce({
+      ...EDITAL_BASE,
+      slug: 'festival-arte-cultura-irece-centenario-2026',
+      cronograma: [
+        {
+          tipo: 'custom',
+          acao: 'PUBLICACAO_HABILITADOS',
+          label: 'Publicação dos Projetos Habilitados',
+          dataHora: '2026-10-01T00:00:00',
+          diarioOficialUrl: 'https://io.irece.ba.gov.br/diario/123.pdf',
+        },
+      ],
+    } as never)
+
+    const res = await getPublicacao('festival-arte-cultura-irece-centenario-2026', 'PUBLICACAO_HABILITADOS')
+
+    expect(res?.exists).toBe(true)
+    expect(res?.visivel).toBe(true)
+    expect(res?.items).toHaveLength(36)
+
+    const inabilitados = res?.items.filter((i) => i.status === 'INABILITADA') ?? []
+    expect(inabilitados).toHaveLength(2)
+    expect(inabilitados.map((i) => i.numero).sort()).toEqual(['PNAB-2026-0024', 'PNAB-2026-0110'])
+
+    const habilitados = res?.items.filter((i) => i.status === 'HABILITADA') ?? []
+    expect(habilitados).toHaveLength(34)
+  })
+
+  it('PUBLICACAO_HABILITADOS para o Festival fica visivel=false quando Diário Oficial ainda não foi informado', async () => {
+    vi.mocked(prisma.edital.findUnique).mockResolvedValueOnce({
+      ...EDITAL_BASE,
+      slug: 'festival-arte-cultura-irece-centenario-2026',
+      cronograma: [
+        {
+          tipo: 'custom',
+          acao: 'PUBLICACAO_HABILITADOS',
+          label: 'Publicação dos Projetos Habilitados',
+          dataHora: '2026-10-01T00:00:00',
+        },
+      ],
+    } as never)
+
+    const res = await getPublicacao('festival-arte-cultura-irece-centenario-2026', 'PUBLICACAO_HABILITADOS')
+
+    expect(res?.exists).toBe(true)
+    expect(res?.visivel).toBe(false)
+    expect(res?.items).toHaveLength(0)
+  })
+
   it('cronograma como string JSON é parseado', async () => {
     vi.mocked(prisma.edital.findUnique).mockResolvedValueOnce({
       ...EDITAL_BASE,

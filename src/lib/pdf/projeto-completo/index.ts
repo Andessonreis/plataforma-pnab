@@ -14,6 +14,7 @@ import {
 import { criarDocumentoOficial, finalizarDocumento, garantirEspaco } from '../documento-oficial'
 import { CORES, FONTES, LARGURA_UTIL, X_ESQUERDA, LIMITE_CONTEUDO } from '../documento-oficial/tema'
 import { novaPagina } from '../documento-oficial/pagina'
+import { textoParaPdf } from '../texto-winansi'
 import {
   buildCampoKeys, formatCampoValue, formatTipoProponente,
   resolveCampoDef, resolveCampoLabel, STATUS_LABELS,
@@ -97,7 +98,7 @@ function desenharCampos(doc: PDFKit.PDFDocument, data: ProjetoCompletoData): voi
   for (const chave of chaves) {
     const definicao = resolveCampoDef(chave, data.camposFormulario)
     const rotulo = resolveCampoLabel(chave, data.camposFormulario)
-    const valor = formatCampoValue(data.campos[chave], definicao, chave)
+    const valor = textoParaPdf(formatCampoValue(data.campos[chave], definicao, chave))
 
     if (valor.length > LIMITE_LINHA) {
       desenharCampoLongo(doc, rotulo, valor)

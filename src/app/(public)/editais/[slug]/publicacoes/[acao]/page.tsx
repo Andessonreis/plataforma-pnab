@@ -7,7 +7,7 @@ import { IconArrowLeft, IconDownload, IconClock } from '@/components/ui/icons'
 import { formatDateTime } from '@/lib/utils/format'
 import { maskCpfCnpj, maskName } from '@/lib/utils/mask'
 import { getPublicacao } from '@/lib/edital/publicacoes'
-import { hrefResultados } from '@/lib/edital/rotas-resultado'
+import { hrefHabilitacao, hrefResultados } from '@/lib/edital/rotas-resultado'
 import { isAcaoPublicacao, isAcaoResultado } from '@/types/cronograma'
 import { inscricaoStatusLabel, inscricaoStatusVariant } from '@/lib/status-maps'
 
@@ -37,6 +37,11 @@ export default async function PublicacaoPage({ params }: Props) {
     redirect(hrefResultados(slug, acao === 'PUBLICACAO_RESULTADO_FINAL'))
   }
 
+  // Publicações de habilitação redirecionam para a página dedicada de habilitação
+  if (acao === 'PUBLICACAO_HABILITADOS' || acao === 'PUBLICACAO_HABILITADOS_POS_RECURSOS') {
+    redirect(hrefHabilitacao(slug))
+  }
+
   const edital = await prisma.edital.findUnique({
     where: { slug },
     select: { id: true, titulo: true, ano: true, cronograma: true },
@@ -45,7 +50,9 @@ export default async function PublicacaoPage({ params }: Props) {
 
   let diarioOficialUrl: string | null = null
   if (Array.isArray(edital.cronograma)) {
-    const itemComDiario = (edital.cronograma as any[]).find((it) => it && typeof it === 'object' && it.diarioOficialUrl)
+    const itemComDiario = (edital.cronograma as Array<{ diarioOficialUrl?: string }>).find(
+      (it) => it && typeof it === 'object' && it.diarioOficialUrl,
+    )
     if (itemComDiario?.diarioOficialUrl) {
       diarioOficialUrl = itemComDiario.diarioOficialUrl
     }

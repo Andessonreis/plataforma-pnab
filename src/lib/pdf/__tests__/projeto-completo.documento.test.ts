@@ -143,6 +143,17 @@ describe('generateProjetoCompleto — conteúdo do documento', () => {
     expect(spyDocumento.mock.calls.map(([opcoes]) => opcoes.rotulo)).toEqual(['Projeto completo', 'Projeto contemplado'])
   })
 
+  it('troca a tabulação colada do Word por espaço e tira o que a fonte não desenha', async () => {
+    await generateProjetoCompleto(projeto({
+      campos: { etapa: 'Execução\t', lema: 'Eu \u2764 Irecê', meta: '1.\tRealizar' },
+    }))
+
+    const linhas = linhasImpressas()
+    expect(linhas).toContainEqual({ label: 'Etapa', value: 'Execução' })
+    expect(linhas).toContainEqual({ label: 'Lema', value: 'Eu Irecê' })
+    expect(linhas).toContainEqual({ label: 'Meta', value: '1. Realizar' })
+  })
+
   it('não desenha o quadro de anexos, mesmo com anexos na inscrição', async () => {
     await generateProjetoCompleto(projeto())
 
