@@ -222,6 +222,7 @@ async function main() {
     '/home/andesson-reis/Documents',
     '/home/andesson-reis/Downloads',
     path.resolve('.omc/artifacts'),
+    path.resolve('public/documentos'),
   ]
 
   for (const dir of destinations) {
