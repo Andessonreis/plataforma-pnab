@@ -3,13 +3,14 @@ import type { Emissao } from '@/lib/documentos/emissao'
 import type { VersaoProjeto } from '@/lib/documentos/titulos'
 import type { ProjetoCompletoData } from '@/lib/pdf/projeto-completo'
 import type { CampoFormulario } from '@/types/campo-formulario'
+import { flattenEtapasCustomizadas, isEtapasCustomizadasArray } from '@/types/etapa-customizada'
 
 /** O que a inscrição precisa trazer do banco para virar o PDF do projeto completo. */
 export const INCLUDE_PROJETO_COMPLETO = {
   proponente: {
     select: { id: true, nome: true, cpfCnpj: true, email: true, tipoProponente: true },
   },
-  edital: { select: { titulo: true, ano: true, camposFormulario: true } },
+  edital: { select: { titulo: true, ano: true, camposFormulario: true, etapasCustomizadas: true } },
   anexos: { select: { titulo: true, tipo: true, valido: true, url: true } },
 } satisfies Prisma.InscricaoInclude
 
@@ -46,9 +47,16 @@ export function montarDadosProjeto(
   inscricao: InscricaoDoProjeto,
   { status, emissao, versao }: OpcoesProjeto,
 ): ProjetoCompletoData {
-  const camposFormulario = Array.isArray(inscricao.edital.camposFormulario)
+  const camposBase = Array.isArray(inscricao.edital.camposFormulario)
     ? (inscricao.edital.camposFormulario as unknown as CampoFormulario[])
     : []
+  // Campos das etapas customizadas também têm rótulo e tipo próprios no formulário do edital.
+  const camposFormulario = [
+    ...camposBase,
+    ...(isEtapasCustomizadasArray(inscricao.edital.etapasCustomizadas)
+      ? flattenEtapasCustomizadas(inscricao.edital.etapasCustomizadas)
+      : []),
+  ]
 
   return {
     emissao,

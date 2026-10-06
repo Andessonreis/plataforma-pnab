@@ -41,24 +41,32 @@ export async function gerarPdfHabilitadosFestival(agora: Date = new Date()): Pro
     },
   })
 
+  const totalConvocados = CATEGORIAS_HABILITACAO_FESTIVAL.reduce((acc, c) => acc + c.propostas.length, 0)
+  const totalHabilitados = CATEGORIAS_HABILITACAO_FESTIVAL.reduce((acc, c) => acc + c.propostas.filter((p) => p.habilitado).length, 0)
+  const totalInabilitados = totalConvocados - totalHabilitados
+  const resultadoFaseTexto =
+    totalInabilitados === 1
+      ? `${totalHabilitados} Habilitadas  ·  1 Desclassificada (sem recurso)`
+      : `${totalHabilitados} Habilitadas  ·  ${totalInabilitados} Inabilitadas com pendências`
+
   // Bloco de Identificação
   desenharBlocoInfo(doc, [
     { label: 'Edital', value: editalTitulo },
     { label: 'Ano', value: ano },
     { label: 'Etapa / Fase', value: 'Habilitação Documental Presencial — Convocação dos Contemplados' },
     { label: 'Data de Emissão', value: dataHora(agora) },
-    { label: 'Total Convocado', value: '36 propostas analisadas na fase de habilitação' },
-    { label: 'Resultado da Fase', value: '34 Habilitadas  ·  2 Inabilitadas com pendências' },
+    { label: 'Total Convocado', value: `${totalConvocados} propostas analisadas na fase de habilitação` },
+    { label: 'Resultado da Fase', value: resultadoFaseTexto },
   ])
   desenharDivisor(doc)
 
   const colunas: ColunaTabela[] = [
     { label: 'POS.', width: 25, align: 'center' },
     { label: 'INSCRIÇÃO', width: 73 },
-    { label: 'PROPONENTE', width: 145.28 },
+    { label: 'PROPONENTE', width: 136.28 },
     { label: 'CPF / CNPJ', width: 76, align: 'center' },
-    { label: 'SITUAÇÃO', width: 56, align: 'center' },
-    { label: 'MOTIVO', width: 120 },
+    { label: 'SITUAÇÃO', width: 70, align: 'center' },
+    { label: 'MOTIVO', width: 115 },
   ]
 
   for (const cat of CATEGORIAS_HABILITACAO_FESTIVAL) {
@@ -85,7 +93,7 @@ export async function gerarPdfHabilitadosFestival(agora: Date = new Date()): Pro
           prop.numero,
           prop.nome,
           maskCpfCnpj(prop.cpfCnpj),
-          prop.habilitado ? 'Habilitado' : 'Inabilitado',
+          prop.habilitado ? 'Habilitado' : (prop.situacao ?? 'Inabilitado'),
           prop.habilitado ? '—' : (prop.motivo ?? 'Pendência/Ausência de documentação'),
         ],
         celulas,

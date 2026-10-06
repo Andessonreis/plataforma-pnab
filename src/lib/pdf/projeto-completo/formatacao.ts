@@ -6,6 +6,8 @@
  * vez do JSON bruto que o proponente nunca preencheu como texto.
  */
 import type { CampoFormulario } from '@/types/campo-formulario'
+import { AUXILIO_INSCRICAO_CAMPO, parseAuxilioInscricao } from '@/types/auxilio-inscricao'
+import { DECLARACAO_PARCERIA_CAMPO, parseDeclaracaoParceria } from '@/types/declaracao-parceria'
 
 /** Status legíveis para inscrição. */
 export const STATUS_LABELS: Record<string, string> = {
@@ -33,6 +35,39 @@ export function formatTipoProponente(tipo: string): string {
   return TIPOS_PROPONENTE[tipo] ?? tipo
 }
 
+/** Campos gravados pela própria plataforma (sem definição no formulário do edital). */
+const LABELS_CAMPOS_RESERVADOS: Record<string, string> = {
+  [AUXILIO_INSCRICAO_CAMPO]: 'Inscrição preenchida com auxílio',
+  [DECLARACAO_PARCERIA_CAMPO]: 'Declaração de parceria (Anexo 01)',
+}
+
+/** Junta os rótulos preenchidos em linhas "Rótulo: valor", ignorando o que está vazio. */
+function linhasRotuladas(itens: Array<[string, string]>): string {
+  return itens
+    .map(([rotulo, valor]) => [rotulo, valor.trim()] as const)
+    .filter(([, valor]) => valor !== '')
+    .map(([rotulo, valor]) => `${rotulo}: ${valor}`)
+    .join('\n')
+}
+
+/** Texto legível dos campos reservados; undefined quando a chave não é uma delas. */
+function formatarCampoReservado(key: string, value: unknown): string | undefined {
+  if (key === AUXILIO_INSCRICAO_CAMPO) {
+    const auxilio = parseAuxilioInscricao(value)
+    if (!auxilio.ativo) return 'Não'
+    return linhasRotuladas([['Sim, auxiliado por', auxilio.nomeAuxiliar], ['CPF do auxiliar', auxilio.cpfAuxiliar]])
+  }
+  if (key === DECLARACAO_PARCERIA_CAMPO) {
+    const d = parseDeclaracaoParceria(value)
+    return linhasRotuladas([
+      ['Mestre(a)', d.mestreNome], ['CPF do(a) mestre(a)', d.mestreCpf], ['Telefone do(a) mestre(a)', d.mestreTelefone],
+      ['Parceria', d.parceriaNome], ['CNPJ da parceria', d.parceriaCnpj],
+      ['Endereço da parceria', d.parceriaEndereco], ['Telefone da parceria', d.parceriaTelefone],
+    ])
+  }
+  return undefined
+}
+
 /** Definição completa de um campo, buscada pelo nome no formulário do edital. */
 export function resolveCampoDef(
   key: string,
@@ -45,6 +80,7 @@ export function resolveCampoDef(
 export function resolveCampoLabel(key: string, camposFormulario: CampoFormulario[]): string {
   const def = resolveCampoDef(key, camposFormulario)
   if (def) return def.label
+  if (key in LABELS_CAMPOS_RESERVADOS) return LABELS_CAMPOS_RESERVADOS[key]
   return key
     .replace(/([A-Z])/g, ' $1')
     .replace(/_/g, ' ')
@@ -123,6 +159,9 @@ function formatarItemEstrutura(item: Record<string, unknown>, subcampos: CampoFo
  */
 export function formatCampoValue(value: unknown, campo: CampoFormulario | undefined, key: string): string {
   if (value === null || value === undefined || value === '') return '—'
+
+  const reservado = formatarCampoReservado(key, value)
+  if (reservado !== undefined) return reservado
 
   if (Array.isArray(value)) {
     if (value.length === 0) return '—'

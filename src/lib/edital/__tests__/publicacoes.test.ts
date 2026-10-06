@@ -143,11 +143,11 @@ describe('getPublicacao', () => {
     expect(res?.items).toHaveLength(36)
 
     const inabilitados = res?.items.filter((i) => i.status === 'INABILITADA') ?? []
-    expect(inabilitados).toHaveLength(2)
-    expect(inabilitados.map((i) => i.numero).sort()).toEqual(['PNAB-2026-0024', 'PNAB-2026-0110'])
+    expect(inabilitados).toHaveLength(1)
+    expect(inabilitados.map((i) => i.numero).sort()).toEqual(['PNAB-2026-0110'])
 
     const habilitados = res?.items.filter((i) => i.status === 'HABILITADA') ?? []
-    expect(habilitados).toHaveLength(34)
+    expect(habilitados).toHaveLength(35)
   })
 
   it('PUBLICACAO_HABILITADOS para o Festival fica visivel=false quando Diário Oficial ainda não foi informado', async () => {

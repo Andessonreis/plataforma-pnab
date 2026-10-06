@@ -30,7 +30,11 @@ function apoioDaCapa(dados: HabilitacaoEdital): string {
   if (!dados.disponivel) {
     return 'A relação dos projetos habilitados desta fase aguarda publicação oficial.'
   }
-  return `${dados.totalConvocados} propostas analisadas na fase de habilitação documental · ${dados.totalHabilitados} habilitadas · ${dados.totalInabilitados} inabilitadas com pendências.`
+  const inabilitadasTexto =
+    dados.totalInabilitados === 1
+      ? '1 desclassificada'
+      : `${dados.totalInabilitados} inabilitadas com pendências`
+  return `${dados.totalConvocados} propostas analisadas na fase de habilitação documental · ${dados.totalHabilitados} habilitadas · ${inabilitadasTexto}.`
 }
 
 export async function PaginaHabilitacao({ slug, preview }: PropsPaginaHabilitacao) {

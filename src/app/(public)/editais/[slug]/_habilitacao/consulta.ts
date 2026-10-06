@@ -16,6 +16,7 @@ export interface PropostaHabilitacaoItem {
   modalidade: string
   notaFinal: number
   habilitada: boolean
+  situacao?: string
   motivo?: string
 }
 
@@ -139,6 +140,7 @@ export async function consultarHabilitacao(
           modalidade: prop.modalidade,
           notaFinal: prop.notaFinal,
           habilitada: prop.habilitado,
+          situacao: prop.situacao,
           motivo: prop.motivo,
         }
       })

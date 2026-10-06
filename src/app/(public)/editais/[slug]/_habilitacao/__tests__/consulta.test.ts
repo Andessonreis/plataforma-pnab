@@ -19,7 +19,7 @@ beforeEach(() => {
 describe('consultarHabilitacao — Festival de Arte e Cultura de Irecê', () => {
   const SLUG = 'festival-arte-cultura-irece-centenario-2026'
 
-  it('retorna os 36 convocados, com 34 habilitados e 2 inabilitados', async () => {
+  it('retorna os 36 convocados, com 35 habilitados e 1 desclassificado', async () => {
     vi.mocked(prisma.edital.findUnique).mockResolvedValue({
       id: 'ed-festival',
       titulo: 'Festival de Arte e Cultura de Irecê — Centenário da Cidade',
@@ -40,21 +40,22 @@ describe('consultarHabilitacao — Festival de Arte e Cultura de Irecê', () => 
 
     expect(dados).not.toBeNull()
     expect(dados?.totalConvocados).toBe(36)
-    expect(dados?.totalHabilitados).toBe(34)
-    expect(dados?.totalInabilitados).toBe(2)
+    expect(dados?.totalHabilitados).toBe(35)
+    expect(dados?.totalInabilitados).toBe(1)
     expect(dados?.disponivel).toBe(true)
     expect(dados?.diarioOficialUrl).toBe('https://io.irece.ba.gov.br/diario/123.pdf')
 
-    // Verifica que as duas inabilitadas específicas estão identificadas
+    // Verifica que Alexander está habilitado após recurso e Araúna desclassificada
     const todasPropostas = dados?.categorias.flatMap((c) => c.propostas) ?? []
     const arauna = todasPropostas.find((p) => p.numero === 'PNAB-2026-0110')
     const alexander = todasPropostas.find((p) => p.numero === 'PNAB-2026-0024')
 
     expect(arauna?.habilitada).toBe(false)
-    expect(arauna?.motivo).toContain('Pendência/Ausência de documentação')
+    expect(arauna?.situacao).toBe('Desclassificado')
+    expect(arauna?.motivo).toContain('Desclassificado pela não apresentação de recurso')
 
-    expect(alexander?.habilitada).toBe(false)
-    expect(alexander?.motivo).toContain('Pendência/Ausência de documentação')
+    expect(alexander?.habilitada).toBe(true)
+    expect(alexander?.motivo).toBeUndefined()
   })
 
   it('marca disponivel como false quando o Diário Oficial ainda não foi informado e não está em preview', async () => {

@@ -84,7 +84,7 @@ export function TabelaHabilitacao({ propostas, categoria }: TabelaHabilitacaoPro
                         habilitada ? 'bg-oliva-700 text-papel-50' : 'bg-terracota-700 text-papel-50'
                       }`}
                     >
-                      {habilitada ? 'Habilitado' : 'Inabilitado'}
+                      {habilitada ? 'Habilitado' : (proposta.situacao ?? 'Inabilitado')}
                     </span>
                   </td>
                   <td className="px-4 py-3.5 text-xs">
@@ -128,7 +128,7 @@ export function TabelaHabilitacao({ propostas, categoria }: TabelaHabilitacaoPro
                         habilitada ? 'bg-oliva-700 text-papel-50' : 'bg-terracota-700 text-papel-50'
                       }`}
                     >
-                      {habilitada ? 'Habilitado' : 'Inabilitado'}
+                      {habilitada ? 'Habilitado' : (proposta.situacao ?? 'Inabilitado')}
                     </span>
                   ),
                 },

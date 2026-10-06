@@ -26,26 +26,30 @@ function desenharQuadroInfo(doc: PDFKit.PDFDocument, info: string): void {
   doc.y = y + ALTURA_QUADRO
 }
 
-function desenharObservacao(doc: PDFKit.PDFDocument, texto: string): void {
+function desenharObservacao(doc: PDFKit.PDFDocument, texto: string, rotulo = 'Observação'): void {
   const RECUO = 8
   const largura = LARGURA_UTIL - RECUO * 2
   doc.font('Helvetica-Oblique').fontSize(7.5)
-  const altura = doc.heightOfString(`Observação: ${texto}`, { width: largura }) + 10
+  const altura = doc.heightOfString(`${rotulo}: ${texto}`, { width: largura }) + 10
   garantirEspaco(doc, altura + 4)
   const y = doc.y + 6
   doc.rect(MARGINS.left, y, LARGURA_UTIL, altura).fill(COLORS.background)
-  doc.fillColor(COLORS.text).font('Helvetica-Bold').text('Observação: ', MARGINS.left + RECUO, y + 5, { continued: true, width: largura })
+  doc.fillColor(COLORS.text).font('Helvetica-Bold').text(`${rotulo}: `, MARGINS.left + RECUO, y + 5, { continued: true, width: largura })
     .font('Helvetica-Oblique').text(texto)
   doc.y = y + altura
 }
+
+// Texto redigido pela Secretaria de Cultura e Turismo
+export const TEXTO_ERRATA_0103 =
+  'Registra-se que, foi identificada falha operacional no sistema eletrônico, decorrente do espelhamento automático de dados na inscrição PNAB - 2026 - 0103, que resultou na reprodução indevida do nome da responsável pelo preenchimento da inscrição no campo destinado à identificação da proponente, desse modo segue a lista com a correção.'
 
 // Dados oficiais do banco de dados de produção (VPS) do Edital Premiação para Mestres e Mestras de Irecê
 const PROPOSTAS = [
   {
     posicao: 1,
     numero: 'PNAB-2026-0103',
-    nome: 'Elisangela Santana de Jesus',
-    cpfCnpj: '08121803560',
+    nome: 'Ana Vitória Lucinda de Jesus',
+    cpfCnpj: '25976842534',
     notaFinal: '29.17',
     status: 'CONTEMPLADA' as const,
   },
@@ -124,7 +128,7 @@ const PROPOSTAS = [
 ]
 
 export async function gerarPdfResultadoFinalMestres(agora: Date = new Date()): Promise<Buffer> {
-  const titulo = 'Relação de Contemplados'
+  const titulo = 'Relação Final de Classificados'
   const editalTitulo = 'Premiação para Mestres e Mestras de Irecê'
   const ano = '2026'
 
@@ -142,7 +146,7 @@ export async function gerarPdfResultadoFinalMestres(agora: Date = new Date()): P
   desenharBlocoInfo(doc, [
     { label: 'Edital', value: editalTitulo },
     { label: 'Ano', value: ano },
-    { label: 'Contemplados', value: '5' },
+    { label: 'Classificados', value: '5' },
     { label: 'Suplentes', value: '5' },
   ])
   desenharDivisor(doc)
@@ -181,7 +185,7 @@ export async function gerarPdfResultadoFinalMestres(agora: Date = new Date()): P
         prop.nome,
         maskCpfCnpj(prop.cpfCnpj),
         prop.notaFinal,
-        contemplada ? 'Contemplado' : 'Suplente',
+        contemplada ? 'Classificado' : 'Suplente',
       ],
       celulas,
       destaque: contemplada ? COLORS.destaque : undefined,
@@ -190,6 +194,9 @@ export async function gerarPdfResultadoFinalMestres(agora: Date = new Date()): P
 
   desenharTabela(doc, colunas, linhas, { fios: true })
   doc.y += 6
+
+  // Errata da Secretaria sobre a titularidade da inscrição 0103, logo abaixo da listagem
+  desenharObservacao(doc, TEXTO_ERRATA_0103, 'Errata')
 
   // Observação sobre a cota remanejada conforme o edital (itens 6.7 e 6.7.1)
   desenharObservacao(
@@ -202,7 +209,7 @@ export async function gerarPdfResultadoFinalMestres(agora: Date = new Date()): P
   doc.y += 10
   desenharAvisoLegal(
     doc,
-    'Relação de contemplados e suplentes consolidada no sistema da plataforma Portal PNAB Irecê, após o julgamento dos recursos, conforme as notas lançadas pela comissão avaliadora.',
+    'Relação final de classificados e suplentes consolidada no sistema da plataforma Portal PNAB Irecê, após o julgamento dos recursos, conforme as notas lançadas pela comissão avaliadora.',
   )
 
   return finalizarDocumento(doc)

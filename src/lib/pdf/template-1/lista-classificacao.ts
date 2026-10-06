@@ -5,7 +5,7 @@ import type { CategoriaClassificacao, ListaClassificacaoData } from '@/lib/pdf/m
 import { separarPorVaga } from '@/lib/pdf/modelo/vagas-classificacao'
 import { desenharAvisoDestaque, desenharAvisoLegal, desenharBlocoInfo, desenharDivisor } from './blocos'
 import { desenharCabecalhoCompacto } from './cabecalho'
-import { desenharCategoriaPorVaga } from './classificacao-por-vaga'
+import { desenharCategoriaPorVaga, desenharObservacao } from './classificacao-por-vaga'
 import { abrirDocumento, finalizarDocumento, garantirEspaco } from './pagina'
 import { desenharTabela } from './tabela'
 import { colunasDaTabela, descreverCriterios, linhaDaTabela, tetoDoBonus } from './tabela-classificacao'
@@ -93,6 +93,7 @@ export async function gerarListaClassificacaoV1(data: ListaClassificacaoData): P
     doc.y += 10
   }
 
+  if (data.errata) desenharObservacao(doc, data.errata, 'Errata')
   desenharAvisoLegal(doc, TEXTOS_POR_SITUACAO[data.situacao].rodape(data.mostraBonus))
   return finalizarDocumento(doc)
 }

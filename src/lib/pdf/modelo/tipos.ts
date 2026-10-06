@@ -90,6 +90,10 @@ export interface ListaClassificacaoData {
   /** Itens de bonificação do edital; a versão 1 os abre em colunas B1, B2, B3... */
   bonus?: ItensBonusConfig | null
   geradoEm: Date
+  /** Errata publicada logo abaixo da listagem, antes do aviso de rodapé. */
+  errata?: string
+  /** Suprime o bloco "Como ler este resultado" nas categorias desenhadas por vaga. */
+  ocultarComoLer?: boolean
   /** Obrigatória de propósito: quem gera a classificação tem que decidir se há
    *  registro de emissão, nem que seja para passar null. */
   emissao: Emissao | null

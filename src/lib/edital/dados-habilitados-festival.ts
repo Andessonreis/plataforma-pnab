@@ -6,6 +6,7 @@ export interface PropostaHabilitacaoFestival {
   modalidade: string
   notaFinal: number
   habilitado: boolean
+  situacao?: string
   motivo?: string
 }
 
@@ -50,7 +51,7 @@ export const CATEGORIAS_HABILITACAO_FESTIVAL: CategoriaHabilitacaoFestival[] = [
     vagasInfo: '4 vagas · R$ 10.000,00 por projeto',
     propostas: [
       { posicao: 1, numero: 'PNAB-2026-0023', nome: 'Marcelo Barreto de Lima', cpfCnpj: '03014631582', modalidade: 'Ampla concorrência', notaFinal: 101.50, habilitado: true },
-      { posicao: 2, numero: 'PNAB-2026-0024', nome: 'Alexander Gondim Barretto', cpfCnpj: '05849484507', modalidade: 'Ampla concorrência', notaFinal: 87.50, habilitado: false, motivo: 'Pendência/Ausência de documentação' },
+      { posicao: 2, numero: 'PNAB-2026-0024', nome: 'Alexander Gondim Barretto', cpfCnpj: '05849484507', modalidade: 'Ampla concorrência', notaFinal: 87.50, habilitado: true },
       { posicao: 3, numero: 'PNAB-2026-0085', nome: 'Kaique Amador dos Santos', cpfCnpj: '51349037869', modalidade: 'Cota — Pessoas Negras', notaFinal: 70.00, habilitado: true },
       { posicao: 4, numero: 'PNAB-2026-0140', nome: 'Ayslan Kevin Costa Brandão', cpfCnpj: '12612741569', modalidade: 'Cota — Pessoas Negras', notaFinal: 69.83, habilitado: true },
     ],
@@ -77,7 +78,7 @@ export const CATEGORIAS_HABILITACAO_FESTIVAL: CategoriaHabilitacaoFestival[] = [
     vagasInfo: '4 vagas · R$ 5.000,00 por projeto',
     propostas: [
       { posicao: 1, numero: 'PNAB-2026-0051', nome: 'Associação Quilombola Comunitária de Convivência com o semiárido', cpfCnpj: '10733827000168', modalidade: 'Cota — Pessoas Negras', notaFinal: 99.00, habilitado: true },
-      { posicao: 2, numero: 'PNAB-2026-0110', nome: 'Grupo de Capoeira Araúna', cpfCnpj: '10763778583', modalidade: 'Cota — Pessoas Negras', notaFinal: 87.83, habilitado: false, motivo: 'Pendência/Ausência de documentação' },
+      { posicao: 2, numero: 'PNAB-2026-0110', nome: 'Grupo de Capoeira Araúna', cpfCnpj: '10763778583', modalidade: 'Cota — Pessoas Negras', notaFinal: 87.83, habilitado: false, situacao: 'Desclassificado', motivo: 'Desclassificado pela não apresentação de recurso' },
       { posicao: 3, numero: 'PNAB-2026-0106', nome: 'Raiane Kedma de Sousa Silva', cpfCnpj: '06923278511', modalidade: 'Ampla concorrência', notaFinal: 80.50, habilitado: true },
       { posicao: 6, numero: 'PNAB-2026-0013', nome: 'Francinaudo Sousa da Silva', cpfCnpj: '92503632572', modalidade: 'Cota — Pessoas Negras', notaFinal: 54.17, habilitado: true },
     ],

@@ -68,14 +68,14 @@ function desenharTituloDoGrupo(doc: PDFKit.PDFDocument, grupo: GrupoDeVaga): voi
   doc.y = y + 18
 }
 
-function desenharObservacao(doc: PDFKit.PDFDocument, texto: string): void {
+export function desenharObservacao(doc: PDFKit.PDFDocument, texto: string, rotulo = 'Observação'): void {
   const largura = LARGURA_UTIL - RECUO * 2
   doc.font('Helvetica-Oblique').fontSize(7.5)
-  const altura = doc.heightOfString(`Observação: ${texto}`, { width: largura }) + 10
+  const altura = doc.heightOfString(`${rotulo}: ${texto}`, { width: largura }) + 10
   garantirEspaco(doc, altura + 4)
   const y = doc.y + 3
   doc.rect(MARGINS.left, y, LARGURA_UTIL, altura).fill(COLORS.background)
-  doc.fillColor(COLORS.text).font('Helvetica-Bold').text('Observação: ', MARGINS.left + RECUO, y + 5, { continued: true, width: largura })
+  doc.fillColor(COLORS.text).font('Helvetica-Bold').text(`${rotulo}: `, MARGINS.left + RECUO, y + 5, { continued: true, width: largura })
     .font('Helvetica-Oblique').text(texto)
   doc.y = y + altura
 }
@@ -136,6 +136,7 @@ export function desenharCategoriaPorVaga(
     desenharTabela(doc, colunas, separada.demais.map((l) => linhaDaTabela(l, data)), { fios: true })
   }
 
+  if (data.ocultarComoLer) return
   doc.y += 4
   desenharComoLer(doc)
 }
