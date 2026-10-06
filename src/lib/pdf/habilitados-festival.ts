@@ -27,7 +27,7 @@ function desenharQuadroInfo(doc: PDFKit.PDFDocument, info: string): void {
 }
 
 export async function gerarPdfHabilitadosFestival(agora: Date = new Date()): Promise<Buffer> {
-  const titulo = 'Relação de Habilitados Final após entrega de documentação'
+  const titulo = 'Relação final de habilitados'
   const editalTitulo = 'Festival de Arte e Cultura de Irecê — Centenário da Cidade'
   const ano = '2026'
 
@@ -84,7 +84,7 @@ export async function gerarPdfHabilitadosFestival(agora: Date = new Date()): Pro
         { negrito: true },
         undefined,
         undefined,
-        prop.habilitado ? { cor: COLORS.apagado } : undefined,
+        prop.habilitado && !prop.motivo ? { cor: COLORS.apagado } : undefined,
       ]
 
       return {
@@ -94,7 +94,7 @@ export async function gerarPdfHabilitadosFestival(agora: Date = new Date()): Pro
           prop.nome,
           maskCpfCnpj(prop.cpfCnpj),
           prop.habilitado ? 'Habilitado' : (prop.situacao ?? 'Inabilitado'),
-          prop.habilitado ? '—' : (prop.motivo ?? 'Pendência/Ausência de documentação'),
+          prop.motivo ?? (prop.habilitado ? '—' : 'Pendência/Ausência de documentação'),
         ],
         celulas,
       }

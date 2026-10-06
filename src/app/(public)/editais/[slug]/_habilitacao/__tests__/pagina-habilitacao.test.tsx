@@ -58,7 +58,7 @@ describe('PaginaHabilitacao', () => {
       await PaginaHabilitacao({ slug: 'festival-arte-cultura-irece-centenario-2026' }),
     )
 
-    expect(html).toContain('Relação de Habilitados Final após entrega de documentação')
+    expect(html).toContain('Relação final de habilitados')
     expect(html).toContain('36 propostas analisadas')
     expect(html).toContain('34 habilitadas')
     expect(html).toContain('2 inabilitadas')

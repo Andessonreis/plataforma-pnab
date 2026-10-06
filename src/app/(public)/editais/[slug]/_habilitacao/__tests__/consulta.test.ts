@@ -55,7 +55,7 @@ describe('consultarHabilitacao — Festival de Arte e Cultura de Irecê', () => 
     expect(arauna?.motivo).toContain('Desclassificado pela não apresentação de recurso')
 
     expect(alexander?.habilitada).toBe(true)
-    expect(alexander?.motivo).toBeUndefined()
+    expect(alexander?.motivo).toBe('Habilitado após recurso')
   })
 
   it('marca disponivel como false quando o Diário Oficial ainda não foi informado e não está em preview', async () => {

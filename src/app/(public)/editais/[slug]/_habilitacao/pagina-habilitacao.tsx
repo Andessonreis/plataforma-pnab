@@ -19,7 +19,7 @@ export async function metadataHabilitacao({ slug }: { slug: string }): Promise<M
   if (!dados) return { title: 'Relação de Habilitados' }
 
   return {
-    title: `Relação de Habilitados — ${dados.titulo}`,
+    title: `Relação final de habilitados — ${dados.titulo}`,
     description: dados.disponivel
       ? `Relação oficial de proponentes habilitados e inabilitados na fase documental do edital ${dados.titulo}.`
       : undefined,
@@ -47,7 +47,7 @@ export async function PaginaHabilitacao({ slug, preview }: PropsPaginaHabilitaca
         fotos={dados.template.fotos}
         trilha="Habilitação"
         chamada={`Edital de ${dados.ano}`}
-        titulo="Relação de Habilitados Final após entrega de documentação"
+        titulo="Relação final de habilitados"
         apoio={apoioDaCapa(dados)}
         compacto
       >

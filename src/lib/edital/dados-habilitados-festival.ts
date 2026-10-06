@@ -51,7 +51,7 @@ export const CATEGORIAS_HABILITACAO_FESTIVAL: CategoriaHabilitacaoFestival[] = [
     vagasInfo: '4 vagas · R$ 10.000,00 por projeto',
     propostas: [
       { posicao: 1, numero: 'PNAB-2026-0023', nome: 'Marcelo Barreto de Lima', cpfCnpj: '03014631582', modalidade: 'Ampla concorrência', notaFinal: 101.50, habilitado: true },
-      { posicao: 2, numero: 'PNAB-2026-0024', nome: 'Alexander Gondim Barretto', cpfCnpj: '05849484507', modalidade: 'Ampla concorrência', notaFinal: 87.50, habilitado: true },
+      { posicao: 2, numero: 'PNAB-2026-0024', nome: 'Alexander Gondim Barretto', cpfCnpj: '05849484507', modalidade: 'Ampla concorrência', notaFinal: 87.50, habilitado: true, motivo: 'Habilitado após recurso' },
       { posicao: 3, numero: 'PNAB-2026-0085', nome: 'Kaique Amador dos Santos', cpfCnpj: '51349037869', modalidade: 'Cota — Pessoas Negras', notaFinal: 70.00, habilitado: true },
       { posicao: 4, numero: 'PNAB-2026-0140', nome: 'Ayslan Kevin Costa Brandão', cpfCnpj: '12612741569', modalidade: 'Cota — Pessoas Negras', notaFinal: 69.83, habilitado: true },
     ],

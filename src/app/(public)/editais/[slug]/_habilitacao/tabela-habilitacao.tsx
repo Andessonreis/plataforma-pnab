@@ -89,7 +89,11 @@ export function TabelaHabilitacao({ propostas, categoria }: TabelaHabilitacaoPro
                   </td>
                   <td className="px-4 py-3.5 text-xs">
                     {habilitada ? (
-                      <span className="text-tinta-400">—</span>
+                      proposta.motivo ? (
+                        <span className="font-medium text-oliva-700">{proposta.motivo}</span>
+                      ) : (
+                        <span className="text-tinta-400">—</span>
+                      )
                     ) : (
                       <span className="font-medium text-terracota-700">
                         {proposta.motivo ?? 'Pendência/Ausência de documentação'}
