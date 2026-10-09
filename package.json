@@ -58,7 +58,6 @@
     "@react-email/components": "^1.0.12",
     "@react-email/render": "^2.0.8",
     "@sentry/nextjs": "^10.41.0",
-    "@supabase/supabase-js": "^2.48.0",
     "autoprefixer": "^10.4.20",
     "bcryptjs": "^2.4.3",
     "bullmq": "^5.38.0",

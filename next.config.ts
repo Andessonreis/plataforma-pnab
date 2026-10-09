@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
   experimental: {
     // Middleware (RBAC) intercepta todas as rotas, inclusive /api — o limite
     // padrão de 10MB truncava uploads de vídeo. Mantido acima do MAX_VIDEO_SIZE_MB
-    // (50MB, teto do plano do Supabase Storage) com folga pro overhead do multipart.
+    // (50MB) com folga pro overhead do multipart.
     middlewareClientMaxBodySize: '60mb',
   },
   typescript: {
@@ -18,10 +18,6 @@ const nextConfig: NextConfig = {
   },
   images: {
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '*.supabase.co',
-      },
       {
         protocol: 'https',
         hostname: 'culturaeturismo.irece.ba.gov.br',
