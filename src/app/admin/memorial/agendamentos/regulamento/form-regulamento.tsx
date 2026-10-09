@@ -2,7 +2,8 @@
 
 import { useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { Aviso, Button, Textarea } from '@/components/ui'
+import { Aviso } from '@/components/ui'
+import { botaoPrimario, campo, rotuloCampo } from '@/app/admin/memorial/_ui'
 
 interface FormRegulamentoProps {
   textoInicial: string
@@ -35,20 +36,28 @@ export function FormRegulamento({ textoInicial, versaoAtual }: FormRegulamentoPr
   }
 
   return (
-    <form onSubmit={publicar} className="space-y-4 rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
-      <Textarea
-        id="texto-regulamento"
-        label="Texto do regulamento"
-        hint="A página pública mostra o texto com as mesmas quebras de linha. Uma regra por linha fica mais fácil de ler no celular."
-        rows={18}
-        value={texto}
-        onChange={(e) => setTexto(e.target.value)}
-        required
-      />
+    <form onSubmit={publicar} className="space-y-4 rounded-xl border border-tinta-900/15 bg-white p-4 sm:p-5">
+      <div>
+        <label htmlFor="texto-regulamento" className={rotuloCampo}>
+          Texto do regulamento
+        </label>
+        <textarea
+          id="texto-regulamento"
+          aria-describedby="dica-regulamento"
+          rows={18}
+          value={texto}
+          onChange={(e) => setTexto(e.target.value)}
+          required
+          className={`${campo} py-2 leading-relaxed`}
+        />
+        <p id="dica-regulamento" className="mt-1 text-xs text-tinta-600">
+          O site mostra o texto com as mesmas quebras de linha. Uma regra por linha fica mais fácil de ler no celular.
+        </p>
+      </div>
       {recado && <Aviso tom={recado.tom}>{recado.texto}</Aviso>}
-      <Button type="submit" loading={enviando} disabled={!alterado} className="w-full sm:w-auto">
-        {versaoAtual === null ? 'Publicar primeira versão' : `Publicar como versão ${versaoAtual + 1}`}
-      </Button>
+      <button type="submit" disabled={!alterado || enviando} className={`${botaoPrimario} w-full sm:w-auto`}>
+        {enviando ? 'Publicando...' : versaoAtual === null ? 'Publicar primeira versão' : `Publicar como versão ${versaoAtual + 1}`}
+      </button>
     </form>
   )
 }

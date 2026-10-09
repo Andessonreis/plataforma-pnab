@@ -1,22 +1,25 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { z } from 'zod'
-import { Button, IconDownload } from '@/components/ui'
+import { IconDownload } from '@/components/ui'
 import { requireRole } from '@/app/admin/require-role'
-import { CabecalhoAdmin } from '@/app/admin/memorial/_componentes/cabecalho-admin'
 import { lerFiltros, montarUrl } from '@/app/admin/memorial/_componentes/parametros'
+import { CabecalhoPagina, linkDiscreto } from '@/app/admin/memorial/_ui'
 import { ehDiaValido } from '@/lib/memorial/agendamento/datas'
 import { listarVisitasQuerySchema } from '@/lib/schemas/memorial-agendamento'
-import { AbasVisao } from './_componentes/abas-visao'
+import { ABAS_AGENDA, contarAbas } from '@/lib/services/memorial-agenda-abas.service'
+import { ROLES_MEMORIAL } from '@/lib/memorial/acesso'
+import { AbasAgenda, AlternarVisao } from './_componentes/abas-visao'
 import { FiltrosVisitas } from './_componentes/filtros-visitas'
 import { VisaoCalendario } from './_componentes/visao-calendario'
 import { VisaoLista } from './_componentes/visao-lista'
-import { ROLES_MEMORIAL } from '@/lib/memorial/acesso'
 
-export const metadata: Metadata = { title: 'Agendamentos do Memorial — Portal PNAB Irecê' }
+export const metadata: Metadata = { title: 'Agenda de visitas do Memorial — Portal PNAB Irecê' }
 
 const filtrosSchema = listarVisitasQuerySchema.extend({
+  aba: z.enum(ABAS_AGENDA).default('responder'),
   visao: z.enum(['lista', 'calendario']).default('lista'),
-  escala: z.enum(['mes', 'semana', 'dia']).default('mes'),
+  escala: z.enum(['mes', 'semana', 'dia']).default('semana'),
   ref: z.string().refine(ehDiaValido).optional(),
 })
 
@@ -27,45 +30,52 @@ interface Props {
 export default async function AgendamentosPage({ searchParams }: Props) {
   await requireRole(...ROLES_MEMORIAL)
   const filtros = lerFiltros(filtrosSchema, await searchParams)
-  const { visao, escala, ref, status, busca, de, ate } = filtros
+  const { aba, visao, escala, ref, status, busca, de, ate } = filtros
+  const calendario = visao === 'calendario'
+  const contagem = await contarAbas()
 
   return (
-    <section>
-      <CabecalhoAdmin
-        titulo="Agendamentos de visitas"
-        descricao="Pedidos de visita ao Memorial. Confirme ou recuse cada um; o responsável recebe a resposta por e-mail."
-      >
-        <Button href="/admin/memorial/agendamentos/relatorio" variant="ghost" size="sm">
-          Relatório
-        </Button>
-        <Button href="/admin/memorial/agendamentos/regulamento" variant="ghost" size="sm">
+    <div className="space-y-5">
+      <CabecalhoPagina
+        titulo="Agenda de visitas"
+        descricao="Responda os pedidos de visita e acompanhe quem vem ao Memorial. O responsável recebe cada resposta por e-mail."
+        acoes={<AlternarVisao visao={visao} busca={busca} />}
+      />
+
+      <nav aria-label="Outras telas da agenda" className="-mt-3 flex flex-wrap gap-x-5">
+        <Link href="/admin/memorial/agendamentos/relatorio" className={`${linkDiscreto} py-2`}>
+          Relatório de visitas
+        </Link>
+        <Link href="/admin/memorial/agendamentos/regulamento" className={`${linkDiscreto} py-2`}>
           Regulamento
-        </Button>
+        </Link>
         {/* Link comum, não <Link>: o prefetch do Next baixaria o CSV e gravaria a exportação na auditoria. */}
         <a
           href={montarUrl('/api/v1/memorial/agendamentos/exportar', { de, ate, status, busca })}
-          className="inline-flex min-h-[44px] items-center rounded-md border-2 border-brand-600 px-3 text-sm font-medium text-brand-700 hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
+          className={`${linkDiscreto} inline-flex items-center gap-1.5 py-2`}
         >
-          <IconDownload className="mr-1.5 h-4 w-4" />
-          Exportar CSV
+          <IconDownload className="h-4 w-4" />
+          Baixar planilha
         </a>
-      </CabecalhoAdmin>
+      </nav>
 
-      <AbasVisao visao={visao} escala={escala} status={status} busca={busca} />
+      {!calendario && <AbasAgenda ativa={aba} contagem={contagem} busca={busca} />}
+
       <FiltrosVisitas
-        fixos={visao === 'calendario' ? { visao, escala, ref } : {}}
+        fixos={calendario ? { visao, escala, ref } : { aba }}
         status={status}
         busca={busca}
         de={de}
         ate={ate}
-        comPeriodo={visao === 'lista'}
+        comSituacao={calendario || aba === 'todas'}
+        comPeriodo={!calendario}
       />
 
-      {visao === 'calendario' ? (
+      {calendario ? (
         <VisaoCalendario escala={escala} referencia={ref} status={status} busca={busca} />
       ) : (
-        <VisaoLista filtros={filtros} />
+        <VisaoLista aba={aba} filtros={filtros} />
       )}
-    </section>
+    </div>
   )
 }

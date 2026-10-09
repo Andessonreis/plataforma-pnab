@@ -24,7 +24,7 @@ export function filtroVisitas(q: Partial<Pick<ListarVisitasQuery, 'de' | 'ate' |
   return where
 }
 
-const CAMPOS_CARTAO = {
+export const CAMPOS_CARTAO = {
   id: true,
   protocolo: true,
   status: true,

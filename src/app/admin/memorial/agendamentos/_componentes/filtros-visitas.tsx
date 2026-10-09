@@ -1,55 +1,81 @@
-import { ROTULO_STATUS } from '@/lib/memorial/agendamento/status'
+import Link from 'next/link'
 import type { MemorialStatusAgendamento } from '@prisma/client'
+import { IconChevronDown } from '@/components/ui'
+import { ROTULO_STATUS } from '@/lib/memorial/agendamento/status'
+import { montarUrl } from '@/app/admin/memorial/_componentes/parametros'
+import { botaoPrimario, campo, linkDiscreto, rotuloCampo } from '@/app/admin/memorial/_ui'
 
 interface FiltrosVisitasProps {
-  /** Parâmetros que precisam sobreviver ao envio (visão, escala, referência). */
+  /** Parâmetros que precisam sobreviver ao envio (aba, visão, escala, referência). */
   fixos: Record<string, string | undefined>
   status?: string
   busca?: string
   de?: string
   ate?: string
+  /** Situação só faz sentido onde a aba não fixa a situação. */
+  comSituacao?: boolean
   /** No calendário o período é a própria tela, então os campos de data somem. */
   comPeriodo?: boolean
 }
 
-const CAMPO =
-  'min-h-[44px] w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200'
-
-/** Filtros por link/GET: funcionam sem JavaScript e a URL pode ser compartilhada. */
-export function FiltrosVisitas({ fixos, status, busca, de, ate, comPeriodo = true }: FiltrosVisitasProps) {
+/**
+ * Filtros recolhidos num painel que abre ao toque. Funcionam por GET, sem JavaScript, e a
+ * URL pode ser enviada a outra pessoa da equipe. Com filtro ativo, o painel já vem aberto.
+ */
+export function FiltrosVisitas({ fixos, status, busca, de, ate, comSituacao = true, comPeriodo = true }: FiltrosVisitasProps) {
+  const ativos = [busca, comSituacao && status, comPeriodo && de, comPeriodo && ate].filter(Boolean).length
   return (
-    <form action="/admin/memorial/agendamentos" role="search" className="mb-5 grid gap-3 rounded-xl border border-slate-200 bg-white p-3 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr_auto] lg:items-end">
-      {Object.entries(fixos).map(([k, v]) => v && <input key={k} type="hidden" name={k} value={v} />)}
-      <label className="text-xs font-medium text-slate-600">
-        Buscar
-        <input name="busca" type="search" defaultValue={busca} placeholder="Protocolo, instituição, responsável ou e-mail" className={`mt-1 ${CAMPO}`} />
-      </label>
-      <label className="text-xs font-medium text-slate-600">
-        Situação
-        <select name="status" defaultValue={status ?? ''} className={`mt-1 ${CAMPO}`}>
-          <option value="">Todas</option>
-          {(Object.keys(ROTULO_STATUS) as MemorialStatusAgendamento[]).map((s) => (
-            <option key={s} value={s}>
-              {ROTULO_STATUS[s]}
-            </option>
-          ))}
-        </select>
-      </label>
-      {comPeriodo && (
-        <>
-          <label className="text-xs font-medium text-slate-600">
-            De
-            <input name="de" type="date" defaultValue={de} className={`mt-1 ${CAMPO}`} />
+    <details open={ativos > 0} className="group rounded-xl border border-tinta-900/15 bg-white">
+      <summary className="flex min-h-[48px] cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 text-sm font-semibold text-tinta-900 focus-visible:outline-2 focus-visible:outline-accent-500 [&::-webkit-details-marker]:hidden">
+        <span>
+          Buscar e filtrar
+          {ativos > 0 && <span className="ml-2 rounded-full bg-accent-500 px-2 py-0.5 text-xs font-bold text-tinta-950">{ativos} ativo{ativos > 1 ? 's' : ''}</span>}
+        </span>
+        <IconChevronDown className="h-5 w-5 text-tinta-600 transition-transform group-open:rotate-180" />
+      </summary>
+
+      <form action="/admin/memorial/agendamentos" role="search" className="grid gap-3 border-t border-tinta-900/10 p-4 sm:grid-cols-2 lg:grid-cols-4 lg:items-end">
+        {Object.entries(fixos).map(([k, v]) => v && <input key={k} type="hidden" name={k} value={v} />)}
+        <label className="sm:col-span-2">
+          <span className={rotuloCampo}>Instituição, responsável, e-mail ou protocolo</span>
+          <input name="busca" type="search" defaultValue={busca} className={campo} />
+        </label>
+        {comSituacao && (
+          <label>
+            <span className={rotuloCampo}>Situação</span>
+            <select name="status" defaultValue={status ?? ''} className={campo}>
+              <option value="">Todas</option>
+              {(Object.keys(ROTULO_STATUS) as MemorialStatusAgendamento[]).map((s) => (
+                <option key={s} value={s}>
+                  {ROTULO_STATUS[s]}
+                </option>
+              ))}
+            </select>
           </label>
-          <label className="text-xs font-medium text-slate-600">
-            Até
-            <input name="ate" type="date" defaultValue={ate} className={`mt-1 ${CAMPO}`} />
-          </label>
-        </>
-      )}
-      <button type="submit" className="min-h-[44px] rounded-lg bg-slate-800 px-5 text-sm font-medium text-white hover:bg-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-800">
-        Filtrar
-      </button>
-    </form>
+        )}
+        {comPeriodo && (
+          <>
+            <label>
+              <span className={rotuloCampo}>Visitas a partir de</span>
+              <input name="de" type="date" defaultValue={de} className={campo} />
+            </label>
+            <label>
+              <span className={rotuloCampo}>Até</span>
+              <input name="ate" type="date" defaultValue={ate} className={campo} />
+            </label>
+          </>
+        )}
+        <div className="flex items-center gap-4 sm:col-span-2 lg:col-span-4">
+          <button type="submit" className={botaoPrimario}>
+            Aplicar
+          </button>
+          {ativos > 0 && (
+            <Link href={montarUrl('/admin/memorial/agendamentos', fixos)} className={`${linkDiscreto} py-2`}>
+              Limpar filtros
+            </Link>
+          )}
+        </div>
+      </form>
+    </details>
   )
 }

@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { StatusConteudo } from '@prisma/client'
 import { ROTULO_TIPO_ACERVO } from '@/lib/memorial/rotulos'
 import type { ResultadoBusca as Resultado } from '@/lib/services/memorial-busca.service'
-import { SeloStatus } from './selo-status'
+import { StatusChip } from '@/app/admin/memorial/_ui'
 
 interface Linha {
   id: string
@@ -16,16 +16,16 @@ function Grupo({ titulo, linhas }: { titulo: string; linhas: Linha[] }) {
   if (linhas.length === 0) return null
   return (
     <section aria-label={titulo}>
-      <h3 className="mb-2 text-sm font-semibold text-slate-700">{titulo}</h3>
-      <ul className="divide-y divide-slate-100 rounded-lg border border-slate-200 bg-white">
+      <h3 className="mb-2 text-sm font-bold text-tinta-800">{titulo}</h3>
+      <ul className="divide-y divide-tinta-900/10 rounded-lg border border-tinta-900/10 bg-white">
         {linhas.map((l) => (
           <li key={l.id}>
-            <Link href={l.href} className="flex min-h-[48px] items-center justify-between gap-3 px-3 py-2 text-sm hover:bg-slate-50">
+            <Link href={l.href} className="flex min-h-[48px] items-center justify-between gap-3 px-3 py-2 text-sm hover:bg-papel-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-500">
               <span className="min-w-0">
-                <span className="block truncate text-slate-900">{l.rotulo}</span>
-                {l.detalhe && <span className="block text-xs text-slate-500">{l.detalhe}</span>}
+                <span className="block truncate font-semibold text-tinta-900">{l.rotulo}</span>
+                {l.detalhe && <span className="block text-xs text-tinta-600">{l.detalhe}</span>}
               </span>
-              <SeloStatus status={l.status} />
+              <StatusChip tipo="conteudo" status={l.status} />
             </Link>
           </li>
         ))}
@@ -40,7 +40,7 @@ export function ResultadoBusca({ termo, resultado }: { termo: string; resultado:
   const total = exposicoes.length + acervo.length + pessoas.length + eventos.length
 
   if (total === 0) {
-    return <p className="text-sm text-slate-600">Nada encontrado para “{termo}”. Tente outra grafia ou só parte do nome.</p>
+    return <p className="rounded-lg border border-dashed border-tinta-900/20 bg-white px-4 py-4 text-sm text-tinta-700">Nada encontrado para “{termo}”. Tente outra grafia ou só parte do nome.</p>
   }
 
   return (

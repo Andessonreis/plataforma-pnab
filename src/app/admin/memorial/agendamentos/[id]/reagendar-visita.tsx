@@ -3,7 +3,8 @@
 import { useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import type { MemorialTurno } from '@prisma/client'
-import { Aviso, Button, Input, Select } from '@/components/ui'
+import { Aviso } from '@/components/ui'
+import { botaoNeutro, botaoPrimario, campo, linkDiscreto, rotuloCampo } from '@/app/admin/memorial/_ui'
 import { ROTULO_TURNO } from '@/lib/memorial/agendamento/status'
 import { TURNOS } from '@/lib/memorial/agendamento/regras'
 import type { Visitacao } from '@/lib/memorial/config'
@@ -56,28 +57,40 @@ export function ReagendarVisita({ id, atual, horarios }: ReagendarVisitaProps) {
 
   if (!aberto) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white p-4">
+      <div className="space-y-2 border-t border-tinta-900/10 pt-4">
         {salvo && <Aviso tom="sucesso">Visita remarcada. O responsável foi avisado por e-mail.</Aviso>}
-        <Button type="button" variant="ghost" className="mt-1 w-full" onClick={() => setAberto(true)}>
+        <button type="button" className={`${botaoNeutro} w-full`} onClick={() => setAberto(true)}>
           Remarcar data ou horário
-        </Button>
+        </button>
       </div>
     )
   }
 
   return (
-    <form onSubmit={salvar} className="space-y-3 rounded-xl border border-slate-200 bg-white p-4">
-      <h2 className="text-sm font-semibold text-slate-900">Remarcar visita</h2>
-      <Input id="reagendar-data" label="Nova data" type="date" value={data} onChange={(e) => setData(e.target.value)} required />
-      <Select id="reagendar-horario" label="Horário" options={opcoes} value={horario} onChange={(e) => setHorario(e.target.value)} required />
+    <form onSubmit={salvar} className="space-y-3 border-t border-tinta-900/10 pt-4">
+      <h3 className="text-sm font-bold text-tinta-900">Remarcar visita</h3>
+      <label className="block">
+        <span className={rotuloCampo}>Nova data</span>
+        <input id="reagendar-data" type="date" value={data} onChange={(e) => setData(e.target.value)} required className={campo} />
+      </label>
+      <label className="block">
+        <span className={rotuloCampo}>Horário</span>
+        <select id="reagendar-horario" value={horario} onChange={(e) => setHorario(e.target.value)} required className={campo}>
+          {opcoes.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+      </label>
       {erro && <Aviso tom="erro">{erro}</Aviso>}
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <Button type="submit" loading={enviando} className="flex-1">
-          Remarcar e avisar
-        </Button>
-        <Button type="button" variant="ghost" onClick={() => setAberto(false)}>
+      <div className="flex items-center gap-4">
+        <button type="submit" disabled={enviando} className={`${botaoPrimario} flex-1`}>
+          {enviando ? 'Remarcando...' : 'Remarcar e avisar'}
+        </button>
+        <button type="button" onClick={() => setAberto(false)} className={`${linkDiscreto} min-h-[44px]`}>
           Cancelar
-        </Button>
+        </button>
       </div>
     </form>
   )
