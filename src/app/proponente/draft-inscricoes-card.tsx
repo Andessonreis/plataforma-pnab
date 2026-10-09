@@ -1,6 +1,8 @@
 import Link from 'next/link'
-import { Badge, IconEdit } from '@/components/ui'
+import { IconArrowRight } from '@/components/ui'
 import { formatDate } from '@/lib/utils/format'
+import { SecaoPainel } from './secao-painel'
+import { VazioPainel } from './vazio-painel'
 
 export interface DraftInscricao {
   id: string
@@ -14,45 +16,40 @@ interface DraftInscricoesCardProps {
   totalDrafts: number
 }
 
-// Lista compacta de rascunhos — sem cartão próprio, pra ser empilhada dentro do
-// painel lateral do dashboard (DashboardSidebar) junto de prazos e notificações.
+/** Rascunhos guardados, do editado por último ao mais antigo, cada um com atalho pra continuar. */
 export function DraftInscricoesCard({ drafts, totalDrafts }: DraftInscricoesCardProps) {
   return (
-    <div>
-      <div className="flex items-center justify-between gap-2">
-        <h3 className="titulo text-lg text-tinta-950">Rascunhos pendentes</h3>
-        {totalDrafts > 0 && <Badge variant="warning">{totalDrafts}</Badge>}
-      </div>
-
+    <SecaoPainel
+      id="tour-rascunhos"
+      titulo="Rascunhos"
+      acao={totalDrafts > drafts.length ? { href: '/proponente/inscricoes', rotulo: `Ver os ${totalDrafts}` } : undefined}
+    >
       {drafts.length === 0 ? (
-        <p className="mt-3 text-sm text-slate-500">Nenhum rascunho pendente no momento.</p>
+        <VazioPainel
+          titulo="Nenhum rascunho guardado."
+          texto="A inscrição que você começar e não enviar fica salva aqui, para terminar quando puder."
+        />
       ) : (
-        <ul className="mt-3 space-y-2">
+        <ul>
           {drafts.map((draft) => (
-            <li key={draft.id}>
+            <li key={draft.id} className="border-b border-tinta-900/15 last:border-b-0">
               <Link
                 href={`/proponente/inscricoes/${draft.id}/editar`}
-                className="flex items-start justify-between gap-2 rounded-lg px-2.5 py-2 -mx-2.5 hover:bg-slate-50 transition-colors group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+                className="group flex min-h-[64px] items-center justify-between gap-3 py-3 [@media(hover:hover)]:hover:bg-white/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-tinta-900"
               >
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-slate-900 leading-snug truncate">{draft.editalTitulo}</p>
-                  <p className="mt-0.5 text-xs text-slate-500">Editado em {formatDate(draft.updatedAt)}</p>
-                </div>
-                <IconEdit className="h-4 w-4 shrink-0 mt-0.5 text-slate-500 group-hover:text-brand-600 transition-colors" />
+                <span className="min-w-0">
+                  <span className="block font-semibold leading-snug text-tinta-900">{draft.editalTitulo}</span>
+                  <span className="block text-sm text-tinta-700">Editado em {formatDate(draft.updatedAt)}</span>
+                </span>
+                <span className="inline-flex shrink-0 items-center gap-1.5 text-sm font-bold text-brand-700">
+                  Continuar
+                  <IconArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                </span>
               </Link>
             </li>
           ))}
         </ul>
       )}
-
-      {totalDrafts > 0 && (
-        <Link
-          href="/proponente/inscricoes"
-          className="mt-3 inline-block text-xs font-medium text-brand-600 hover:text-brand-700"
-        >
-          Ver todos os rascunhos
-        </Link>
-      )}
-    </div>
+    </SecaoPainel>
   )
 }

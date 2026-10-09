@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { IconChevronRight } from '@/components/ui'
 import { Carimbo } from '@/components/ui/carimbo'
 import { inscricaoStatusLabelProponente as inscricaoStatusLabel } from '@/lib/status-maps'
 import { formatDate } from '@/lib/utils/format'
@@ -14,31 +15,29 @@ interface InscricaoRecenteItemProps {
 }
 
 /**
- * Registro de inscrição em formato de ficha — carimbo da situação, não pílula
- * colorida — a mesma linguagem que os dossiês de edital já usam. Um único
- * layout responsivo, sem tabela separada pro desktop.
+ * Registro de inscrição em formato de ficha: o carimbo da situação (mesma
+ * linguagem dos dossiês de edital) à frente, edital e protocolo no meio.
+ * Um único layout responsivo, sem tabela separada pro desktop.
  */
 export function InscricaoRecenteItem({ id, numero, status, createdAt, editalTitulo }: InscricaoRecenteItemProps) {
   return (
     <Link
       href={`/proponente/inscricoes/${id}`}
-      className="flex flex-col gap-3 border-b border-tinta-900/10 py-4 transition-colors last:border-b-0 hover:bg-papel-100/40 sm:flex-row sm:items-center sm:gap-4 sm:px-2"
+      className="group flex min-h-[72px] flex-col gap-2 border-b border-tinta-900/15 py-4 last:border-b-0 sm:flex-row sm:items-center sm:gap-5 sm:px-2 [@media(hover:hover)]:hover:bg-white/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-tinta-900"
     >
-      <Carimbo tom={tomCarimboDeStatus(status)} className="shrink-0 self-start sm:self-center">
+      <Carimbo tom={tomCarimboDeStatus(status)} className="shrink-0 self-start !rotate-0 sm:w-36 sm:text-center">
         {inscricaoStatusLabel[status]}
       </Carimbo>
 
       <div className="min-w-0 flex-1">
-        <p className="font-medium text-tinta-950 leading-snug">{editalTitulo}</p>
-        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-tinta-700/60">
-          {/* deslop-ignore-next-line 34 — número de protocolo, identificador real, não decoração */}
-          <span className="font-mono">{numero}</span>
-          <span aria-hidden="true">·</span>
-          <span>{formatDate(createdAt)}</span>
+        <p className="font-semibold leading-snug text-tinta-900">{editalTitulo}</p>
+        <p className="mt-0.5 text-sm text-tinta-700">
+          {/* deslop-ignore-next-line 34 número de protocolo, identificador real, não decoração */}
+          <span className="font-mono">{numero}</span>, criada em {formatDate(createdAt)}
         </p>
       </div>
 
-      <span className="rotulo shrink-0 text-xs text-brand-700 sm:text-right">Ver detalhes</span>
+      <IconChevronRight className="hidden h-5 w-5 shrink-0 text-tinta-600 transition-transform group-hover:translate-x-0.5 sm:block" />
     </Link>
   )
 }

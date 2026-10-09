@@ -2,10 +2,11 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button, IconCheckSimple } from '@/components/ui'
 import { toast } from '@/hooks/use-toast'
+import { BotaoCarregando } from '../_componentes/botao-carregando'
+import { botaoContorno } from '../estilos'
 
-export function MarkAllReadButton() {
+export function MarkAllReadButton({ naoLidas }: { naoLidas: number }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
 
@@ -15,10 +16,10 @@ export function MarkAllReadButton() {
       const res = await fetch('/api/proponente/notifications/read-all', { method: 'POST' })
       const data = await res.json()
       if (!res.ok) {
-        toast({ variant: 'destructive', title: data.message ?? 'Erro' })
+        toast({ variant: 'destructive', title: data.message ?? 'Não foi possível marcar os avisos como lidos.' })
         return
       }
-      toast({ title: `${data.updated} notificação(ões) marcada(s) como lida(s)` })
+      toast({ title: data.updated === 1 ? '1 aviso marcado como lido' : `${data.updated} avisos marcados como lidos` })
       router.refresh()
     } finally {
       setLoading(false)
@@ -26,17 +27,14 @@ export function MarkAllReadButton() {
   }
 
   return (
-    <Button
+    <BotaoCarregando
       id="tour-notificacoes-marcar-lidas"
+      type="button"
       onClick={handleClick}
-      loading={loading}
-      variant="ghost"
-      size="sm"
-      className="shrink-0"
+      carregando={loading}
+      estilo={botaoContorno}
     >
-      <IconCheckSimple className="h-4 w-4 mr-1.5" />
-      <span className="hidden sm:inline">Marcar todas como lidas</span>
-      <span className="sm:hidden">Marcar lidas</span>
-    </Button>
+      Marcar {naoLidas === 1 ? 'como lido' : 'todos como lidos'}
+    </BotaoCarregando>
   )
 }

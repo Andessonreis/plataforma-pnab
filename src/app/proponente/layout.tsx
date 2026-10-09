@@ -1,46 +1,43 @@
+import type { Viewport } from 'next'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
-import { ProponenteSidebar } from './sidebar'
-import { MobileMenuButton } from './mobile-menu-button'
-import { ProponenteFooter } from './proponente-footer'
 import { prisma } from '@/lib/db'
+import { variaveisDeFonte } from '../fontes'
+import { MobileTopBar } from './mobile-top-bar'
+import { ProponenteFooter } from './proponente-footer'
+import { ProponenteSidebar } from './sidebar'
+
+// `cover` deixa a barra de abas do rodapé respeitar a área segura do iPhone (env(safe-area-inset-bottom)).
+export const viewport: Viewport = { viewportFit: 'cover' }
 
 export default async function ProponenteLayout({ children }: { children: React.ReactNode }) {
   const session = await auth()
   if (!session) redirect('/login')
 
-  // Carrega avatarUrl pra mostrar no header e na sidebar.
-  // Não está na session (NextAuth) — buscar é leve e dispensa migração de schema da session.
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { avatarUrl: true },
-  })
+  // Avatar e contagem de avisos não estão na session (NextAuth): buscar é leve
+  // e dispensa migração de schema da session.
+  const [user, unreadCount] = await Promise.all([
+    prisma.user.findUnique({ where: { id: session.user.id }, select: { avatarUrl: true } }),
+    prisma.notification.count({ where: { userId: session.user.id, lidaEm: null } }),
+  ])
   const nome = session.user.name ?? 'Proponente'
   const avatarUrl = user?.avatarUrl ?? null
 
   return (
-    // .tema-secult resolve as CSS vars --brand-*/--accent-* pra cor real da
-    // identidade SECULT (terracota/dourado). papel-textura é a mesma trama
-    // diagonal sutil da home, no lugar do cinza chapado genérico de SaaS.
-    <div className="tema-secult papel-textura font-questrial flex min-h-screen bg-papel-50">
-      <ProponenteSidebar userName={nome} userAvatarUrl={avatarUrl} />
+    // `variaveisDeFonte` carrega Anton (.titulo/.rotulo) e Questrial; sem ele a
+    // área cai em Inter e o título perde a identidade. `.tema-secult` resolve
+    // --brand-*/--accent-* pra terracota/dourado reais, e `papel-textura` é a
+    // trama sutil de papel da home. O menu e o rodapé são escuros e o miolo é
+    // papel: o contraste de superfícies é o que dá profundidade à área.
+    <div className={`${variaveisDeFonte} tema-secult papel-textura font-questrial min-h-[100dvh] bg-papel-50 text-tinta-900`}>
+      <div className="lg:flex">
+        <ProponenteSidebar userName={nome} userAvatarUrl={avatarUrl} unreadCount={unreadCount} />
 
-      {/* flex-col + min-h-screen aqui (não só no wrapper externo): com pouco
-          conteúdo (ex.: filtro sem resultado) essa coluna ficava mais curta
-          que a viewport, e o rodapé subia deixando vazio embaixo enquanto a
-          sidebar fixa continuava até o fim da tela. main cresce (flex-1) e
-          empurra o rodapé pro fim de verdade. */}
-      <div className="relative flex min-h-screen flex-1 min-w-0 flex-col lg:ml-64">
-        <MobileMenuButton />
-
-        {/* pt-20 no mobile: abre espaço pro botão hamburguer flutuante
-            (fixed left-3 top-3, ~56px de altura) não cobrir o título da
-            página em telas sem hero próprio (dashboard tem espaço embutido). */}
-        <main className="flex-1 p-4 pt-20 pb-24 lg:p-6 lg:pb-8">
-          {children}
-        </main>
-
-        <ProponenteFooter />
+        <div className="flex min-h-[100dvh] min-w-0 flex-1 flex-col">
+          <MobileTopBar nome={nome} avatarUrl={avatarUrl} />
+          <main className="flex-1 overflow-x-clip px-4 py-6 sm:px-6 lg:px-10 lg:py-10">{children}</main>
+          <ProponenteFooter />
+        </div>
       </div>
     </div>
   )
