@@ -4,10 +4,15 @@ import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { Card, Badge, Pagination, Button, EmptyState, FadeIn, IconPlus, IconSlides } from '@/components/ui'
+import { ROLES_SLIDES } from '@/lib/services/slide-destaque.service'
+import { obterCarrossel } from '@/lib/services/carrossel.service'
+import { PainelCarrossel } from './painel-carrossel'
 
 export const metadata: Metadata = {
   title: 'Slides da Home — Portal PNAB Irecê',
 }
+
+const ROTULO_FORMATO = { ARTE: 'Arte pronta', PECA: 'Peça editorial' } as const
 
 interface Props {
   searchParams: Promise<{ page?: string; status?: string }>
@@ -15,7 +20,7 @@ interface Props {
 
 export default async function AdminSlidesPage({ searchParams }: Props) {
   const session = await auth()
-  if (!session || !['SUPER_ADMIN', 'COMUNICACAO'].includes(session.user.role)) redirect('/')
+  if (!session || !ROLES_SLIDES.includes(session.user.role)) redirect('/')
 
   const params = await searchParams
   const page = Math.max(1, Number(params.page) || 1)
@@ -28,7 +33,7 @@ export default async function AdminSlidesPage({ searchParams }: Props) {
       ? { ativo: false }
       : {}
 
-  const [slides, total] = await Promise.all([
+  const [slides, total, carrossel] = await Promise.all([
     prisma.slideDestaque.findMany({
       where,
       orderBy: { ordem: 'asc' },
@@ -36,6 +41,7 @@ export default async function AdminSlidesPage({ searchParams }: Props) {
       take: pageSize,
     }),
     prisma.slideDestaque.count({ where }),
+    obterCarrossel(),
   ])
 
   const totalPages = Math.ceil(total / pageSize)
@@ -61,6 +67,8 @@ export default async function AdminSlidesPage({ searchParams }: Props) {
           </Button>
         </div>
       </FadeIn>
+
+      <PainelCarrossel inicial={carrossel} />
 
       {/* Filtros */}
       <div className="flex flex-wrap gap-2 mb-4 sm:mb-6">
@@ -106,6 +114,7 @@ export default async function AdminSlidesPage({ searchParams }: Props) {
                   </Badge>
                 </div>
                 <div className="flex items-center gap-3 text-[11px] text-slate-500">
+                  <span>{ROTULO_FORMATO[slide.formato]}</span>
                   <span>Ordem: {slide.ordem}</span>
                   {slide.inicioEm && (
                     <span>
@@ -137,6 +146,7 @@ export default async function AdminSlidesPage({ searchParams }: Props) {
                       <td className="py-3 px-4">
                         <div>
                           <p className="font-medium text-slate-900">{slide.titulo}</p>
+                          <p className="text-xs text-slate-500">{ROTULO_FORMATO[slide.formato]}</p>
                           {slide.descricao && (
                             <p className="text-xs text-slate-500 line-clamp-1">{slide.descricao}</p>
                           )}

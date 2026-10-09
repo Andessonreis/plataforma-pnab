@@ -2,6 +2,9 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
+import { ROLES_SLIDES } from '@/lib/services/slide-destaque.service'
+import { buscarEditaisAbertura } from '@/app/(public)/_home/editais'
+import { FOTOS_ABERTURA } from '@/app/(public)/_home/slide-institucional'
 import { SlideForm } from '../slide-form'
 
 export const metadata: Metadata = {
@@ -10,7 +13,8 @@ export const metadata: Metadata = {
 
 export default async function NovoSlidePage() {
   const session = await auth()
-  if (!session || !['SUPER_ADMIN', 'COMUNICACAO'].includes(session.user.role)) redirect('/')
+  if (!session || !ROLES_SLIDES.includes(session.user.role)) redirect('/')
+  const editais = await buscarEditaisAbertura()
 
   return (
     <section>
@@ -25,10 +29,10 @@ export default async function NovoSlidePage() {
           Voltar para Slides
         </Link>
         <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Novo Slide</h1>
-        <p className="text-xs sm:text-sm text-slate-600 mt-1">Preencha os dados do novo slide do carrossel.</p>
+        <p className="text-xs sm:text-sm text-slate-600 mt-1">Escolha o tipo, preencha e confira na prévia como fica na página inicial.</p>
       </div>
 
-      <SlideForm />
+      <SlideForm editais={editais} fotos={FOTOS_ABERTURA} />
     </section>
   )
 }

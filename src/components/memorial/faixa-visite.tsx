@@ -1,33 +1,14 @@
 import Link from 'next/link'
 import type { Contato, Visitacao } from '@/lib/memorial/config'
-
-const DIAS = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado']
-
-/** [1,2,3,4,5] → "segunda a sexta"; dias soltos viram lista. */
-function diasDeVisita(dias: number[]): string {
-  const ordenados = [...dias].sort((a, b) => a - b)
-  const seguidos = ordenados.every((d, i) => i === 0 || d === ordenados[i - 1] + 1)
-  if (seguidos && ordenados.length > 2) return `${DIAS[ordenados[0]]} a ${DIAS[ordenados.at(-1)!]}`
-  return ordenados.map((d) => DIAS[d]).join(', ')
-}
-
-function faixaHorario(h: { inicio: string; fim: string }[]) {
-  return h.length ? `${h[0].inicio} às ${h.at(-1)!.fim}` : null
-}
+import { regrasDeVisita } from '@/lib/memorial/texto-visita'
 
 /**
  * Como visitar: regras de agendamento e funcionamento vindos das configurações do
  * Memorial. Turquesa é a cor do acolhimento na identidade da Secretaria.
  */
 export function FaixaVisite({ visitacao, contato }: { visitacao: Visitacao; contato: Contato }) {
-  const manha = faixaHorario(visitacao.horarios.MANHA)
-  const tarde = faixaHorario(visitacao.horarios.TARDE)
-  const turnos = [manha && `pela manhã, das ${manha}`, tarde && `à tarde, das ${tarde}`].filter(Boolean).join(', e ')
-  const regras = [
-    `Visitas em grupo, de ${diasDeVisita(visitacao.diasSemana)}${turnos ? `, ${turnos}` : ''}.`,
-    `Grupos de até ${visitacao.maxPessoasPorGrupo} pessoas.`,
-    `Peça com pelo menos ${visitacao.antecedenciaHoras} horas de antecedência.`,
-  ]
+  const { quando, grupo, antecedencia } = regrasDeVisita(visitacao)
+  const regras = [quando, grupo, antecedencia]
 
   return (
     <section aria-labelledby="visite-titulo" className="bg-turquesa-800 text-white">

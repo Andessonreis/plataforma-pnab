@@ -31,7 +31,7 @@ export interface BannerEditalProps {
  * `AnimatePresence` das fotos passou a viver dentro do mesmo pai, e os blocos
  * ficavam presos em `opacity: 0`.
  */
-function batida(atraso: number, parado: boolean): MotionProps {
+export function batida(atraso: number, parado: boolean): MotionProps {
   if (parado) return {}
   return {
     initial: { opacity: 0, scale: 1.06, rotate: -0.8 },
@@ -80,7 +80,7 @@ export function BannerEdital({
           alt="Política Nacional Aldir Blanc — PNAB Cultura Irecê"
           width={612}
           height={294}
-          className="h-auto w-[52%] max-w-[248px] rounded-sm"
+          className="h-auto w-[40%] max-w-[248px] rounded-sm md:w-[52%]"
           priority
         />
       </motion.div>
@@ -90,9 +90,9 @@ export function BannerEdital({
           garantir contraste. Dentro do bloco, ela está sempre sobre tinta. */}
       <motion.div
         {...batida(0.26, parado)}
-        className="relative mt-4 rounded-sm bg-tinta-900/95 px-4 py-3.5 sm:px-5 sm:py-4"
+        className="relative mt-3 rounded-sm bg-tinta-900/95 px-4 py-3 sm:px-5 sm:py-4 md:mt-4"
       >
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1.4fr_1fr] sm:gap-5">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1.4fr_1fr] sm:gap-5 md:grid-cols-1 md:gap-3 lg:grid-cols-[1.4fr_1fr] lg:gap-5">
           <div>
             <p className="text-lg leading-tight text-papel-50 sm:text-xl">
               {chamadaInicio}{' '}
@@ -108,7 +108,7 @@ export function BannerEdital({
             </p>
           </div>
 
-          <div className="border-papel-100/25 sm:border-l sm:pl-5">
+          <div className="border-papel-100/25 sm:border-l sm:pl-5 md:border-l-0 md:pl-0 lg:border-l lg:pl-5">
             <p className="text-xs font-bold uppercase tracking-widest text-accent-300">
               {valorPrefixo}
             </p>
@@ -121,7 +121,9 @@ export function BannerEdital({
           </div>
         </div>
 
-        <p className="mt-3.5 border-t border-papel-100/15 pt-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-papel-100/85">
+        {/* No celular a assinatura sai: o quadro é fixo e o cabeçalho do portal
+            logo acima já diz de quem é a peça. */}
+        <p className="mt-3.5 hidden border-t border-papel-100/15 pt-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-papel-100/85 md:block">
           Secretaria de Cultura e Turismo · Prefeitura de Irecê
         </p>
       </motion.div>

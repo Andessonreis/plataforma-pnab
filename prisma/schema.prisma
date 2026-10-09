@@ -572,19 +572,40 @@ model CmsPage {
 // Slides de Destaque (Carrossel da Home)
 // ─────────────────────────────────────────────────────────────────────────────
 
+/// ARTE: imagem fechada enviada pela Secretaria, exibida inteira ao lado do
+/// painel de editais. PECA: peça editorial montada em texto real que ocupa a
+/// faixa inteira (chamada, foto colada, varal) — `imagemUrl` vira o fundo e o
+/// conteúdo editorial mora em `peca`, validado por `pecaSchema`.
+enum SlideFormato {
+  ARTE
+  PECA
+}
+
 model SlideDestaque {
-  id        String    @id @default(cuid())
+  id        String       @id @default(cuid())
+  formato   SlideFormato @default(ARTE)
   titulo    String
   descricao String?
   imagemUrl String?
+  peca      Json?
   ctaLabel  String?
   ctaUrl    String?
-  ordem     Int       @default(0)
-  ativo     Boolean   @default(true)
+  ordem     Int          @default(0)
+  ativo     Boolean      @default(true)
   inicioEm  DateTime?
   fimEm     DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+/// Configurações do site público editadas pelo painel, uma linha por chave
+/// (ex.: "carrossel" — tempo da troca automática da abertura). Cada chave tem
+/// o próprio schema Zod; valor ausente ou inválido cai no padrão do código.
+model SiteConfig {
+  chave         String   @id
+  valor         Json
+  atualizadoEm  DateTime @updatedAt
+  atualizadoPor String?
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

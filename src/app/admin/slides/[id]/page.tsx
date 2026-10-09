@@ -3,7 +3,11 @@ import Link from 'next/link'
 import { auth } from '@/lib/auth'
 import { redirect, notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
+import { ROLES_SLIDES } from '@/lib/services/slide-destaque.service'
+import { buscarEditaisAbertura } from '@/app/(public)/_home/editais'
+import { FOTOS_ABERTURA } from '@/app/(public)/_home/slide-institucional'
 import { SlideForm } from '../slide-form'
+import { formDoRegistro } from '../_form/estado'
 import { DeleteSlideButton } from './delete-button'
 
 interface Props {
@@ -21,19 +25,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function EditarSlidePage({ params }: Props) {
   const session = await auth()
-  if (!session || !['SUPER_ADMIN', 'COMUNICACAO'].includes(session.user.role)) redirect('/')
+  if (!session || !ROLES_SLIDES.includes(session.user.role)) redirect('/')
 
   const { id } = await params
-  const slide = await prisma.slideDestaque.findUnique({ where: { id } })
+  const [slide, editais] = await Promise.all([
+    prisma.slideDestaque.findUnique({ where: { id } }),
+    buscarEditaisAbertura(),
+  ])
 
   if (!slide) notFound()
-
-  const inicioEmFormatted = slide.inicioEm
-    ? new Date(slide.inicioEm).toISOString().slice(0, 16)
-    : ''
-  const fimEmFormatted = slide.fimEm
-    ? new Date(slide.fimEm).toISOString().slice(0, 16)
-    : ''
 
   return (
     <section>
@@ -56,21 +56,7 @@ export default async function EditarSlidePage({ params }: Props) {
         </div>
       </div>
 
-      <SlideForm
-        initialData={{
-          id: slide.id,
-          titulo: slide.titulo,
-          descricao: slide.descricao ?? '',
-          imagemUrl: slide.imagemUrl ?? '',
-          ctaLabel: slide.ctaLabel ?? '',
-          ctaUrl: slide.ctaUrl ?? '',
-          ordem: slide.ordem,
-          ativo: slide.ativo,
-          inicioEm: inicioEmFormatted,
-          fimEm: fimEmFormatted,
-        }}
-        slideId={slide.id}
-      />
+      <SlideForm initialData={formDoRegistro(slide)} slideId={slide.id} editais={editais} fotos={FOTOS_ABERTURA} />
     </section>
   )
 }
