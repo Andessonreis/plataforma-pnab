@@ -1,20 +1,11 @@
 'use client'
 
-import { Card, Input, Textarea } from '@/components/ui'
 import { generateSimpleSlug } from '@/lib/utils/slug'
-import type { CampoFormulario } from '@/types/campo-formulario'
+import { CampoArea, CampoMarcar, CampoTexto } from '@/app/admin/memorial/_ui/config-campo'
+import { EscolherFinalidade } from './escolher-finalidade'
+import type { ValoresQuestionario } from './valores'
 
-export interface ValoresQuestionario {
-  slug: string
-  titulo: string
-  descricao: string
-  finalidade: string
-  exigeLogin: boolean
-  mensagemSucesso: string
-  campos: CampoFormulario[]
-}
-
-interface DadosGeraisProps {
+interface Props {
   valores: ValoresQuestionario
   erros: Record<string, string>
   /** Enquanto o endereço não foi editado à mão, ele acompanha o título. */
@@ -23,70 +14,58 @@ interface DadosGeraisProps {
   onSlugManual: () => void
 }
 
-export function DadosGerais({ valores, erros, slugAutomatico, onChange, onSlugManual }: DadosGeraisProps) {
+/** Título, para que serve e textos da página do questionário. */
+export function DadosGerais({ valores, erros, slugAutomatico, onChange, onSlugManual }: Props) {
   return (
-    <Card>
-      <h2 className="mb-4 text-base font-semibold text-slate-900">Dados do questionário</h2>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Input
-          label="Título"
-          value={valores.titulo}
-          required
-          error={erros.titulo}
-          onChange={(e) => {
-            const titulo = e.target.value
-            onChange(slugAutomatico ? { titulo, slug: generateSimpleSlug(titulo).slice(0, 80) } : { titulo })
-          }}
+    <section aria-labelledby="sobre-titulo" className="space-y-4 rounded-xl border border-tinta-900/10 bg-white p-4 sm:p-5">
+      <h2 id="sobre-titulo" className="text-base font-bold text-tinta-900">Sobre o questionário</h2>
+      <CampoTexto
+        rotulo="Título"
+        required
+        value={valores.titulo}
+        erro={erros.titulo}
+        dica="É o que o público vê no topo da página."
+        onChange={(e) => {
+          const titulo = e.target.value
+          onChange(slugAutomatico ? { titulo, slug: generateSimpleSlug(titulo).slice(0, 80) } : { titulo })
+        }}
+      />
+      <EscolherFinalidade valor={valores.finalidade} erro={erros.finalidade} onChange={(finalidade) => onChange({ finalidade })} />
+      <CampoArea
+        rotulo="Texto de abertura"
+        rows={3}
+        value={valores.descricao}
+        erro={erros.descricao}
+        dica="Opcional. Aparece abaixo do título, antes das perguntas."
+        onChange={(e) => onChange({ descricao: e.target.value })}
+      />
+      <div className="grid gap-4 2xl:grid-cols-2">
+        <CampoArea
+          rotulo="Mensagem depois do envio"
+          rows={2}
+          value={valores.mensagemSucesso}
+          erro={erros.mensagemSucesso}
+          dica="Opcional. Sem ela, aparece um agradecimento padrão junto do protocolo."
+          onChange={(e) => onChange({ mensagemSucesso: e.target.value })}
         />
-        <Input
-          label="Endereço público"
-          value={valores.slug}
+        <CampoTexto
+          rotulo="Endereço da página"
           required
-          error={erros.slug}
-          hint={`Fica em /questionarios/${valores.slug || '...'}`}
+          value={valores.slug}
+          erro={erros.slug}
+          dica={`Fica em /questionarios/${valores.slug || '…'}`}
           onChange={(e) => {
             onSlugManual()
             onChange({ slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })
           }}
         />
-        <div className="sm:col-span-2">
-          <Input
-            label="Finalidade"
-            value={valores.finalidade}
-            required
-            error={erros.finalidade}
-            hint="Agrupa questionários do mesmo uso. O agendamento do Memorial usa memorial-agendamento."
-            onChange={(e) => onChange({ finalidade: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })}
-          />
-        </div>
       </div>
-      <div className="mt-4 space-y-4">
-        <Textarea
-          label="Apresentação (opcional)"
-          value={valores.descricao}
-          error={erros.descricao}
-          rows={3}
-          hint="Aparece no topo da página, abaixo do título."
-          onChange={(e) => onChange({ descricao: e.target.value })}
-        />
-        <Textarea
-          label="Mensagem depois do envio (opcional)"
-          value={valores.mensagemSucesso}
-          error={erros.mensagemSucesso}
-          rows={2}
-          hint="Mostrada junto do protocolo. Sem mensagem, aparece um agradecimento padrão."
-          onChange={(e) => onChange({ mensagemSucesso: e.target.value })}
-        />
-        <label className="flex min-h-[44px] items-center gap-3 text-sm text-slate-700">
-          <input
-            type="checkbox"
-            checked={valores.exigeLogin}
-            onChange={(e) => onChange({ exigeLogin: e.target.checked })}
-            className="h-5 w-5 rounded border-slate-400 text-brand-600 focus-visible:ring-2 focus-visible:ring-brand-500"
-          />
-          Só quem tem conta no portal pode responder
-        </label>
-      </div>
-    </Card>
+      <CampoMarcar
+        rotulo="Só quem tem conta no portal pode responder"
+        dica="Deixe desmarcado para qualquer pessoa conseguir responder."
+        checked={valores.exigeLogin}
+        onChange={(e) => onChange({ exigeLogin: e.target.checked })}
+      />
+    </section>
   )
 }

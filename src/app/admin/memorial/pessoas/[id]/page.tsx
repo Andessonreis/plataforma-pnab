@@ -1,12 +1,12 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { ROLES_MEMORIAL } from '@/lib/memorial/acesso'
 import { pendenciasPessoa } from '@/lib/memorial/publicacao'
 import { opcoesDeVinculo } from '@/lib/services/memorial-painel.service'
 import { obter } from '@/lib/services/memorial-pessoa.service'
-import { requireRole } from '../../../require-role'
-import { PainelEdicao } from '../../_componentes/painel-edicao'
+import { requireRole } from '@/app/admin/require-role'
+import { PainelConteudo } from '../_edicao/painel-conteudo'
 import { PessoaForm } from '../pessoa-form'
-import { ROLES_MEMORIAL } from '@/lib/memorial/acesso'
 
 export const metadata: Metadata = { title: 'Editar pessoa — Portal PNAB Irecê' }
 
@@ -17,7 +17,7 @@ export default async function EditarPessoaPage({ params }: { params: Promise<{ i
   if (!pessoa) notFound()
 
   return (
-    <PainelEdicao
+    <PainelConteudo
       titulo={pessoa.nome}
       voltar={{ href: '/admin/memorial/pessoas', rotulo: 'Pessoas e eventos' }}
       endpoint={`/api/v1/memorial/pessoas/${id}`}
@@ -29,6 +29,6 @@ export default async function EditarPessoaPage({ params }: { params: Promise<{ i
       destinoExclusao="/admin/memorial/pessoas"
     >
       <PessoaForm pessoa={pessoa} opcoes={opcoes} />
-    </PainelEdicao>
+    </PainelConteudo>
   )
 }

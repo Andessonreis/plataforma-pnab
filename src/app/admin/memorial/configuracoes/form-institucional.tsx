@@ -1,13 +1,12 @@
 'use client'
 
 import type { FormEvent } from 'react'
-import { Button, Input, Textarea } from '@/components/ui'
 import { CapaMemorial } from '@/components/memorial/capa-memorial'
 import type { Institucional } from '@/lib/memorial/config'
-import { RecadoEnvio } from '../_componentes/recado-envio'
-import { SecaoForm } from '../_componentes/secao-form'
-import { useCampos, useSalvar } from '../_componentes/use-envio'
-import { CONFIGURACOES, PreviaSite } from './previa-site'
+import { useCampos, useSalvar } from '@/app/admin/memorial/_componentes/use-envio'
+import { RodapeSalvar } from '@/app/admin/memorial/_ui/config-barra-salvar'
+import { CampoArea, CampoTexto } from '@/app/admin/memorial/_ui/config-campo'
+import { CONFIGURACOES, SecaoConfig } from './previa-site'
 
 export function FormInstitucional({ inicial, foto }: { inicial: Institucional; foto: string | null }) {
   const { valores, texto } = useCampos(inicial)
@@ -19,25 +18,22 @@ export function FormInstitucional({ inicial, foto }: { inicial: Institucional; f
   }
 
   return (
-    <SecaoForm titulo="Apresentação do Memorial" ajuda="Nome, frase de abertura e texto institucional da página do Memorial.">
-      <form onSubmit={enviar} className="space-y-4" noValidate>
-        <Input label="Nome" required error={erros.titulo} {...texto('titulo')} />
-        <Input label="Chamada" hint="Frase curta sob o nome, na abertura da página." error={erros.chamada} {...texto('chamada')} />
-        <Textarea
-          label="Texto institucional"
-          rows={8}
-          hint="O primeiro parágrafo aparece na página inicial; o texto inteiro, em “Sobre”. Separe parágrafos com uma linha em branco."
-          error={erros.texto}
-          {...texto('texto')}
-        />
-        <RecadoEnvio recado={recado} />
-        <Button type="submit" loading={enviando} className="min-h-[44px]">
-          Salvar apresentação
-        </Button>
-      </form>
-      <PreviaSite>
-        <CapaMemorial institucional={valores} foto={foto} credito={null} previa />
-      </PreviaSite>
-    </SecaoForm>
+    <SecaoConfig
+      titulo="Apresentação do Memorial"
+      explicacao="O que o visitante lê ao abrir a página do Memorial."
+      onSubmit={enviar}
+      previa={<CapaMemorial institucional={valores} foto={foto} credito={null} previa />}
+    >
+      <CampoTexto rotulo="Nome do Memorial" required erro={erros.titulo} {...texto('titulo')} />
+      <CampoTexto rotulo="Chamada" dica="Frase curta logo abaixo do nome, na abertura da página." erro={erros.chamada} {...texto('chamada')} />
+      <CampoArea
+        rotulo="Texto de apresentação"
+        rows={9}
+        dica="O primeiro parágrafo aparece na abertura; o texto inteiro, na página “Sobre”. Deixe uma linha em branco entre parágrafos."
+        erro={erros.texto}
+        {...texto('texto')}
+      />
+      <RodapeSalvar valores={valores} recado={recado} enviando={enviando} rotulo="Salvar apresentação" sobreCartao />
+    </SecaoConfig>
   )
 }

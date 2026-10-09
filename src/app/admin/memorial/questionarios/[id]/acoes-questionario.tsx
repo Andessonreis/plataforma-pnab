@@ -3,12 +3,12 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { StatusConteudo } from '@prisma/client'
-import { Button } from '@/components/ui'
+import Link from 'next/link'
+import { botaoNeutro, botaoPerigo, botaoPrimario } from '@/app/admin/memorial/_ui'
 import { toast } from '@/hooks/use-toast'
 
 interface AcoesQuestionarioProps {
   id: string
-  slug: string
   titulo: string
   status: StatusConteudo
   respostas: number
@@ -19,10 +19,10 @@ type Acao = 'status' | 'duplicar' | 'excluir'
 const BASE = '/admin/memorial/questionarios'
 
 /**
- * Publicar/arquivar, duplicar e excluir. Questionário com respostas não tem
+ * Publicar ou parar de receber respostas, copiar e excluir. Questionário com respostas não tem
  * botão de excluir: as respostas são registro e a API recusaria de qualquer jeito.
  */
-export function AcoesQuestionario({ id, slug, titulo, status, respostas }: AcoesQuestionarioProps) {
+export function AcoesQuestionario({ id, titulo, status, respostas }: AcoesQuestionarioProps) {
   const router = useRouter()
   const [emAndamento, setEmAndamento] = useState<Acao | null>(null)
   const publicado = status === 'PUBLICADO'
@@ -52,7 +52,7 @@ export function AcoesQuestionario({ id, slug, titulo, status, respostas }: Acoes
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: proximo }),
-    }, publicado ? 'Questionário arquivado' : 'Questionário publicado')
+    }, publicado ? 'Questionário arquivado: não recebe mais respostas' : 'Questionário publicado')
     if (ok) router.refresh()
   }
 
@@ -69,37 +69,19 @@ export function AcoesQuestionario({ id, slug, titulo, status, respostas }: Acoes
 
   return (
     <>
-      <Button href={`${BASE}/${id}/respostas`} variant="outline" size="sm">
-        {respostas === 1 ? '1 resposta' : `${respostas} respostas`}
-      </Button>
-      {publicado && (
-        <a
-          href={`/questionarios/${slug}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex min-h-[44px] items-center rounded-md px-3 text-sm font-medium text-slate-700 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-brand-600"
-        >
-          Abrir no site
-          <span className="sr-only"> (abre em nova aba)</span>
-        </a>
-      )}
-      <Button type="button" size="sm" loading={emAndamento === 'status'} onClick={alternarPublicacao}>
-        {publicado ? 'Arquivar' : 'Publicar'}
-      </Button>
-      <Button type="button" variant="ghost" size="sm" loading={emAndamento === 'duplicar'} onClick={duplicar}>
-        Duplicar
-      </Button>
+      <button type="button" className={publicado ? botaoNeutro : botaoPrimario} disabled={emAndamento !== null} onClick={alternarPublicacao}>
+        {emAndamento === 'status' ? 'Aguarde…' : publicado ? 'Parar de receber respostas' : status === 'ARQUIVADO' ? 'Publicar de novo' : 'Publicar'}
+      </button>
+      <Link href={`${BASE}/${id}/respostas`} className={botaoNeutro}>
+        {respostas === 1 ? 'Ver 1 resposta' : `Ver ${respostas} respostas`}
+      </Link>
+      <button type="button" className={botaoNeutro} disabled={emAndamento !== null} onClick={duplicar}>
+        {emAndamento === 'duplicar' ? 'Copiando…' : 'Fazer uma cópia'}
+      </button>
       {respostas === 0 && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="text-red-700 hover:bg-red-50"
-          loading={emAndamento === 'excluir'}
-          onClick={excluir}
-        >
-          Excluir
-        </Button>
+        <button type="button" className={botaoPerigo} disabled={emAndamento !== null} onClick={excluir}>
+          {emAndamento === 'excluir' ? 'Excluindo…' : 'Excluir'}
+        </button>
       )}
     </>
   )

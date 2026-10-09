@@ -2,31 +2,33 @@
 
 import { useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui'
-import { toast } from '@/hooks/use-toast'
 import { questionarioSchema } from '@/lib/schemas/questionario'
-import { DadosGerais, type ValoresQuestionario } from './dados-gerais'
+import type { Recado } from '@/app/admin/memorial/_componentes/use-envio'
+import { AbasBotao } from '@/app/admin/memorial/_ui/config-abas'
+import { RodapeSalvar } from '@/app/admin/memorial/_ui/config-barra-salvar'
 import { ConstrutorCampos } from './construtor-campos'
+import { DadosGerais } from './dados-gerais'
 import { PreVisualizacao } from './pre-visualizacao'
+import { QUESTIONARIO_VAZIO, type ValoresQuestionario } from './valores'
 
-interface QuestionarioFormProps {
+interface Props {
   questionarioId?: string
   valoresIniciais?: ValoresQuestionario
+  /** Respostas já recebidas, para avisar que mudar perguntas cria uma versão nova. */
+  respostas?: number
 }
 
-const VAZIO: ValoresQuestionario = {
-  slug: '', titulo: '', descricao: '', finalidade: '',
-  exigeLogin: false, mensagemSucesso: '', campos: [],
-}
-
-type Aba = 'editar' | 'previa'
-
-export function QuestionarioForm({ questionarioId, valoresIniciais }: QuestionarioFormProps) {
+/**
+ * Editor do questionário. No computador, perguntas à esquerda e a prévia viva à
+ * direita; no celular, as duas coisas em abas.
+ */
+export function QuestionarioForm({ questionarioId, valoresIniciais, respostas = 0 }: Props) {
   const router = useRouter()
-  const [valores, setValores] = useState<ValoresQuestionario>(valoresIniciais ?? VAZIO)
+  const [valores, setValores] = useState<ValoresQuestionario>(valoresIniciais ?? QUESTIONARIO_VAZIO)
   const [slugAutomatico, setSlugAutomatico] = useState(!questionarioId)
   const [erros, setErros] = useState<Record<string, string>>({})
-  const [aba, setAba] = useState<Aba>('editar')
+  const [recado, setRecado] = useState<Recado>(null)
+  const [aba, setAba] = useState('perguntas')
   const [salvando, setSalvando] = useState(false)
 
   const alterar = (patch: Partial<ValoresQuestionario>) => setValores((v) => ({ ...v, ...patch }))
@@ -38,8 +40,8 @@ export function QuestionarioForm({ questionarioId, valoresIniciais }: Questionar
       const novos: Record<string, string> = {}
       for (const issue of validacao.error.issues) novos[issue.path.join('.')] ??= issue.message
       setErros(novos)
-      setAba('editar')
-      toast({ variant: 'destructive', title: 'Confira os campos destacados', description: Object.values(novos)[0] })
+      setAba('perguntas')
+      setRecado({ tom: 'erro', texto: `Confira o que está em vermelho: ${Object.values(novos)[0]}` })
       return
     }
 
@@ -54,61 +56,42 @@ export function QuestionarioForm({ questionarioId, valoresIniciais }: Questionar
       const corpo = await res.json().catch(() => ({}))
       if (!res.ok) {
         if (corpo.fieldErrors) setErros(corpo.fieldErrors)
-        toast({ variant: 'destructive', title: 'Questionário não salvo', description: corpo.message })
+        setRecado({ tom: 'erro', texto: corpo.message ?? 'Não foi possível salvar. Tente de novo.' })
         return
       }
-      toast({ title: questionarioId ? 'Questionário salvo' : 'Questionário criado' })
+      setRecado({ tom: 'sucesso', texto: 'Salvo' })
       if (questionarioId) router.refresh()
       else router.push(`/admin/memorial/questionarios/${corpo.data.id}`)
     } catch {
-      toast({ variant: 'destructive', title: 'Sem conexão', description: 'Confira sua internet e tente de novo.' })
+      setRecado({ tom: 'erro', texto: 'Sem conexão. Confira a internet e tente de novo.' })
     } finally {
       setSalvando(false)
     }
   }
 
-  const abas: { id: Aba; rotulo: string }[] = [
-    { id: 'editar', rotulo: 'Editar' },
-    { id: 'previa', rotulo: 'Pré-visualizar' },
-  ]
-
   return (
-    <form onSubmit={salvar} noValidate className="space-y-4 pb-24 sm:space-y-6 sm:pb-0">
-      <div role="group" aria-label="Modo de exibição" className="inline-flex rounded-lg bg-slate-100 p-1">
-        {abas.map((a) => (
-          <button
-            key={a.id}
-            type="button"
-            aria-pressed={aba === a.id}
-            onClick={() => setAba(a.id)}
-            className={`min-h-[44px] rounded-md px-4 text-sm font-medium focus-visible:outline-2 focus-visible:outline-brand-600 ${aba === a.id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'}`}
-          >
-            {a.rotulo}
-          </button>
-        ))}
+    <div>
+      <AbasBotao
+        rotulo="O que ver"
+        className="mb-4 lg:hidden"
+        ativa={aba}
+        onChange={setAba}
+        abas={[
+          { chave: 'perguntas', rotulo: 'Perguntas', contagem: valores.campos.length },
+          { chave: 'previa', rotulo: 'Como fica' },
+        ]}
+      />
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:items-start xl:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] 2xl:grid-cols-[minmax(0,1fr)_minmax(0,30rem)]">
+        {/* A prévia tem o próprio <form>; por isso ela fica fora deste. */}
+        <form onSubmit={salvar} noValidate className={`space-y-4 ${aba === 'previa' ? 'hidden lg:block' : ''}`}>
+          <ConstrutorCampos campos={valores.campos} erros={erros} respostas={respostas} onChange={(campos) => alterar({ campos })} />
+          <DadosGerais valores={valores} erros={erros} slugAutomatico={slugAutomatico} onChange={alterar} onSlugManual={() => setSlugAutomatico(false)} />
+          <RodapeSalvar valores={valores} recado={recado} enviando={salvando} rotulo={questionarioId ? 'Salvar alterações' : 'Criar questionário'} />
+        </form>
+        <div className={`lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto ${aba === 'perguntas' ? 'hidden lg:block' : ''}`}>
+          <PreVisualizacao titulo={valores.titulo} descricao={valores.descricao} campos={valores.campos} />
+        </div>
       </div>
-
-      {aba === 'editar' ? (
-        <>
-          <DadosGerais
-            valores={valores}
-            erros={erros}
-            slugAutomatico={slugAutomatico}
-            onChange={alterar}
-            onSlugManual={() => setSlugAutomatico(false)}
-          />
-          <ConstrutorCampos campos={valores.campos} erros={erros} onChange={(campos) => alterar({ campos })} />
-        </>
-      ) : (
-        <PreVisualizacao campos={valores.campos} />
-      )}
-
-      {/* No celular o botão fica preso ao rodapé: a lista de perguntas é longa e salvar não pode exigir rolar até o fim. */}
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 p-3 backdrop-blur sm:static sm:border-0 sm:bg-transparent sm:p-0">
-        <Button type="submit" loading={salvando} className="w-full sm:w-auto">
-          {questionarioId ? 'Salvar alterações' : 'Criar questionário'}
-        </Button>
-      </div>
-    </form>
+    </div>
   )
 }

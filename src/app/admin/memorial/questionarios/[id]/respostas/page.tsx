@@ -1,15 +1,15 @@
 import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
-import { requireRole } from '@/app/admin/require-role'
-import { paginationSchema } from '@/lib/schemas/pagination'
-import { ServiceError } from '@/lib/services/errors'
-import { obterQuestionario } from '@/lib/services/questionario.service'
-import { listarRespostas } from '@/lib/services/questionario-resposta.service'
-import { Card, EmptyState, IconClipboard, IconDownload, Pagination } from '@/components/ui'
-import { Cabecalho } from '../../cabecalho'
-import { RespostasTabela } from './respostas-tabela'
-import { RespostaCartao } from './resposta-cartao'
+import { IconClipboard, IconDownload, Pagination } from '@/components/ui'
 import { ROLES_MEMORIAL } from '@/lib/memorial/acesso'
+import { paginationSchema } from '@/lib/schemas/pagination'
+import { requireRole } from '@/app/admin/require-role'
+import { montarUrl } from '@/app/admin/memorial/_componentes/parametros'
+import { CabecalhoPagina, VazioAcionavel, botaoPrimario } from '@/app/admin/memorial/_ui'
+import { carregarRespostas } from './carregar'
+import { FiltroPeriodo } from './filtro-periodo'
+import { periodoSchema } from './periodo'
+import { RespostaCartao } from './resposta-cartao'
+import { RespostasTabela } from './respostas-tabela'
 
 export const metadata: Metadata = {
   title: 'Respostas do questionário — Portal PNAB Irecê',
@@ -17,68 +17,68 @@ export const metadata: Metadata = {
 
 interface Props {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ page?: string }>
+  searchParams: Promise<{ page?: string; de?: string; ate?: string }>
 }
 
-async function carregar(id: string, page: number) {
-  try {
-    return await Promise.all([obterQuestionario(id), listarRespostas(id, page, 20)])
-  } catch (err) {
-    if (err instanceof ServiceError && err.code === 'NOT_FOUND') notFound()
-    throw err
-  }
+function textoTotal(total: number, totalGeral: number, filtrando: boolean) {
+  const n = (x: number) => (x === 1 ? '1 resposta' : `${x} respostas`)
+  return filtrando ? `${n(total)} no período escolhido, de ${totalGeral} no total.` : `${n(total)} recebidas, da mais nova para a mais antiga.`
 }
 
 export default async function RespostasPage({ params, searchParams }: Props) {
   await requireRole(...ROLES_MEMORIAL)
   const { id } = await params
-  const { page } = paginationSchema.catch({ page: 1, pageSize: 20 }).parse({ page: (await searchParams).page })
-  const [questionario, { data, meta }] = await carregar(id, page)
-  const base = `/admin/memorial/questionarios/${id}`
+  const busca = await searchParams
+  const { page } = paginationSchema.catch({ page: 1, pageSize: 20 }).parse({ page: busca.page })
+  const periodo = periodoSchema.parse(busca)
+  const { questionario, data, total, totalGeral, totalPages } = await carregarRespostas(id, page, periodo)
+  const base = `/admin/memorial/questionarios/${id}/respostas`
+  const filtrando = Boolean(periodo.de || periodo.ate)
 
   return (
     <section>
-      <Cabecalho
-        titulo="Respostas"
-        voltar={{ href: base, rotulo: questionario.titulo }}
-        descricao={`${meta.total} resposta(s). Cada uma aparece com as perguntas da versão em que foi enviada.`}
+      <CabecalhoPagina
+        titulo={`Respostas: ${questionario.titulo}`}
+        descricao={`${textoTotal(total, totalGeral, filtrando)} Cada uma aparece com as perguntas da versão em que foi enviada.`}
+        voltar={{ href: `/admin/memorial/questionarios/${id}`, rotulo: 'Voltar ao questionário' }}
         acoes={
-          meta.total > 0 ? (
-            <a
-              href={`/api/v1/questionarios/${id}/respostas?formato=csv`}
-              download
-              className="inline-flex min-h-[44px] items-center rounded-lg border-2 border-brand-600 px-4 text-sm font-medium text-brand-700 hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
-            >
-              <IconDownload className="mr-2 h-4 w-4" aria-hidden="true" />
-              Baixar planilha (CSV)
+          totalGeral > 0 && (
+            <a href={`/api/v1/questionarios/${id}/respostas?formato=csv`} download className={`${botaoPrimario} w-full sm:w-auto`}>
+              <IconDownload className="h-4 w-4" />
+              Baixar planilha com todas
             </a>
-          ) : null
+          )
         }
       />
+      {totalGeral > 0 && <FiltroPeriodo base={base} periodo={periodo} />}
+      {filtrando && totalGeral > 0 && (
+        <p className="-mt-2 mb-4 text-sm text-tinta-600">A planilha sempre traz todas as respostas, sem o filtro de período.</p>
+      )}
 
       {data.length === 0 ? (
-        <Card>
-          <EmptyState
-            icon={<IconClipboard className="h-8 w-8 text-slate-400" />}
-            title="Nenhuma resposta ainda"
-            description={
-              questionario.status === 'PUBLICADO'
-                ? `Compartilhe o endereço /questionarios/${questionario.slug} para receber respostas.`
+        <VazioAcionavel
+          icone={<IconClipboard className="h-6 w-6" />}
+          titulo={filtrando ? 'Nenhuma resposta nesse período' : 'Nenhuma resposta ainda'}
+          texto={
+            filtrando
+              ? 'Escolha outras datas ou veja todas.'
+              : questionario.status === 'PUBLICADO'
+                ? `Envie o endereço /questionarios/${questionario.slug} para começar a receber respostas.`
                 : 'O questionário só recebe respostas depois de publicado.'
-            }
-          />
-        </Card>
+          }
+          acao={filtrando ? { href: base, rotulo: 'Ver todas' } : undefined}
+        />
       ) : (
         <>
           <ul className="space-y-3 sm:hidden">
             {data.map((r) => (
               <li key={r.id}>
-                <RespostaCartao resposta={r} />
+                <RespostaCartao resposta={r} href={`${base}/${r.id}`} />
               </li>
             ))}
           </ul>
-          <RespostasTabela respostas={data} />
-          <Pagination currentPage={meta.page} totalPages={meta.totalPages} baseUrl={`${base}/respostas`} className="mt-4 sm:mt-6" />
+          <RespostasTabela respostas={data} base={base} />
+          <Pagination currentPage={page} totalPages={totalPages} baseUrl={montarUrl(base, periodo)} className="mt-6" />
         </>
       )}
     </section>
