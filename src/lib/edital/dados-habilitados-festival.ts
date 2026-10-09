@@ -1,3 +1,5 @@
+import { vagasInfoDaCategoria } from './categorias-festival'
+
 export interface PropostaHabilitacaoFestival {
   posicao: number
   numero: string
@@ -13,7 +15,7 @@ export interface PropostaHabilitacaoFestival {
 export interface CategoriaHabilitacaoFestival {
   nome: string
   ancora: string
-  vagasInfo?: string
+  vagasInfo: string
   propostas: PropostaHabilitacaoFestival[]
 }
 
@@ -23,11 +25,12 @@ export function isEditalFestival(slug: string): boolean {
   return slug === SLUG_FESTIVAL
 }
 
-export const CATEGORIAS_HABILITACAO_FESTIVAL: CategoriaHabilitacaoFestival[] = [
+type CategoriaSemVagas = Omit<CategoriaHabilitacaoFestival, 'vagasInfo'>
+
+const HABILITADOS_FESTIVAL: CategoriaSemVagas[] = [
   {
     nome: 'Arte Visual/Exposição',
     ancora: 'arte-visual-exposicao',
-    vagasInfo: '3 vagas · R$ 7.000,00 por projeto',
     propostas: [
       { posicao: 1, numero: 'PNAB-2026-0139', nome: 'Cleriston Kerley Dourado', cpfCnpj: '00326220585', modalidade: 'Ampla concorrência', notaFinal: 95.00, habilitado: true },
       { posicao: 2, numero: 'PNAB-2026-0155', nome: 'Lenec Mota da Silva', cpfCnpj: '06500529510', modalidade: 'Cota — Pessoas Negras', notaFinal: 93.33, habilitado: true },
@@ -37,7 +40,6 @@ export const CATEGORIAS_HABILITACAO_FESTIVAL: CategoriaHabilitacaoFestival[] = [
   {
     nome: 'Atividades de Formação/Curso',
     ancora: 'atividades-de-formacao-curso',
-    vagasInfo: '4 vagas · R$ 6.000,00 por projeto',
     propostas: [
       { posicao: 1, numero: 'PNAB-2026-0135', nome: 'Gleige Souza Pereira', cpfCnpj: '05699510540', modalidade: 'Ampla concorrência', notaFinal: 98.33, habilitado: true },
       { posicao: 2, numero: 'PNAB-2026-0066', nome: 'nicolle da conceicao barros', cpfCnpj: '63881900000105', modalidade: 'Ampla concorrência', notaFinal: 94.17, habilitado: true },
@@ -48,7 +50,6 @@ export const CATEGORIAS_HABILITACAO_FESTIVAL: CategoriaHabilitacaoFestival[] = [
   {
     nome: 'Audiovisual/Cinema',
     ancora: 'audiovisual-cinema',
-    vagasInfo: '4 vagas · R$ 10.000,00 por projeto',
     propostas: [
       { posicao: 1, numero: 'PNAB-2026-0023', nome: 'Marcelo Barreto de Lima', cpfCnpj: '03014631582', modalidade: 'Ampla concorrência', notaFinal: 101.50, habilitado: true },
       { posicao: 2, numero: 'PNAB-2026-0024', nome: 'Alexander Gondim Barretto', cpfCnpj: '05849484507', modalidade: 'Ampla concorrência', notaFinal: 87.50, habilitado: true, motivo: 'Habilitado após recurso' },
@@ -59,7 +60,6 @@ export const CATEGORIAS_HABILITACAO_FESTIVAL: CategoriaHabilitacaoFestival[] = [
   {
     nome: 'Cultura Hip Hop/Batalha de Rua',
     ancora: 'cultura-hip-hop-batalha-de-rua',
-    vagasInfo: '1 vaga · R$ 5.000,00 por projeto',
     propostas: [
       { posicao: 1, numero: 'PNAB-2026-0025', nome: 'Italo Jonmar Almeida de Oliveira', cpfCnpj: '05886825517', modalidade: 'Ampla concorrência', notaFinal: 91.33, habilitado: true },
     ],
@@ -67,7 +67,6 @@ export const CATEGORIAS_HABILITACAO_FESTIVAL: CategoriaHabilitacaoFestival[] = [
   {
     nome: 'Cultura Hip Hop/Grafite',
     ancora: 'cultura-hip-hop-grafite',
-    vagasInfo: '1 vaga · R$ 5.000,00 por projeto',
     propostas: [
       { posicao: 1, numero: 'PNAB-2026-0076', nome: 'Maicon Nunes Bastos', cpfCnpj: '07137577520', modalidade: 'Ampla concorrência', notaFinal: 87.83, habilitado: true },
     ],
@@ -75,7 +74,6 @@ export const CATEGORIAS_HABILITACAO_FESTIVAL: CategoriaHabilitacaoFestival[] = [
   {
     nome: 'Cultura Popular',
     ancora: 'cultura-popular',
-    vagasInfo: '4 vagas · R$ 5.000,00 por projeto',
     propostas: [
       { posicao: 1, numero: 'PNAB-2026-0051', nome: 'Associação Quilombola Comunitária de Convivência com o semiárido', cpfCnpj: '10733827000168', modalidade: 'Cota — Pessoas Negras', notaFinal: 99.00, habilitado: true },
       { posicao: 2, numero: 'PNAB-2026-0110', nome: 'Grupo de Capoeira Araúna', cpfCnpj: '10763778583', modalidade: 'Cota — Pessoas Negras', notaFinal: 87.83, habilitado: false, situacao: 'Desclassificado', motivo: 'Desclassificado pela não apresentação de recurso' },
@@ -86,7 +84,6 @@ export const CATEGORIAS_HABILITACAO_FESTIVAL: CategoriaHabilitacaoFestival[] = [
   {
     nome: 'Economia Criativa/Feiras e/ou Mostras',
     ancora: 'economia-criativa-feiras-e-ou-mostras',
-    vagasInfo: '2 vagas · R$ 8.000,00 por projeto',
     propostas: [
       { posicao: 1, numero: 'PNAB-2026-0035', nome: 'Sandra Fernandes de Sousa', cpfCnpj: '00053119509', modalidade: 'Cota — Pessoas Negras', notaFinal: 105.33, habilitado: true },
       { posicao: 2, numero: 'PNAB-2026-0037', nome: 'Romário Rodrigues de Oliveira Júnior', cpfCnpj: '02890477576', modalidade: 'Cota — Pessoas Negras', notaFinal: 94.50, habilitado: true },
@@ -95,7 +92,6 @@ export const CATEGORIAS_HABILITACAO_FESTIVAL: CategoriaHabilitacaoFestival[] = [
   {
     nome: 'Literatura/Publicação Livro',
     ancora: 'literatura-publicacao-livro',
-    vagasInfo: '2 vagas · R$ 10.000,00 por projeto',
     propostas: [
       { posicao: 1, numero: 'PNAB-2026-0148', nome: 'Caique Sousa Queiroz', cpfCnpj: '06939749586', modalidade: 'Cota — Pessoas Negras', notaFinal: 98.17, habilitado: true },
       { posicao: 2, numero: 'PNAB-2026-0022', nome: 'João Pablo Trabuco de Oliveira', cpfCnpj: '03851938585', modalidade: 'Ampla concorrência', notaFinal: 96.50, habilitado: true },
@@ -104,7 +100,6 @@ export const CATEGORIAS_HABILITACAO_FESTIVAL: CategoriaHabilitacaoFestival[] = [
   {
     nome: 'Música I',
     ancora: 'musica-i',
-    vagasInfo: '3 vagas · R$ 8.000,00 por projeto',
     propostas: [
       { posicao: 1, numero: 'PNAB-2026-0074', nome: 'FERNANDA SODRE CUNHA', cpfCnpj: '01584369540', modalidade: 'Ampla concorrência', notaFinal: 92.17, habilitado: true },
       { posicao: 2, numero: 'PNAB-2026-0117', nome: 'César Augusto Barros', cpfCnpj: '06402286583', modalidade: 'Ampla concorrência', notaFinal: 92.00, habilitado: true },
@@ -114,7 +109,6 @@ export const CATEGORIAS_HABILITACAO_FESTIVAL: CategoriaHabilitacaoFestival[] = [
   {
     nome: 'Música II',
     ancora: 'musica-ii',
-    vagasInfo: '5 vagas · R$ 5.000,00 por projeto',
     propostas: [
       { posicao: 1, numero: 'PNAB-2026-0145', nome: '57.845.237 FABRICIA DE SOUZA SILVA', cpfCnpj: '57845237000190', modalidade: 'Ampla concorrência', notaFinal: 99.50, habilitado: true },
       { posicao: 2, numero: 'PNAB-2026-0112', nome: '33.662.146 LAIO RODRIGUES PINTO', cpfCnpj: '33662146000151', modalidade: 'Ampla concorrência', notaFinal: 94.17, habilitado: true },
@@ -126,7 +120,6 @@ export const CATEGORIAS_HABILITACAO_FESTIVAL: CategoriaHabilitacaoFestival[] = [
   {
     nome: 'Poesia/Sarau',
     ancora: 'poesia-sarau',
-    vagasInfo: '2 vagas · R$ 4.000,00 por projeto',
     propostas: [
       { posicao: 1, numero: 'PNAB-2026-0151', nome: 'Larissa Carneiro de Souza', cpfCnpj: '86038280596', modalidade: 'Ampla concorrência', notaFinal: 91.17, habilitado: true },
       { posicao: 2, numero: 'PNAB-2026-0111', nome: 'Luiz André Marques Dourado', cpfCnpj: '77062345504', modalidade: 'Ampla concorrência', notaFinal: 89.83, habilitado: true },
@@ -135,7 +128,6 @@ export const CATEGORIAS_HABILITACAO_FESTIVAL: CategoriaHabilitacaoFestival[] = [
   {
     nome: 'Sinfônicas e Filarmônicas',
     ancora: 'sinfonicas-e-filarmonicas',
-    vagasInfo: '2 vagas · R$ 15.000,00 por projeto',
     propostas: [
       { posicao: 1, numero: 'PNAB-2026-0045', nome: 'Sociedade Musical e Beneficente de Irecê', cpfCnpj: '03410823000183', modalidade: 'Ampla concorrência', notaFinal: 93.67, habilitado: true },
       { posicao: 2, numero: 'PNAB-2026-0105', nome: 'Centro Espirita Jesus de Nazaré', cpfCnpj: '16445785000146', modalidade: 'Cota — Pessoas Negras', notaFinal: 72.83, habilitado: true },
@@ -144,7 +136,6 @@ export const CATEGORIAS_HABILITACAO_FESTIVAL: CategoriaHabilitacaoFestival[] = [
   {
     nome: 'Teatro',
     ancora: 'teatro',
-    vagasInfo: '3 vagas · R$ 8.000,00 por projeto',
     propostas: [
       { posicao: 1, numero: 'PNAB-2026-0057', nome: 'KAREN RODRIGUES MOITINHO', cpfCnpj: '06029773550', modalidade: 'Cota — Indígenas e/ou PcD', notaFinal: 99.17, habilitado: true },
       { posicao: 2, numero: 'PNAB-2026-0143', nome: 'IRISVANIA DE SOUZA FEITOZA LIMA', cpfCnpj: '03692008538', modalidade: 'Ampla concorrência', notaFinal: 94.83, habilitado: true },
@@ -152,3 +143,8 @@ export const CATEGORIAS_HABILITACAO_FESTIVAL: CategoriaHabilitacaoFestival[] = [
     ],
   },
 ]
+
+export const CATEGORIAS_HABILITACAO_FESTIVAL: CategoriaHabilitacaoFestival[] = HABILITADOS_FESTIVAL.map((cat) => ({
+  ...cat,
+  vagasInfo: vagasInfoDaCategoria(cat.nome),
+}))

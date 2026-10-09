@@ -10,7 +10,7 @@
  */
 
 import { PrismaClient, type Prisma } from '@prisma/client'
-import type { CategoriaConfig } from '../src/types/categoria-config'
+import { CATEGORIAS_CONFIG_FESTIVAL } from '../src/lib/edital/categorias-festival'
 
 const prisma = new PrismaClient()
 
@@ -18,27 +18,8 @@ function toJson(value: unknown): Prisma.InputJsonValue {
   return value as unknown as Prisma.InputJsonValue
 }
 
-// ─── Categorias, vagas, cotas e valor (Anexo I) ──────────────────────────────
-// Duas cotas reservadas em todo o edital: pessoas negras e indígenas/PCD
-// (combinadas em uma única coluna no Anexo I).
-
-const categoriasConfig: CategoriaConfig[] = [
-  { nome: 'Atividades de Formação/Curso', vagasAmplaConcorrencia: 3, cotas: [{ key: 'negros', label: 'Cotas Pessoas Negras', vagas: 1 }, { key: 'indigena_pcd', label: 'Cotas Indígenas e/ou PCD', vagas: 0 }], valorPorProjeto: 7000, valorTotalCategoria: 28000 },
-  { nome: 'Música I', vagasAmplaConcorrencia: 2, cotas: [{ key: 'negros', label: 'Cotas Pessoas Negras', vagas: 1 }, { key: 'indigena_pcd', label: 'Cotas Indígenas e/ou PCD', vagas: 0 }], valorPorProjeto: 15000, valorTotalCategoria: 45000 },
-  { nome: 'Música II', vagasAmplaConcorrencia: 3, cotas: [{ key: 'negros', label: 'Cotas Pessoas Negras', vagas: 1 }, { key: 'indigena_pcd', label: 'Cotas Indígenas e/ou PCD', vagas: 1 }], valorPorProjeto: 7000, valorTotalCategoria: 35000 },
-  { nome: 'Sinfônicas e Filarmônicas', vagasAmplaConcorrencia: 2, cotas: [{ key: 'negros', label: 'Cotas Pessoas Negras', vagas: 0 }, { key: 'indigena_pcd', label: 'Cotas Indígenas e/ou PCD', vagas: 0 }], valorPorProjeto: 7000, valorTotalCategoria: 14000 },
-  { nome: 'Arte Visual/Exposição', vagasAmplaConcorrencia: 2, cotas: [{ key: 'negros', label: 'Cotas Pessoas Negras', vagas: 1 }, { key: 'indigena_pcd', label: 'Cotas Indígenas e/ou PCD', vagas: 0 }], valorPorProjeto: 7000, valorTotalCategoria: 21000 },
-  { nome: 'Dança I', vagasAmplaConcorrencia: 2, cotas: [{ key: 'negros', label: 'Cotas Pessoas Negras', vagas: 0 }, { key: 'indigena_pcd', label: 'Cotas Indígenas e/ou PCD', vagas: 0 }], valorPorProjeto: 5000, valorTotalCategoria: 10000 },
-  { nome: 'Economia Criativa/Feiras e/ou Mostras', vagasAmplaConcorrencia: 2, cotas: [{ key: 'negros', label: 'Cotas Pessoas Negras', vagas: 0 }, { key: 'indigena_pcd', label: 'Cotas Indígenas e/ou PCD', vagas: 0 }], valorPorProjeto: 20000, valorTotalCategoria: 40000 },
-  { nome: 'Teatro', vagasAmplaConcorrencia: 2, cotas: [{ key: 'negros', label: 'Cotas Pessoas Negras', vagas: 1 }, { key: 'indigena_pcd', label: 'Cotas Indígenas e/ou PCD', vagas: 0 }], valorPorProjeto: 10000, valorTotalCategoria: 30000 },
-  { nome: 'Poesia/Sarau', vagasAmplaConcorrencia: 2, cotas: [{ key: 'negros', label: 'Cotas Pessoas Negras', vagas: 0 }, { key: 'indigena_pcd', label: 'Cotas Indígenas e/ou PCD', vagas: 0 }], valorPorProjeto: 3000, valorTotalCategoria: 6000 },
-  { nome: 'Literatura/Publicação Livro', vagasAmplaConcorrencia: 2, cotas: [{ key: 'negros', label: 'Cotas Pessoas Negras', vagas: 0 }, { key: 'indigena_pcd', label: 'Cotas Indígenas e/ou PCD', vagas: 0 }], valorPorProjeto: 15000, valorTotalCategoria: 30000 },
-  { nome: 'Audiovisual/Cinema', vagasAmplaConcorrencia: 3, cotas: [{ key: 'negros', label: 'Cotas Pessoas Negras', vagas: 1 }, { key: 'indigena_pcd', label: 'Cotas Indígenas e/ou PCD', vagas: 0 }], valorPorProjeto: 2000, valorTotalCategoria: 8000 },
-  { nome: 'Cultura Popular', vagasAmplaConcorrencia: 3, cotas: [{ key: 'negros', label: 'Cotas Pessoas Negras', vagas: 1 }, { key: 'indigena_pcd', label: 'Cotas Indígenas e/ou PCD', vagas: 0 }], valorPorProjeto: 5000, valorTotalCategoria: 20000 },
-  { nome: 'Cultura Hip Hop/Grafite', vagasAmplaConcorrencia: 2, cotas: [{ key: 'negros', label: 'Cotas Pessoas Negras', vagas: 0 }, { key: 'indigena_pcd', label: 'Cotas Indígenas e/ou PCD', vagas: 0 }], valorPorProjeto: 7000, valorTotalCategoria: 14000 },
-  { nome: 'Cultura Hip Hop/Batalha de Rua', vagasAmplaConcorrencia: 1, cotas: [{ key: 'negros', label: 'Cotas Pessoas Negras', vagas: 0 }, { key: 'indigena_pcd', label: 'Cotas Indígenas e/ou PCD', vagas: 0 }], valorPorProjeto: 5000, valorTotalCategoria: 5000 },
-  { nome: 'Outros Serviços de Terceiros - Pessoa Jurídica', vagasAmplaConcorrencia: null, cotas: [], valorPorProjeto: null, valorTotalCategoria: 60272.49 },
-]
+// Categorias, vagas, cotas e valor (Anexo I) vêm de src/lib/edital/categorias-festival.ts
+const categoriasConfig = CATEGORIAS_CONFIG_FESTIVAL
 
 const categorias = categoriasConfig.map((c) => c.nome)
 
