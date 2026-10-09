@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
+import { ROLES_MEMORIAL } from '@/lib/memorial/acesso'
 import { opcoesDeVinculo } from '@/lib/services/memorial-painel.service'
 import { requireRole } from '../../../require-role'
-import { CabecalhoAdmin } from '../../_componentes/cabecalho-admin'
-import { ItemForm } from '../item-form'
-import { ROLES_MEMORIAL } from '@/lib/memorial/acesso'
+import { CabecalhoPagina } from '../../_ui'
+import { ItemForm } from '../_componentes/item-form'
 
 export const metadata: Metadata = { title: 'Novo item do acervo — Portal PNAB Irecê' }
 
@@ -13,9 +13,9 @@ export default async function NovoItemPage() {
 
   return (
     <section>
-      <CabecalhoAdmin
+      <CabecalhoPagina
         titulo="Novo item do acervo"
-        descricao="Para várias fotos de uma vez, use o envio de fotografias na página do acervo."
+        descricao="Para documentos, objetos, depoimentos ou uma foto com todos os dados. Para várias fotos de uma vez, use o envio na página do acervo."
         voltar={{ href: '/admin/memorial/acervo', rotulo: 'Acervo' }}
       />
       <ItemForm opcoes={opcoes} />

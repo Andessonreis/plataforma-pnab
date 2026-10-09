@@ -5,6 +5,8 @@ import { AdminSidebar } from './sidebar'
 import { getRoleTheme } from './role-theme'
 import { getEditaisVisiveis } from '@/lib/edital-acesso'
 import { prisma } from '@/lib/db'
+import { ROLES_MEMORIAL_COMPLETO } from '@/lib/memorial/acesso'
+import { STATUS_PENDENTES } from '@/lib/memorial/agendamento/status'
 import { IconMenu, UserAvatar } from '@/components/ui'
 import { NotificationBell } from '@/components/layout'
 import { variaveisDeFonte } from '../fontes'
@@ -78,6 +80,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         ])
       : [0, 0]
 
+  // Pedidos de visita ao Memorial esperando resposta — aparece no grupo do menu.
+  const memorialPendentes = ROLES_MEMORIAL_COMPLETO.includes(role)
+    ? await prisma.memorialAgendamento.count({ where: { status: { in: STATUS_PENDENTES } } })
+    : 0
+
   return (
     // .tema-secult resolve --brand-*/--accent-* pra cor real da identidade
     // SECULT (terracota/dourado); sem ela o backoffice caía no verde/âmbar
@@ -91,6 +98,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         habilitacaoPendentes={habilitacaoPendentes}
         avaliacaoPendentes={avaliacaoPendentes}
         avaliacaoEmAndamento={editaisEmAvaliacao > 0}
+        memorialPendentes={memorialPendentes}
       />
 
       <div className="flex-1 min-w-0 lg:ml-64">

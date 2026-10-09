@@ -2,9 +2,10 @@
 
 import { useRouter } from 'next/navigation'
 import type { FormEvent } from 'react'
-import { Button, Input } from '@/components/ui'
 import { RecadoEnvio } from '../../_componentes/recado-envio'
 import { useCampos, useEnvio } from '../../_componentes/use-envio'
+import { botaoPerigo, botaoPrimario } from '../../_ui'
+import { CampoTexto } from '../../_ui/acervo-campo'
 
 interface AlbumEditavel {
   id: string
@@ -41,10 +42,11 @@ export function AlbumForm({ album }: { album?: AlbumEditavel }) {
   return (
     <form onSubmit={salvar} className="space-y-3" noValidate>
       <div className="grid gap-3 sm:grid-cols-[2fr_3fr_6rem]">
-        <Input label="Nome" required error={erros.nome} {...texto('nome')} />
-        <Input label="Descrição" error={erros.descricao} {...texto('descricao')} />
-        <Input
-          label="Ordem"
+        <CampoTexto rotulo="Nome" required erro={erros.nome} {...texto('nome')} />
+        <CampoTexto rotulo="Descrição" erro={erros.descricao} {...texto('descricao')} />
+        <CampoTexto
+          rotulo="Ordem"
+          dica="Menor vem antes"
           type="number"
           min={0}
           value={valores.ordem}
@@ -52,13 +54,13 @@ export function AlbumForm({ album }: { album?: AlbumEditavel }) {
         />
       </div>
       <div className="flex flex-wrap gap-2">
-        <Button type="submit" size="sm" className="min-h-[44px]" loading={enviando}>
-          {album ? 'Salvar' : 'Criar álbum'}
-        </Button>
+        <button type="submit" className={botaoPrimario} disabled={enviando}>
+          {album ? 'Salvar álbum' : 'Criar álbum'}
+        </button>
         {album && (
-          <Button type="button" size="sm" variant="ghost" className="min-h-[44px] text-red-700" disabled={enviando} onClick={excluir}>
-            Excluir
-          </Button>
+          <button type="button" className={botaoPerigo} disabled={enviando} onClick={excluir}>
+            Excluir álbum
+          </button>
         )}
       </div>
       <RecadoEnvio recado={recado} />

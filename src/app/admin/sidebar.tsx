@@ -4,8 +4,9 @@ import { usePathname } from 'next/navigation'
 import type { UserRole } from '@prisma/client'
 import { LogoutButton } from '@/components/logout-button'
 import { IconClose, UserAvatar } from '@/components/ui'
-import { navSections, isNavItemActive } from './nav-items'
-import { AdminNavLink } from './nav-link'
+import { navSections } from './nav-items'
+import type { NavItem } from './nav-items'
+import { NavGroup } from './nav-group'
 import { getRoleTheme } from './role-theme'
 
 interface AdminSidebarProps {
@@ -19,6 +20,8 @@ interface AdminSidebarProps {
   avaliacaoPendentes?: number
   /** Há edital na fase de avaliação — destaca o item mesmo sem pendências */
   avaliacaoEmAndamento?: boolean
+  /** Pedidos de visita ao Memorial ainda sem resposta da equipe */
+  memorialPendentes?: number
 }
 
 /**
@@ -36,20 +39,23 @@ export function AdminSidebar({
   habilitacaoPendentes = 0,
   avaliacaoPendentes = 0,
   avaliacaoEmAndamento = false,
+  memorialPendentes = 0,
 }: AdminSidebarProps) {
   const pathname = usePathname()
   const theme = getRoleTheme(userRole)
 
-  function badgeCount(item: (typeof navSections)[number]['items'][number]): number | null {
+  function badgeCount(item: NavItem): number | null {
     if (item.highlightKey === 'habilitacao' && habilitacaoPendentes > 0) return habilitacaoPendentes
     if (item.highlightKey === 'avaliacao' && avaliacaoPendentes > 0) return avaliacaoPendentes
+    if (item.highlightKey === 'memorial' && memorialPendentes > 0) return memorialPendentes
     return null
   }
 
-  function isHighlighted(item: (typeof navSections)[number]['items'][number], active: boolean): boolean {
+  function isHighlighted(item: NavItem, active: boolean): boolean {
     if (active) return false
     if (item.highlightKey === 'habilitacao') return habilitacaoPendentes > 0
     if (item.highlightKey === 'avaliacao') return avaliacaoEmAndamento
+    if (item.highlightKey === 'memorial') return memorialPendentes > 0
     return false
   }
 
@@ -85,32 +91,20 @@ export function AdminSidebar({
         </div>
 
         {/* Navegação */}
-        <nav className="flex-1 px-3 py-4 space-y-6 overflow-y-auto scrollbar-hide" aria-label="Menu administrativo">
+        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4 scrollbar-hide" aria-label="Menu administrativo">
           {navSections.map((section) => {
-            const visibleItems = section.items.filter((item) => item.roles.includes(userRole))
-            if (visibleItems.length === 0) return null
-
+            const items = section.items.filter((item) => item.roles.includes(userRole))
+            if (items.length === 0) return null
             return (
-              <div key={section.title}>
-                <p className="px-3 mb-2 text-[11px] font-semibold uppercase tracking-wider text-papel-100/35">
-                  {section.title}
-                </p>
-                <div className="space-y-1">
-                  {visibleItems.map((item) => {
-                    const active = isNavItemActive(item.href, pathname)
-                    return (
-                      <AdminNavLink
-                        key={item.href}
-                        item={item}
-                        active={active}
-                        highlighted={isHighlighted(item, active)}
-                        badgeCount={badgeCount(item)}
-                        theme={theme}
-                      />
-                    )
-                  })}
-                </div>
-              </div>
+              <NavGroup
+                key={section.title}
+                section={section}
+                items={items}
+                pathname={pathname}
+                theme={theme}
+                badgeFor={badgeCount}
+                isHighlighted={isHighlighted}
+              />
             )
           })}
         </nav>

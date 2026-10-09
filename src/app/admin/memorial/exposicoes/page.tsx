@@ -1,13 +1,16 @@
 import type { Metadata } from 'next'
-import { Button, IconPlus } from '@/components/ui'
+import Link from 'next/link'
+import { IconPlus, IconSlides, Pagination } from '@/components/ui'
+import { ROLES_MEMORIAL } from '@/lib/memorial/acesso'
 import { listagemAdminSchema } from '@/lib/schemas/memorial-comum'
 import { listarAdmin } from '@/lib/services/memorial-exposicao.service'
+import { contarConteudo } from '@/lib/services/memorial-painel.service'
 import { requireRole } from '../../require-role'
-import { CabecalhoAdmin } from '../_componentes/cabecalho-admin'
-import { FiltrosLista } from '../_componentes/filtros-lista'
-import { ListaConteudo } from '../_componentes/lista-conteudo'
 import { lerFiltros, montarUrl } from '../_componentes/parametros'
-import { ROLES_MEMORIAL } from '@/lib/memorial/acesso'
+import { CabecalhoPagina, VazioAcionavel, botaoPrimario } from '../_ui'
+import { AcervoAbasSituacao } from '../_ui/acervo-abas-situacao'
+import { AcervoBusca } from '../_ui/acervo-busca'
+import { CartaoExposicao } from './_componentes/cartao-exposicao'
 
 export const metadata: Metadata = { title: 'Exposições do Memorial — Portal PNAB Irecê' }
 
@@ -20,36 +23,43 @@ const BASE = '/admin/memorial/exposicoes'
 export default async function ExposicoesAdminPage({ searchParams }: Props) {
   await requireRole(...ROLES_MEMORIAL)
   const f = lerFiltros(listagemAdminSchema, await searchParams)
-  const { itens, total } = await listarAdmin(f)
+  const [{ itens, total }, contagens] = await Promise.all([listarAdmin(f), contarConteudo()])
+  const filtrando = Boolean(f.q || f.status)
 
   return (
-    <section>
-      <CabecalhoAdmin
+    <section className="space-y-5">
+      <CabecalhoPagina
         titulo="Exposições"
-        descricao={`${total} ${total === 1 ? 'exposição cadastrada' : 'exposições cadastradas'}.`}
+        descricao="Cada exposição reúne texto, capa e fotos do acervo. Abra uma para ver como ela aparece no site."
         voltar={{ href: '/admin/memorial', rotulo: 'Painel do Memorial' }}
-      >
-        <Button href={`${BASE}/novo`} size="sm" className="min-h-[44px]">
-          <IconPlus className="mr-2 h-4 w-4" />
-          Nova exposição
-        </Button>
-      </CabecalhoAdmin>
-
-      <FiltrosLista base={BASE} status={f.status} q={f.q} />
-      <ListaConteudo
-        linhas={itens.map((e) => ({
-          id: e.id,
-          titulo: e.titulo,
-          detalhe: e.subtitulo ?? e.periodo,
-          status: e.status,
-          atualizadoEm: e.updatedAt,
-          href: `${BASE}/${e.id}`,
-        }))}
-        vazio={f.q || f.status ? 'Nenhuma exposição com esse filtro.' : 'Nenhuma exposição cadastrada. Comece pela primeira.'}
-        pagina={f.page}
-        totalPaginas={Math.ceil(total / f.pageSize)}
-        baseUrl={montarUrl(BASE, { status: f.status, q: f.q })}
+        acoes={
+          <Link href={`${BASE}/novo`} className={botaoPrimario}>
+            <IconPlus className="h-4 w-4" />
+            Nova exposição
+          </Link>
+        }
       />
+
+      <AcervoAbasSituacao base={montarUrl(BASE, { q: f.q })} status={f.status} contagens={contagens.exposicoes} />
+      <AcervoBusca acao={BASE} q={f.q} manter={{ status: f.status }} placeholder="Buscar pelo título ou texto" />
+
+      {itens.length === 0 ? (
+        <VazioAcionavel
+          icone={<IconSlides className="h-6 w-6" />}
+          titulo={filtrando ? 'Nenhuma exposição nesta busca' : 'Nenhuma exposição ainda'}
+          texto={filtrando ? 'Troque de aba ou limpe a busca.' : 'Crie a primeira e escolha as fotos do acervo que fazem parte dela.'}
+          acao={filtrando ? undefined : { href: `${BASE}/novo`, rotulo: 'Nova exposição' }}
+        />
+      ) : (
+        <ul className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          {itens.map((e) => (
+            <li key={e.id}>
+              <CartaoExposicao e={e} />
+            </li>
+          ))}
+        </ul>
+      )}
+      <Pagination currentPage={f.page} totalPages={Math.ceil(total / f.pageSize)} baseUrl={montarUrl(BASE, { status: f.status, q: f.q })} />
     </section>
   )
 }

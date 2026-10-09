@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react'
 import type { UserRole } from '@prisma/client'
-import { ROLES_MEMORIAL_COMPLETO } from '@/lib/memorial/acesso'
+import { memorialSection } from './nav-memorial'
 import {
   IconHome,
+  IconChart,
   IconNews,
   IconDocument,
   IconClipboard,
@@ -18,8 +19,6 @@ import {
   IconMail,
   IconShield,
   IconInstagram,
-  IconCalendar,
-  IconBook,
 } from '@/components/ui'
 
 export interface NavItem {
@@ -28,17 +27,22 @@ export interface NavItem {
   icon: ReactNode
   roles: UserRole[]
   /** Identificador opcional para tratamento visual especial (destaque, badge). */
-  highlightKey?: 'habilitacao' | 'avaliacao'
+  highlightKey?: 'habilitacao' | 'avaliacao' | 'memorial'
+  /** Ativo só na rota exata (ex.: a visão geral de um grupo, que é prefixo das demais). */
+  exact?: boolean
 }
 
 export interface NavSection {
   title: string
+  /** Ícone do grupo, mostrado no cabeçalho que expande e recolhe. */
+  icon: ReactNode
   items: NavItem[]
 }
 
 export const navSections: NavSection[] = [
   {
     title: 'Gestão',
+    icon: <IconChart className="h-5 w-5" />,
     items: [
       {
         label: 'Dashboard',
@@ -100,6 +104,7 @@ export const navSections: NavSection[] = [
   },
   {
     title: 'Atendimento',
+    icon: <IconTicket className="h-5 w-5" />,
     items: [
       {
         label: 'Atendimentos',
@@ -115,55 +120,10 @@ export const navSections: NavSection[] = [
       },
     ],
   },
-  {
-    title: 'Memorial',
-    items: [
-      {
-        label: 'Painel do Memorial',
-        href: '/admin/memorial',
-        roles: ROLES_MEMORIAL_COMPLETO,
-        icon: <IconHome className="h-5 w-5" />,
-      },
-      {
-        label: 'Agendamentos',
-        href: '/admin/memorial/agendamentos',
-        roles: ROLES_MEMORIAL_COMPLETO,
-        icon: <IconCalendar className="h-5 w-5" />,
-      },
-      {
-        label: 'Exposições',
-        href: '/admin/memorial/exposicoes',
-        roles: ROLES_MEMORIAL_COMPLETO,
-        icon: <IconSlides className="h-5 w-5" />,
-      },
-      {
-        label: 'Acervo e fotos',
-        href: '/admin/memorial/acervo',
-        roles: ROLES_MEMORIAL_COMPLETO,
-        icon: <IconBook className="h-5 w-5" />,
-      },
-      {
-        label: 'Pessoas e eventos',
-        href: '/admin/memorial/pessoas',
-        roles: ROLES_MEMORIAL_COMPLETO,
-        icon: <IconUsers className="h-5 w-5" />,
-      },
-      {
-        label: 'Questionários',
-        href: '/admin/memorial/questionarios',
-        roles: ROLES_MEMORIAL_COMPLETO,
-        icon: <IconClipboard className="h-5 w-5" />,
-      },
-      {
-        label: 'Textos e regras',
-        href: '/admin/memorial/configuracoes',
-        roles: ROLES_MEMORIAL_COMPLETO,
-        icon: <IconSettings className="h-5 w-5" />,
-      },
-    ],
-  },
+  memorialSection,
   {
     title: 'Conteúdo',
+    icon: <IconNews className="h-5 w-5" />,
     items: [
       {
         label: 'Notícias',
@@ -199,6 +159,7 @@ export const navSections: NavSection[] = [
   },
   {
     title: 'Comunicação',
+    icon: <IconChatBubble className="h-5 w-5" />,
     items: [
       {
         label: 'Notificações',
@@ -216,6 +177,7 @@ export const navSections: NavSection[] = [
   },
   {
     title: 'Sistema',
+    icon: <IconSettings className="h-5 w-5" />,
     items: [
       {
         label: 'Usuários',
@@ -251,7 +213,7 @@ export const navSections: NavSection[] = [
   },
 ]
 
-export function isNavItemActive(href: string, pathname: string): boolean {
-  if (href === '/admin') return pathname === '/admin'
-  return pathname.startsWith(href)
+export function isNavItemActive(item: Pick<NavItem, 'href' | 'exact'>, pathname: string): boolean {
+  if (item.exact || item.href === '/admin') return pathname === item.href
+  return pathname.startsWith(item.href)
 }
