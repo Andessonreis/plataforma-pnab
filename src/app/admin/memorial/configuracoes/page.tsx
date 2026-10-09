@@ -8,6 +8,9 @@ import { listarPublicos } from '@/lib/services/memorial-acervo.service'
 import { lerConfiguracoes } from '@/lib/services/memorial-config.service'
 import { obterRegulamentoVigente } from '@/lib/services/memorial-regulamento.service'
 import { formatDate } from '@/lib/utils/format'
+import { prisma } from '@/lib/db'
+import { diaEmIrece, somarDias } from '@/lib/memorial/agendamento/datas'
+import { ocupacoesNoIntervalo } from '@/lib/memorial/agendamento/ocupacao'
 import { requireRole } from '@/app/admin/require-role'
 import { HistoricoVersoes } from '@/app/admin/memorial/_componentes/historico-versoes'
 import { CabecalhoPagina } from '@/app/admin/memorial/_ui'
@@ -36,10 +39,12 @@ function Atalho({ href, icone, titulo, texto }: { href: string; icone: ReactNode
 export default async function ConfiguracoesMemorialPage({ searchParams }: { searchParams: Promise<{ secao?: string }> }) {
   await requireRole(...ROLES_MEMORIAL)
   const { secao } = await searchParams
-  const [config, fotos, regulamento] = await Promise.all([
+  const hoje = diaEmIrece(new Date())
+  const [config, fotos, regulamento, pedidosFuturos] = await Promise.all([
     lerConfiguracoes(),
     listarPublicos({ page: 1, pageSize: 1, tipo: 'FOTOGRAFIA' }),
     obterRegulamentoVigente(),
+    ocupacoesNoIntervalo(prisma, hoje, somarDias(hoje, 730)),
   ])
   const foto = fotos.itens[0] ? imagemDoItem(fotos.itens[0]) : null
   const historico = (id: string) => (
@@ -79,7 +84,7 @@ export default async function ConfiguracoesMemorialPage({ searchParams }: { sear
                     texto="Ficam em Questionários. Dá para mudar quando quiser."
                   />
                 </div>
-                <FormVisitacao inicial={config.visitacao} contato={config.contato} />
+                <FormVisitacao inicial={config.visitacao} contato={config.contato} pedidosFuturos={pedidosFuturos} />
                 {historico('visitacao')}
               </>
             ),

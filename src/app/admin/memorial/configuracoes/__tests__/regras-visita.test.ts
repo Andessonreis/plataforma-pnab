@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { juntarAntecedencia, proximaFaixa, resumoTurno, separarAntecedencia } from '../regras-visita'
+import { juntarAntecedencia, pedidosForaDaGrade, proximaFaixa, resumoTurno, separarAntecedencia } from '../regras-visita'
 
 describe('antecedência em dias e horas', () => {
   it('ida e volta preservam o total em horas', () => {
@@ -25,5 +25,19 @@ describe('horários de um turno', () => {
   it('resume o turno do primeiro início ao último fim', () => {
     expect(resumoTurno([{ inicio: '09:45', fim: '10:30' }, { inicio: '09:00', fim: '09:45' }])).toBe('09:00 às 10:30')
     expect(resumoTurno([])).toBeNull()
+  })
+})
+
+describe('pedidos futuros fora da grade em edição', () => {
+  const grade = { diasSemana: [1, 2, 3, 4, 5], horarios: { MANHA: [{ inicio: '09:00', fim: '09:45' }], TARDE: [] } }
+  it('conta horário retirado e dia da semana fechado', () => {
+    const pedidos = [
+      { data: '2026-10-15', turno: 'MANHA' as const, horaInicio: '09:00' },
+      { data: '2026-10-15', turno: 'MANHA' as const, horaInicio: '10:30' },
+      { data: '2026-10-15', turno: 'TARDE' as const, horaInicio: '14:00' },
+      { data: '2026-10-17', turno: 'MANHA' as const, horaInicio: '09:00' },
+    ]
+    expect(pedidosForaDaGrade(pedidos, grade)).toBe(3)
+    expect(pedidosForaDaGrade(pedidos.slice(0, 1), grade)).toBe(0)
   })
 })

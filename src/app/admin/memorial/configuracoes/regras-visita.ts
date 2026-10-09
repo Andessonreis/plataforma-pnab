@@ -1,3 +1,6 @@
+import type { Visitacao } from '@/lib/memorial/config'
+import { diaDaSemana, minutosDoDia } from '@/lib/memorial/agendamento/datas'
+
 export type Horario = { inicio: string; fim: string }
 
 /** A regra é gravada em horas; na tela a equipe pensa em dias e horas. */
@@ -7,11 +10,6 @@ export function separarAntecedencia(horas: number): { dias: number; horas: numbe
 
 export function juntarAntecedencia(dias: number, horas: number): number {
   return Math.max(0, Math.trunc(dias)) * 24 + Math.max(0, Math.trunc(horas))
-}
-
-function emMinutos(hora: string): number {
-  const [h, m] = hora.split(':').map(Number)
-  return h * 60 + m
 }
 
 function emHora(minutos: number): string {
@@ -25,9 +23,9 @@ function emHora(minutos: number): string {
  */
 export function proximaFaixa(horarios: Horario[], inicioPadrao: string, duracaoPadrao = 45): Horario {
   const ultima = horarios.at(-1)
-  if (!ultima) return { inicio: inicioPadrao, fim: emHora(emMinutos(inicioPadrao) + duracaoPadrao) }
-  const duracao = emMinutos(ultima.fim) - emMinutos(ultima.inicio)
-  const inicio = emMinutos(ultima.fim)
+  if (!ultima) return { inicio: inicioPadrao, fim: emHora(minutosDoDia(inicioPadrao) + duracaoPadrao) }
+  const duracao = minutosDoDia(ultima.fim) - minutosDoDia(ultima.inicio)
+  const inicio = minutosDoDia(ultima.fim)
   return { inicio: emHora(inicio), fim: emHora(inicio + (duracao > 0 ? duracao : duracaoPadrao)) }
 }
 
@@ -37,4 +35,20 @@ export function resumoTurno(horarios: Horario[]): string | null {
   const inicios = horarios.map((h) => h.inicio).sort()
   const fins = horarios.map((h) => h.fim).sort()
   return `${inicios[0]} às ${fins.at(-1)}`
+}
+
+export interface PedidoMarcado {
+  data: string
+  turno: 'MANHA' | 'TARDE'
+  horaInicio: string
+}
+
+/**
+ * Pedidos futuros que deixariam de caber na grade em edição (horário retirado ou dia da
+ * semana fechado). Eles continuam valendo; a conta só serve para avisar a equipe.
+ */
+export function pedidosForaDaGrade(pedidos: readonly PedidoMarcado[], grade: Pick<Visitacao, 'horarios' | 'diasSemana'>): number {
+  return pedidos.filter(
+    (p) => !grade.diasSemana.includes(diaDaSemana(p.data)) || !grade.horarios[p.turno].some((h) => h.inicio === p.horaInicio),
+  ).length
 }

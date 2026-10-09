@@ -9,6 +9,7 @@ import { CampoArea, CampoTexto } from '@/app/admin/memorial/_ui/config-campo'
 import { HorariosTurno } from './horarios-turno'
 import { CONFIGURACOES, SecaoConfig } from './previa-site'
 import { RegrasGrupo } from './regras-grupo'
+import { pedidosForaDaGrade, type PedidoMarcado } from './regras-visita'
 
 function Bloco({ titulo, children }: { titulo: string; children: ReactNode }) {
   return (
@@ -19,8 +20,16 @@ function Bloco({ titulo, children }: { titulo: string; children: ReactNode }) {
   )
 }
 
-export function FormVisitacao({ inicial, contato }: { inicial: Visitacao; contato: Contato }) {
+interface FormVisitacaoProps {
+  inicial: Visitacao
+  contato: Contato
+  /** Pedidos de hoje em diante que seguram vaga, para avisar quando a grade nova os deixa de fora. */
+  pedidosFuturos: PedidoMarcado[]
+}
+
+export function FormVisitacao({ inicial, contato, pedidosFuturos }: FormVisitacaoProps) {
   const { valores, definir, texto } = useCampos(inicial)
+  const foraDaGrade = pedidosForaDaGrade(pedidosFuturos, valores)
   const { enviando, erros, recado, salvar } = useSalvar(CONFIGURACOES, 'visitacao', '')
 
   function enviar(e: FormEvent) {
@@ -45,6 +54,12 @@ export function FormVisitacao({ inicial, contato }: { inicial: Visitacao; contat
           <HorariosTurno turno="Tarde" inicioPadrao="14:00" horarios={valores.horarios.TARDE}
             onChange={(h) => definir('horarios', { ...valores.horarios, TARDE: h })} erro={erros['horarios.TARDE']} />
         </div>
+        {foraDaGrade > 0 && (
+          <p role="status" className="rounded-lg border border-amber-600/40 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-950">
+            {foraDaGrade === 1 ? 'Há 1 pedido futuro' : `Há ${foraDaGrade} pedidos futuros`} em horário ou dia que esta
+            alteração tira da grade. Os pedidos continuam valendo e aparecem em Agendamentos; se for o caso, remarque cada um por lá.
+          </p>
+        )}
       </Bloco>
 
       <Bloco titulo="Avisos e links">
