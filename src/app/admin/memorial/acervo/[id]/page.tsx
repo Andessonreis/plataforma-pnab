@@ -6,11 +6,12 @@ import { opcoesDeVinculo } from '@/lib/services/memorial-painel.service'
 import { requireRole } from '../../../require-role'
 import { PainelEdicao } from '../../_componentes/painel-edicao'
 import { ItemForm } from '../item-form'
+import { ROLES_MEMORIAL } from '@/lib/memorial/acesso'
 
 export const metadata: Metadata = { title: 'Editar item do acervo — Portal PNAB Irecê' }
 
 export default async function EditarItemPage({ params }: { params: Promise<{ id: string }> }) {
-  await requireRole('COMUNICACAO')
+  await requireRole(...ROLES_MEMORIAL)
   const { id } = await params
   const [item, opcoes] = await Promise.all([obter(id).catch(() => null), opcoesDeVinculo()])
   if (!item) notFound()

@@ -9,6 +9,7 @@ import { Cabecalho } from '../cabecalho'
 import { QuestionarioForm } from '../questionario-form'
 import { VARIANTE_STATUS } from '../status'
 import { AcoesQuestionario } from './acoes-questionario'
+import { ROLES_MEMORIAL } from '@/lib/memorial/acesso'
 
 export const metadata: Metadata = {
   title: 'Editar questionário — Portal PNAB Irecê',
@@ -19,7 +20,7 @@ interface Props {
 }
 
 export default async function EditarQuestionarioPage({ params }: Props) {
-  await requireRole('COMUNICACAO')
+  await requireRole(...ROLES_MEMORIAL)
   const { id } = await params
 
   const questionario = await prisma.questionario.findUnique({

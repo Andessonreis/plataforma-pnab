@@ -3,6 +3,7 @@ import { createContext, forbidden, handleError, logRequest } from '@/lib/api/res
 import { getIp, requireRole, resolveAuth } from '@/lib/api/auth-resolver'
 import { listarVisitasQuerySchema } from '@/lib/schemas/memorial-agendamento'
 import { exportarVisitasCsv } from '@/lib/services/memorial-agendamento-relatorio.service'
+import { ROLES_MEMORIAL } from '@/lib/memorial/acesso'
 
 export const runtime = 'nodejs'
 
@@ -11,7 +12,7 @@ export async function GET(req: NextRequest) {
   const ctx = createContext()
   try {
     const caller = await resolveAuth(req)
-    if (!requireRole(caller, 'COMUNICACAO')) return forbidden(ctx)
+    if (!requireRole(caller, ...ROLES_MEMORIAL)) return forbidden(ctx)
     const q = listarVisitasQuerySchema.parse(Object.fromEntries(req.nextUrl.searchParams))
     const csv = await exportarVisitasCsv(q, caller.userId, getIp(req))
 

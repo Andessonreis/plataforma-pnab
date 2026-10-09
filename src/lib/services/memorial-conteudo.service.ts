@@ -1,3 +1,4 @@
+import { ROLES_MEMORIAL_COMPLETO } from '@/lib/memorial/acesso'
 import { Prisma, type StatusConteudo, type UserRole } from '@prisma/client'
 import { prisma } from '@/lib/db'
 import { logAudit, type AuditAction } from '@/lib/audit'
@@ -25,7 +26,7 @@ export type EntidadeMemorial =
   | 'MemorialAlbum'
   | 'MemorialConfig'
 
-const PAPEIS_EDITORIAIS: UserRole[] = ['COMUNICACAO', 'SUPER_ADMIN']
+const PAPEIS_EDITORIAIS: UserRole[] = ROLES_MEMORIAL_COMPLETO
 
 export function paginar(p: { page: number; pageSize: number }) {
   return { skip: (p.page - 1) * p.pageSize, take: p.pageSize }

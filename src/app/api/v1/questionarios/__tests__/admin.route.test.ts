@@ -10,7 +10,6 @@ beforeEach(() => vi.clearAllMocks())
 describe('permissões da gestão de questionários', () => {
   it.each([
     ['sem sessão', null],
-    ['ADMIN', 'ADMIN'],
     ['PROPONENTE', 'PROPONENTE'],
     ['ATENDIMENTO', 'ATENDIMENTO'],
   ])('%s → 403 em todas as rotas', async (_, role) => {
@@ -29,8 +28,8 @@ describe('permissões da gestão de questionários', () => {
     expect(db.questionario.create).not.toHaveBeenCalled()
   })
 
-  it('SUPER_ADMIN passa sem estar listado', async () => {
-    logarComo('SUPER_ADMIN')
+  it.each(['SUPER_ADMIN', 'ADMIN'])('%s passa', async (role) => {
+    logarComo(role)
     db.questionario.findMany.mockResolvedValue([])
     db.questionario.count.mockResolvedValue(0)
     expect((await listar(req('/api/v1/questionarios'))).status).toBe(200)

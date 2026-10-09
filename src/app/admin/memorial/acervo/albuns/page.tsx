@@ -8,6 +8,7 @@ import { CabecalhoAdmin } from '../../_componentes/cabecalho-admin'
 import { lerFiltros } from '../../_componentes/parametros'
 import { SecaoForm } from '../../_componentes/secao-form'
 import { AlbumForm } from './album-form'
+import { ROLES_MEMORIAL } from '@/lib/memorial/acesso'
 
 export const metadata: Metadata = { title: 'Álbuns do Memorial — Portal PNAB Irecê' }
 
@@ -16,7 +17,7 @@ interface Props {
 }
 
 export default async function AlbunsPage({ searchParams }: Props) {
-  await requireRole('COMUNICACAO')
+  await requireRole(...ROLES_MEMORIAL)
   const f = lerFiltros(listagemAdminSchema, { pageSize: '20', ...(await searchParams) })
   const { itens, total } = await listarAdmin(f)
 

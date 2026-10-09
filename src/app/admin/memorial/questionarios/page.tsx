@@ -7,6 +7,7 @@ import { STATUS_CONTEUDO, ROTULO_STATUS } from '@/lib/memorial/rotulos'
 import { Button, Card, EmptyState, IconClipboard, IconPlus, Pagination } from '@/components/ui'
 import { Cabecalho } from './cabecalho'
 import { QuestionariosLista } from './questionarios-lista'
+import { ROLES_MEMORIAL } from '@/lib/memorial/acesso'
 
 export const metadata: Metadata = {
   title: 'Questionários — Portal PNAB Irecê',
@@ -19,7 +20,7 @@ interface Props {
 const BASE = '/admin/memorial/questionarios'
 
 export default async function QuestionariosPage({ searchParams }: Props) {
-  await requireRole('COMUNICACAO')
+  await requireRole(...ROLES_MEMORIAL)
 
   const params = await searchParams
   const filtros = listarQuestionariosSchema.safeParse({ page: params.page, pageSize: 12, status: params.status || undefined })

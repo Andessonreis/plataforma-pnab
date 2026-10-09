@@ -79,7 +79,7 @@ describe('rotas da equipe', () => {
     expect((await GET(req(''))).status).toBe(403)
     sessao('PROPONENTE')
     expect((await GET(req(''))).status).toBe(403)
-    sessao('ADMIN')
+    sessao('ATENDIMENTO')
     expect((await GET(req(''))).status).toBe(403)
     expect(listar).not.toHaveBeenCalled()
   })

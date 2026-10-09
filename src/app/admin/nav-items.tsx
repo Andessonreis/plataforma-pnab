@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import type { UserRole } from '@prisma/client'
+import { ROLES_MEMORIAL_COMPLETO } from '@/lib/memorial/acesso'
 import {
   IconHome,
   IconNews,
@@ -120,43 +121,43 @@ export const navSections: NavSection[] = [
       {
         label: 'Painel do Memorial',
         href: '/admin/memorial',
-        roles: ['SUPER_ADMIN', 'COMUNICACAO'],
+        roles: ROLES_MEMORIAL_COMPLETO,
         icon: <IconHome className="h-5 w-5" />,
       },
       {
         label: 'Agendamentos',
         href: '/admin/memorial/agendamentos',
-        roles: ['SUPER_ADMIN', 'COMUNICACAO'],
+        roles: ROLES_MEMORIAL_COMPLETO,
         icon: <IconCalendar className="h-5 w-5" />,
       },
       {
         label: 'Exposições',
         href: '/admin/memorial/exposicoes',
-        roles: ['SUPER_ADMIN', 'COMUNICACAO'],
+        roles: ROLES_MEMORIAL_COMPLETO,
         icon: <IconSlides className="h-5 w-5" />,
       },
       {
         label: 'Acervo e fotos',
         href: '/admin/memorial/acervo',
-        roles: ['SUPER_ADMIN', 'COMUNICACAO'],
+        roles: ROLES_MEMORIAL_COMPLETO,
         icon: <IconBook className="h-5 w-5" />,
       },
       {
         label: 'Pessoas e eventos',
         href: '/admin/memorial/pessoas',
-        roles: ['SUPER_ADMIN', 'COMUNICACAO'],
+        roles: ROLES_MEMORIAL_COMPLETO,
         icon: <IconUsers className="h-5 w-5" />,
       },
       {
         label: 'Questionários',
         href: '/admin/memorial/questionarios',
-        roles: ['SUPER_ADMIN', 'COMUNICACAO'],
+        roles: ROLES_MEMORIAL_COMPLETO,
         icon: <IconClipboard className="h-5 w-5" />,
       },
       {
         label: 'Textos e regras',
         href: '/admin/memorial/configuracoes',
-        roles: ['SUPER_ADMIN', 'COMUNICACAO'],
+        roles: ROLES_MEMORIAL_COMPLETO,
         icon: <IconSettings className="h-5 w-5" />,
       },
     ],

@@ -6,11 +6,12 @@ import { obter } from '@/lib/services/memorial-pessoa.service'
 import { requireRole } from '../../../require-role'
 import { PainelEdicao } from '../../_componentes/painel-edicao'
 import { PessoaForm } from '../pessoa-form'
+import { ROLES_MEMORIAL } from '@/lib/memorial/acesso'
 
 export const metadata: Metadata = { title: 'Editar pessoa — Portal PNAB Irecê' }
 
 export default async function EditarPessoaPage({ params }: { params: Promise<{ id: string }> }) {
-  await requireRole('COMUNICACAO')
+  await requireRole(...ROLES_MEMORIAL)
   const { id } = await params
   const [pessoa, opcoes] = await Promise.all([obter(id).catch(() => null), opcoesDeVinculo()])
   if (!pessoa) notFound()

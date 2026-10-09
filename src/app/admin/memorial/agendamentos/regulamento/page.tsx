@@ -5,11 +5,12 @@ import { formatDateTime } from '@/lib/utils/format'
 import { listarVersoesRegulamento, obterRegulamentoVigente } from '@/lib/services/memorial-regulamento.service'
 import { REGULAMENTO_PADRAO } from '@/lib/memorial/agendamento/regulamento-padrao'
 import { FormRegulamento } from './form-regulamento'
+import { ROLES_MEMORIAL } from '@/lib/memorial/acesso'
 
 export const metadata: Metadata = { title: 'Regulamento de visitação — Memorial' }
 
 export default async function RegulamentoPage() {
-  await requireRole('COMUNICACAO')
+  await requireRole(...ROLES_MEMORIAL)
   const [vigente, versoes] = await Promise.all([obterRegulamentoVigente(), listarVersoesRegulamento()])
 
   return (

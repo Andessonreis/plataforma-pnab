@@ -67,7 +67,7 @@ describe('memorial-exposicao.service', () => {
 
   it('publicar exige papel editorial', async () => {
     db.memorialExposicao.findUnique.mockResolvedValue(registro)
-    await expect(servico.mudarStatus('e1', 'PUBLICADO', { userId: 'u2', role: 'ADMIN' })).rejects.toMatchObject({
+    await expect(servico.mudarStatus('e1', 'PUBLICADO', { userId: 'u2', role: 'ATENDIMENTO' })).rejects.toMatchObject({
       code: 'FORBIDDEN',
     })
   })

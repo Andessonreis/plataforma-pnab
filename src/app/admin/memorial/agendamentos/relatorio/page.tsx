@@ -6,6 +6,7 @@ import { relatorioVisitas } from '@/lib/services/memorial-agendamento-relatorio.
 import { relatorioQuerySchema } from '@/lib/schemas/memorial-agendamento'
 import { diaEmIrece, intervaloDoMes } from '@/lib/memorial/agendamento/datas'
 import { TabelaGrupos } from './tabela-grupos'
+import { ROLES_MEMORIAL } from '@/lib/memorial/acesso'
 
 export const metadata: Metadata = { title: 'Relatório de visitas — Memorial' }
 
@@ -16,7 +17,7 @@ interface Props {
 const CAMPO = 'mt-1 min-h-[44px] w-full rounded-lg border border-slate-300 bg-white px-3 text-sm'
 
 export default async function RelatorioVisitasPage({ searchParams }: Props) {
-  await requireRole('COMUNICACAO')
+  await requireRole(...ROLES_MEMORIAL)
   const mes = intervaloDoMes(diaEmIrece(new Date()).slice(0, 7))
   const busca = await searchParams
   const { de, ate } = lerFiltros(relatorioQuerySchema.catch(mes), busca)

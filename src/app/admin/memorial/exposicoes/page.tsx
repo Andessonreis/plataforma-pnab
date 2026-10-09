@@ -7,6 +7,7 @@ import { CabecalhoAdmin } from '../_componentes/cabecalho-admin'
 import { FiltrosLista } from '../_componentes/filtros-lista'
 import { ListaConteudo } from '../_componentes/lista-conteudo'
 import { lerFiltros, montarUrl } from '../_componentes/parametros'
+import { ROLES_MEMORIAL } from '@/lib/memorial/acesso'
 
 export const metadata: Metadata = { title: 'Exposições do Memorial — Portal PNAB Irecê' }
 
@@ -17,7 +18,7 @@ interface Props {
 const BASE = '/admin/memorial/exposicoes'
 
 export default async function ExposicoesAdminPage({ searchParams }: Props) {
-  await requireRole('COMUNICACAO')
+  await requireRole(...ROLES_MEMORIAL)
   const f = lerFiltros(listagemAdminSchema, await searchParams)
   const { itens, total } = await listarAdmin(f)
 

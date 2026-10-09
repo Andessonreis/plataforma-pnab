@@ -3,6 +3,7 @@ import { createContext, forbidden, handleError, logRequest, ok } from '@/lib/api
 import { getIp, requireRole, resolveAuth } from '@/lib/api/auth-resolver'
 import { decidirVisitaSchema } from '@/lib/schemas/memorial-agendamento'
 import { decidirVisita } from '@/lib/services/memorial-agendamento-gestao.service'
+import { ROLES_MEMORIAL } from '@/lib/memorial/acesso'
 
 export const runtime = 'nodejs'
 
@@ -15,7 +16,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
   const ctx = createContext()
   try {
     const caller = await resolveAuth(req)
-    if (!requireRole(caller, 'COMUNICACAO')) return forbidden(ctx)
+    if (!requireRole(caller, ...ROLES_MEMORIAL)) return forbidden(ctx)
     const { id } = await params
     const input = decidirVisitaSchema.parse(await req.json())
     const visita = await decidirVisita(id, input, caller.userId, getIp(req))

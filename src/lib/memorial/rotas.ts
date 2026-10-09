@@ -14,6 +14,7 @@ import {
 import { getIp, requireRole, resolveAuth } from '@/lib/api/auth-resolver'
 import { transicaoSchema } from '@/lib/schemas/memorial-comum'
 import { metaPaginacao, type Autor } from '@/lib/services/memorial-conteudo.service'
+import { ROLES_MEMORIAL } from '@/lib/memorial/acesso'
 
 /*
  * Handlers das rotas /api/v1/memorial. As entidades seguem o mesmo contrato
@@ -30,7 +31,7 @@ type Paginado = { page: number; pageSize: number }
 /** Escrita e leitura do painel: equipe de comunicação (SUPER_ADMIN sempre passa). */
 export async function autorEditorial(req: NextRequest): Promise<Autor | null> {
   const caller = await resolveAuth(req)
-  if (!requireRole(caller, 'COMUNICACAO')) return null
+  if (!requireRole(caller, ...ROLES_MEMORIAL)) return null
   return { userId: caller.userId, role: caller.role, ip: getIp(req) }
 }
 

@@ -91,8 +91,8 @@ describe('POST /api/v1/questionarios/publico/[slug]/respostas', () => {
 describe('GET /api/v1/questionarios/[id]/respostas', () => {
   const id = params({ id: 'q1' })
 
-  it('ADMIN → 403', async () => {
-    logarComo('ADMIN')
+  it('ATENDIMENTO → 403', async () => {
+    logarComo('ATENDIMENTO')
     expect((await listarRespostas(req('/api/v1/questionarios/q1/respostas'), id)).status).toBe(403)
   })
 

@@ -3,11 +3,12 @@ import { opcoesDeVinculo } from '@/lib/services/memorial-painel.service'
 import { requireRole } from '../../../require-role'
 import { CabecalhoAdmin } from '../../_componentes/cabecalho-admin'
 import { ItemForm } from '../item-form'
+import { ROLES_MEMORIAL } from '@/lib/memorial/acesso'
 
 export const metadata: Metadata = { title: 'Novo item do acervo — Portal PNAB Irecê' }
 
 export default async function NovoItemPage() {
-  await requireRole('COMUNICACAO')
+  await requireRole(...ROLES_MEMORIAL)
   const opcoes = await opcoesDeVinculo()
 
   return (

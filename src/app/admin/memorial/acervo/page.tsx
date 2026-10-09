@@ -10,6 +10,7 @@ import { lerFiltros, montarUrl } from '../_componentes/parametros'
 import { EnviarFotos } from './enviar-fotos'
 import { FiltrosAcervo } from './filtros-acervo'
 import { GradeAcervo } from './grade-acervo'
+import { ROLES_MEMORIAL } from '@/lib/memorial/acesso'
 
 export const metadata: Metadata = { title: 'Acervo do Memorial — Portal PNAB Irecê' }
 
@@ -20,7 +21,7 @@ interface Props {
 const BASE = '/admin/memorial/acervo'
 
 export default async function AcervoAdminPage({ searchParams }: Props) {
-  await requireRole('COMUNICACAO')
+  await requireRole(...ROLES_MEMORIAL)
   const f = lerFiltros(listagemAcervoAdminSchema, { pageSize: '24', ...(await searchParams) })
   const [{ itens, total }, opcoes] = await Promise.all([listarAdmin(f), opcoesDeVinculo()])
   const filtrosUrl = { status: f.status, q: f.q, tipo: f.tipo, albumId: f.albumId, decada: f.decada }

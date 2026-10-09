@@ -6,6 +6,7 @@ import { RATE_LIMITS } from '@/lib/rate-limit/config'
 import { listarVisitasQuerySchema, solicitarVisitaSchema } from '@/lib/schemas/memorial-agendamento'
 import { solicitarVisita } from '@/lib/services/memorial-agendamento.service'
 import { listarVisitas } from '@/lib/services/memorial-agendamento-gestao.service'
+import { ROLES_MEMORIAL } from '@/lib/memorial/acesso'
 
 export const runtime = 'nodejs'
 
@@ -16,7 +17,7 @@ export async function GET(req: NextRequest) {
   const ctx = createContext()
   try {
     const caller = await resolveAuth(req)
-    if (!requireRole(caller, 'COMUNICACAO')) return forbidden(ctx)
+    if (!requireRole(caller, ...ROLES_MEMORIAL)) return forbidden(ctx)
     const q = listarVisitasQuerySchema.parse(Object.fromEntries(req.nextUrl.searchParams))
     const { itens, total } = await listarVisitas(q)
     logRequest(ctx, 'GET', PATH, 200)

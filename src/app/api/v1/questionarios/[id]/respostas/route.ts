@@ -3,6 +3,7 @@ import { createContext, okPaginated, handleError, forbidden, logRequest } from '
 import { resolveAuth, requireRole, getIp } from '@/lib/api/auth-resolver'
 import { listarRespostasSchema } from '@/lib/schemas/questionario'
 import * as respostaService from '@/lib/services/questionario-resposta.service'
+import { ROLES_MEMORIAL } from '@/lib/memorial/acesso'
 
 export const runtime = 'nodejs'
 
@@ -13,7 +14,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
   const ctx = createContext()
   try {
     const caller = await resolveAuth(req)
-    if (!requireRole(caller, 'COMUNICACAO')) return forbidden(ctx)
+    if (!requireRole(caller, ...ROLES_MEMORIAL)) return forbidden(ctx)
     const { id } = await params
     const { page, pageSize, formato } = listarRespostasSchema.parse(
       Object.fromEntries(new URL(req.url).searchParams),

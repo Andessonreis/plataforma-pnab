@@ -11,6 +11,7 @@ import { StatusVisita } from '../_componentes/status-visita'
 import { DetalhesVisita } from './detalhes-visita'
 import { AcoesVisita } from './acoes-visita'
 import { ReagendarVisita } from './reagendar-visita'
+import { ROLES_MEMORIAL } from '@/lib/memorial/acesso'
 
 export const metadata: Metadata = { title: 'Pedido de visita — Memorial' }
 
@@ -28,7 +29,7 @@ async function carregar(id: string) {
 }
 
 export default async function VisitaPage({ params }: Props) {
-  await requireRole('COMUNICACAO')
+  await requireRole(...ROLES_MEMORIAL)
   const { id } = await params
   const [visita, visitacao] = await Promise.all([carregar(id), getConfig('visitacao')])
   const acoes = acoesPossiveis(visita.status)

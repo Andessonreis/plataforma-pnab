@@ -10,6 +10,7 @@ import { AbasVisao } from './_componentes/abas-visao'
 import { FiltrosVisitas } from './_componentes/filtros-visitas'
 import { VisaoCalendario } from './_componentes/visao-calendario'
 import { VisaoLista } from './_componentes/visao-lista'
+import { ROLES_MEMORIAL } from '@/lib/memorial/acesso'
 
 export const metadata: Metadata = { title: 'Agendamentos do Memorial — Portal PNAB Irecê' }
 
@@ -24,7 +25,7 @@ interface Props {
 }
 
 export default async function AgendamentosPage({ searchParams }: Props) {
-  await requireRole('COMUNICACAO')
+  await requireRole(...ROLES_MEMORIAL)
   const filtros = lerFiltros(filtrosSchema, await searchParams)
   const { visao, escala, ref, status, busca, de, ate } = filtros
 

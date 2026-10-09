@@ -8,12 +8,13 @@ import { HistoricoVersoes } from '../_componentes/historico-versoes'
 import { FormContato } from './form-contato'
 import { FormInstitucional } from './form-institucional'
 import { FormVisitacao } from './form-visitacao'
+import { ROLES_MEMORIAL } from '@/lib/memorial/acesso'
 
 export const metadata: Metadata = { title: 'Configurações do Memorial — Portal PNAB Irecê' }
 
 /** Textos institucionais, contatos e regras de visita do Memorial, com prévia do site. */
 export default async function ConfiguracoesMemorialPage() {
-  await requireRole('COMUNICACAO')
+  await requireRole(...ROLES_MEMORIAL)
   const [config, fotos] = await Promise.all([
     lerConfiguracoes(),
     listarPublicos({ page: 1, pageSize: 1, tipo: 'FOTOGRAFIA' }),

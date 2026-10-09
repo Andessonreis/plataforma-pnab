@@ -1,3 +1,4 @@
+import { ROLES_MEMORIAL_COMPLETO } from '@/lib/memorial/acesso'
 import type { MemorialAgendamento } from '@prisma/client'
 import { prisma } from '@/lib/db'
 import { enqueueEmail } from '@/lib/queue'
@@ -63,7 +64,7 @@ export async function avisarPedidoRecebido(v: Visita, aviso: string) {
 export async function avisarEquipeNovoPedido(v: Visita) {
   await semDerrubar(v.protocolo, 'alerta da equipe', async () => {
     const [equipe, contato] = await Promise.all([
-      prisma.user.findMany({ where: { role: 'COMUNICACAO', ativo: true }, select: { nome: true, email: true } }),
+      prisma.user.findMany({ where: { role: { in: ROLES_MEMORIAL_COMPLETO }, ativo: true }, select: { nome: true, email: true } }),
       emailDeContato(),
     ])
     const destinatarios = new Map(equipe.map((p) => [p.email.toLowerCase(), p.nome]))

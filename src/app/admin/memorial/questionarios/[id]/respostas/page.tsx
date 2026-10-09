@@ -9,6 +9,7 @@ import { Card, EmptyState, IconClipboard, IconDownload, Pagination } from '@/com
 import { Cabecalho } from '../../cabecalho'
 import { RespostasTabela } from './respostas-tabela'
 import { RespostaCartao } from './resposta-cartao'
+import { ROLES_MEMORIAL } from '@/lib/memorial/acesso'
 
 export const metadata: Metadata = {
   title: 'Respostas do questionário — Portal PNAB Irecê',
@@ -29,7 +30,7 @@ async function carregar(id: string, page: number) {
 }
 
 export default async function RespostasPage({ params, searchParams }: Props) {
-  await requireRole('COMUNICACAO')
+  await requireRole(...ROLES_MEMORIAL)
   const { id } = await params
   const { page } = paginationSchema.catch({ page: 1, pageSize: 20 }).parse({ page: (await searchParams).page })
   const [questionario, { data, meta }] = await carregar(id, page)

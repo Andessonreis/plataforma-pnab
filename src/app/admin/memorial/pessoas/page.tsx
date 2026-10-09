@@ -8,6 +8,7 @@ import { CabecalhoAdmin } from '../_componentes/cabecalho-admin'
 import { FiltrosLista } from '../_componentes/filtros-lista'
 import { ListaConteudo } from '../_componentes/lista-conteudo'
 import { lerFiltros, montarUrl } from '../_componentes/parametros'
+import { ROLES_MEMORIAL } from '@/lib/memorial/acesso'
 
 export const metadata: Metadata = { title: 'Pessoas e eventos do Memorial — Portal PNAB Irecê' }
 
@@ -19,7 +20,7 @@ const BASE = '/admin/memorial/pessoas'
 
 /** Pessoas e eventos históricos em abas: são cadastrados juntos e se relacionam o tempo todo. */
 export default async function PessoasAdminPage({ searchParams }: Props) {
-  await requireRole('COMUNICACAO')
+  await requireRole(...ROLES_MEMORIAL)
   const busca = await searchParams
   const aba = busca.aba === 'eventos' ? 'eventos' : 'pessoas'
   const f = lerFiltros(listagemAdminSchema, busca)

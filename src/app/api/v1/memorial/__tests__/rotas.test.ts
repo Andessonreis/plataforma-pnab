@@ -33,8 +33,14 @@ describe('/api/v1/memorial/exposicoes', () => {
   it('sem sessão ou com papel fora da comunicação → 403', async () => {
     mockAuth.mockResolvedValue(null as never)
     expect((await colecao.GET(req('/api/v1/memorial/exposicoes'), semParams)).status).toBe(403)
-    sessao('ADMIN')
+    sessao('ATENDIMENTO')
     expect((await colecao.GET(req('/api/v1/memorial/exposicoes'), semParams)).status).toBe(403)
+  })
+
+  it('ADMIN também opera o Memorial', async () => {
+    sessao('ADMIN')
+    servicoExposicao.listarAdmin.mockResolvedValue({ itens: [], total: 0 })
+    expect((await colecao.GET(req('/api/v1/memorial/exposicoes'), semParams)).status).toBe(200)
   })
 
   it('lista paginada para a comunicação, respeitando o teto de 50 por página', async () => {

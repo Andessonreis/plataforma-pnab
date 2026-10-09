@@ -7,6 +7,7 @@ import { CabecalhoAdmin } from './_componentes/cabecalho-admin'
 import { ContagensConteudo } from './_componentes/contagens-conteudo'
 import { ResultadoBusca } from './_componentes/resultado-busca'
 import { ResumoAgendamentos } from './_componentes/resumo-agendamentos'
+import { ROLES_MEMORIAL } from '@/lib/memorial/acesso'
 
 export const metadata: Metadata = { title: 'Memorial de Irecê — Portal PNAB Irecê' }
 
@@ -24,7 +25,7 @@ const ATALHOS = [
 ]
 
 export default async function PainelMemorialPage({ searchParams }: Props) {
-  await requireRole('COMUNICACAO')
+  await requireRole(...ROLES_MEMORIAL)
   const termo = (await searchParams).q?.trim().slice(0, 100) ?? ''
   const [contagens, resultado] = await Promise.all([
     contarConteudo(),

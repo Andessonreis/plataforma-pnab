@@ -3,6 +3,7 @@ import { createContext, created, forbidden, handleError, logRequest, notFound, o
 import { getIp, requireRole, resolveAuth } from '@/lib/api/auth-resolver'
 import { regulamentoSchema } from '@/lib/schemas/memorial-agendamento'
 import { obterRegulamentoVigente, publicarNovoRegulamento } from '@/lib/services/memorial-regulamento.service'
+import { ROLES_MEMORIAL } from '@/lib/memorial/acesso'
 
 export const runtime = 'nodejs'
 
@@ -25,7 +26,7 @@ export async function POST(req: NextRequest) {
   const ctx = createContext()
   try {
     const caller = await resolveAuth(req)
-    if (!requireRole(caller, 'COMUNICACAO')) return forbidden(ctx)
+    if (!requireRole(caller, ...ROLES_MEMORIAL)) return forbidden(ctx)
     const { texto } = regulamentoSchema.parse(await req.json())
     const result = await publicarNovoRegulamento(texto, caller.userId, getIp(req))
     logRequest(ctx, 'POST', PATH, 201)

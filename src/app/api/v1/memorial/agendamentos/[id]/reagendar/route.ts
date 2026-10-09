@@ -4,6 +4,7 @@ import { getIp, requireRole, resolveAuth } from '@/lib/api/auth-resolver'
 import { reagendarVisitaSchema } from '@/lib/schemas/memorial-agendamento'
 import { reagendarVisita } from '@/lib/services/memorial-agendamento-gestao.service'
 import { dateParaDia } from '@/lib/memorial/agendamento/datas'
+import { ROLES_MEMORIAL } from '@/lib/memorial/acesso'
 
 export const runtime = 'nodejs'
 
@@ -15,7 +16,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
   const ctx = createContext()
   try {
     const caller = await resolveAuth(req)
-    if (!requireRole(caller, 'COMUNICACAO')) return forbidden(ctx)
+    if (!requireRole(caller, ...ROLES_MEMORIAL)) return forbidden(ctx)
     const { id } = await params
     const input = reagendarVisitaSchema.parse(await req.json())
     const v = await reagendarVisita(id, input, caller.userId, getIp(req))
