@@ -252,8 +252,15 @@ vi.mock('@/lib/rate-limit/config', () => ({
 
 // Mock storage
 vi.mock('@/lib/storage', () => ({
-  uploadFile: vi.fn().mockResolvedValue('https://storage.example.com/file.pdf'),
+  uploadFile: vi.fn().mockResolvedValue('/api/arquivos/editais/file.pdf'),
   deleteFile: vi.fn().mockResolvedValue(undefined),
+  downloadFile: vi.fn().mockResolvedValue(Buffer.from('')),
+  extractStoragePath: vi.fn((bucket: string, url: string) => {
+    const marcador = `/api/arquivos/${bucket}/`
+    const i = url.indexOf(marcador)
+    return i === -1 ? null : decodeURIComponent(url.slice(i + marcador.length).split('?')[0])
+  }),
+  parseStorageUrl: vi.fn(),
   getSignedUrl: vi.fn().mockResolvedValue('https://storage.example.com/signed-url'),
 }))
 

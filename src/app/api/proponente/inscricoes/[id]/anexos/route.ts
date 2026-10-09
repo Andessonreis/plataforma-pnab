@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { randomUUID } from 'crypto'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { uploadFile, deleteFile } from '@/lib/storage'
+import { uploadFile, deleteFile, extractStoragePath } from '@/lib/storage'
 import { validateMagicBytes, sanitizeFilename } from '@/lib/upload/validate'
 import {
   MAX_FILE_SIZE_BYTES,
@@ -330,9 +330,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
       return res
     }
 
-    // Extrair path do Supabase a partir da URL
-    const urlObj = new URL(anexo.url)
-    const storagePath = urlObj.pathname.split('/propostas/').pop()
+    const storagePath = extractStoragePath('propostas', anexo.url)
     if (storagePath) {
       try {
         await deleteFile('propostas', storagePath)

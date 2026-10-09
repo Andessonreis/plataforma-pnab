@@ -3,7 +3,7 @@ import { randomUUID } from 'crypto'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { AUDIT_ACTIONS, logAudit } from '@/lib/audit'
-import { deleteFile, uploadFile } from '@/lib/storage'
+import { deleteFile, uploadFile, extractStoragePath } from '@/lib/storage'
 
 export const runtime = 'nodejs'
 
@@ -16,13 +16,9 @@ const EXT_BY_MIME: Record<string, string> = {
 }
 const BUCKET = 'manuais'
 
-// Extrai o path dentro do bucket a partir da URL pública salva no campo.
-// Public URL do Supabase tem o formato:
-//   https://<proj>.supabase.co/storage/v1/object/public/<bucket>/<path>
+// Caminho dentro do bucket a partir da URL salva em User.avatarUrl.
 function extractAvatarPath(url: string | null | undefined): string | null {
-  if (!url) return null
-  const m = url.match(/\/storage\/v1\/object\/public\/[^/]+\/(.+)$/)
-  return m ? m[1] : null
+  return url ? extractStoragePath(BUCKET, url) : null
 }
 
 // POST — Upload de novo avatar. Substitui o existente (apaga o antigo).

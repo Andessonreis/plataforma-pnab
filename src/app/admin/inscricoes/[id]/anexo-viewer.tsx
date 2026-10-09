@@ -77,7 +77,7 @@ export function AnexoViewer({ inscricaoId, anexos, pendentes = [] }: AnexoViewer
       const embedUrl = toEmbedUrl(data.url)
       if (embedUrl) {
         setPreview({ anexoId: anexo.id, data: { kind: 'iframe', src: embedUrl } })
-      } else if (new URL(data.url).pathname.includes('/propostas/')) {
+      } else if (data.url.includes('/api/arquivos/propostas/')) {
         setPreview({ anexoId: anexo.id, data: { kind: 'video', src: data.url } })
       } else {
         window.open(data.url, '_blank', 'noopener,noreferrer')

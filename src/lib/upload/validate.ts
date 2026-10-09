@@ -63,7 +63,7 @@ export function validateMagicBytes(buffer: Buffer, declaredMime: string): boolea
 
 /**
  * Sanitiza o nome do arquivo para prevenir path traversal e caracteres perigosos,
- * e converte para o conjunto ASCII seguro aceito pelo Supabase Storage como key.
+ * e converte para o conjunto ASCII seguro seguro para nomes de arquivo em disco e URLs.
  *
  * Regras aplicadas:
  * - Remove path separators e traversal (.., /, \)

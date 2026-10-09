@@ -26,7 +26,7 @@ export const VIDEO_ANEXO_TIPOS = {
   complementar: 'VIDEO_COMPLEMENTAR',
 } as const
 
-// Limitado pelo plano do Supabase Storage (bucket 'propostas' aceita até 50MB por arquivo)
+// Limite de 50MB por arquivo no bucket 'propostas'
 export const MAX_VIDEO_SIZE_MB = 50
 export const MAX_VIDEO_SIZE_BYTES = MAX_VIDEO_SIZE_MB * 1024 * 1024
 

@@ -31,7 +31,7 @@ export function UserAvatar({ nome, src, size = 40, className }: UserAvatarProps)
           width={size}
           height={size}
           className="h-full w-full object-cover"
-          unoptimized // URLs externas (Supabase) — evita exigir config no next.config
+          unoptimized // URLs externas — evita exigir config no next.config
         />
       </span>
     )

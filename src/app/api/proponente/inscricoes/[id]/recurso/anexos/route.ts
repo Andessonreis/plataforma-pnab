@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { uploadFile, getSignedUrl } from '@/lib/storage'
+import { uploadFile, getSignedUrl, extractStoragePath } from '@/lib/storage'
 import { validateMagicBytes, sanitizeFilename } from '@/lib/upload/validate'
 import { logAudit } from '@/lib/audit'
 
@@ -66,7 +66,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       )
     }
 
-    const storagePath = new URL(url).pathname.split('/propostas/').pop()
+    const storagePath = extractStoragePath('propostas', url)
     if (!storagePath) {
       return NextResponse.json(
         { error: 'INTERNAL_ERROR', message: 'Caminho do arquivo inválido.', requestId },
