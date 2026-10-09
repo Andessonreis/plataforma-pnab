@@ -2,33 +2,50 @@
 
 import { useRef, type KeyboardEvent } from 'react'
 import { diaDaSemana, diasEntre, intervaloDoMes } from '@/lib/memorial/agendamento/datas'
+import type { AgendaDoMes } from './use-disponibilidade'
 
 const SEMANA = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
 const SEMANA_EXTENSO = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado']
 
 interface CalendarioVisitasProps {
   mes: string
-  /** Dias com pelo menos um horário livre. */
-  livres: ReadonlySet<string>
+  /** Dias de visitação do mês, de hoje em diante, com a situação de cada horário. */
+  agenda: AgendaDoMes
+  /** Hoje em Irecê ("AAAA-MM-DD"). */
+  hoje: string
+  antecedenciaHoras: number
   selecionado: string
   aoSelecionar: (dia: string) => void
 }
 
-function rotuloDia(dia: string, livre: boolean) {
+/** Por que o dia não aceita pedido, dito do jeito que a pessoa entende; vazio quando aceita. */
+function motivoDoDia(dia: string, agenda: AgendaDoMes, hoje: string, antecedenciaHoras: number): string {
+  if (dia < hoje) return 'data que já passou'
+  const horarios = agenda.get(dia)
+  if (!horarios) return 'sem visitação neste dia da semana'
+  if (horarios.some((h) => h.motivo === null)) return ''
+  if (horarios.every((h) => h.motivo === 'ANTECEDENCIA')) return `pedido precisa de ${antecedenciaHoras} horas de antecedência`
+  if (horarios.some((h) => h.motivo === 'DIA_LOTADO')) return 'limite de grupos do dia atingido'
+  return 'todos os horários já reservados'
+}
+
+function rotuloDia(dia: string, motivo: string) {
   const nomeMes = new Intl.DateTimeFormat('pt-BR', { month: 'long', timeZone: 'UTC' }).format(new Date(`${dia}T12:00:00Z`))
-  return `${Number(dia.slice(8))} de ${nomeMes}, ${SEMANA_EXTENSO[diaDaSemana(dia)]}${livre ? '' : ', sem horário'}`
+  return `${Number(dia.slice(8))} de ${nomeMes}, ${SEMANA_EXTENSO[diaDaSemana(dia)]}${motivo ? `, ${motivo}` : ''}`
 }
 
 /**
- * Grade do mês em que só os dias com horário livre são botões. As setas andam entre
+ * Grade do mês em que só os dias com pelo menos um horário livre são botões; os demais
+ * dizem ao leitor de tela (e no `title`) por que estão fechados. As setas andam entre
  * esses dias (esquerda/direita: anterior/próximo livre; cima/baixo: mesma coluna),
  * e só um deles fica na ordem do Tab, como pede o padrão de grade do WAI-ARIA.
  */
-export function CalendarioVisitas({ mes, livres, selecionado, aoSelecionar }: CalendarioVisitasProps) {
+export function CalendarioVisitas({ mes, agenda, hoje, antecedenciaHoras, selecionado, aoSelecionar }: CalendarioVisitasProps) {
   const { de, ate } = intervaloDoMes(mes)
   const dias = diasEntre(de, ate)
-  const disponiveis = dias.filter((d) => livres.has(d))
-  const foco = livres.has(selecionado) ? selecionado : disponiveis[0]
+  const motivos = new Map(dias.map((d) => [d, motivoDoDia(d, agenda, hoje, antecedenciaHoras)]))
+  const disponiveis = dias.filter((d) => !motivos.get(d))
+  const foco = disponiveis.includes(selecionado) ? selecionado : disponiveis[0]
   const botoes = useRef(new Map<string, HTMLButtonElement>())
 
   function mover(e: KeyboardEvent, dia: string) {
@@ -69,11 +86,16 @@ export function CalendarioVisitas({ mes, livres, selecionado, aoSelecionar }: Ca
         ))}
         {dias.map((dia) => {
           const numero = Number(dia.slice(8))
-          if (!livres.has(dia)) {
+          const motivo = motivos.get(dia) ?? ''
+          if (motivo) {
             return (
-              <span key={dia} className="flex h-11 items-center justify-center text-sm text-tinta-900/40 line-through decoration-tinta-900/20">
+              <span
+                key={dia}
+                title={motivo}
+                className="flex h-11 items-center justify-center text-sm text-tinta-900/50 line-through decoration-tinta-900/30"
+              >
                 <span aria-hidden="true">{numero}</span>
-                <span className="sr-only">{rotuloDia(dia, false)}</span>
+                <span className="sr-only">{rotuloDia(dia, motivo)}</span>
               </span>
             )
           }
@@ -88,7 +110,7 @@ export function CalendarioVisitas({ mes, livres, selecionado, aoSelecionar }: Ca
               type="button"
               tabIndex={dia === foco ? 0 : -1}
               aria-pressed={ativo}
-              aria-label={rotuloDia(dia, true)}
+              aria-label={rotuloDia(dia, '')}
               onClick={() => aoSelecionar(dia)}
               onKeyDown={(e) => mover(e, dia)}
               className={[

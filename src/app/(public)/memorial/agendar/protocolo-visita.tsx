@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { IconCheck } from '@/components/ui'
 import { formatarDiaPorExtenso } from '@/lib/memorial/agendamento/datas'
+import { AjudaVisita } from './ajuda-visita'
 
 export interface PedidoRegistrado {
   protocolo: string
@@ -11,14 +12,29 @@ export interface PedidoRegistrado {
   horaInicio: string
   horaFim: string
   mensagem: string
+  /** Se a cópia do pedido entrou na fila de e-mail. */
+  copiaEnviada: boolean
 }
+
+export interface DestinoFinal {
+  href: string
+  rotulo: string
+}
+
+const DESTINO_PUBLICO: DestinoFinal = { href: '/memorial', rotulo: 'Voltar ao Memorial' }
 
 /**
  * Comprovante do pedido. O aviso de que a visita ainda não está confirmada vem da
  * configuração do Memorial e fica acima do protocolo, porque é a informação que
  * mais gera engano.
  */
-export function ProtocoloVisita({ pedido, contatoEmail }: { pedido: PedidoRegistrado; contatoEmail: string }) {
+interface ProtocoloVisitaProps {
+  pedido: PedidoRegistrado
+  contatoEmail: string
+  destino?: DestinoFinal
+}
+
+export function ProtocoloVisita({ pedido, contatoEmail, destino = DESTINO_PUBLICO }: ProtocoloVisitaProps) {
   const titulo = useRef<HTMLHeadingElement>(null)
   useEffect(() => titulo.current?.focus(), [])
 
@@ -40,15 +56,17 @@ export function ProtocoloVisita({ pedido, contatoEmail }: { pedido: PedidoRegist
       </p>
 
       <p className="mx-auto mt-6 max-w-md text-sm leading-relaxed text-tinta-700">
-        Uma cópia do pedido segue para o e-mail informado.
-        {contatoEmail && <> Se precisar mudar algo, escreva para {contatoEmail} citando o protocolo.</>}
+        {pedido.copiaEnviada
+          ? 'Enviamos uma cópia do pedido para o e-mail informado. Se não a encontrar, confira a caixa de spam.'
+          : 'Não foi possível enviar a cópia por e-mail agora, mas o pedido está registrado. Anote o número do protocolo.'}
       </p>
+      <AjudaVisita contatoEmail={contatoEmail} protocolo={pedido.protocolo} className="mx-auto mt-3 max-w-md" />
 
       <Link
-        href="/memorial"
+        href={destino.href}
         className="mt-8 inline-flex min-h-[48px] items-center justify-center border-2 border-tinta-900 px-6 text-sm font-semibold text-tinta-900 hover:bg-tinta-900 hover:text-papel-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-turquesa-700"
       >
-        Voltar ao Memorial
+        {destino.rotulo}
       </Link>
     </div>
   )

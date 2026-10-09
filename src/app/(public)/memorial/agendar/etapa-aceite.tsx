@@ -6,6 +6,7 @@ import { formatarDiaPorExtenso } from '@/lib/memorial/agendamento/datas'
 import type { DadosVisita } from './dados-visita'
 import type { RegrasPublicas } from './fluxo-agendamento'
 import { BotoesEtapa } from './botoes-etapa'
+import { TextoRegulamento } from './texto-regulamento'
 
 interface EtapaAceiteProps {
   dados: DadosVisita
@@ -35,7 +36,7 @@ export function EtapaAceite({ dados, regras, regulamento, aoVoltar, aoEnviar }: 
   const resumo: [string, string][] = [
     ['Data', formatarDiaPorExtenso(dados.data)],
     ['Horário', `${dados.horaInicio} às ${dados.horaFim}`],
-    ['Grupo', `${dados.instituicao} — ${dados.quantidade} pessoas`],
+    ['Grupo', `${dados.instituicao} — ${dados.quantidade} ${dados.quantidade === '1' ? 'pessoa' : 'pessoas'}`],
     ['Responsável', `${dados.responsavelNome} (${dados.responsavelEmail})`],
   ]
 
@@ -72,7 +73,9 @@ export function EtapaAceite({ dados, regras, regulamento, aoVoltar, aoEnviar }: 
 
       <details className="mt-6 border-2 border-tinta-900/15 px-4 py-3">
         <summary className="min-h-[44px] cursor-pointer py-2.5 text-sm font-semibold text-tinta-900">Reler o regulamento</summary>
-        <div className="mt-2 whitespace-pre-line text-sm leading-relaxed text-tinta-700">{regulamento}</div>
+        <div className="mt-2 pb-2">
+          <TextoRegulamento texto={regulamento} compacto />
+        </div>
       </details>
 
       <label className="mt-6 flex min-h-[48px] cursor-pointer items-start gap-3 bg-papel-100/70 p-4 text-[15px] leading-relaxed text-tinta-900">

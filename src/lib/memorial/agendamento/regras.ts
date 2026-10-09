@@ -120,20 +120,58 @@ export function motivoIndisponivel(
   return null
 }
 
-/** Horários ainda livres num dia, já descontando antecedência, lotação e turno. */
-export function horariosLivres(dia: string, ocupacoes: readonly Ocupacao[], regras: RegrasVisita, agora: Date): Horario[] {
+/** Por que um horário da grade não pode ser escolhido; null quando está livre. */
+export type MotivoHorario = 'RESERVADO' | 'ANTECEDENCIA' | 'DIA_LOTADO' | 'OUTRO_TURNO'
+
+export interface SituacaoHorario extends Horario {
+  motivo: MotivoHorario | null
+}
+
+/**
+ * Toda a grade do dia, cada horário com o motivo de estar indisponível. Assim a tela
+ * mostra o que está tomado em vez de esconder, e o dia só fica fechado quando nada sobra.
+ * Dia da semana sem visitação devolve lista vazia.
+ */
+export function situacaoDosHorarios(dia: string, ocupacoes: readonly Ocupacao[], regras: RegrasVisita, agora: Date): SituacaoHorario[] {
   if (!diaAbertoParaVisita(dia, regras.diasSemana)) return []
   const doDia = ocupacoesDoDia(ocupacoes, dia)
-  if (diaLotado(doDia, regras.maxGruposPorDia)) return []
+  const lotado = diaLotado(doDia, regras.maxGruposPorDia)
 
   return TURNOS.flatMap((turno) =>
-    turnoBloqueado(doDia, turno, regras.umTurnoPorDia)
-      ? []
-      : regras.horarios[turno]
-          .filter((h) => !horarioOcupado(doDia, turno, h.inicio))
-          .filter((h) => cumpreAntecedencia(dia, h.inicio, agora, regras.antecedenciaHoras))
-          .map((h) => ({ turno, inicio: h.inicio, fim: h.fim })),
+    regras.horarios[turno].map((h): SituacaoHorario => {
+      const motivo: MotivoHorario | null = horarioOcupado(doDia, turno, h.inicio)
+        ? 'RESERVADO'
+        : !cumpreAntecedencia(dia, h.inicio, agora, regras.antecedenciaHoras)
+          ? 'ANTECEDENCIA'
+          : lotado
+            ? 'DIA_LOTADO'
+            : turnoBloqueado(doDia, turno, regras.umTurnoPorDia)
+              ? 'OUTRO_TURNO'
+              : null
+      return { turno, inicio: h.inicio, fim: h.fim, motivo }
+    }),
   )
+}
+
+/** Horários ainda livres num dia, já descontando antecedência, lotação e turno. */
+export function horariosLivres(dia: string, ocupacoes: readonly Ocupacao[], regras: RegrasVisita, agora: Date): Horario[] {
+  return situacaoDosHorarios(dia, ocupacoes, regras, agora)
+    .filter((h) => h.motivo === null)
+    .map(({ turno, inicio, fim }) => ({ turno, inicio, fim }))
+}
+
+/** Rótulo curto que aparece no lugar do horário indisponível. */
+export function rotuloMotivoHorario(motivo: MotivoHorario, turno: MemorialTurno): string {
+  switch (motivo) {
+    case 'RESERVADO':
+      return 'Reservado'
+    case 'ANTECEDENCIA':
+      return 'Antecedência mínima'
+    case 'DIA_LOTADO':
+      return 'Limite de grupos no dia'
+    case 'OUTRO_TURNO':
+      return turno === 'MANHA' ? 'Turno da tarde já tem visita' : 'Turno da manhã já tem visita'
+  }
 }
 
 export function mensagemIndisponivel(motivo: MotivoIndisponivel, regras: RegrasVisita): string {
@@ -151,6 +189,6 @@ export function mensagemIndisponivel(motivo: MotivoIndisponivel, regras: RegrasV
     case 'OUTRO_TURNO_OCUPADO':
       return 'Esse dia já tem visita no outro turno. Escolha um horário do mesmo turno ou outra data.'
     case 'HORARIO_OCUPADO':
-      return 'Esse horário acabou de ser reservado por outro grupo. Escolha outro.'
+      return 'Esse horário acabou de ser ocupado por outro grupo. Escolha outro horário.'
   }
 }

@@ -7,6 +7,7 @@ import { listarVisitasQuerySchema, solicitarVisitaSchema } from '@/lib/schemas/m
 import { solicitarVisita } from '@/lib/services/memorial-agendamento.service'
 import { listarVisitas } from '@/lib/services/memorial-agendamento-gestao.service'
 import { ROLES_MEMORIAL } from '@/lib/memorial/acesso'
+import { getConfig } from '@/lib/memorial/config'
 
 export const runtime = 'nodejs'
 
@@ -34,7 +35,9 @@ export async function POST(req: NextRequest) {
     const limited = await rateLimit(req, 'memorial/agendamento', RATE_LIMITS['memorial/agendamento'])
     if (limited) return limited
 
-    const input = solicitarVisitaSchema.parse(await req.json())
+    // O teto de pessoas é o da configuração vigente, o mesmo que o formulário mostrou.
+    const { maxPessoasPorGrupo } = await getConfig('visitacao')
+    const input = solicitarVisitaSchema(maxPessoasPorGrupo).parse(await req.json())
     const caller = await resolveAuth(req)
     const result = await solicitarVisita(input, { userId: caller?.userId, ip: getIp(req) })
     logRequest(ctx, 'POST', PATH, 201)

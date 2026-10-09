@@ -24,6 +24,18 @@ describe('templates do agendamento do Memorial', () => {
     expect(html).toContain('memorial@example.com')
   })
 
+  it('pedido recebido oferece a página Falar com a Secretaria com o protocolo', async () => {
+    const { html } = await renderTemplate('memorial_solicitacao_recebida', {
+      ...visita,
+      nome: 'Ana Souza',
+      aviso: 'Sua visita ainda NÃO está confirmada.',
+      contatoUrl: 'https://portal.exemplo/contato?assunto=memorial-visita&protocolo=MEM-2026-A1B2C3',
+    })
+    expect(html).toContain('Falar com a Secretaria')
+    expect(html).toContain('protocolo=MEM-2026-A1B2C3')
+    expect(html).toContain('09:00 às 09:45')
+  })
+
   it('confirmada e remarcada mudam título e assunto', async () => {
     const confirmada = await renderTemplate('memorial_visita_confirmada', { ...visita, nome: 'Ana' })
     const remarcada = await renderTemplate('memorial_visita_confirmada', { ...visita, nome: 'Ana', remarcada: true })

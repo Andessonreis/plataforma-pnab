@@ -3,8 +3,8 @@ import { logAudit, AUDIT_ACTIONS } from '@/lib/audit'
 import { getConfig } from '@/lib/memorial/config'
 import { generateProtocolo } from '@/lib/atendimento/protocolo'
 import { diaEmIrece, diaParaDate, diasEntre, intervaloDoMes } from '@/lib/memorial/agendamento/datas'
-import { horariosLivres, mensagemIndisponivel, motivoIndisponivel, type Horario } from '@/lib/memorial/agendamento/regras'
-import { ocupacoesNoIntervalo, travarDia } from '@/lib/memorial/agendamento/ocupacao'
+import { mensagemIndisponivel, motivoIndisponivel, situacaoDosHorarios, type SituacaoHorario } from '@/lib/memorial/agendamento/regras'
+import { ehConflitoDeHorario, ocupacoesNoIntervalo, travarDia } from '@/lib/memorial/agendamento/ocupacao'
 import { buscarPerguntasExtras, registrarPerguntasExtras } from '@/lib/memorial/agendamento/perguntas-extras'
 import { avisarEquipeNovoPedido, avisarPedidoRecebido } from '@/lib/memorial/agendamento/notificar'
 import { obterRegulamentoVigente } from './memorial-regulamento.service'
@@ -13,12 +13,13 @@ import type { DisponibilidadeQuery, SolicitarVisitaInput } from '@/lib/schemas/m
 
 export interface DiaDisponivel {
   data: string
-  horarios: Horario[]
+  horarios: SituacaoHorario[]
 }
 
 /**
- * Dias com pelo menos um horário livre no mês (ou intervalo) pedido. Nada sobre quem
- * já reservou sai daqui: a página pública só precisa saber o que está livre.
+ * Dias de visitação do mês (ou intervalo) pedido, de hoje em diante, com a grade inteira
+ * de cada um e o motivo de cada horário indisponível. Nada sobre quem reservou sai
+ * daqui: só se o horário está livre ou por que não está.
  */
 export async function consultarDisponibilidade(query: DisponibilidadeQuery, agora = new Date()) {
   const regras = await getConfig('visitacao')
@@ -29,7 +30,7 @@ export async function consultarDisponibilidade(query: DisponibilidadeQuery, agor
 
   const ocupacoes = await ocupacoesNoIntervalo(prisma, inicio, ate)
   const dias = diasEntre(inicio, ate)
-    .map((data) => ({ data, horarios: horariosLivres(data, ocupacoes, regras, agora) }))
+    .map((data) => ({ data, horarios: situacaoDosHorarios(data, ocupacoes, regras, agora) }))
     .filter((d) => d.horarios.length > 0)
   return { de, ate, dias }
 }
@@ -67,48 +68,54 @@ export async function solicitarVisita(input: SolicitarVisitaInput, solicitante: 
 
   const protocolo = await protocoloLivre()
 
-  const visita = await prisma.$transaction(async (tx) => {
-    await travarDia(tx, input.data)
-    const ocupacoes = await ocupacoesNoIntervalo(tx, input.data, input.data)
-    const motivo = motivoIndisponivel(input, ocupacoes, regras, agora)
-    if (motivo) throw new ServiceError(motivo === 'HORARIO_OCUPADO' ? 'CONFLICT' : 'BAD_REQUEST', mensagemIndisponivel(motivo, regras))
+  const visita = await prisma
+    .$transaction(async (tx) => {
+      await travarDia(tx, input.data)
+      const ocupacoes = await ocupacoesNoIntervalo(tx, input.data, input.data)
+      const motivo = motivoIndisponivel(input, ocupacoes, regras, agora)
+      if (motivo) throw new ServiceError(motivo === 'HORARIO_OCUPADO' ? 'CONFLICT' : 'BAD_REQUEST', mensagemIndisponivel(motivo, regras))
 
-    const respostaId = perguntas
-      ? await registrarPerguntasExtras(tx, perguntas.id, input.perguntasExtras ?? {}, {
-          userId: solicitante.userId,
-          nome: input.responsavelNome,
-          email: input.responsavelEmail,
-        })
-      : undefined
+      const respostaId = perguntas
+        ? await registrarPerguntasExtras(tx, perguntas.id, input.perguntasExtras ?? {}, {
+            userId: solicitante.userId,
+            nome: input.responsavelNome,
+            email: input.responsavelEmail,
+          })
+        : undefined
 
-    return tx.memorialAgendamento.create({
-      data: {
-        protocolo,
-        userId: solicitante.userId ?? null,
-        tipoVisitante: input.tipoVisitante,
-        instituicao: input.instituicao,
-        quantidade: input.quantidade,
-        faixaEtaria: input.faixaEtaria ?? null,
-        turma: input.turma ?? null,
-        endereco: input.endereco ?? null,
-        cidade: input.cidade ?? null,
-        responsavelNome: input.responsavelNome,
-        responsavelCargo: input.responsavelCargo ?? null,
-        responsavelEmail: input.responsavelEmail,
-        responsavelTelefone: input.responsavelTelefone,
-        data: diaParaDate(input.data),
-        turno: input.turno,
-        horaInicio: input.horaInicio,
-        horaFim: input.horaFim,
-        observacoes: input.observacoes ?? null,
-        necessidades: input.necessidades ?? null,
-        preferenciaContato: input.preferenciaContato ?? null,
-        regulamentoVersao: regulamento.versao,
-        aceiteEm: agora,
-        respostaId: respostaId ?? null,
-      },
+      return tx.memorialAgendamento.create({
+        data: {
+          protocolo,
+          userId: solicitante.userId ?? null,
+          tipoVisitante: input.tipoVisitante,
+          instituicao: input.instituicao,
+          quantidade: input.quantidade,
+          faixaEtaria: input.faixaEtaria,
+          turma: input.turma ?? null,
+          endereco: input.endereco ?? null,
+          cidade: input.cidade ?? null,
+          responsavelNome: input.responsavelNome,
+          responsavelCargo: input.responsavelCargo ?? null,
+          responsavelEmail: input.responsavelEmail,
+          responsavelTelefone: input.responsavelTelefone,
+          data: diaParaDate(input.data),
+          turno: input.turno,
+          horaInicio: input.horaInicio,
+          horaFim: input.horaFim,
+          observacoes: input.observacoes ?? null,
+          necessidades: input.necessidades ?? null,
+          preferenciaContato: input.preferenciaContato,
+          regulamentoVersao: regulamento.versao,
+          aceiteEm: agora,
+          respostaId: respostaId ?? null,
+        },
+      })
     })
-  })
+    .catch((err: unknown) => {
+      // Rede de segurança do banco: o índice único de horário ativo barra o que a trava não pegou.
+      if (ehConflitoDeHorario(err)) throw new ServiceError('CONFLICT', mensagemIndisponivel('HORARIO_OCUPADO', regras))
+      throw err
+    })
 
   await logAudit({
     userId: solicitante.userId,
@@ -119,7 +126,7 @@ export async function solicitarVisita(input: SolicitarVisitaInput, solicitante: 
     ip: solicitante.ip,
   })
 
-  await avisarPedidoRecebido(visita, regras.textoSolicitacaoRecebida)
+  const copiaEnviada = await avisarPedidoRecebido(visita, regras.textoSolicitacaoRecebida)
   await avisarEquipeNovoPedido(visita)
 
   return {
@@ -129,8 +136,24 @@ export async function solicitarVisita(input: SolicitarVisitaInput, solicitante: 
     horaInicio: visita.horaInicio,
     horaFim: visita.horaFim,
     mensagem: regras.textoSolicitacaoRecebida,
+    /** A cópia chegou à fila de e-mail; a tela só promete o envio quando isso deu certo. */
+    copiaEnviada,
   }
 }
+
+/** Campos de uma visita que o próprio visitante acompanha (lista e painel). */
+export const SELECT_MINHA_VISITA = {
+  id: true,
+  protocolo: true,
+  status: true,
+  data: true,
+  turno: true,
+  horaInicio: true,
+  horaFim: true,
+  instituicao: true,
+  quantidade: true,
+  motivoRecusa: true,
+} as const
 
 /** Visitas pedidas pela própria conta — a lista de "minhas visitas". */
 export async function listarMinhasVisitas(userId: string, page: number, pageSize: number) {
@@ -141,18 +164,7 @@ export async function listarMinhasVisitas(userId: string, page: number, pageSize
       orderBy: { data: 'desc' },
       skip: (page - 1) * pageSize,
       take: pageSize,
-      select: {
-        id: true,
-        protocolo: true,
-        status: true,
-        data: true,
-        turno: true,
-        horaInicio: true,
-        horaFim: true,
-        instituicao: true,
-        quantidade: true,
-        motivoRecusa: true,
-      },
+      select: SELECT_MINHA_VISITA,
     }),
     prisma.memorialAgendamento.count({ where }),
   ])

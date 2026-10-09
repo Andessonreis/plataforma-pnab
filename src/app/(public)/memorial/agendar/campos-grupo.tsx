@@ -2,8 +2,10 @@
 
 import { Input, Select } from '@/components/ui'
 import { idDoCampo } from '@/components/formulario-dinamico/campo-com-erro'
-import { TIPOS_VISITANTE } from '@/lib/memorial/agendamento/status'
+import { TIPOS_VISITANTE, ehVisitaEscolar } from '@/lib/memorial/agendamento/status'
 import type { DadosVisita, ErrosVisita } from './dados-visita'
+import { CampoQuantidade } from './campo-quantidade'
+import { CampoFaixaEtaria } from './campo-faixa-etaria'
 
 interface CamposProps {
   dados: DadosVisita
@@ -15,6 +17,8 @@ const TIPOS = TIPOS_VISITANTE.map((t) => ({ value: t, label: t }))
 
 /** Dados do grupo: quem é, quantos são e de onde vêm. */
 export function CamposGrupo({ dados, erros, maxPessoas, aoMudar }: CamposProps & { maxPessoas: number }) {
+  const escolar = ehVisitaEscolar(dados.tipoVisitante)
+
   return (
     <fieldset className="mt-6 space-y-5">
       <legend className="mb-1 text-base font-semibold text-tinta-900">Grupo</legend>
@@ -25,7 +29,8 @@ export function CamposGrupo({ dados, erros, maxPessoas, aoMudar }: CamposProps &
         placeholder="Escolha uma opção"
         options={TIPOS}
         value={dados.tipoVisitante}
-        onChange={(e) => aoMudar({ tipoVisitante: e.target.value })}
+        // Ano/turma é só de escola: ao trocar para outro tipo, o valor digitado é descartado.
+        onChange={(e) => aoMudar({ tipoVisitante: e.target.value, ...(ehVisitaEscolar(e.target.value) ? {} : { turma: '' }) })}
         error={erros.tipoVisitante}
         required
       />
@@ -39,37 +44,18 @@ export function CamposGrupo({ dados, erros, maxPessoas, aoMudar }: CamposProps &
         required
         autoComplete="organization"
       />
-      <div className="grid gap-5 sm:grid-cols-2">
+      <CampoQuantidade valor={dados.quantidade} max={maxPessoas} erro={erros.quantidade} aoMudar={(quantidade) => aoMudar({ quantidade })} />
+      <CampoFaixaEtaria dados={dados} erros={erros} aoMudar={aoMudar} />
+      {escolar && (
         <Input
-          id={idDoCampo('quantidade')}
-          label="Quantidade de pessoas"
-          hint={`Até ${maxPessoas}, contando os responsáveis.`}
-          type="number"
-          inputMode="numeric"
-          min={1}
-          max={maxPessoas}
-          value={dados.quantidade}
-          onChange={(e) => aoMudar({ quantidade: e.target.value })}
-          error={erros.quantidade}
-          required
+          id={idDoCampo('turma')}
+          label="Ano ou turma"
+          hint="Ex.: 4º ano B."
+          value={dados.turma}
+          onChange={(e) => aoMudar({ turma: e.target.value })}
+          error={erros.turma}
         />
-        <Input
-          id={idDoCampo('faixaEtaria')}
-          label="Faixa etária"
-          placeholder="Ex.: 8 a 10 anos"
-          value={dados.faixaEtaria}
-          onChange={(e) => aoMudar({ faixaEtaria: e.target.value })}
-          error={erros.faixaEtaria}
-        />
-      </div>
-      <Input
-        id={idDoCampo('turma')}
-        label="Ano ou turma"
-        hint="Para escolas. Ex.: 4º ano B."
-        value={dados.turma}
-        onChange={(e) => aoMudar({ turma: e.target.value })}
-        error={erros.turma}
-      />
+      )}
       <div className="grid gap-5 sm:grid-cols-[2fr_1fr]">
         <Input
           id={idDoCampo('endereco')}

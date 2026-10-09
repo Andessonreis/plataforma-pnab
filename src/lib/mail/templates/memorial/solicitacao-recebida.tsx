@@ -1,4 +1,4 @@
-import { Heading, Section, Text } from '@react-email/components'
+import { Heading, Link, Section, Text } from '@react-email/components'
 import { Layout } from '../_shared/layout'
 import { colors, styles } from '../_shared/theme'
 import { DetalhesVisita, type DadosVisitaEmail } from './detalhes-visita'
@@ -9,12 +9,14 @@ export interface MemorialSolicitacaoRecebidaData extends DadosVisitaEmail {
   nome: string
   aviso: string
   contatoEmail?: string
+  /** Página "Falar com a Secretaria" já com o protocolo no assunto. */
+  contatoUrl?: string
 }
 
 export const memorialSolicitacaoRecebidaSubject = (d: MemorialSolicitacaoRecebidaData) =>
   `Memorial de Irecê — pedido de visita ${d.protocolo} recebido`
 
-export function MemorialSolicitacaoRecebida({ nome, aviso, contatoEmail, ...visita }: MemorialSolicitacaoRecebidaData) {
+export function MemorialSolicitacaoRecebida({ nome, aviso, contatoEmail, contatoUrl, ...visita }: MemorialSolicitacaoRecebidaData) {
   return (
     <Layout preview={`Recebemos seu pedido de visita (${visita.protocolo}). Ainda não está confirmado.`}>
       <Heading style={styles.h1}>Pedido de visita recebido</Heading>
@@ -37,9 +39,16 @@ export function MemorialSolicitacaoRecebida({ nome, aviso, contatoEmail, ...visi
       <DetalhesVisita {...visita} />
 
       <Text style={styles.paragraph}>Guarde o número do protocolo: é por ele que a equipe localiza o seu pedido.</Text>
-      {contatoEmail && (
+      {(contatoUrl || contatoEmail) && (
         <Text style={styles.paragraph}>
-          Precisa mudar alguma coisa? Escreva para <strong>{contatoEmail}</strong> informando o protocolo.
+          Precisa mudar alguma coisa? Envie uma mensagem pela página{' '}
+          {contatoUrl ? <Link href={contatoUrl}>Falar com a Secretaria</Link> : 'Falar com a Secretaria'} do portal
+          {contatoEmail && (
+            <>
+              {' '}ou escreva para <strong>{contatoEmail}</strong>
+            </>
+          )}
+          , informando o protocolo.
         </Text>
       )}
     </Layout>

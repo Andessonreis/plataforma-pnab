@@ -18,8 +18,11 @@ const TRANSICOES: Record<AcaoVisita, { de: MemorialStatusAgendamento[]; para: Me
 /** Recusar ou cancelar sem dizer o porquê deixa o visitante sem resposta. */
 export const ACOES_COM_MOTIVO: readonly AcaoVisita[] = ['RECUSAR', 'CANCELAR']
 
+/** Pedidos ainda vivos: a visita não foi encerrada, recusada nem cancelada. */
+export const STATUS_ATIVOS: readonly MemorialStatusAgendamento[] = [...EM_ABERTO, 'CONFIRMADO']
+
 /** Só dá para remarcar o que ainda não foi encerrado. */
-export const STATUS_REAGENDAVEIS: readonly MemorialStatusAgendamento[] = [...EM_ABERTO, 'CONFIRMADO']
+export const STATUS_REAGENDAVEIS = STATUS_ATIVOS
 
 export function statusAposAcao(atual: MemorialStatusAgendamento, acao: AcaoVisita): MemorialStatusAgendamento | null {
   const regra = TRANSICOES[acao]
@@ -66,4 +69,21 @@ export const TIPOS_VISITANTE = [
   'Grupo de Turistas',
 ] as const
 
-export const PREFERENCIAS_CONTATO = ['E-mail', 'WhatsApp', 'Telefone'] as const
+/** Ano ou turma só faz sentido para escolas; nos demais tipos o campo nem aparece. */
+export function ehVisitaEscolar(tipoVisitante: string): boolean {
+  return tipoVisitante.startsWith('Unidade Escolar')
+}
+
+/**
+ * Canal pelo qual o responsável quer receber a resposta da equipe. O primeiro é o
+ * padrão; "Telefone" continua aceito porque pedidos antigos já foram gravados com ele.
+ */
+export const PREFERENCIAS_CONTATO = ['E-mail', 'WhatsApp', 'E-mail e WhatsApp', 'Telefone'] as const
+export type PreferenciaContato = (typeof PREFERENCIAS_CONTATO)[number]
+
+export const ROTULO_PREFERENCIA: Record<PreferenciaContato, string> = {
+  'E-mail': 'Por e-mail',
+  WhatsApp: 'Por WhatsApp',
+  'E-mail e WhatsApp': 'Por e-mail e por WhatsApp',
+  Telefone: 'Por ligação telefônica',
+}

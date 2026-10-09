@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { Prisma } from '@prisma/client'
 import { enqueueEmail } from '@/lib/queue'
 import { logAudit } from '@/lib/audit'
 
@@ -31,6 +32,8 @@ const entrada = {
   tipoVisitante: 'Unidade Escolar Municipal' as const,
   instituicao: 'Escola Rui Barbosa',
   quantidade: 18,
+  faixaEtaria: 'Fundamental I (6 a 10 anos)',
+  preferenciaContato: 'E-mail' as const,
   responsavelNome: 'Ana Souza',
   responsavelEmail: 'ana@example.com',
   responsavelTelefone: '74999990000',
@@ -106,10 +109,36 @@ describe('solicitarVisita', () => {
     expect(enviados).toContainEqual(['memorial_nova_solicitacao', 'memorialirececsj@gmail.com'])
   })
 
+  it('com a cópia na fila, a resposta autoriza a tela a prometer o e-mail', async () => {
+    await expect(solicitarVisita(entrada, {}, AGORA)).resolves.toMatchObject({ copiaEnviada: true })
+    const recibo = vi.mocked(enqueueEmail).mock.calls.find(([j]) => j.template === 'memorial_solicitacao_recebida')![0]
+    expect(recibo.data).toMatchObject({
+      protocolo: expect.stringMatching(/^MEM-/),
+      data: 'quinta-feira, 15 de outubro de 2026',
+      horario: '09:00 às 09:45',
+      aviso: expect.stringContaining('NÃO está confirmada'),
+      contatoUrl: expect.stringContaining('/contato?assunto=memorial-visita&protocolo=MEM-'),
+    })
+  })
+
+  it('violação do índice único de horário vira o mesmo 409 de horário ocupado', async () => {
+    db.$transaction.mockRejectedValueOnce(
+      new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+        code: 'P2002',
+        clientVersion: 'test',
+        meta: { target: ['data', 'horaInicio'] },
+      }),
+    )
+    await expect(solicitarVisita(entrada, {}, AGORA)).rejects.toMatchObject({
+      code: 'CONFLICT',
+      message: expect.stringContaining('acabou de ser ocupado'),
+    })
+  })
+
   it('falha na fila de e-mail não derruba o pedido', async () => {
     vi.mocked(enqueueEmail).mockRejectedValue(new Error('redis fora'))
     const erro = vi.spyOn(console, 'error').mockImplementation(() => {})
-    await expect(solicitarVisita(entrada, {}, AGORA)).resolves.toHaveProperty('protocolo')
+    await expect(solicitarVisita(entrada, {}, AGORA)).resolves.toMatchObject({ copiaEnviada: false })
     expect(JSON.stringify(erro.mock.calls)).not.toContain('ana@example.com')
     erro.mockRestore()
     vi.mocked(enqueueEmail).mockResolvedValue(undefined as never)
@@ -124,10 +153,23 @@ describe('solicitarVisita', () => {
 })
 
 describe('consultarDisponibilidade', () => {
-  it('lista só dias com horário livre a partir de hoje', async () => {
+  it('devolve os dias de visitação a partir de hoje com a grade inteira e o motivo de cada horário', async () => {
     const r = await consultarDisponibilidade({ de: '2026-10-10', ate: '2026-10-18' }, AGORA)
-    // 12 e 13 não cumprem 48h; 14 só a partir das 10h; 17 e 18 são fim de semana
-    expect(r.dias.map((d) => d.data)).toEqual(['2026-10-14', '2026-10-15', '2026-10-16'])
+    // 10/11 e 17/18 são fim de semana; 12 e 13 ficam inteiros dentro das 48h
+    expect(r.dias.map((d) => d.data)).toEqual(['2026-10-12', '2026-10-13', '2026-10-14', '2026-10-15', '2026-10-16'])
+    expect(r.dias[0].horarios.every((h) => h.motivo === 'ANTECEDENCIA')).toBe(true)
+    const dia14 = r.dias[2].horarios
+    expect(dia14.filter((h) => h.motivo === 'ANTECEDENCIA').map((h) => h.inicio)).toEqual(['09:00', '09:45'])
+    expect(dia14.find((h) => h.inicio === '10:30')?.motivo).toBeNull()
+  })
+
+  it('nada sobre quem reservou sai na disponibilidade', async () => {
+    db.memorialAgendamento.findMany.mockResolvedValue([
+      { data: new Date('2026-10-15T00:00:00Z'), turno: 'MANHA', horaInicio: '09:00', status: 'SOLICITADO' },
+    ])
+    const r = await consultarDisponibilidade({ de: '2026-10-15', ate: '2026-10-15' }, AGORA)
+    expect(Object.keys(r.dias[0].horarios[0]).sort()).toEqual(['fim', 'inicio', 'motivo', 'turno'])
+    expect(r.dias[0].horarios[0].motivo).toBe('RESERVADO')
   })
 
   it('intervalo todo no passado devolve vazio sem consultar o banco', async () => {

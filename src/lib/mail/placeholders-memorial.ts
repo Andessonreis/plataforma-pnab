@@ -23,6 +23,7 @@ export const TEMPLATE_META_MEMORIAL: Record<MemorialEmailTemplate, TemplateMeta>
       ...VISITA,
       { key: 'aviso', description: 'Texto de "solicitação recebida" definido nas configurações do Memorial.', sample: 'Sua visita ainda NÃO está confirmada.', required: true },
       CONTATO,
+      { key: 'contatoUrl', description: 'Link da página "Falar com a Secretaria" com o protocolo no assunto.', sample: 'https://culturaeturismo.irece.ba.gov.br/contato?assunto=memorial-visita&protocolo=MEM-2026-A1B2C3' },
     ],
   },
   memorial_visita_confirmada: {

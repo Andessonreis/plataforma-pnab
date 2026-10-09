@@ -14,6 +14,7 @@ vi.mock('@/lib/services/memorial-agendamento.service', () => ({
   consultarDisponibilidade: (...a: unknown[]) => disponibilidade(...a),
 }))
 vi.mock('@/lib/services/memorial-agendamento-gestao.service', () => ({ listarVisitas: (...a: unknown[]) => listar(...a) }))
+vi.mock('@/lib/memorial/config', () => ({ getConfig: async () => ({ maxPessoasPorGrupo: 20 }) }))
 vi.mock('@/lib/services/memorial-agendamento-relatorio.service', () => ({ exportarVisitasCsv: (...a: unknown[]) => exportar(...a) }))
 
 const { GET, POST } = await import('../route')
@@ -31,6 +32,8 @@ const corpo = {
   tipoVisitante: 'Grupo de Turistas',
   instituicao: 'Turma da Bahia',
   quantidade: 10,
+  idadeMinima: 18,
+  idadeMaxima: 59,
   responsavelNome: 'Ana Souza',
   responsavelEmail: 'ANA@example.com',
   responsavelTelefone: '74999990000',
@@ -65,6 +68,49 @@ describe('POST /api/v1/memorial/agendamentos', () => {
     const res = await POST(req('', { method: 'POST', body: JSON.stringify({ ...corpo, aceite: false }) }))
     expect(res.status).toBe(400)
     expect(solicitar).not.toHaveBeenCalled()
+  })
+
+  const enviar = (extra: Record<string, unknown>) => POST(req('', { method: 'POST', body: JSON.stringify({ ...corpo, ...extra }) }))
+  const errosDe = async (res: Response) => (await res.json()).fieldErrors as Record<string, string>
+
+  it('quantidade só inteira de 1 até o teto da configuração', async () => {
+    for (const quantidade of [0, -3, 21, 2.5, 'abc', '']) {
+      const res = await enviar({ quantidade })
+      expect(res.status).toBe(400)
+      expect(await errosDe(res)).toHaveProperty('quantidade')
+    }
+    expect((await errosDe(await enviar({ quantidade: 21 }))).quantidade).toBe('Cada agendamento atende até 20 pessoas.')
+    solicitar.mockResolvedValue({ protocolo: 'x' })
+    expect((await enviar({ quantidade: 20 })).status).toBe(201)
+    expect(solicitar).toHaveBeenCalledTimes(1)
+  })
+
+  it('faixa etária vem de duas idades válidas e vira texto legível', async () => {
+    expect((await errosDe(await enviar({ idadeMinima: 12, idadeMaxima: 8 })))).toHaveProperty('idadeMaxima')
+    expect((await errosDe(await enviar({ idadeMinima: -1 })))).toHaveProperty('idadeMinima')
+    expect((await errosDe(await enviar({ idadeMaxima: 130 })))).toHaveProperty('idadeMaxima')
+    solicitar.mockResolvedValue({ protocolo: 'x' })
+    await enviar({ idadeMinima: 6, idadeMaxima: 10 })
+    expect(solicitar.mock.calls[0][0].faixaEtaria).toBe('Fundamental I (6 a 10 anos)')
+    await enviar({ idadeMinima: 8, idadeMaxima: 12 })
+    expect(solicitar.mock.calls[1][0].faixaEtaria).toBe('Entre 8 e 12 anos')
+  })
+
+  it('ano/turma só segue para escolas', async () => {
+    solicitar.mockResolvedValue({ protocolo: 'x' })
+    await enviar({ turma: '4º ano B' })
+    expect(solicitar.mock.calls[0][0].turma).toBeUndefined()
+    await enviar({ tipoVisitante: 'Unidade Escolar Municipal', turma: '4º ano B' })
+    expect(solicitar.mock.calls[1][0].turma).toBe('4º ano B')
+  })
+
+  it('preferência de contato: e-mail por padrão e só opções conhecidas', async () => {
+    solicitar.mockResolvedValue({ protocolo: 'x' })
+    await enviar({})
+    expect(solicitar.mock.calls[0][0].preferenciaContato).toBe('E-mail')
+    expect((await enviar({ preferenciaContato: 'Tanto faz' })).status).toBe(400)
+    await enviar({ preferenciaContato: 'E-mail e WhatsApp' })
+    expect(solicitar.mock.calls[1][0].preferenciaContato).toBe('E-mail e WhatsApp')
   })
 
   it('rate limit barra antes de tudo', async () => {

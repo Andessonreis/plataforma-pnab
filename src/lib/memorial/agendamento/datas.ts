@@ -89,3 +89,9 @@ export function formatarDiaCurto(dia: string): string {
   const [ano, mes, d] = dia.split('-')
   return `${d}/${mes}/${ano}`
 }
+
+/** "09:45" → 585 (minutos desde a meia-noite). */
+export function minutosDoDia(hora: string): number {
+  const [h, m] = hora.split(':').map(Number)
+  return h * 60 + m
+}

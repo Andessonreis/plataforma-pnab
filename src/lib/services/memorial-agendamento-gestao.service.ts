@@ -5,7 +5,7 @@ import { getConfig } from '@/lib/memorial/config'
 import { dateParaDia, diaParaDate } from '@/lib/memorial/agendamento/datas'
 import { mensagemIndisponivel, motivoIndisponivel } from '@/lib/memorial/agendamento/regras'
 import { STATUS_REAGENDAVEIS, statusAposAcao } from '@/lib/memorial/agendamento/status'
-import { ocupacoesNoIntervalo, travarDia } from '@/lib/memorial/agendamento/ocupacao'
+import { ehConflitoDeHorario, ocupacoesNoIntervalo, travarDia } from '@/lib/memorial/agendamento/ocupacao'
 import { avisarConfirmacao, avisarRecusa } from '@/lib/memorial/agendamento/notificar'
 import { ServiceError } from './errors'
 import type { DecidirVisitaInput, ListarVisitasQuery, ReagendarVisitaInput } from '@/lib/schemas/memorial-agendamento'
@@ -132,6 +132,9 @@ export async function reagendarVisita(id: string, input: ReagendarVisitaInput, u
       where: { id },
       data: { data: diaParaDate(input.data), turno: input.turno, horaInicio: input.horaInicio, horaFim: input.horaFim },
     })
+  }).catch((err: unknown) => {
+    if (ehConflitoDeHorario(err)) throw new ServiceError('CONFLICT', mensagemIndisponivel('HORARIO_OCUPADO', regras))
+    throw err
   })
 
   await logAudit({

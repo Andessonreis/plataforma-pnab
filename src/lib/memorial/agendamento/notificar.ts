@@ -5,6 +5,7 @@ import { enqueueEmail } from '@/lib/queue'
 import { getConfig } from '@/lib/memorial/config'
 import type { DadosVisitaEmail } from '@/lib/mail/templates/memorial/detalhes-visita'
 import { dateParaDia, formatarDiaPorExtenso } from './datas'
+import { linkFalarComSecretaria } from './contato-secretaria'
 
 /**
  * E-mails do agendamento. Cada envio é isolado: se a fila cair, a visita continua
@@ -37,12 +38,19 @@ function dadosVisita(v: Visita): DadosVisitaEmail {
   }
 }
 
-async function semDerrubar(protocolo: string, descricao: string, envio: () => Promise<unknown>) {
+/** Devolve se o e-mail entrou na fila, para a tela não prometer uma cópia que não saiu. */
+async function semDerrubar(protocolo: string, descricao: string, envio: () => Promise<unknown>): Promise<boolean> {
   try {
     await envio()
+    return true
   } catch (err) {
     console.error({ protocolo, message: `Falha ao enfileirar e-mail: ${descricao}`, error: err instanceof Error ? err.message : 'Unknown' })
+    return false
   }
+}
+
+function urlDoSite(caminho: string): string {
+  return `${(process.env.NEXT_PUBLIC_SITE_URL || SITE_URL_FALLBACK).replace(/\/$/, '')}${caminho}`
 }
 
 async function emailDeContato(): Promise<string | undefined> {
@@ -50,12 +58,18 @@ async function emailDeContato(): Promise<string | undefined> {
   return contato.email || undefined
 }
 
-export async function avisarPedidoRecebido(v: Visita, aviso: string) {
-  await semDerrubar(v.protocolo, 'pedido recebido', async () =>
+export async function avisarPedidoRecebido(v: Visita, aviso: string): Promise<boolean> {
+  return semDerrubar(v.protocolo, 'pedido recebido', async () =>
     enqueueEmail({
       to: v.responsavelEmail,
       template: 'memorial_solicitacao_recebida',
-      data: { ...dadosVisita(v), nome: v.responsavelNome, aviso, contatoEmail: await emailDeContato() },
+      data: {
+        ...dadosVisita(v),
+        nome: v.responsavelNome,
+        aviso,
+        contatoEmail: await emailDeContato(),
+        contatoUrl: urlDoSite(linkFalarComSecretaria(v.protocolo)),
+      },
     }),
   )
 }
@@ -70,8 +84,7 @@ export async function avisarEquipeNovoPedido(v: Visita) {
     const destinatarios = new Map(equipe.map((p) => [p.email.toLowerCase(), p.nome]))
     if (contato && !destinatarios.has(contato.toLowerCase())) destinatarios.set(contato.toLowerCase(), 'Equipe do Memorial')
 
-    const base = (process.env.NEXT_PUBLIC_SITE_URL || SITE_URL_FALLBACK).replace(/\/$/, '')
-    const url = `${base}/admin/memorial/agendamentos/${v.id}`
+    const url = urlDoSite(`/admin/memorial/agendamentos/${v.id}`)
     await Promise.all(
       [...destinatarios].map(([email, nome]) =>
         enqueueEmail({

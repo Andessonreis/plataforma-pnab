@@ -1,4 +1,4 @@
-import type { Prisma, PrismaClient } from '@prisma/client'
+import { Prisma, type PrismaClient } from '@prisma/client'
 import { dateParaDia, diaParaDate } from './datas'
 import { STATUS_QUE_OCUPAM, type Ocupacao } from './regras'
 
@@ -24,4 +24,15 @@ export async function ocupacoesNoIntervalo(db: Db, de: string, ate: string, exce
     select: { data: true, turno: true, horaInicio: true, status: true },
   })
   return linhas.map((l) => ({ ...l, data: dateParaDia(l.data) }))
+}
+
+/**
+ * Violação do índice único "MemorialAgendamento_horario_ativo_key" (data + início, só
+ * para pedidos que seguram vaga). Com a trava do dia isso não deveria acontecer; se
+ * acontecer, quem chegou depois recebe o mesmo aviso de horário ocupado.
+ */
+export function ehConflitoDeHorario(err: unknown): boolean {
+  if (!(err instanceof Prisma.PrismaClientKnownRequestError) || err.code !== 'P2002') return false
+  const alvo = JSON.stringify(err.meta?.target ?? '')
+  return alvo.includes('horaInicio') || alvo.includes('horario_ativo')
 }

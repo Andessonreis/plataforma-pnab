@@ -1,5 +1,6 @@
 import type { RegrasPublicas } from './fluxo-agendamento'
 import { BotoesEtapa } from './botoes-etapa'
+import { TextoRegulamento } from './texto-regulamento'
 
 interface EtapaRegrasProps {
   regras: RegrasPublicas
@@ -20,6 +21,7 @@ export function EtapaRegras({ regras, regulamento, aoContinuar }: EtapaRegrasPro
   return (
     <div>
       <h2 className="titulo text-2xl text-tinta-900 sm:text-3xl">Antes de escolher a data</h2>
+      <p className="mt-2 text-sm text-tinta-700">Em resumo, conforme as regras em vigor:</p>
 
       <ul className="mt-5 space-y-3 text-base leading-relaxed text-tinta-800">
         {limites.map((l) => (
@@ -31,8 +33,8 @@ export function EtapaRegras({ regras, regulamento, aoContinuar }: EtapaRegrasPro
       </ul>
 
       <h3 className="mt-8 text-lg font-semibold text-tinta-900">Regulamento de visitação</h3>
-      <div className="mt-3 max-w-prose whitespace-pre-line border-t-2 border-tinta-900/15 pt-4 text-[15px] leading-relaxed text-tinta-700">
-        {regulamento}
+      <div className="mt-3 border-t-2 border-tinta-900/15 pt-4">
+        <TextoRegulamento texto={regulamento} />
       </div>
 
       <BotoesEtapa aoContinuar={aoContinuar} rotulo="Escolher data e horário" />

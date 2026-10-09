@@ -1,4 +1,5 @@
 import type { MemorialStatusAgendamento, MemorialTurno } from '@prisma/client'
+import { grupoDaFaixaEtaria } from './faixa-etaria'
 
 /** Linha mínima que o relatório precisa — sem nenhum dado pessoal do responsável. */
 export interface LinhaRelatorio {
@@ -67,7 +68,7 @@ export function montarRelatorio(linhas: LinhaRelatorio[]): RelatorioVisitas {
     recusas: porStatus.RECUSADO ?? 0,
     taxaComparecimento: encerradas === 0 ? null : realizadas.length / encerradas,
     porTipoVisitante: agrupar(naAgenda, (l) => l.tipoVisitante),
-    porFaixaEtaria: agrupar(naAgenda, (l) => l.faixaEtaria?.trim() || 'Não informada'),
+    porFaixaEtaria: agrupar(naAgenda, (l) => grupoDaFaixaEtaria(l.faixaEtaria)),
     porHorario: agrupar(naAgenda, (l) => l.horaInicio),
   }
 }

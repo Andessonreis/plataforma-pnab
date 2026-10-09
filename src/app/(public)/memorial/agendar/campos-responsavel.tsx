@@ -1,11 +1,12 @@
 'use client'
 
-import { Input, Select, Textarea } from '@/components/ui'
+import { Input, Textarea } from '@/components/ui'
 import { idDoCampo } from '@/components/formulario-dinamico/campo-com-erro'
-import { PREFERENCIAS_CONTATO } from '@/lib/memorial/agendamento/status'
+import { PREFERENCIAS_CONTATO, ROTULO_PREFERENCIA } from '@/lib/memorial/agendamento/status'
 import type { CamposProps } from './campos-grupo'
+import { OpcoesRadio } from './opcoes-radio'
 
-const PREFERENCIAS = PREFERENCIAS_CONTATO.map((p) => ({ value: p, label: p }))
+const PREFERENCIAS = PREFERENCIAS_CONTATO.map((p) => ({ valor: p, rotulo: ROTULO_PREFERENCIA[p] }))
 
 /** Responsável pelo grupo, como prefere ser avisado e o que a equipe precisa saber antes. */
 export function CamposResponsavel({ dados, erros, aoMudar }: CamposProps) {
@@ -56,14 +57,14 @@ export function CamposResponsavel({ dados, erros, aoMudar }: CamposProps) {
             autoComplete="tel"
           />
         </div>
-        <Select
-          id={idDoCampo('preferenciaContato')}
-          label="Como prefere ser avisado"
-          placeholder="Tanto faz"
-          options={PREFERENCIAS}
-          value={dados.preferenciaContato}
-          onChange={(e) => aoMudar({ preferenciaContato: e.target.value })}
-          error={erros.preferenciaContato}
+        <OpcoesRadio
+          nome="preferenciaContato"
+          legenda="Como prefere receber a resposta da equipe"
+          opcoes={PREFERENCIAS}
+          valor={dados.preferenciaContato}
+          aoMudar={(preferenciaContato) => aoMudar({ preferenciaContato })}
+          erro={erros.preferenciaContato}
+          obrigatorio
         />
       </fieldset>
 
