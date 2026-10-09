@@ -2,10 +2,8 @@
 
 import { useRef, useState } from 'react'
 import { toast } from '@/hooks/use-toast'
+import { IMAGEM_MAX_BYTES, IMAGEM_MIMES, isImagemMime, megabytes } from '@/lib/upload/imagem'
 import { Button } from './button'
-
-const ACCEPTED_MIME = ['image/jpeg', 'image/png', 'image/webp'] as const
-const MAX_BYTES = 5 * 1024 * 1024 // 5 MB
 
 export interface ImageUploadProps {
   label?: string
@@ -13,8 +11,12 @@ export interface ImageUploadProps {
   /** URL atual da imagem (vinda do banco) */
   value: string
   onChange: (url: string) => void
-  /** Pasta dentro do bucket (controla onde a imagem é salva). */
-  pasta?: 'noticias' | 'slides' | 'momentos'
+  /** Pasta dentro do bucket (controla onde a imagem é salva). A rota valida os nomes aceitos. */
+  pasta?: string
+  /** Rota de upload. A padrão grava no bucket de editais; o Memorial usa a própria. */
+  endpoint?: string
+  /** Limite de tamanho conferido no navegador, igual ao da rota escolhida. */
+  maxBytes?: number
   /** Permite limpar/remover a imagem do formulário (não deleta do storage). */
   allowClear?: boolean
 }
@@ -25,6 +27,8 @@ export function ImageUpload({
   value,
   onChange,
   pasta = 'noticias',
+  endpoint = '/api/admin/upload-imagem',
+  maxBytes = IMAGEM_MAX_BYTES,
   allowClear = true,
 }: ImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null)
@@ -32,12 +36,12 @@ export function ImageUpload({
   const [uploading, setUploading] = useState(false)
 
   function validateFile(file: File): string | null {
-    if (!(ACCEPTED_MIME as readonly string[]).includes(file.type)) {
+    if (!isImagemMime(file.type)) {
       return 'Tipo inválido. Use JPG, PNG ou WEBP.'
     }
-    if (file.size > MAX_BYTES) {
+    if (file.size > maxBytes) {
       const mb = (file.size / 1024 / 1024).toFixed(1)
-      return `Imagem muito grande (${mb} MB). Máximo 5 MB.`
+      return `Imagem muito grande (${mb} MB). Máximo ${megabytes(maxBytes)} MB.`
     }
     return null
   }
@@ -55,7 +59,7 @@ export function ImageUpload({
       fd.append('file', file)
       fd.append('pasta', pasta)
 
-      const res = await fetch('/api/admin/upload-imagem', { method: 'POST', body: fd })
+      const res = await fetch(endpoint, { method: 'POST', body: fd })
       const data = await res.json()
 
       if (!res.ok) {
@@ -67,7 +71,8 @@ export function ImageUpload({
         return
       }
 
-      onChange(data.url)
+      // A rota antiga responde { url }; as da API v1, o envelope { data: { url } }
+      onChange(data.url ?? data.data?.url)
       toast({ title: 'Imagem enviada com sucesso' })
     } catch {
       toast({
@@ -100,7 +105,7 @@ export function ImageUpload({
       <input
         ref={inputRef}
         type="file"
-        accept={ACCEPTED_MIME.join(',')}
+        accept={IMAGEM_MIMES.join(',')}
         onChange={handleFileChange}
         className="sr-only"
         aria-label={label}

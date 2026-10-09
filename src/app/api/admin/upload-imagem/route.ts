@@ -2,27 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import { auth } from '@/lib/auth'
 import { uploadFile } from '@/lib/storage'
-import { validateMagicBytes } from '@/lib/upload/validate'
+import { lerImagemValidada } from '@/lib/upload/imagem'
 
 export const runtime = 'nodejs'
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
-
-const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp'] as const
-type AllowedMime = (typeof ALLOWED_MIME)[number]
-
-const MIME_TO_EXT: Record<AllowedMime, string> = {
-  'image/jpeg': 'jpg',
-  'image/png': 'png',
-  'image/webp': 'webp',
-}
-
 const PASTAS_PERMITIDAS = ['noticias', 'slides', 'momentos'] as const
 type Pasta = (typeof PASTAS_PERMITIDAS)[number]
-
-function isAllowedMime(mime: string): mime is AllowedMime {
-  return (ALLOWED_MIME as readonly string[]).includes(mime)
-}
 
 function isPastaPermitida(p: string): p is Pasta {
   return (PASTAS_PERMITIDAS as readonly string[]).includes(p)
@@ -60,35 +45,15 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    if (!isAllowedMime(file.type)) {
-      return buildResponse(400, {
-        error: 'BAD_REQUEST',
-        message: 'Tipo de imagem não permitido. Aceitos: JPG, PNG, WEBP.',
-      })
+    const imagem = await lerImagemValidada(file)
+    if (!imagem.ok) {
+      return buildResponse(400, { error: 'BAD_REQUEST', message: imagem.message })
     }
 
-    if (file.size > MAX_FILE_SIZE) {
-      return buildResponse(400, {
-        error: 'BAD_REQUEST',
-        message: 'A imagem deve ter no máximo 5 MB.',
-      })
-    }
-
-    const arrayBuffer = await file.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
-
-    if (!validateMagicBytes(buffer, file.type)) {
-      return buildResponse(400, {
-        error: 'BAD_REQUEST',
-        message: 'O conteúdo da imagem não corresponde ao tipo declarado.',
-      })
-    }
-
-    const ext = MIME_TO_EXT[file.type]
     const fileId = randomUUID()
-    const storagePath = `${pastaRaw}/${fileId}.${ext}`
+    const storagePath = `${pastaRaw}/${fileId}.${imagem.ext}`
 
-    const publicUrl = await uploadFile('editais', storagePath, buffer, file.type)
+    const publicUrl = await uploadFile('editais', storagePath, imagem.buffer, file.type)
 
     const res = NextResponse.json({ url: publicUrl, requestId }, { status: 201 })
     res.headers.set('X-Request-Id', requestId)
