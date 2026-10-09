@@ -842,3 +842,273 @@ model DocumentoEmitido {
   @@index([emitidoEm])
   @@index([emitidoPorId, emitidoEm])
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Questionários dinâmicos (genéricos — o Memorial é só uma finalidade)
+//
+// Quem administra define os campos (mesmo formato de CampoFormulario do edital) e
+// pode mudá-los quando quiser. Cada resposta guarda a versão e uma cópia dos campos
+// da época, então editar o questionário nunca quebra respostas já recebidas.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum StatusConteudo {
+  RASCUNHO
+  EM_REVISAO
+  APROVADO
+  PUBLICADO
+  ARQUIVADO
+}
+
+model Questionario {
+  id              String         @id @default(cuid())
+  slug            String         @unique
+  titulo          String
+  descricao       String?
+  // Agrupa por uso (ex.: "memorial-agendamento", "memorial-pesquisa-visitante")
+  finalidade      String
+  campos          Json           @default("[]") // CampoFormulario[]
+  versao          Int            @default(1)
+  status          StatusConteudo @default(RASCUNHO)
+  exigeLogin      Boolean        @default(false)
+  mensagemSucesso String?
+  criadoPorId     String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  respostas QuestionarioResposta[]
+
+  @@index([finalidade, status])
+}
+
+model QuestionarioResposta {
+  id             String   @id @default(cuid())
+  questionarioId String
+  protocolo      String   @unique
+  versao         Int
+  camposSnapshot Json // CampoFormulario[] vigente quando respondeu
+  dados          Json // { [campo.nome]: valor }
+  userId         String?
+  nome           String?
+  email          String?
+  createdAt      DateTime @default(now())
+
+  questionario Questionario         @relation(fields: [questionarioId], references: [id])
+  agendamento  MemorialAgendamento?
+
+  @@index([questionarioId, createdAt])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Memorial de Irecê
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum MemorialTipoAcervo {
+  FOTOGRAFIA
+  DOCUMENTO
+  OBJETO
+  VIDEO
+  AUDIO
+  CARTAZ
+  JORNAL
+  REGISTRO_HISTORICO
+  DEPOIMENTO
+  PUBLICACAO
+  OUTRO
+}
+
+enum MemorialStatusAgendamento {
+  SOLICITADO
+  EM_ANALISE
+  CONFIRMADO
+  RECUSADO
+  CANCELADO
+  REALIZADO
+  NAO_COMPARECEU
+  REAGENDAMENTO_SOLICITADO
+}
+
+enum MemorialTurno {
+  MANHA
+  TARDE
+}
+
+model MemorialExposicao {
+  id          String         @id @default(cuid())
+  slug        String         @unique
+  titulo      String
+  subtitulo   String?
+  descricao   String?
+  periodo     String?
+  localizacao String?
+  capaUrl     String?
+  dataInicio  DateTime?
+  dataFim     DateTime?
+  destaque    Boolean        @default(false)
+  ordem       Int            @default(0)
+  status      StatusConteudo @default(RASCUNHO)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  itens   MemorialAcervoItem[]
+  pessoas MemorialPessoa[]
+  eventos MemorialEvento[]
+
+  @@index([status, ordem])
+}
+
+model MemorialAlbum {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  nome      String
+  descricao String?
+  ordem     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  itens MemorialAcervoItem[]
+}
+
+// Fotografia, documento, objeto etc. Foto é um item do acervo com tipo FOTOGRAFIA.
+model MemorialAcervoItem {
+  id                String             @id @default(cuid())
+  tipo              MemorialTipoAcervo @default(FOTOGRAFIA)
+  titulo            String
+  legenda           String?
+  descricao         String?
+  contextoHistorico String?
+  dataAproximada    String?
+  decada            Int?
+  local             String?
+  autor             String?
+  fotografo         String?
+  fonte             String?
+  credito           String?
+  direitosUso       String?
+  autorizado        Boolean            @default(false)
+  // Arquivo original e versão leve para a web; "fotoAtual" é o par do antes/hoje
+  arquivoUrl        String?
+  versaoWebUrl      String?
+  fotoAtualUrl      String?
+  tags              String[]
+  albumId           String?
+  status            StatusConteudo     @default(RASCUNHO)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  album      MemorialAlbum?      @relation(fields: [albumId], references: [id], onDelete: SetNull)
+  exposicoes MemorialExposicao[]
+  pessoas    MemorialPessoa[]
+  eventos    MemorialEvento[]
+
+  @@index([status, tipo])
+  @@index([decada])
+}
+
+model MemorialPessoa {
+  id        String         @id @default(cuid())
+  slug      String         @unique
+  nome      String
+  biografia String?
+  fotoUrl   String?
+  periodo   String?
+  fontes    String?
+  status    StatusConteudo @default(RASCUNHO)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  itens      MemorialAcervoItem[]
+  eventos    MemorialEvento[]
+  exposicoes MemorialExposicao[]
+}
+
+model MemorialEvento {
+  id        String         @id @default(cuid())
+  slug      String         @unique
+  titulo    String
+  descricao String?
+  // Texto livre ("década de 1950") e ano numérico para ordenar a linha do tempo
+  periodo   String?
+  ano       Int?
+  fontes    String?
+  status    StatusConteudo @default(RASCUNHO)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  itens      MemorialAcervoItem[]
+  pessoas    MemorialPessoa[]
+  exposicoes MemorialExposicao[]
+
+  @@index([ano])
+}
+
+// Textos institucionais, contatos, horários e regras de agendamento editáveis pelo painel
+model MemorialConfig {
+  chave         String   @id
+  valor         Json
+  atualizadoEm  DateTime @updatedAt
+  atualizadoPor String?
+}
+
+// Cada alteração do regulamento vira uma versão nova; o aceite registra qual versão foi lida
+model MemorialRegulamento {
+  id           String   @id @default(cuid())
+  versao       Int      @unique
+  texto        String
+  vigenteDesde DateTime @default(now())
+  criadoPorId  String?
+
+  agendamentos MemorialAgendamento[]
+}
+
+model MemorialAgendamento {
+  id                  String                    @id @default(cuid())
+  protocolo           String                    @unique
+  userId              String?
+  status              MemorialStatusAgendamento @default(SOLICITADO)
+  tipoVisitante       String
+  instituicao         String
+  quantidade          Int
+  faixaEtaria         String?
+  turma               String?
+  endereco            String?
+  cidade              String?
+  responsavelNome     String
+  responsavelCargo    String?
+  responsavelEmail    String
+  responsavelTelefone String
+  data                DateTime                  @db.Date
+  turno               MemorialTurno
+  horaInicio          String
+  horaFim             String
+  observacoes         String?
+  necessidades        String?
+  preferenciaContato  String?
+  motivoRecusa        String?
+  regulamentoVersao   Int
+  aceiteEm            DateTime
+  // Perguntas extras configuradas pela equipe (questionário "memorial-agendamento")
+  respostaId          String?                   @unique
+  decididoPorId       String?
+  decididoEm          DateTime?
+  createdAt           DateTime                  @default(now())
+  updatedAt           DateTime                  @updatedAt
+
+  regulamento MemorialRegulamento   @relation(fields: [regulamentoVersao], references: [versao])
+  resposta    QuestionarioResposta? @relation(fields: [respostaId], references: [id])
+
+  @@index([data, status])
+  @@index([responsavelEmail])
+}
+
+// Histórico de versões de qualquer conteúdo do Memorial (texto, exposição, pessoa...)
+model MemorialVersao {
+  id          String   @id @default(cuid())
+  entidade    String
+  entidadeId  String
+  versao      Int
+  snapshot    Json
+  criadoPorId String?
+  createdAt   DateTime @default(now())
+
+  @@unique([entidade, entidadeId, versao])
+  @@index([entidade, entidadeId])
+}

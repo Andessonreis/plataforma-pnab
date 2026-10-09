@@ -17,6 +17,8 @@ import {
   IconMail,
   IconShield,
   IconInstagram,
+  IconCalendar,
+  IconBook,
 } from '@/components/ui'
 
 export interface NavItem {
@@ -109,6 +111,53 @@ export const navSections: NavSection[] = [
         href: '/admin/faq',
         roles: ['ADMIN', 'SUPER_ADMIN', 'ATENDIMENTO'],
         icon: <IconQuestion className="h-5 w-5" />,
+      },
+    ],
+  },
+  {
+    title: 'Memorial',
+    items: [
+      {
+        label: 'Painel do Memorial',
+        href: '/admin/memorial',
+        roles: ['SUPER_ADMIN', 'COMUNICACAO'],
+        icon: <IconHome className="h-5 w-5" />,
+      },
+      {
+        label: 'Agendamentos',
+        href: '/admin/memorial/agendamentos',
+        roles: ['SUPER_ADMIN', 'COMUNICACAO'],
+        icon: <IconCalendar className="h-5 w-5" />,
+      },
+      {
+        label: 'Exposições',
+        href: '/admin/memorial/exposicoes',
+        roles: ['SUPER_ADMIN', 'COMUNICACAO'],
+        icon: <IconSlides className="h-5 w-5" />,
+      },
+      {
+        label: 'Acervo e fotos',
+        href: '/admin/memorial/acervo',
+        roles: ['SUPER_ADMIN', 'COMUNICACAO'],
+        icon: <IconBook className="h-5 w-5" />,
+      },
+      {
+        label: 'Pessoas e eventos',
+        href: '/admin/memorial/pessoas',
+        roles: ['SUPER_ADMIN', 'COMUNICACAO'],
+        icon: <IconUsers className="h-5 w-5" />,
+      },
+      {
+        label: 'Questionários',
+        href: '/admin/memorial/questionarios',
+        roles: ['SUPER_ADMIN', 'COMUNICACAO'],
+        icon: <IconClipboard className="h-5 w-5" />,
+      },
+      {
+        label: 'Textos e regras',
+        href: '/admin/memorial/configuracoes',
+        roles: ['SUPER_ADMIN', 'COMUNICACAO'],
+        icon: <IconSettings className="h-5 w-5" />,
       },
     ],
   },
