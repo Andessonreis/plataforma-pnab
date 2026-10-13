@@ -4,6 +4,7 @@ import { FolhaDeRosto } from '@/components/ui/folha-de-rosto'
 import { AtalhoDuvidas } from './atalho-duvidas'
 import { FaixaAtendimento } from './faixa-atendimento'
 import { FormularioContato } from './formulario-contato'
+import { assuntoPreenchido } from '@/lib/memorial/agendamento/contato-secretaria'
 
 export const metadata: Metadata = {
   title: 'Falar com a Secretaria — Portal PNAB Irecê',
@@ -17,7 +18,13 @@ const FOTOS = [
   '/images/galeria/foto-03.png', // arraiá no coreto
 ]
 
-export default async function ContatoPage() {
+interface ContatoPageProps {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}
+
+export default async function ContatoPage({ searchParams }: ContatoPageProps) {
+  // Quem chega do agendamento do Memorial já encontra o assunto com o protocolo.
+  const assuntoInicial = assuntoPreenchido(await searchParams)
   const editais = await prisma.edital.findMany({
     where: { status: { not: 'RASCUNHO' } },
     orderBy: { createdAt: 'desc' },
@@ -63,7 +70,7 @@ export default async function ContatoPage() {
             </p>
 
             <div className="border-2 border-tinta-900/15 bg-white p-6 sm:p-8">
-              <FormularioContato editais={editais} />
+              <FormularioContato editais={editais} assuntoInicial={assuntoInicial} />
             </div>
           </div>
         </div>

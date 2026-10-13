@@ -1,6 +1,7 @@
 import type { BadgeVariant } from '@/components/ui/badge'
 import type { TomCarimbo } from '@/components/ui/carimbo'
 import type { BannerEditalProps } from './banner-edital'
+import type { PecaEditorial } from './peca/tipos'
 
 /** Edital já normalizado para exibição na home (Decimal/Date resolvidos na page). */
 export interface EditalResumo {
@@ -37,7 +38,17 @@ export interface SlideArte extends SlideBase {
   imagemUrl: string
 }
 
-export type SlideDestaque = SlideComposicao | SlideArte
+/**
+ * Peça editorial cadastrada no admin (ex.: o Memorial de Irecê). Diferente dos
+ * outros slides, não divide a abertura com o painel de editais: ocupa a faixa
+ * inteira, com fundo próprio.
+ */
+export interface SlidePeca extends SlideBase {
+  tipo: 'peca'
+  peca: PecaEditorial
+}
+
+export type SlideDestaque = SlideComposicao | SlideArte | SlidePeca
 
 /** Momento do "dia a dia da Secretaria" — carrossel que linka pro Instagram. */
 export interface MomentoResumo {

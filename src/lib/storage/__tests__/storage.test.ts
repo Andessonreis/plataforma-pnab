@@ -1,147 +1,98 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-
-// ─── Mock Supabase ──────────────────────────────────────────────────────────────
-
-const mockUpload = vi.fn()
-const mockRemove = vi.fn()
-const mockCreateSignedUrl = vi.fn()
-const mockGetPublicUrl = vi.fn()
-
-const mockFrom = vi.fn(() => ({
-  upload: mockUpload,
-  remove: mockRemove,
-  createSignedUrl: mockCreateSignedUrl,
-  getPublicUrl: mockGetPublicUrl,
-}))
-
-vi.mock('@supabase/supabase-js', () => ({
-  createClient: vi.fn(() => ({
-    storage: {
-      from: mockFrom,
-    },
-  })),
-}))
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
+import { promises as fs } from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
 
 // Desfaz o mock global do setup.ts para testar a implementação real
 vi.unmock('@/lib/storage')
 
-// Variáveis de ambiente necessárias para getSupabase()
-process.env.SUPABASE_URL = 'https://test.supabase.co'
-process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key'
+let raiz: string
 
-// Importa depois dos mocks
-const { uploadFile, deleteFile, getSignedUrl } = await import('../index')
+beforeAll(async () => {
+  raiz = await fs.mkdtemp(path.join(os.tmpdir(), 'pnab-storage-'))
+  process.env.UPLOAD_DIR = raiz
+  process.env.AUTH_SECRET = 'segredo-de-teste'
+})
 
-// ─── Testes ─────────────────────────────────────────────────────────────────────
+afterAll(async () => {
+  await fs.rm(raiz, { recursive: true, force: true })
+})
 
-describe('storage', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
+const { uploadFile, deleteFile, downloadFile, extractStoragePath, getSignedUrl } = await import('../index')
+const { assinaturaValida } = await import('../assinatura')
+
+describe('storage em disco', () => {
+  it('grava o arquivo e devolve a URL relativa servida por /api/arquivos', async () => {
+    const url = await uploadFile('editais', 'edital-1/edital final.pdf', Buffer.from('pdf'), 'application/pdf')
+
+    expect(url).toBe('/api/arquivos/editais/edital-1/edital%20final.pdf')
+    expect(await fs.readFile(path.join(raiz, 'editais/edital-1/edital final.pdf'), 'utf8')).toBe('pdf')
   })
 
-  // ─── uploadFile ─────────────────────────────────────────────────────────────
-
-  describe('uploadFile', () => {
-    it('faz upload e retorna URL pública', async () => {
-      mockUpload.mockResolvedValueOnce({ error: null })
-      mockGetPublicUrl.mockReturnValueOnce({
-        data: { publicUrl: 'https://storage.supabase.co/editais/edital-1.pdf' },
-      })
-
-      const buffer = Buffer.from('conteudo-pdf')
-      const url = await uploadFile('editais', 'edital-1.pdf', buffer, 'application/pdf')
-
-      expect(url).toBe('https://storage.supabase.co/editais/edital-1.pdf')
-      expect(mockFrom).toHaveBeenCalledWith('editais')
-      expect(mockUpload).toHaveBeenCalledWith('edital-1.pdf', buffer, {
-        contentType: 'application/pdf',
-        upsert: true,
-      })
-    })
-
-    it('lança erro quando upload falha', async () => {
-      mockUpload.mockResolvedValueOnce({
-        error: { message: 'Bucket not found' },
-      })
-
-      const buffer = Buffer.from('dados')
-      await expect(
-        uploadFile('inexistente', 'arquivo.pdf', buffer, 'application/pdf'),
-      ).rejects.toThrow('Upload falhou: Bucket not found')
-    })
+  it('upsert=false falha quando o arquivo já existe', async () => {
+    await uploadFile('manuais', 'a.pdf', Buffer.from('1'), 'application/pdf')
+    await expect(uploadFile('manuais', 'a.pdf', Buffer.from('2'), 'application/pdf', false)).rejects.toThrow(
+      'Upload falhou',
+    )
   })
 
-  // ─── deleteFile ─────────────────────────────────────────────────────────────
-
-  describe('deleteFile', () => {
-    it('remove o arquivo do bucket', async () => {
-      mockRemove.mockResolvedValueOnce({ error: null })
-
-      await deleteFile('propostas', 'doc-123.pdf')
-
-      expect(mockFrom).toHaveBeenCalledWith('propostas')
-      expect(mockRemove).toHaveBeenCalledWith(['doc-123.pdf'])
-    })
-
-    it('lança erro quando deleção falha', async () => {
-      mockRemove.mockResolvedValueOnce({
-        error: { message: 'Object not found' },
-      })
-
-      await expect(
-        deleteFile('propostas', 'nao-existe.pdf'),
-      ).rejects.toThrow('Deleção falhou: Object not found')
-    })
+  it('aceita Blob', async () => {
+    await uploadFile('manuais', 'blob.txt', new Blob(['oi']), 'text/plain')
+    expect((await downloadFile('manuais', 'blob.txt')).toString()).toBe('oi')
   })
 
-  // ─── getSignedUrl ───────────────────────────────────────────────────────────
+  it.each(['../fora.pdf', '/absoluto.pdf', 'a/../../fora.pdf'])('rejeita caminho que escapa da pasta: %s', async (caminho) => {
+    await expect(uploadFile('editais', caminho, Buffer.from('x'), 'application/pdf')).rejects.toThrow(
+      'Caminho de arquivo inválido',
+    )
+  })
+
+  it('rejeita bucket desconhecido', async () => {
+    await expect(uploadFile('inexistente', 'a.pdf', Buffer.from('x'), 'application/pdf')).rejects.toThrow(
+      'Bucket desconhecido',
+    )
+  })
+
+  it('deleteFile remove o arquivo e é idempotente', async () => {
+    await uploadFile('propostas', 'doc.pdf', Buffer.from('x'), 'application/pdf')
+    await deleteFile('propostas', 'doc.pdf')
+    await expect(downloadFile('propostas', 'doc.pdf')).rejects.toThrow('Download falhou')
+    await expect(deleteFile('propostas', 'doc.pdf')).resolves.toBeUndefined()
+  })
+
+  describe('extractStoragePath', () => {
+    it('devolve o caminho decodificado do bucket certo', () => {
+      expect(extractStoragePath('editais', '/api/arquivos/editais/edital-1/edital%20final.pdf')).toBe(
+        'edital-1/edital final.pdf',
+      )
+    })
+
+    it('ignora query string e host', () => {
+      expect(extractStoragePath('propostas', 'https://x.br/api/arquivos/propostas/a/b.pdf?exp=1&sig=2')).toBe('a/b.pdf')
+    })
+
+    it('devolve null para outro bucket ou link externo', () => {
+      expect(extractStoragePath('editais', '/api/arquivos/manuais/a.pdf')).toBeNull()
+      expect(extractStoragePath('propostas', 'https://youtu.be/abc')).toBeNull()
+    })
+  })
 
   describe('getSignedUrl', () => {
-    it('retorna URL assinada com expiração padrão (3600s)', async () => {
-      mockCreateSignedUrl.mockResolvedValueOnce({
-        data: { signedUrl: 'https://storage.supabase.co/signed/propostas/doc.pdf?token=abc' },
-        error: null,
-      })
+    it('gera URL com assinatura válida e expiração', async () => {
+      const url = new URL(await getSignedUrl('propostas', 'inscricoes/1/a.pdf', 600), 'http://x')
+      const exp = Number(url.searchParams.get('exp'))
 
-      const url = await getSignedUrl('propostas', 'doc.pdf')
-
-      expect(url).toBe('https://storage.supabase.co/signed/propostas/doc.pdf?token=abc')
-      expect(mockFrom).toHaveBeenCalledWith('propostas')
-      expect(mockCreateSignedUrl).toHaveBeenCalledWith('doc.pdf', 3600)
+      expect(url.pathname).toBe('/api/arquivos/propostas/inscricoes/1/a.pdf')
+      expect(assinaturaValida('propostas', 'inscricoes/1/a.pdf', exp, url.searchParams.get('sig') ?? '')).toBe(true)
     })
 
-    it('respeita expiração customizada', async () => {
-      mockCreateSignedUrl.mockResolvedValueOnce({
-        data: { signedUrl: 'https://storage.supabase.co/signed/propostas/doc.pdf?token=xyz' },
-        error: null,
-      })
+    it('assinatura não vale para outro caminho nem depois de expirar', async () => {
+      const url = new URL(await getSignedUrl('propostas', 'a.pdf', 600), 'http://x')
+      const exp = Number(url.searchParams.get('exp'))
+      const sig = url.searchParams.get('sig') ?? ''
 
-      const url = await getSignedUrl('propostas', 'doc.pdf', 7200)
-
-      expect(url).toBe('https://storage.supabase.co/signed/propostas/doc.pdf?token=xyz')
-      expect(mockCreateSignedUrl).toHaveBeenCalledWith('doc.pdf', 7200)
-    })
-
-    it('lança erro quando createSignedUrl falha', async () => {
-      mockCreateSignedUrl.mockResolvedValueOnce({
-        data: null,
-        error: { message: 'Unauthorized' },
-      })
-
-      await expect(
-        getSignedUrl('propostas', 'privado.pdf'),
-      ).rejects.toThrow('URL assinada falhou: Unauthorized')
-    })
-
-    it('lança erro quando data é null sem error', async () => {
-      mockCreateSignedUrl.mockResolvedValueOnce({
-        data: null,
-        error: null,
-      })
-
-      await expect(
-        getSignedUrl('propostas', 'algo.pdf'),
-      ).rejects.toThrow('URL assinada falhou')
+      expect(assinaturaValida('propostas', 'outro.pdf', exp, sig)).toBe(false)
+      expect(assinaturaValida('propostas', 'a.pdf', Math.floor(Date.now() / 1000) - 1, sig)).toBe(false)
     })
   })
 })

@@ -93,6 +93,7 @@ export {
   IconArrowLeft,
   IconArrowRight,
   IconPlus,
+  IconMinus,
   IconNews,
   IconPdf,
   IconEye,

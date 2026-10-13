@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react'
 import type { UserRole } from '@prisma/client'
+import { memorialSection } from './nav-memorial'
 import {
   IconHome,
+  IconChart,
   IconNews,
   IconDocument,
   IconClipboard,
@@ -25,17 +27,22 @@ export interface NavItem {
   icon: ReactNode
   roles: UserRole[]
   /** Identificador opcional para tratamento visual especial (destaque, badge). */
-  highlightKey?: 'habilitacao' | 'avaliacao'
+  highlightKey?: 'habilitacao' | 'avaliacao' | 'memorial'
+  /** Ativo só na rota exata (ex.: a visão geral de um grupo, que é prefixo das demais). */
+  exact?: boolean
 }
 
 export interface NavSection {
   title: string
+  /** Ícone do grupo, mostrado no cabeçalho que expande e recolhe. */
+  icon: ReactNode
   items: NavItem[]
 }
 
 export const navSections: NavSection[] = [
   {
     title: 'Gestão',
+    icon: <IconChart className="h-5 w-5" />,
     items: [
       {
         label: 'Dashboard',
@@ -97,6 +104,7 @@ export const navSections: NavSection[] = [
   },
   {
     title: 'Atendimento',
+    icon: <IconTicket className="h-5 w-5" />,
     items: [
       {
         label: 'Atendimentos',
@@ -112,8 +120,10 @@ export const navSections: NavSection[] = [
       },
     ],
   },
+  memorialSection,
   {
     title: 'Conteúdo',
+    icon: <IconNews className="h-5 w-5" />,
     items: [
       {
         label: 'Notícias',
@@ -149,6 +159,7 @@ export const navSections: NavSection[] = [
   },
   {
     title: 'Comunicação',
+    icon: <IconChatBubble className="h-5 w-5" />,
     items: [
       {
         label: 'Notificações',
@@ -166,6 +177,7 @@ export const navSections: NavSection[] = [
   },
   {
     title: 'Sistema',
+    icon: <IconSettings className="h-5 w-5" />,
     items: [
       {
         label: 'Usuários',
@@ -201,7 +213,7 @@ export const navSections: NavSection[] = [
   },
 ]
 
-export function isNavItemActive(href: string, pathname: string): boolean {
-  if (href === '/admin') return pathname === '/admin'
-  return pathname.startsWith(href)
+export function isNavItemActive(item: Pick<NavItem, 'href' | 'exact'>, pathname: string): boolean {
+  if (item.exact || item.href === '/admin') return pathname === item.href
+  return pathname.startsWith(item.href)
 }

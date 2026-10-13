@@ -18,6 +18,8 @@ export const RATE_LIMITS: Record<string, RateLimitConfig> = {
   'recurso-edital': { window: 60, max: 3 },
   newsletter: { window: 60, max: 5 },
   'cnpj/lookup': { window: 60, max: 10 },
+  'memorial/agendamento': { window: 60, max: 3 },
+  'questionario/resposta': { window: 60, max: 5 },
 
   // API v1 — por API key
   'v1:read': { window: 60, max: 60 },

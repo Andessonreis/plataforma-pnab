@@ -16,6 +16,13 @@ export interface PersonalDataInitial {
   uf: string
 }
 
+const CAMPOS = ['nome', 'email', 'telefone', 'cep', 'logradouro', 'numero', 'complemento', 'bairro', 'cidade', 'uf'] as const
+
+/** Serializa só os campos editáveis, na mesma ordem, para comparar estados. */
+function retrato(dados: PersonalDataInitial): string {
+  return JSON.stringify(CAMPOS.map((campo) => dados[campo]))
+}
+
 type FormMessage = { type: 'success' | 'error'; text: string }
 
 /** Estado e submissão dos dados pessoais + endereço. Separado da senha porque
@@ -37,6 +44,12 @@ export function usePersonalDataForm(initialData: PersonalDataInitial) {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<FormMessage | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
+
+  const values = { nome, email, telefone, cep, logradouro, numero, complemento, bairro, cidade, uf }
+  // Retrato do que está gravado no servidor: comparar com ele diz à barra de
+  // salvar se há algo pendente, sem rastrear campo a campo.
+  const [salvo, setSalvo] = useState(() => retrato({ ...initialData, telefone: formatTelefoneBR(initialData.telefone) }))
+  const alterado = retrato(values) !== salvo
 
   async function handleCepBlur() {
     const cepLimpo = cep.replace(/\D/g, '')
@@ -93,7 +106,8 @@ export function usePersonalDataForm(initialData: PersonalDataInitial) {
         return
       }
 
-      setMessage({ type: 'success', text: 'Perfil atualizado com sucesso.' })
+      setSalvo(retrato(values))
+      setMessage({ type: 'success', text: 'Dados salvos.' })
     } catch {
       setMessage({ type: 'error', text: 'Erro de conexão. Tente novamente.' })
     } finally {
@@ -102,7 +116,8 @@ export function usePersonalDataForm(initialData: PersonalDataInitial) {
   }
 
   return {
-    values: { nome, email, telefone, cep, logradouro, numero, complemento, bairro, cidade, uf },
+    values,
+    alterado,
     setters: {
       setNome, setEmail, setTelefone, setCep, setLogradouro,
       setNumero, setComplemento, setBairro, setCidade, setUf,

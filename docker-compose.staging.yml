@@ -16,6 +16,8 @@ services:
     ports:
       - "3002:3000"
     env_file: .env
+    volumes:
+      - ${UPLOAD_HOST_DIR:-/opt/pnab-staging-uploads}:/app/uploads
     networks:
       - pnab_pnab-network
     restart: unless-stopped

@@ -16,7 +16,7 @@
  */
 
 import { PrismaClient, type Prisma } from '@prisma/client'
-import { createClient } from '@supabase/supabase-js'
+import { uploadFile } from '../src/lib/storage'
 import { randomUUID } from 'crypto'
 import fs from 'fs'
 import path from 'path'
@@ -177,16 +177,7 @@ async function uploadArquivos(editalId: string) {
     return
   }
 
-  const supabaseUrl = process.env.SUPABASE_URL
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!supabaseUrl || !supabaseServiceKey) {
-    console.log('Aviso: SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY ausentes. Pulando upload dos anexos.\n')
-    return
-  }
-
-  const supabase = createClient(supabaseUrl, supabaseServiceKey)
-
-  console.log('Enviando arquivos do edital pro Supabase Storage...')
+  console.log('Gravando arquivos do edital no armazenamento local...')
   const existentes = await prisma.arquivoEdital.findMany({ where: { editalId }, select: { titulo: true } })
   const titulosExistentes = new Set(existentes.map((a) => a.titulo))
 
@@ -206,18 +197,16 @@ async function uploadArquivos(editalId: string) {
     const fileId = randomUUID().split('-')[0]
     const storagePath = `edital-${editalId}/${fileId}.pdf`
 
-    const { error: uploadError } = await supabase.storage
-      .from('editais')
-      .upload(storagePath, buffer, { contentType: 'application/pdf', upsert: false })
-    if (uploadError) {
-      console.error(`  Erro ao enviar ${arq.titulo}: ${uploadError.message}`)
+    let url: string
+    try {
+      url = await uploadFile('editais', storagePath, buffer, 'application/pdf', false)
+    } catch (err) {
+      console.error(`  Erro ao gravar ${arq.titulo}: ${err instanceof Error ? err.message : err}`)
       continue
     }
 
-    const { data: publicUrlData } = supabase.storage.from('editais').getPublicUrl(storagePath)
-
     await prisma.arquivoEdital.create({
-      data: { editalId, tipo: arq.tipo, titulo: arq.titulo, url: publicUrlData.publicUrl },
+      data: { editalId, tipo: arq.tipo, titulo: arq.titulo, url },
     })
     console.log(`  Enviado: ${arq.titulo}`)
   }

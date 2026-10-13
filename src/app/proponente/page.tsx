@@ -1,20 +1,21 @@
 import type { Metadata } from 'next'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
-import { prisma } from '@/lib/db'
-import { getNextDeadline } from '@/lib/utils/cronograma'
-import { parseBrazilDateTime } from '@/lib/utils/format'
-import {
-  statusVisivelParaProponente,
-  STATUS_POS_HABILITACAO_NAO_DIVULGADO,
-} from '@/lib/edital/resultado-habilitacao'
-import type { InscricaoStatus } from '@prisma/client'
-import { situacaoRecurso } from '@/lib/edital/recurso-proponente'
-import { DashboardHero } from './dashboard-hero'
-import { OpenEditaisBanner } from './open-editais-banner'
-import { DashboardStats } from './dashboard-stats'
-import { DashboardSidebar } from './dashboard-sidebar'
+import { statusVisivelParaProponente } from '@/lib/edital/resultado-habilitacao'
+import { CabecalhoPagina } from './_componentes/cabecalho-pagina'
+import { resolverAgora } from './agora'
+import { AgoraPanel } from './agora-panel'
+import { resolverConviteEditais } from './convite-editais'
+import { ConviteEditaisPanel } from './convite-editais-panel'
+import { carregarPainel } from './dashboard-data'
+import { PASSOS_DASHBOARD } from './dashboard-tour-steps'
+import { DraftInscricoesCard } from './draft-inscricoes-card'
+import { GradePainel } from './grade-painel'
+import { MemorialDestaque } from './memorial-destaque'
+import { PrazosLista } from './prazos-lista'
+import { posicaoDoMemorial } from './prioridade-memorial'
 import { RecentInscricoesSection } from './recent-inscricoes-section'
+import { RecentNotificationsCard } from './recent-notifications-card'
 
 export const metadata: Metadata = {
   title: 'Minha Área — Portal PNAB Irecê',
@@ -24,81 +25,9 @@ export default async function ProponenteDashboardPage() {
   const session = await auth()
   if (!session) redirect('/login')
 
-  const userId = session.user.id
+  const painel = await carregarPainel(session.user.id)
 
-  const [
-    totalInscricoes,
-    inscricoesEnviadas,
-    inscricoesContempladas,
-    editaisAbertosCount,
-    recentInscricoes,
-    draftInscricoes,
-    draftCount,
-    openEditais,
-    recentNotifications,
-    unreadNotificationsCount,
-    inscricoesComRecurso,
-  ] = await Promise.all([
-    prisma.inscricao.count({ where: { proponenteId: userId } }),
-    // "Pendente" pro proponente é o que ele ainda vê como "Em análise" — inclui
-    // ENVIADA de verdade e os status pós-habilitação/avaliação ainda não
-    // liberados (mesmo critério de statusVisivelParaProponente), senão esse
-    // contador cai sozinho quando a inscrição muda de status internamente,
-    // vazando de forma indireta que ela avançou de fase.
-    prisma.inscricao.count({
-      where: {
-        proponenteId: userId,
-        OR: [
-          { status: 'ENVIADA' },
-          {
-            status: { in: [...STATUS_POS_HABILITACAO_NAO_DIVULGADO] as InscricaoStatus[] },
-            resultadoLiberadoEm: null,
-          },
-        ],
-      },
-    }),
-    prisma.inscricao.count({ where: { proponenteId: userId, status: 'CONTEMPLADA' } }),
-    prisma.edital.count({ where: { status: 'INSCRICOES_ABERTAS' } }),
-    prisma.inscricao.findMany({
-      where: { proponenteId: userId },
-      orderBy: { createdAt: 'desc' },
-      take: 5,
-      include: { edital: { select: { titulo: true, slug: true } } },
-    }),
-    prisma.inscricao.findMany({
-      where: { proponenteId: userId, status: 'RASCUNHO' },
-      orderBy: { updatedAt: 'desc' },
-      take: 3,
-      include: { edital: { select: { titulo: true, slug: true } } },
-    }),
-    prisma.inscricao.count({ where: { proponenteId: userId, status: 'RASCUNHO' } }),
-    prisma.edital.findMany({
-      where: { status: 'INSCRICOES_ABERTAS' },
-      select: { id: true, titulo: true, slug: true, cronograma: true },
-      take: 10,
-    }),
-    prisma.notification.findMany({
-      where: { userId },
-      orderBy: { createdAt: 'desc' },
-      take: 4,
-    }),
-    prisma.notification.count({ where: { userId, lidaEm: null } }),
-    prisma.inscricao.findMany({
-      where: {
-        proponenteId: userId,
-        status: { in: ['INABILITADA', 'RESULTADO_PRELIMINAR', 'NAO_CONTEMPLADA', 'SUPLENTE'] },
-        resultadoLiberadoEm: { not: null },
-      },
-      select: {
-        id: true,
-        status: true,
-        edital: { select: { titulo: true, cronograma: true } },
-        recursos: { select: { fase: true } },
-      },
-    }),
-  ])
-
-  const today = new Date().toLocaleDateString('pt-BR', {
+  const hoje = new Date().toLocaleDateString('pt-BR', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -106,84 +35,88 @@ export default async function ProponenteDashboardPage() {
     timeZone: 'America/Sao_Paulo',
   })
 
-  // Um prazo por edital aberto (o próximo marco futuro do cronograma),
-  // ordenados pelo mais urgente.
-  const upcomingDeadlines = openEditais
-    .map((edital) => {
-      const next = getNextDeadline(edital.cronograma)
-      if (!next) return null
-      return {
-        editalId: edital.id,
-        editalTitulo: edital.titulo,
-        slug: edital.slug,
-        label: next.label,
-        dataHora: next.dataHora,
-      }
-    })
-    .filter((d): d is NonNullable<typeof d> => d !== null)
-    .sort((a, b) => parseBrazilDateTime(a.dataHora).getTime() - parseBrazilDateTime(b.dataHora).getTime())
-    .slice(0, 3)
+  const agora = resolverAgora({
+    recursoPendente: painel.recursoPendente,
+    nearestDeadline: painel.prazos[0] ?? null,
+    draftCount: painel.draftCount,
+    nearestDraft: painel.nearestDraft,
+    editaisAbertosCount: painel.editaisAbertosCount,
+  })
 
-  const nearestDeadline = upcomingDeadlines[0] ?? null
-  // Inscrição com prazo de recurso aberto e ainda sem recurso: é a pendência
-  // mais urgente do painel, porque o prazo é curto e só o proponente age.
-  const recursoAberto = inscricoesComRecurso
-    .map((i) => ({ i, situacao: situacaoRecurso(i.status, i.edital.cronograma, i.recursos.map((r) => r.fase)) }))
-    .find(({ situacao }) => situacao?.aberto && situacao.janela?.fim)
-  const recursoPendente = recursoAberto
-    ? { inscricaoId: recursoAberto.i.id, editalTitulo: recursoAberto.i.edital.titulo, fim: recursoAberto.situacao!.janela!.fim! }
-    : null
-  const nearestDraft = draftInscricoes[0]
-    ? { id: draftInscricoes[0].id, editalTitulo: draftInscricoes[0].edital.titulo }
-    : null
+  // O prazo mais próximo já é o destaque do bloco "agora"; a lista traz só os que vêm depois.
+  const prazosSeguintes = agora.tom === 'prazo' ? painel.prazos.slice(1) : painel.prazos
+
+  const posicao = posicaoDoMemorial({
+    temVisitasPorVir: painel.memorial.proximas.length > 0,
+    totalInscricoes: painel.totalInscricoes,
+    tomAgora: agora.tom,
+  })
+  // Sem inscrição em edital, o convite toma o lugar do "agora" e já lista os
+  // prazos dos abertos, então a lista de prazos sai para não repetir.
+  const convite = resolverConviteEditais(painel.totalInscricoes, painel.editaisVigentes)
+  const memorial = <MemorialDestaque {...painel.memorial} compacto={posicao === 'memorial-abaixo'} />
+  const blocoAgora = convite ? <ConviteEditaisPanel convite={convite} /> : <AgoraPanel agora={agora} />
+  const prazos = !convite && prazosSeguintes.length > 0 ? <PrazosLista prazos={prazosSeguintes} /> : null
+
+  // A primeira linha segue `posicaoDoMemorial`; quando o Memorial ocupa o
+  // lugar ao lado da abertura, os prazos descem para o alto da pilha de apoio.
+  const topo = {
+    'memorial-agora': { abertura: memorial, aoLado: blocoAgora },
+    'agora-memorial': { abertura: blocoAgora, aoLado: memorial },
+    'memorial-abaixo': { abertura: blocoAgora, aoLado: prazos },
+  }[posicao]
 
   return (
-    <section className="space-y-6 sm:space-y-8">
-      <DashboardHero
-        firstName={session.user.name?.split(' ')[0] ?? 'Proponente'}
-        today={today}
-        nearestDeadline={nearestDeadline}
-        deadlines={upcomingDeadlines}
-        draftCount={draftCount}
-        nearestDraft={nearestDraft}
-        editaisAbertosCount={editaisAbertosCount}
-        recursoPendente={recursoPendente}
+    <div className="mx-auto max-w-6xl space-y-10 lg:space-y-12">
+      <CabecalhoPagina
+        id="tour-painel-abertura"
+        titulo="Painel do proponente"
+        resumo={
+          <>
+            <span className="font-semibold text-papel-50">{session.user.name ?? 'Proponente'}</span>
+            {', '}
+            {hoje}
+          </>
+        }
+        passosTour={PASSOS_DASHBOARD}
       />
 
-      <OpenEditaisBanner
-        count={editaisAbertosCount}
-        editais={openEditais.map((e) => ({ titulo: e.titulo, slug: e.slug }))}
+      <GradePainel
+        {...topo}
+        dividida={convite !== null}
+        principal={
+          <RecentInscricoesSection
+            inscricoes={painel.recentInscricoes.map((i) => ({
+              ...i,
+              status: statusVisivelParaProponente(i.status, i.resultadoLiberadoEm !== null),
+            }))}
+            total={painel.totalInscricoes}
+            rascunhos={painel.draftCount}
+            pendentes={painel.inscricoesPendentes}
+            contempladas={painel.inscricoesContempladas}
+            editaisAbertos={painel.editaisAbertosCount}
+          />
+        }
+        apoio={
+          <>
+            {posicao !== 'memorial-abaixo' && prazos}
+            <DraftInscricoesCard
+              drafts={painel.draftInscricoes.map((d) => ({
+                id: d.id,
+                numero: d.numero,
+                editalTitulo: d.edital.titulo,
+                updatedAt: d.updatedAt,
+              }))}
+              totalDrafts={painel.draftCount}
+            />
+            <RecentNotificationsCard
+              notifications={painel.recentNotifications}
+              unreadCount={painel.unreadNotificationsCount}
+            />
+            {posicao === 'memorial-abaixo' && memorial}
+          </>
+        }
       />
-
-      <DashboardStats
-        total={totalInscricoes}
-        pendentes={inscricoesEnviadas}
-        contempladas={inscricoesContempladas}
-        editaisAbertos={editaisAbertosCount}
-      />
-
-      {/* Inscrições recentes em largura total (prazos já não mora mais aqui,
-          foi pro hero) — rascunhos/notificações formam a segunda zona,
-          lado a lado, não uma coluna lateral estreita empurrada pro canto. */}
-      <RecentInscricoesSection
-        inscricoes={recentInscricoes.map((i) => ({
-          ...i,
-          status: statusVisivelParaProponente(i.status, i.resultadoLiberadoEm !== null),
-        }))}
-        total={totalInscricoes}
-      />
-
-      <DashboardSidebar
-        drafts={draftInscricoes.map((d) => ({
-          id: d.id,
-          numero: d.numero,
-          editalTitulo: d.edital.titulo,
-          updatedAt: d.updatedAt,
-        }))}
-        draftCount={draftCount}
-        notifications={recentNotifications}
-        unreadCount={unreadNotificationsCount}
-      />
-    </section>
+    </div>
   )
 }

@@ -1,225 +1,65 @@
 'use client'
 
-import { useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { Input, Button, Card, Textarea } from '@/components/ui'
-import { toast } from '@/hooks/use-toast'
+import { Button } from '@/components/ui'
+import type { EditalResumo } from '@/components/home/types'
+import { CamposArte } from './_form/campos-arte'
+import { CamposPecaMidia } from './_form/campos-peca-midia'
+import { CamposPecaTexto } from './_form/campos-peca-texto'
+import { CamposVisibilidade } from './_form/campos-visibilidade'
+import { PreviaQuadro } from './_form/previa-quadro'
+import { SeletorFormato } from './_form/seletor-formato'
+import { useSlideForm } from './_form/use-slide-form'
+import type { FormSlide } from './_form/estado'
 
 interface SlideFormProps {
-  initialData?: {
-    id: string
-    titulo: string
-    descricao: string
-    imagemUrl: string
-    ctaLabel: string
-    ctaUrl: string
-    ordem: number
-    ativo: boolean
-    inicioEm: string
-    fimEm: string
-  }
+  initialData?: FormSlide
   slideId?: string
+  /** Editais e fotos reais da home, para a prévia mostrar o quadro como ele vai ficar. */
+  editais: EditalResumo[]
+  fotos: string[]
 }
 
-export function SlideForm({ initialData, slideId }: SlideFormProps) {
+/**
+ * Formulário do slide da abertura. Os campos mudam com o formato (arte pronta
+ * ou peça editorial) e a prévia ao lado redesenha o quadro da home a cada
+ * tecla. No computador a prévia acompanha a rolagem; no celular fica no topo.
+ */
+export function SlideForm({ initialData, slideId, editais, fotos }: SlideFormProps) {
   const router = useRouter()
-  const isEdit = !!initialData
-
-  const [titulo, setTitulo] = useState(initialData?.titulo ?? '')
-  const [descricao, setDescricao] = useState(initialData?.descricao ?? '')
-  const [imagemUrl, setImagemUrl] = useState(initialData?.imagemUrl ?? '')
-  const [ctaLabel, setCtaLabel] = useState(initialData?.ctaLabel ?? '')
-  const [ctaUrl, setCtaUrl] = useState(initialData?.ctaUrl ?? '')
-  const [ordem, setOrdem] = useState(initialData?.ordem ?? 0)
-  const [ativo, setAtivo] = useState(initialData?.ativo ?? true)
-  const [inicioEm, setInicioEm] = useState(initialData?.inicioEm ?? '')
-  const [fimEm, setFimEm] = useState(initialData?.fimEm ?? '')
-
-  const [loading, setLoading] = useState(false)
-  const [errors, setErrors] = useState<Record<string, string>>({})
-
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault()
-    setLoading(true)
-    setErrors({})
-
-    const body = {
-      titulo,
-      descricao: descricao || null,
-      imagemUrl: imagemUrl || null,
-      ctaLabel: ctaLabel || null,
-      ctaUrl: ctaUrl || null,
-      ordem,
-      ativo,
-      inicioEm: inicioEm || null,
-      fimEm: fimEm || null,
-    }
-
-    try {
-      const url = isEdit
-        ? `/api/admin/slides/${slideId}`
-        : '/api/admin/slides'
-
-      const res = await fetch(url, {
-        method: isEdit ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        if (data.fieldErrors) {
-          setErrors(data.fieldErrors)
-          toast({
-            variant: 'destructive',
-            title: 'Verifique os campos do formulário',
-          })
-        } else {
-          toast({
-            variant: 'destructive',
-            title: 'Erro ao salvar slide',
-            description: data.message || 'Tente novamente em instantes.',
-          })
-        }
-        return
-      }
-
-      toast({
-        title: isEdit ? 'Slide atualizado' : 'Slide criado com sucesso',
-      })
-      if (!isEdit) {
-        router.push(`/admin/slides/${data.id}`)
-      }
-    } catch {
-      toast({
-        variant: 'destructive',
-        title: 'Erro de conexão',
-        description: 'Verifique sua internet e tente novamente.',
-      })
-    } finally {
-      setLoading(false)
-    }
-  }
+  const controle = useSlideForm(initialData, slideId)
+  const { form, campo, salvando, salvar } = controle
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-2xl space-y-5 sm:space-y-6">
-      {/* Conteúdo */}
-      <Card padding="sm" className="sm:p-6">
-        <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Conteúdo</h2>
-        <div className="space-y-4">
-          <Input
-            label="Título do Slide"
-            value={titulo}
-            onChange={(e) => setTitulo(e.target.value)}
-            error={errors.titulo}
-            required
-            placeholder="Ex: Inscrições Abertas — Edital de Fomento 2026"
-          />
+    <form onSubmit={salvar} noValidate className="grid gap-5 sm:gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+      <div className="xl:sticky xl:top-24 xl:order-2 xl:self-start">
+        <h2 className="mb-2 text-sm font-semibold text-slate-700">Prévia na página inicial</h2>
+        <PreviaQuadro form={form} editais={editais} fotos={fotos} />
+        <p className="mt-2 text-sm text-slate-600">
+          O quadro tem altura fixa: textos maiores que o limite de cada campo não cabem.
+        </p>
+      </div>
 
-          <Textarea
-            label="Descrição"
-            value={descricao}
-            onChange={(e) => setDescricao(e.target.value)}
-            error={errors.descricao}
-            placeholder="Texto descritivo do slide (opcional)"
-            rows={3}
-          />
+      <div className="space-y-5 sm:space-y-6 xl:order-1">
+        <SeletorFormato valor={form.formato} onChange={(f) => campo('formato', f)} />
+        {form.formato === 'ARTE' ? (
+          <CamposArte {...controle} />
+        ) : (
+          <>
+            <CamposPecaTexto {...controle} />
+            <CamposPecaMidia {...controle} />
+          </>
+        )}
+        <CamposVisibilidade {...controle} />
 
-          <Input
-            label="URL da Imagem de Fundo"
-            value={imagemUrl}
-            onChange={(e) => setImagemUrl(e.target.value)}
-            error={errors.imagemUrl}
-            placeholder="https://exemplo.com/imagem.jpg"
-            hint="Imagem de fundo do slide (opcional). Sem imagem, usa gradiente."
-          />
+        <div className="flex items-center justify-end gap-3">
+          <Button type="button" variant="ghost" onClick={() => router.push('/admin/slides')}>
+            Cancelar
+          </Button>
+          <Button type="submit" loading={salvando}>
+            {slideId ? 'Salvar alterações' : 'Criar slide'}
+          </Button>
         </div>
-      </Card>
-
-      {/* CTA e Ordenação */}
-      <Card padding="sm" className="sm:p-6">
-        <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Link e Ordenação</h2>
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Input
-              label="Texto do Botão (CTA)"
-              value={ctaLabel}
-              onChange={(e) => setCtaLabel(e.target.value)}
-              error={errors.ctaLabel}
-              placeholder="Ex: Saiba mais"
-              hint="Texto do botão de ação"
-            />
-
-            <Input
-              label="URL do Botão"
-              value={ctaUrl}
-              onChange={(e) => setCtaUrl(e.target.value)}
-              error={errors.ctaUrl}
-              placeholder="Ex: /editais/edital-2026"
-              hint="Para onde o botão direciona"
-            />
-          </div>
-
-          <Input
-            label="Ordem de Exibição"
-            type="number"
-            value={String(ordem)}
-            onChange={(e) => setOrdem(Number(e.target.value))}
-            error={errors.ordem}
-            hint="Slides são ordenados do menor para o maior"
-          />
-        </div>
-      </Card>
-
-      {/* Visibilidade */}
-      <Card padding="sm" className="sm:p-6">
-        <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-3 sm:mb-4">Visibilidade</h2>
-        <div className="space-y-4">
-          <label className="flex items-center gap-3 cursor-pointer min-h-[44px]">
-            <input
-              type="checkbox"
-              checked={ativo}
-              onChange={(e) => setAtivo(e.target.checked)}
-              className="h-5 w-5 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
-            />
-            <span className="text-sm font-medium text-slate-700">Slide ativo</span>
-          </label>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Input
-              label="Exibir a partir de"
-              type="datetime-local"
-              value={inicioEm}
-              onChange={(e) => setInicioEm(e.target.value)}
-              error={errors.inicioEm}
-              hint="Deixe em branco para exibir imediatamente"
-            />
-
-            <Input
-              label="Exibir até"
-              type="datetime-local"
-              value={fimEm}
-              onChange={(e) => setFimEm(e.target.value)}
-              error={errors.fimEm}
-              hint="Deixe em branco para exibir indefinidamente"
-            />
-          </div>
-        </div>
-      </Card>
-
-      {/* Botões */}
-      <div className="flex items-center justify-end gap-3">
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={() => router.push('/admin/slides')}
-        >
-          Cancelar
-        </Button>
-        <Button type="submit" loading={loading}>
-          {isEdit ? 'Salvar Alterações' : 'Criar Slide'}
-        </Button>
       </div>
     </form>
   )

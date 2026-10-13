@@ -1,9 +1,11 @@
 'use client'
 
+import type { TipoProponente } from '@prisma/client'
 import { useAvatarUpload } from './hooks/use-avatar-upload'
 import { usePersonalDataForm, type PersonalDataInitial } from './hooks/use-personal-data-form'
 import { usePasswordForm } from './hooks/use-password-form'
-import { ProfileHeader } from './profile-summary-card'
+import { FichaIdentidade } from './ficha-identidade'
+import { FotoPerfil } from './foto-perfil'
 import { PersonalDataSection } from './personal-data-section'
 import { PasswordSection } from './password-section'
 
@@ -11,43 +13,43 @@ interface ProfileFormProps {
   initialData: PersonalDataInitial & {
     avatarUrl: string | null
     cpfCnpj: string | null
-    tipoProponente: string | null
+    tipoProponente: TipoProponente | null
     createdAt: Date
   }
 }
 
-/** Orquestra os três blocos editáveis do perfil (foto, dados pessoais e
- * senha) — cada um com seu próprio hook porque são três submits independentes
- * contra endpoints/estados diferentes. O cabeçalho lê nome/e-mail/endereço
- * direto do estado do formulário de dados pessoais, sem duplicar valores. */
+/**
+ * Ficha cadastral: canhoto de identidade à esquerda (fixo no desktop, no
+ * topo do celular) e, à direita, os dados editáveis e a senha. Foto, dados e
+ * senha têm hooks próprios porque são três envios independentes.
+ */
 export function ProfileForm({ initialData }: ProfileFormProps) {
   const avatar = useAvatarUpload(initialData.avatarUrl)
   const personalData = usePersonalDataForm(initialData)
   const passwordForm = usePasswordForm()
 
   return (
-    <div className="space-y-6">
-      <ProfileHeader
+    <div className="grid gap-12 lg:grid-cols-[17rem_minmax(0,1fr)] lg:items-start lg:gap-16">
+      <FichaIdentidade
         nome={personalData.values.nome}
-        email={personalData.values.email}
-        avatarUrl={avatar.avatarUrl}
-        avatarBusy={avatar.avatarBusy}
-        onAvatarUpload={avatar.handleAvatarUpload}
-        onAvatarRemove={avatar.handleAvatarRemove}
         tipoProponente={initialData.tipoProponente}
         cpfCnpj={initialData.cpfCnpj}
-        telefone={personalData.values.telefone}
-        logradouro={personalData.values.logradouro}
-        numero={personalData.values.numero}
-        complemento={personalData.values.complemento}
-        bairro={personalData.values.bairro}
-        cidade={personalData.values.cidade}
-        uf={personalData.values.uf}
-        cep={personalData.values.cep}
         createdAt={initialData.createdAt}
+        foto={
+          <FotoPerfil
+            nome={personalData.values.nome}
+            avatarUrl={avatar.avatarUrl}
+            ocupado={avatar.avatarBusy}
+            onEnviar={avatar.handleAvatarUpload}
+            onRemover={avatar.handleAvatarRemove}
+          />
+        }
       />
-      <PersonalDataSection {...personalData} />
-      <PasswordSection {...passwordForm} />
+
+      <div className="min-w-0 space-y-16">
+        <PersonalDataSection {...personalData} />
+        <PasswordSection {...passwordForm} />
+      </div>
     </div>
   )
 }

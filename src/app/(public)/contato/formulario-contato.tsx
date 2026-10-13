@@ -9,6 +9,8 @@ import { ResumoErros, type ErrosContato } from './resumo-erros'
 
 interface FormularioContatoProps {
   editais: { id: string; titulo: string }[]
+  /** Assunto já validado no servidor (ex.: vindo do agendamento do Memorial). */
+  assuntoInicial?: string
 }
 
 const CAMPOS_INICIAIS = {
@@ -51,8 +53,8 @@ function validar(dados: CamposFormulario): ErrosContato {
  * formulário vira comprovante — sem ele a troca de conteúdo passa em
  * silêncio.
  */
-export function FormularioContato({ editais }: FormularioContatoProps) {
-  const [dados, setDados] = useState<CamposFormulario>(CAMPOS_INICIAIS)
+export function FormularioContato({ editais, assuntoInicial = '' }: FormularioContatoProps) {
+  const [dados, setDados] = useState<CamposFormulario>({ ...CAMPOS_INICIAIS, assunto: assuntoInicial })
   const [erros, setErros] = useState<ErrosContato>({})
   const [erroServidor, setErroServidor] = useState('')
   const [enviando, setEnviando] = useState(false)

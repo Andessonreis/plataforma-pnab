@@ -5,7 +5,7 @@
 # Ajuda | Help: make help
 # =============================================================================
 
-.PHONY: help dev dev-local dev-docker dev-worker start build install clean \
+.PHONY: deploy-staging help dev dev-local dev-docker dev-worker start build install clean \
         docker-up docker-down docker-build docker-logs docker-ps docker-clean \
         db-generate db-push db-migrate db-seed db-studio db-reset db-setup \
         lint typecheck check test test-watch test-coverage setup env-check
@@ -147,6 +147,10 @@ db-setup: db-generate db-push db-seed
 # -----------------------------------------------------------------------------
 # Qualidade de Código | Code Quality
 # -----------------------------------------------------------------------------
+
+## Atualiza o staging na VPS direto (sem GitHub Actions). Usa VPS_SSH_PASS ou chave SSH
+deploy-staging:
+	@./scripts/deploy-staging.sh
 
 ## Verifica lint (ESLint)
 lint:

@@ -97,3 +97,41 @@ describe('POST /api/admin/slides', () => {
     )
   })
 })
+
+describe('POST /api/admin/slides — peça editorial', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockLogAudit.mockResolvedValue(undefined)
+    mockAuth.mockResolvedValue({ user: { id: 'u3', role: 'COMUNICACAO' } } as never)
+  })
+
+  it('COMUNICACAO cria peça e o conteúdo editorial vai para a coluna peca', async () => {
+    mockPrisma.slideDestaque.create.mockResolvedValue({ id: 'slide-2', titulo: 'Memorial', ativo: true } as never)
+
+    const res = await POST(
+      makePostRequest({
+        ...validSlideBody,
+        formato: 'PECA',
+        imagemUrl: '/images/cidade/panoramica-irece.jpg',
+        peca: { chamada: 'Tudo que a memória amou' },
+      }),
+    )
+
+    expect(res.status).toBe(201)
+    const { data } = mockPrisma.slideDestaque.create.mock.calls[0][0] as { data: Record<string, unknown> }
+    expect(data.formato).toBe('PECA')
+    expect(data.peca).toMatchObject({ chamada: 'Tudo que a memória amou', linhas: [] })
+  })
+
+  it('peça sem imagem de fundo → 400 com o campo apontado', async () => {
+    const res = await POST(makePostRequest({ ...validSlideBody, formato: 'PECA', peca: { chamada: 'Chamada' } }))
+    expect(res.status).toBe(400)
+    expect((await res.json()).fieldErrors.imagemUrl).toBeDefined()
+  })
+
+  it('ADMIN continua sem acesso à abertura (conteúdo institucional é da Comunicação)', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'u4', role: 'ADMIN' } } as never)
+    const res = await POST(makePostRequest(validSlideBody))
+    expect(res.status).toBe(403)
+  })
+})

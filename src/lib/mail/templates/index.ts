@@ -82,6 +82,7 @@ import {
   resultadoPreliminarSubject,
   type ResultadoPreliminarData,
 } from './resultado-preliminar'
+import { memorialTemplateRegistry, type MemorialEmailTemplate, type MemorialTemplateDataMap } from './memorial'
 
 export type EmailTemplate =
   | 'boas_vindas'
@@ -100,8 +101,9 @@ export type EmailTemplate =
   | 'notificacao_generica'
   | 'relatorio_inscricoes'
   | 'edital_inscricao_encerrada'
+  | MemorialEmailTemplate
 
-export interface TemplateDataMap {
+export interface TemplateDataMap extends MemorialTemplateDataMap {
   boas_vindas: BoasVindasData
   comprovante_inscricao: ComprovanteInscricaoData
   resultado_preliminar: ResultadoPreliminarData
@@ -192,4 +194,5 @@ export const templateRegistry: Registry = {
     Component: EditalInscricaoEncerrada,
     defaultSubject: editalInscricaoEncerradaSubject,
   },
+  ...memorialTemplateRegistry,
 }

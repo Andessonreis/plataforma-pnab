@@ -16,6 +16,8 @@ services:
     ports:
       - "3001:3000"
     env_file: .env
+    volumes:
+      - ${UPLOAD_HOST_DIR:-/opt/pnab-uploads}:/app/uploads
     depends_on:
       pnab-postgres:
         condition: service_healthy
@@ -42,6 +44,8 @@ services:
         NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
     command: ["node", "worker.cjs"]
     env_file: .env
+    volumes:
+      - ${UPLOAD_HOST_DIR:-/opt/pnab-uploads}:/app/uploads
     depends_on:
       pnab-postgres:
         condition: service_healthy

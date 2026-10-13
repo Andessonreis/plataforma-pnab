@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { getSignedUrl, uploadFile, deleteFile } from '@/lib/storage'
+import { getSignedUrl, uploadFile, deleteFile, extractStoragePath } from '@/lib/storage'
 import { validateMagicBytes, sanitizeFilename } from '@/lib/upload/validate'
 import {
   MAX_FILE_SIZE_BYTES,
@@ -66,13 +66,11 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     }
 
     // Link externo (vídeo por Drive/YouTube/etc.) — não está no nosso storage, usa a URL direto
-    const urlObj = new URL(anexo.url)
-    const storagePath = urlObj.pathname.split('/propostas/').pop()
-    const isExternalLink = !urlObj.pathname.includes('/propostas/')
+    const storagePath = extractStoragePath('propostas', anexo.url)
 
-    const finalUrl = isExternalLink
+    const finalUrl = storagePath === null
       ? anexo.url
-      : await getSignedUrl('propostas', storagePath as string, 3600)
+      : await getSignedUrl('propostas', storagePath, 3600)
 
     const res = NextResponse.json({ url: finalUrl, requestId })
     res.headers.set('X-Request-Id', requestId)

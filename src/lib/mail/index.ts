@@ -7,6 +7,7 @@
 import { checkAllowlist } from './allowlist'
 import { sendViaResend, type EmailAttachment } from './client'
 import { renderTemplate } from './render'
+import { gravarNaCaixaLocal, pastaCaixaLocal } from './caixa-local'
 import type { EmailTemplate } from './templates'
 
 export type { EmailTemplate, TemplateDataMap } from './templates'
@@ -39,7 +40,6 @@ export async function sendEmail(options: SendEmailOptions): Promise<SendEmailRes
   if (!gate.allowed) {
     console.log({
       event: 'email_skipped_by_allowlist',
-      to: options.to,
       template: options.template,
       allowlistSize: gate.list?.length ?? 0,
     })
@@ -53,13 +53,15 @@ export async function sendEmail(options: SendEmailOptions): Promise<SendEmailRes
   // Subject explícito do caller tem prioridade; senão usa o do render
   // (que já considera override do banco quando habilitado).
   const subject = options.subject ?? rendered
-  const result = await sendViaResend({
+  const mensagem = {
     to: options.to,
     subject,
     html,
     text,
     replyTo: options.replyTo,
     attachments: options.attachments,
-  })
+  }
+  const caixaLocal = pastaCaixaLocal()
+  const result = caixaLocal ? await gravarNaCaixaLocal(caixaLocal, mensagem) : await sendViaResend(mensagem)
   return { id: result.id }
 }

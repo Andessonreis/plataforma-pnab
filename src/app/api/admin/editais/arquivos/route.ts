@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { uploadFile, deleteFile } from '@/lib/storage'
+import { uploadFile, deleteFile, extractStoragePath } from '@/lib/storage'
 import { validateMagicBytes } from '@/lib/upload/validate'
 
 export const runtime = 'nodejs'
@@ -225,13 +225,10 @@ export async function DELETE(req: NextRequest) {
       return res
     }
 
-    // Extrai o path relativo da URL do Supabase
-    // URL: https://xxx.supabase.co/storage/v1/object/public/editais/edital-xxx/file.pdf
-    const urlObj = new URL(arquivo.url)
-    const pathParts = urlObj.pathname.split('/storage/v1/object/public/editais/')
-    if (pathParts.length === 2) {
+    const caminho = extractStoragePath('editais', arquivo.url)
+    if (caminho) {
       try {
-        await deleteFile('editais', pathParts[1])
+        await deleteFile('editais', caminho)
       } catch {
         // Se falhar ao deletar do storage, continua e remove do banco
         console.error({ requestId, warning: 'Falha ao deletar arquivo do storage' })

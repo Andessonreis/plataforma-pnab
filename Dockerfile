@@ -75,6 +75,10 @@ COPY --from=builder --chown=nextjs:nodejs /app/dist/worker.cjs ./worker.cjs
 # Prisma schema (para migrations em deploy)
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 
+# Pasta dos uploads (montada como volume no compose; sobrevive aos deploys)
+RUN mkdir -p /app/uploads && chown nextjs:nodejs /app/uploads
+ENV UPLOAD_DIR=/app/uploads
+
 USER nextjs
 
 EXPOSE 3000

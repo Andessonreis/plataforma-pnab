@@ -1,50 +1,89 @@
-import { CarrosselArtes } from './carrossel-artes'
-import { FundoFotos } from '@/components/ui/fundo-fotos'
-import { SolEspiral } from '@/components/ui/ornamentos'
-import { PainelEditais } from './painel-editais'
+'use client'
+
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { BotaoPausa } from './botao-pausa'
+import { FaixaDividida } from './faixa-dividida'
+import { PalcoPeca } from './peca/palco-peca'
+import { PontosCarrossel } from './pontos-carrossel'
+import { ALTURA_QUADRO } from './quadro'
+import { variantesTroca } from './troca'
+import { useAutoplay } from './use-autoplay'
 import type { SlideDestaque, EditalResumo } from './types'
 
 interface AberturaProps {
   slides: SlideDestaque[]
   editais: EditalResumo[]
-  /** Fotografias que ocupam o fundo da faixa inteira. */
+  /** Fotografias que ocupam o fundo da faixa dos editais. */
   fotos: string[]
+  /** Ritmo da troca, configurado pela Comunicação no painel de slides. */
+  carrossel: { intervaloSegundos: number; automatico: boolean }
 }
 
 /**
- * Abertura do portal: peça de destaque e editais abertos lado a lado.
+ * Abertura do portal: um quadro de altura fixa onde os destaques se revezam.
  *
- * A fotografia é o fundo da faixa toda, não de um cartão dentro dela — a
- * abertura é a peça, e a peça tem a largura da página. A chamada e o painel
- * de editais são impressos por cima, como tinta sobre o papel. Os dois blocos
- * dividem a mesma tela de propósito: a pessoa precisa ver quais editais estão
- * abertos assim que acessa, além do que a chamada anuncia.
+ * Há dois arranjos dentro do quadro. A faixa dividida (slide institucional e
+ * artes do admin) põe a peça ao lado do painel de editais, para a pessoa ver o
+ * que está aberto assim que chega. A peça editorial ocupa a faixa inteira. Entre
+ * slides da faixa dividida só a peça da esquerda troca — fotos e painel ficam.
  *
- * O traçado do mapa de Irecê entra como textura de marca por cima de tudo.
+ * Por baixo de tudo há tinta escura, não a cor da marca: se algum quadro da
+ * troca deixasse o fundo à mostra, apareceria sombra, não um clarão terracota.
+ * Os pontos ficam fora das camadas, no mesmo lugar em qualquer slide.
+ *
+ * Quem pede menos movimento não recebe troca automática: os slides mudam só
+ * pelos pontos.
  */
-export function Abertura({ slides, editais, fotos }: AberturaProps) {
+export function Abertura({ slides, editais, fotos, carrossel }: AberturaProps) {
+  const parado = useReducedMotion() === true
+  const automatico = carrossel.automatico && !parado && slides.length > 1
+  const { atual, irPara, pausadoPelaPessoa, alternarPausa, suspender } = useAutoplay({
+    total: slides.length,
+    intervaloMs: carrossel.intervaloSegundos * 1000,
+    ativo: automatico,
+  })
+  const slide = slides[atual]
+  if (!slide) return null
+
+  const camada = slide.tipo === 'peca' ? slide.id : 'faixa-dividida'
+
   return (
-    <section className="relative overflow-hidden bg-brand-700">
-      <FundoFotos fotos={fotos} />
+    <section
+      className={`relative isolate overflow-hidden bg-tinta-950 ${ALTURA_QUADRO}`}
+      onMouseEnter={() => suspender(true)}
+      onMouseLeave={() => suspender(false)}
+      onFocusCapture={() => suspender(true)}
+      onBlurCapture={() => suspender(false)}
+      aria-roledescription="carrossel"
+      aria-label="Destaques"
+      data-quadro-abertura
+    >
+      <AnimatePresence initial={false}>
+        <motion.div
+          key={camada}
+          className="absolute inset-0"
+          variants={variantesTroca(parado)}
+          initial="entrando"
+          animate="visivel"
+          exit="saindo"
+          role="group"
+          aria-roledescription="slide"
+          aria-label={`${atual + 1} de ${slides.length}: ${slide.titulo}`}
+        >
+          {slide.tipo === 'peca' ? (
+            <PalcoPeca slide={slide} />
+          ) : (
+            <FaixaDividida slide={slide} editais={editais} fotos={fotos} />
+          )}
+        </motion.div>
+      </AnimatePresence>
 
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.07] mix-blend-screen"
-        style={{
-          backgroundImage: 'url(/images/secult/mapa-irece.png)',
-          backgroundSize: 'auto 100%',
-          backgroundRepeat: 'repeat-x',
-        }}
-        aria-hidden="true"
-      />
-
-      {/* Sangra pela quina de baixo, na diagonal oposta ao selo — sol nascendo
-          no canto da faixa, e não um disco flutuando no meio dela. */}
-      <SolEspiral className="pointer-events-none absolute -bottom-16 -right-16 h-64 w-64 text-accent-300/20" />
-
-      <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
-        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[1.05fr_1fr] lg:gap-10">
-          <CarrosselArtes slides={slides} />
-          <PainelEditais editais={editais} />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10">
+        <div className="mx-auto flex h-14 max-w-7xl items-center px-4 sm:px-6 lg:px-8">
+          <div className="pointer-events-auto flex items-center gap-2">
+            <PontosCarrossel total={slides.length} atual={atual} onSelecionar={irPara} />
+            {automatico && <BotaoPausa pausado={pausadoPelaPessoa} onAlternar={alternarPausa} />}
+          </div>
         </div>
       </div>
     </section>

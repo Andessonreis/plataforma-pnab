@@ -28,7 +28,7 @@ Tom institucional, gov.br-friendly. Cidadão submete CPF/CNPJ e documentos sens�
 | Estilização | Tailwind CSS v3 (paleta verde esmeralda + dourado, baseada na bandeira de Irecê) |
 | ORM / Banco | Prisma 6 + PostgreSQL 16 |
 | Cache / Filas | Redis 7 + BullMQ (workers de email e PDF) |
-| Storage | Supabase Storage (buckets: editais, propostas, manuais) |
+| Storage | Disco da VPS (UPLOAD_DIR; buckets: editais, propostas, manuais, memorial) |
 | Auth | NextAuth v5 — Credentials (CPF/CNPJ + senha) |
 | Validação | Zod em todos os inputs |
 | E-mail | Nodemailer (SMTP) |
@@ -52,7 +52,7 @@ Tom institucional, gov.br-friendly. Cidadão submete CPF/CNPJ e documentos sens�
 git clone <repo>
 cd portal-pnab-irece
 cp .env.example .env
-# preencher SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SMTP_*, NEXTAUTH_SECRET
+# preencher UPLOAD_DIR, SMTP_*, NEXTAUTH_SECRET
 
 # 2. Setup completo (instala deps, sobe Postgres+Redis, aplica schema, gera Prisma client)
 make setup
@@ -128,7 +128,7 @@ portal-pnab-irece/
 │   │   ├── auth/              # NextAuth config
 │   │   ├── db/                # Prisma singleton
 │   │   ├── redis/             # Redis client (BullMQ-safe)
-│   │   ├── storage/           # Supabase: upload, delete, signedUrl
+│   │   ├── storage/           # Disco: upload, delete, signedUrl
 │   │   ├── mail/              # Nodemailer + templates
 │   │   ├── queue/             # BullMQ queues + workers
 │   │   └── utils/             # cronograma, format, helpers

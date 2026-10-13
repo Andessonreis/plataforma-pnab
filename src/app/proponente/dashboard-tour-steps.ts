@@ -14,7 +14,7 @@ export const PASSOS_DASHBOARD: TourStep[] = [
   {
     elemento: '#tour-prazos',
     titulo: 'Prazos em aberto',
-    descricao: 'Os próximos encerramentos de inscrição que valem a pena acompanhar.',
+    descricao: 'Os encerramentos que vêm a seguir nos editais com inscrições abertas.',
   },
   {
     elemento: '#tour-inscricoes',
@@ -23,28 +23,32 @@ export const PASSOS_DASHBOARD: TourStep[] = [
   },
   {
     elemento: '#tour-rascunhos',
-    titulo: 'Rascunhos pendentes',
+    titulo: 'Rascunhos',
     descricao: 'Inscrições que você começou mas ainda não enviou.',
   },
   {
     elemento: '#tour-notificacoes',
-    titulo: 'Notificações',
+    titulo: 'Avisos',
     descricao: 'Os avisos mais recentes sobre suas inscrições e os editais.',
   },
   {
-    elemento: '#tour-hamburguer',
+    elemento: '#tour-memorial',
+    titulo: 'Memorial de Irecê',
+    descricao: 'Peça uma visita guiada ao Memorial e acompanhe aqui a resposta da equipe.',
+  },
+  {
+    elemento: '#tour-menu',
     titulo: 'Seu menu',
-    descricao: 'Toque aqui pra abrir o menu — suas inscrições, notificações e perfil ficam ali.',
-    soMobile: true,
+    descricao: 'Suas inscrições, avisos, visitas ao Memorial e perfil ficam aqui, a um toque de distância.',
   },
   {
     elemento: '#tour-nav-dashboard',
-    titulo: 'Dashboard',
-    descricao: 'Esta tela — sua visão geral. É pra onde você volta sempre que entra.',
+    titulo: 'Início',
+    descricao: 'Esta tela, a visão geral. É pra onde você volta sempre que entra.',
   },
   {
     elemento: '#tour-nav-inscricoes',
-    titulo: 'Minhas Inscrições',
+    titulo: 'Minhas inscrições',
     descricao: 'Lista completa de tudo que você já inscreveu, em qualquer edital.',
   },
   {
@@ -54,7 +58,7 @@ export const PASSOS_DASHBOARD: TourStep[] = [
   },
   {
     elemento: '#tour-nav-perfil',
-    titulo: 'Meu Perfil',
+    titulo: 'Meu perfil',
     descricao: 'Seus dados de cadastro, pra manter tudo atualizado.',
   },
 ]

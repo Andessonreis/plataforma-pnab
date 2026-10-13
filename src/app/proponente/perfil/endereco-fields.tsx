@@ -40,18 +40,20 @@ export function EnderecoFields({ values, setters, errors, loadingCep, onCepBlur 
   return (
     <>
       {/* deslop-ignore-next-line 28 — linha de campos de formulário (CEP + logradouro), não grade de cartões */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
         <Input
           label="CEP"
           value={values.cep}
           onChange={(e) => setters.setCep(e.target.value)}
           onBlur={onCepBlur}
           error={errors.cep}
-          hint={loadingCep ? 'Buscando...' : undefined}
+          hint={loadingCep ? 'Buscando o endereço…' : undefined}
+          inputMode="numeric"
+          autoComplete="postal-code"
         />
         <div className="sm:col-span-2">
           <Input
-            label="Logradouro"
+            label="Rua ou avenida"
             value={values.logradouro}
             onChange={(e) => setters.setLogradouro(e.target.value)}
             error={errors.logradouro}
@@ -60,7 +62,7 @@ export function EnderecoFields({ values, setters, errors, loadingCep, onCepBlur 
       </div>
 
       {/* deslop-ignore-next-line 28 — linha de campos de formulário (número + complemento), não grade de cartões */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
         <Input
           label="Número"
           value={values.numero}
@@ -86,7 +88,7 @@ export function EnderecoFields({ values, setters, errors, loadingCep, onCepBlur 
       </div>
 
       {/* deslop-ignore-next-line 28 — linha de campos de formulário (bairro + cidade + UF), não grade de cartões */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
         <Input
           label="Bairro"
           value={values.bairro}

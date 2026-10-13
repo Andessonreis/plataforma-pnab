@@ -2,6 +2,7 @@
 // com dados de exemplo. Mantém em sync com os campos de `TemplateDataMap`.
 
 import type { EmailTemplate } from './templates'
+import { TEMPLATE_META_MEMORIAL } from './placeholders-memorial'
 
 export interface PlaceholderSpec {
   key: string
@@ -180,6 +181,7 @@ export const TEMPLATE_META: Record<EmailTemplate, TemplateMeta> = {
       { key: 'url', description: 'Link direto pro painel de habilitação no admin.', sample: 'https://culturaeturismo.irece.ba.gov.br/admin/habilitacao', required: true },
     ],
   },
+  ...TEMPLATE_META_MEMORIAL,
 }
 
 // Monta um objeto data com os valores `sample` — usado pelo preview do admin.

@@ -1,0 +1,6 @@
+export * from './classes'
+export { StatusChip } from './StatusChip'
+export { CabecalhoPagina } from './CabecalhoPagina'
+export { BlocoSecao } from './BlocoSecao'
+export { FolhaData } from './FolhaData'
+export { VazioAcionavel } from './VazioAcionavel'

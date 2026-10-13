@@ -3,43 +3,37 @@ import type { TourStep } from '@/lib/tour/use-tour'
 export const PASSOS_PERFIL: TourStep[] = [
   {
     elemento: '#tour-perfil-resumo',
-    titulo: 'Seu resumo',
-    descricao: 'Foto, tipo de proponente e principais dados de contato, sempre visíveis aqui em cima.',
+    titulo: 'Sua conta',
+    descricao: 'Foto, tipo de proponente e documento. O CPF ou CNPJ é o seu login e não muda por aqui.',
   },
   {
     elemento: '#tour-perfil-foto',
     titulo: 'Foto de perfil',
-    descricao: 'Toque no lápis pra enviar ou trocar sua foto. JPEG, PNG ou WEBP.',
+    descricao: 'Envie, troque ou remova sua foto. Aceita JPG, PNG ou WEBP.',
   },
   {
-    elemento: '#tour-perfil-dados',
-    titulo: 'Dados pessoais',
-    descricao: 'Nome, e-mail e telefone usados no contato e nos documentos gerados.',
+    elemento: '#tour-perfil-identificacao',
+    titulo: 'Identificação',
+    descricao: 'Seu nome como aparece nas inscrições e nos documentos.',
+  },
+  {
+    elemento: '#tour-perfil-contato',
+    titulo: 'Contato',
+    descricao: 'E-mail e telefone para onde chegam avisos e resultados.',
   },
   {
     elemento: '#tour-perfil-endereco',
     titulo: 'Endereço',
-    descricao: 'Digite o CEP e o resto preenche sozinho — só confira e complete o número.',
+    descricao: 'Digite o CEP e o resto se completa. Só confira e informe o número.',
   },
   {
     elemento: '#tour-perfil-salvar',
-    titulo: 'Salvar alterações',
-    descricao: 'Depois de editar dados pessoais ou endereço, não esqueça de salvar aqui.',
+    titulo: 'Salvar',
+    descricao: 'Esta barra avisa quando há algo por salvar. Um toque grava identificação, contato e endereço juntos.',
   },
   {
     elemento: '#tour-perfil-senha',
-    titulo: 'Alterar senha',
-    descricao: 'Troque sua senha de acesso sempre que quiser, informando a senha atual.',
-  },
-  {
-    elemento: '#tour-perfil-alterar-senha-btn',
-    titulo: 'Confirmar nova senha',
-    descricao: 'Depois de preencher os três campos, toque aqui pra confirmar a troca.',
-  },
-  {
-    elemento: '#tour-hamburguer',
-    titulo: 'Seu menu',
-    descricao: 'Toque aqui pra abrir o menu — dashboard, inscrições e notificações ficam ali.',
-    soMobile: true,
+    titulo: 'Senha de acesso',
+    descricao: 'Troque sua senha quando quiser, confirmando a senha atual. É um envio separado dos dados.',
   },
 ]
