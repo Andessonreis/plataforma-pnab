@@ -33,7 +33,7 @@ export function AvisoIndisponivelSuplentes({ dados }: AvisoProps) {
 
 export function ComoFuncionaSuplentes() {
   return (
-    <FaixaSecao id="orientacoes-suplentes" cartela="Orientações aos Suplentes" cor="areia" corCartela="terracota">
+    <FaixaSecao id="orientacoes-suplentes" cartela="Orientações aos Suplentes" cor="papel-forte" corCartela="terracota">
       <div className="grid gap-8 lg:grid-cols-2">
         <div className="space-y-4">
           <h3 className="titulo text-xl text-tinta-900">Prazo e Local de Habilitação Documental</h3>
