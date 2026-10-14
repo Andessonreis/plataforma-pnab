@@ -9,9 +9,10 @@ async function main() {
   const buffer = await gerarPdfConvocacaoSuplente()
 
   const filenames = [
-    'convocacao-de-suplente_festival-arte-cultura-irece-centenario-2026_2026-10-08.pdf',
-    'convocacao-de-suplente_cultura-popular_2026-10-08.pdf',
+    'convocacao-de-suplente_festival-arte-cultura-irece-centenario-2026_2026-10-14.pdf',
+    'convocacao-de-suplente_cultura-popular_2026-10-14.pdf',
     'convocacao-de-suplente.pdf',
+    'convocacao-de-suplente_festival-arte-cultura-irece-centenario-2026.pdf',
   ]
 
   const destinations = [
