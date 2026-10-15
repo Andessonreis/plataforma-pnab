@@ -47,23 +47,23 @@ export const DADOS_CONVOCACAO_SUPLENTE = {
   vagasInfo: '4 vaga(s) · Vaga Remanescente de Suplência · R$ 5.000,00 por projeto',
   suplentes: [
     {
-      posicao: 4,
-      ordem: '1º suplente',
-      numero: 'PNAB-2026-0060',
-      nome: 'José Adenildo de Oliveira',
-      cpfCnpj: '***.101.985-**',
-      notaFinal: '77.00',
-      situacao: 'Desclassificado',
-      motivo: 'Agente contemplado no Edital 03/2026 - Premiação mestres.',
-      classificado: false,
-    },
-    {
       posicao: 5,
       ordem: '2º suplente',
       numero: 'PNAB-2026-0091',
       nome: 'AME Capoeira',
       cpfCnpj: '**.025.456/0001-**',
       notaFinal: '61.00',
+      situacao: 'Desclassificado',
+      motivo: 'Não apresentação da documentação exigida na habilitação.',
+      classificado: false,
+    },
+    {
+      posicao: 7,
+      ordem: '3º suplente',
+      numero: 'PNAB-2026-0007',
+      nome: 'Paulo Ricardo da Silva Nascimento',
+      cpfCnpj: '***.924.185-**',
+      notaFinal: '50.50',
       situacao: 'Classificado',
       motivo: 'Suplente Classificado — Convocado para vaga remanescente',
       classificado: true,
@@ -142,17 +142,17 @@ export async function gerarPdfConvocacaoSuplente(agora: Date = new Date()): Prom
   desenharObservacao(
     doc,
     textoParaPdf(
-      'O proponente da inscrição PNAB-2026-0060 (José Adenildo de Oliveira, 1º suplente na ordem) foi declarado Desclassificado em razão de já constar como Agente contemplado no Edital 03/2026 - Premiação mestres (Edital de Chamamento Público nº 03/2026 — Premiação para Mestres e Mestras de Irecê), atendendo ao critério editalício de vedação de cumulatividade.',
+      'O proponente da inscrição PNAB-2026-0091 (AME Capoeira, 2º suplente na ordem) foi declarado Desclassificado em razão da não apresentação da documentação exigida na fase de habilitação documental dentro do prazo regulamentar.',
     ),
-    'Desclassificação do 1º Suplente (PNAB-2026-0060)',
+    'Desclassificação da Suplente (PNAB-2026-0091)',
   )
 
   desenharObservacao(
     doc,
     textoParaPdf(
-      'Com a desclassificação do 1º suplente, o suplente subsequente na ordem classificatória — PNAB-2026-0091 (AME Capoeira, 2º suplente) — passa à condição de Classificado e fica oficialmente CONVOCADO para assumir a vaga remanescente.',
+      'Com a desclassificação da suplente anterior, o suplente subsequente na ordem classificatória — PNAB-2026-0007 (Paulo Ricardo da Silva Nascimento, 3º suplente) — passa à condição de Classificado e fica oficialmente CONVOCADO para apresentar a documentação de habilitação e assumir a vaga remanescente.',
     ),
-    'Convocação do Suplente Classificado (PNAB-2026-0091)',
+    'Convocação do Suplente Classificado (PNAB-2026-0007)',
   )
 
   // Aviso legal de encerramento

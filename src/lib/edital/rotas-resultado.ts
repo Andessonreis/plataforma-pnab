@@ -18,3 +18,8 @@ export function hrefHabilitacao(slug: string): string {
   return `/editais/${slug}/habilitacao`
 }
 
+/** Página pública de convocação de suplentes. */
+export function hrefSuplentes(slug: string): string {
+  return `/editais/${slug}/suplentes`
+}
+
