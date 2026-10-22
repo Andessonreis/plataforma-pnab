@@ -2,6 +2,7 @@ import type { SlideDestaque as SlideRegistro } from '@prisma/client'
 import { prisma } from '@/lib/db'
 import { pecaSchema } from '@/lib/schemas/slide-destaque'
 import type { SlideDestaque } from '@/components/home/types'
+import { AVISO_FESTIVAL_EXPIRA_EM, SLIDE_AVISO_FESTIVAL } from './slide-aviso-festival'
 import { SLIDE_INSTITUCIONAL } from './slide-institucional'
 
 type CamposSlide = Pick<
@@ -45,9 +46,10 @@ export function slideDoRegistro(registro: CamposSlide): SlideDestaque | null {
 }
 
 /**
- * Slides da abertura: o institucional dos editais (gerado no código, sempre o
- * primeiro) e os cadastrados no admin que estão ativos e dentro da janela de
- * exibição (`inicioEm`/`fimEm` nulos = sem limite).
+ * Slides da abertura: o aviso das datas do Festival (primeiro, enquanto vale),
+ * o institucional dos editais (gerado no código) e os cadastrados no admin que
+ * estão ativos e dentro da janela de exibição (`inicioEm`/`fimEm` nulos = sem
+ * limite).
  */
 export async function buscarSlidesAbertura(agora: Date): Promise<SlideDestaque[]> {
   const registros = await prisma.slideDestaque.findMany({
@@ -74,5 +76,6 @@ export async function buscarSlidesAbertura(agora: Date): Promise<SlideDestaque[]
   const cadastrados = registros
     .map(slideDoRegistro)
     .filter((slide): slide is SlideDestaque => slide !== null)
-  return [SLIDE_INSTITUCIONAL, ...cadastrados]
+  const avisos = agora <= AVISO_FESTIVAL_EXPIRA_EM ? [SLIDE_AVISO_FESTIVAL] : []
+  return [...avisos, SLIDE_INSTITUCIONAL, ...cadastrados]
 }
