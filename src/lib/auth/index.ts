@@ -8,6 +8,22 @@ import type { UserRole } from '@prisma/client'
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
+  callbacks: {
+    ...authConfig.callbacks,
+    /**
+     * O nome vem do cadastro a cada leitura da sessão, não do token: quem teve o
+     * nome alterado passa a ver (e a assinar respostas com) o nome novo sem
+     * precisar sair e entrar de novo. Só o middleware usa o token puro.
+     */
+    async session({ session, token }) {
+      const id = token.id as string
+      const usuario = await prisma.user.findUnique({ where: { id }, select: { nome: true } })
+      session.user.id = id
+      session.user.role = token.role as UserRole
+      if (usuario) session.user.name = usuario.nome
+      return session
+    },
+  },
   providers: [
     Credentials({
       name: 'credentials',
