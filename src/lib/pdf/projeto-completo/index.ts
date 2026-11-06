@@ -62,17 +62,24 @@ export interface ProjetoCompletoData {
 const LIMITE_LINHA = 100
 
 /**
- * Campo de texto longo: rótulo no alto da moldura e o valor corrido abaixo,
- * com a altura medida antes de desenhar. Resposta de textarea, planilha
- * orçamentária e cronograma passam por aqui — numa linha de ficha o texto
- * vazaria por cima do campo seguinte.
+ * Desenha um campo do formulário do projeto em bloco com moldura.
+ * Mede com precisão tanto a altura do rótulo/pergunta quanto a do valor/resposta,
+ * garantindo que textos de qualquer tamanho nunca se sobreponham.
  */
-function desenharCampoLongo(doc: PDFKit.PDFDocument, rotulo: string, valor: string): void {
-  const larguraTexto = LARGURA_UTIL - 12
-  doc.font(FONTES.dado).fontSize(8.5)
-  const altura = doc.heightOfString(valor || '—', { width: larguraTexto }) + 26
+function desenharCampoDoProjeto(doc: PDFKit.PDFDocument, rotulo: string, valor: string): void {
+  const larguraTexto = LARGURA_UTIL - 14
 
-  if (doc.y + altura > LIMITE_CONTEUDO) novaPagina(doc)
+  doc.font(FONTES.rotulo).fontSize(8.5)
+  const alturaRotulo = doc.heightOfString(rotulo || '—', { width: larguraTexto })
+
+  doc.font(FONTES.dado).fontSize(8.5)
+  const alturaValor = doc.heightOfString(valor || '—', { width: larguraTexto })
+
+  const altura = Math.ceil(alturaRotulo + alturaValor) + 16
+
+  if (doc.y + altura > LIMITE_CONTEUDO) {
+    novaPagina(doc)
+  }
 
   const topo = doc.y
   doc.save()
@@ -80,11 +87,12 @@ function desenharCampoLongo(doc: PDFKit.PDFDocument, rotulo: string, valor: stri
   doc.restore()
 
   doc.font(FONTES.rotulo).fontSize(8.5).fillColor(CORES.tinta)
-    .text(rotulo, X_ESQUERDA + 6, topo + 5, { width: larguraTexto, lineBreak: false, ellipsis: true })
-  doc.font(FONTES.dado).fontSize(8.5).fillColor(CORES.texto)
-    .text(valor || '—', X_ESQUERDA + 6, topo + 18, { width: larguraTexto })
+    .text(rotulo || '—', X_ESQUERDA + 7, topo + 6, { width: larguraTexto })
 
-  doc.y = topo + altura + 4
+  doc.font(FONTES.dado).fontSize(8.5).fillColor(CORES.texto)
+    .text(valor || '—', X_ESQUERDA + 7, topo + 6 + alturaRotulo + 4, { width: larguraTexto })
+
+  doc.y = topo + altura + 5
 }
 
 /** Seção "Dados do Projeto" — cada campo do formulário na ordem do edital. */
@@ -100,12 +108,7 @@ function desenharCampos(doc: PDFKit.PDFDocument, data: ProjetoCompletoData): voi
     const rotulo = resolveCampoLabel(chave, data.camposFormulario)
     const valor = textoParaPdf(formatCampoValue(data.campos[chave], definicao, chave))
 
-    if (valor.length > LIMITE_LINHA) {
-      desenharCampoLongo(doc, rotulo, valor)
-    } else {
-      garantirEspaco(doc, 24)
-      addInfoBlock(doc, [{ label: rotulo, value: valor }])
-    }
+    desenharCampoDoProjeto(doc, rotulo, valor)
   }
 
   addDivider(doc)

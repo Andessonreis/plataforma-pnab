@@ -20,20 +20,29 @@ export interface LinhaFicha {
   value: string
 }
 
-/** Altura que a linha precisa para caber o valor inteiro. */
+/** Altura que a linha precisa para caber o valor e o rótulo inteiros. */
 function alturaLinha(doc: PDFKit.PDFDocument, linha: LinhaFicha): number {
+  doc.font(FONTES.rotulo).fontSize(CORPO)
+  const larguraRotulo = COL_ROTULO - RESPIRO * 2
+  const alturaRotulo = doc.heightOfString(linha.label || '', { width: larguraRotulo })
+
   doc.font(FONTES.dado).fontSize(CORPO)
-  const altura = doc.heightOfString(linha.value || '—', { width: LARGURA_UTIL - COL_ROTULO - RESPIRO * 3 })
-  return Math.max(15, Math.ceil(altura) + 7)
+  const larguraValor = LARGURA_UTIL - COL_ROTULO - RESPIRO * 3
+  const alturaValor = doc.heightOfString(linha.value || '—', { width: larguraValor })
+
+  return Math.max(18, Math.ceil(Math.max(alturaRotulo, alturaValor)) + 8)
 }
 
-/** Escreve um par rótulo/valor ocupando a faixa informada. */
+/** Escreve um par rótulo/valor ocupando a faixa informada sem sobreposição. */
 function escreverLinha(doc: PDFKit.PDFDocument, linha: LinhaFicha, y: number): void {
+  const larguraRotulo = COL_ROTULO - RESPIRO * 2
+  const larguraValor = LARGURA_UTIL - COL_ROTULO - RESPIRO * 3
+
   doc.font(FONTES.rotulo).fontSize(CORPO).fillColor(CORES.texto)
-    .text(linha.label, X_ESQUERDA + RESPIRO, y, { width: COL_ROTULO - RESPIRO, lineBreak: false, ellipsis: true })
+    .text(linha.label, X_ESQUERDA + RESPIRO, y, { width: larguraRotulo })
   doc.font(FONTES.dado).fontSize(CORPO).fillColor(CORES.texto)
     .text(linha.value || '—', X_ESQUERDA + COL_ROTULO + RESPIRO, y, {
-      width: LARGURA_UTIL - COL_ROTULO - RESPIRO * 3,
+      width: larguraValor,
     })
 }
 

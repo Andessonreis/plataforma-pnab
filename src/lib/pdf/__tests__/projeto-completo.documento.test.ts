@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import PDFDocument from 'pdfkit'
 import { generateProjetoCompleto, type ProjetoCompletoData } from '../projeto-completo'
 import { addInfoBlock, addCompactSection } from '../layout-helpers'
 import { criarDocumentoOficial } from '../documento-oficial'
@@ -25,6 +26,11 @@ const spyBloco = vi.mocked(addInfoBlock)
 const spySecao = vi.mocked(addCompactSection)
 const spyDocumento = vi.mocked(criarDocumentoOficial)
 
+/** Textos que o gerador mandou o PDFKit escrever — os campos do formulário saem por aqui, fora dos blocos de ficha. */
+function textosDesenhados(): string[] {
+  return vi.mocked(PDFDocument.prototype.text).mock.calls.map(([texto]) => String(texto))
+}
+
 function projeto(parcial: Partial<ProjetoCompletoData> = {}): ProjetoCompletoData {
   return {
     numero: 'PNAB-2026-0139',
@@ -49,7 +55,10 @@ function linhasImpressas(): { label: string; value: string }[] {
 }
 
 describe('generateProjetoCompleto — conteúdo do documento', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => {
+    vi.restoreAllMocks()
+    vi.clearAllMocks()
+  })
 
   it('imprime o CPF completo do proponente, sem máscara', async () => {
     const pdf = await generateProjetoCompleto(projeto())
@@ -144,14 +153,19 @@ describe('generateProjetoCompleto — conteúdo do documento', () => {
   })
 
   it('troca a tabulação colada do Word por espaço e tira o que a fonte não desenha', async () => {
+    vi.spyOn(PDFDocument.prototype, 'text')
+
     await generateProjetoCompleto(projeto({
       campos: { etapa: 'Execução\t', lema: 'Eu \u2764 Irecê', meta: '1.\tRealizar' },
     }))
 
-    const linhas = linhasImpressas()
-    expect(linhas).toContainEqual({ label: 'Etapa', value: 'Execução' })
-    expect(linhas).toContainEqual({ label: 'Lema', value: 'Eu Irecê' })
-    expect(linhas).toContainEqual({ label: 'Meta', value: '1. Realizar' })
+    const textos = textosDesenhados()
+    expect(textos).toContain('Etapa')
+    expect(textos).toContain('Execução')
+    expect(textos).toContain('Lema')
+    expect(textos).toContain('Eu Irecê')
+    expect(textos).toContain('Meta')
+    expect(textos).toContain('1. Realizar')
   })
 
   it('não desenha o quadro de anexos, mesmo com anexos na inscrição', async () => {

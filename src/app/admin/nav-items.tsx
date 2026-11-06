@@ -19,6 +19,7 @@ import {
   IconMail,
   IconShield,
   IconInstagram,
+  IconBook,
 } from '@/components/ui'
 
 export interface NavItem {
@@ -154,6 +155,12 @@ export const navSections: NavSection[] = [
         href: '/admin/momentos',
         roles: ['SUPER_ADMIN', 'COMUNICACAO'],
         icon: <IconInstagram className="h-5 w-5" />,
+      },
+      {
+        label: 'Manuais e Documentos',
+        href: '/admin/manuais',
+        roles: ['SUPER_ADMIN', 'ADMIN', 'COMUNICACAO'],
+        icon: <IconBook className="h-5 w-5" />,
       },
     ],
   },

@@ -43,6 +43,16 @@ describe('validateMagicBytes', () => {
     expect(validateMagicBytes(buffer, mime)).toBe(true)
   })
 
+  it('DOCX (ZIP) e DOC (OLE2): aceita as assinaturas e recusa trocadas com PDF', () => {
+    const zip = Buffer.from([0x50, 0x4b, 0x03, 0x04, 0x14, 0x00])
+    const ole2 = Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1])
+    const docx = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    expect(validateMagicBytes(zip, docx)).toBe(true)
+    expect(validateMagicBytes(ole2, 'application/msword')).toBe(true)
+    expect(validateMagicBytes(Buffer.from('%PDF-1.7'), docx)).toBe(false)
+    expect(validateMagicBytes(Buffer.from('%PDF-1.7'), 'application/msword')).toBe(false)
+  })
+
   it('rejeita executável disfarçado de PDF', () => {
     // MZ header (Windows EXE) com mime declarado como PDF
     const buffer = Buffer.from([0x4d, 0x5a, 0x90, 0x00, 0x03, 0x00])

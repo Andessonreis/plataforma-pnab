@@ -5,6 +5,7 @@ import { desenharTabela, type ColunaTabela, type LinhaTabela, type EstiloCelula 
 import { COLORS, LARGURA_UTIL, MARGINS } from './template-1/tema'
 import { dataHora } from './documento-oficial/tema'
 import { textoParaPdf } from './texto-winansi'
+import { DADOS_CONVOCACAO_SUPLENTE, type DadosConvocacaoSuplente } from './convocacao-suplente-dados'
 
 const ALTURA_TARJA = 17
 const ALTURA_QUADRO = 13
@@ -38,43 +39,13 @@ function desenharObservacao(doc: PDFKit.PDFDocument, texto: string, rotulo = 'Ob
   doc.y = y + altura
 }
 
-export const DADOS_CONVOCACAO_SUPLENTE = {
-  titulo: 'Convocação de Suplente',
-  editalTitulo: 'Festival de Arte e Cultura de Irecê — Centenário da Cidade',
-  editalNumero: 'Edital de Chamamento Público Nº 02/2026',
-  ano: '2026',
-  categoria: 'CULTURA POPULAR',
-  vagasInfo: '4 vaga(s) · Vaga Remanescente de Suplência · R$ 5.000,00 por projeto',
-  suplentes: [
-    {
-      posicao: 5,
-      ordem: '2º suplente',
-      numero: 'PNAB-2026-0091',
-      nome: 'AME Capoeira',
-      cpfCnpj: '**.025.456/0001-**',
-      notaFinal: '61.00',
-      situacao: 'Desclassificado',
-      motivo: 'Não apresentação da documentação exigida na habilitação.',
-      classificado: false,
-    },
-    {
-      posicao: 7,
-      ordem: '3º suplente',
-      numero: 'PNAB-2026-0007',
-      nome: 'Paulo Ricardo da Silva Nascimento',
-      cpfCnpj: '***.924.185-**',
-      notaFinal: '50.50',
-      situacao: 'Classificado',
-      motivo: 'Suplente Classificado — Convocado para vaga remanescente',
-      classificado: true,
-    },
-  ],
-}
+export { DADOS_CONVOCACAO_SUPLENTE, DADOS_CONVOCACAO_SUPLENTE_LITERATURA } from './convocacao-suplente-dados'
 
-export async function gerarPdfConvocacaoSuplente(agora: Date = new Date()): Promise<Buffer> {
-  const titulo = DADOS_CONVOCACAO_SUPLENTE.titulo
-  const editalTitulo = DADOS_CONVOCACAO_SUPLENTE.editalTitulo
-  const ano = DADOS_CONVOCACAO_SUPLENTE.ano
+export async function gerarPdfConvocacaoSuplente(
+  agora: Date = new Date(),
+  dados: DadosConvocacaoSuplente = DADOS_CONVOCACAO_SUPLENTE,
+): Promise<Buffer> {
+  const { titulo, editalTitulo, ano } = dados
 
   let primeiraFolha = true
   const doc = abrirDocumento({
@@ -88,10 +59,10 @@ export async function gerarPdfConvocacaoSuplente(agora: Date = new Date()): Prom
 
   // Bloco de Identificação
   desenharBlocoInfo(doc, [
-    { label: 'Edital', value: `${DADOS_CONVOCACAO_SUPLENTE.editalNumero} — ${editalTitulo}` },
+    { label: 'Edital', value: `${dados.editalNumero} — ${dados.editalTituloCurto}` },
     { label: 'Ano', value: ano },
     { label: 'Etapa / Fase', value: 'Convocação de Suplente — Habilitação Documental' },
-    { label: 'Categoria', value: DADOS_CONVOCACAO_SUPLENTE.categoria },
+    { label: 'Categoria', value: dados.categoria },
     { label: 'Data de Emissão', value: dataHora(agora) },
     { label: 'Objeto', value: 'Convocação de proposta suplente para preenchimento de vaga remanescente' },
   ])
@@ -99,8 +70,8 @@ export async function gerarPdfConvocacaoSuplente(agora: Date = new Date()): Prom
 
   // Tarja e Quadro da Categoria
   garantirEspaco(doc, ALTURA_TARJA + ALTURA_QUADRO + 140)
-  desenharTarja(doc, DADOS_CONVOCACAO_SUPLENTE.categoria)
-  desenharQuadroInfo(doc, DADOS_CONVOCACAO_SUPLENTE.vagasInfo)
+  desenharTarja(doc, dados.categoria)
+  desenharQuadroInfo(doc, dados.vagasInfo)
 
   const colunas: ColunaTabela[] = [
     { label: 'POS.', width: 28, align: 'center' },
@@ -111,7 +82,7 @@ export async function gerarPdfConvocacaoSuplente(agora: Date = new Date()): Prom
     { label: 'MOTIVO / JUSTIFICATIVA', width: 120 },
   ]
 
-  const linhas: LinhaTabela[] = DADOS_CONVOCACAO_SUPLENTE.suplentes.map((prop) => {
+  const linhas: LinhaTabela[] = dados.suplentes.map((prop) => {
     const celulas: (EstiloCelula | undefined)[] = [
       undefined,
       { negrito: true },
@@ -138,22 +109,9 @@ export async function gerarPdfConvocacaoSuplente(agora: Date = new Date()): Prom
   desenharTabela(doc, colunas, linhas, { fios: true })
   doc.y += 6
 
-  // Observações detalhadas
-  desenharObservacao(
-    doc,
-    textoParaPdf(
-      'O proponente da inscrição PNAB-2026-0091 (AME Capoeira, 2º suplente na ordem) foi declarado Desclassificado em razão da não apresentação da documentação exigida na fase de habilitação documental dentro do prazo regulamentar.',
-    ),
-    'Desclassificação da Suplente (PNAB-2026-0091)',
-  )
-
-  desenharObservacao(
-    doc,
-    textoParaPdf(
-      'Com a desclassificação da suplente anterior, o suplente subsequente na ordem classificatória — PNAB-2026-0007 (Paulo Ricardo da Silva Nascimento, 3º suplente) — passa à condição de Classificado e fica oficialmente CONVOCADO para apresentar a documentação de habilitação e assumir a vaga remanescente.',
-    ),
-    'Convocação do Suplente Classificado (PNAB-2026-0007)',
-  )
+  for (const { rotulo, texto } of dados.observacoes) {
+    desenharObservacao(doc, textoParaPdf(texto), rotulo)
+  }
 
   // Aviso legal de encerramento
   garantirEspaco(doc, 40)

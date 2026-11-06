@@ -65,6 +65,9 @@ export const AUDIT_ACTIONS = {
   FAQ_CRIADO: 'FAQ_CRIADO',
   FAQ_ATUALIZADO: 'FAQ_ATUALIZADO',
   FAQ_EXCLUIDO: 'FAQ_EXCLUIDO',
+  MANUAL_CRIADO: 'MANUAL_CRIADO',
+  MANUAL_ATUALIZADO: 'MANUAL_ATUALIZADO',
+  MANUAL_EXCLUIDO: 'MANUAL_EXCLUIDO',
 
   // Admin — Memorial e questionários
   MEMORIAL_CONTEUDO_CRIADO: 'MEMORIAL_CONTEUDO_CRIADO',
@@ -194,6 +197,9 @@ export const ACTION_LABELS: Record<string, string> = {
   FAQ_CRIADO: 'FAQ criado',
   FAQ_ATUALIZADO: 'FAQ atualizado',
   FAQ_EXCLUIDO: 'FAQ excluído',
+  MANUAL_CRIADO: 'Manual criado',
+  MANUAL_ATUALIZADO: 'Manual atualizado',
+  MANUAL_EXCLUIDO: 'Manual excluído',
   MEMORIAL_CONTEUDO_CRIADO: 'Conteúdo do Memorial criado',
   MEMORIAL_CONTEUDO_ATUALIZADO: 'Conteúdo do Memorial atualizado',
   MEMORIAL_CONTEUDO_PUBLICADO: 'Conteúdo do Memorial publicado',

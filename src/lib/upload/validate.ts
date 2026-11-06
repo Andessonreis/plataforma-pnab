@@ -24,6 +24,12 @@ const MAGIC_BYTES: Record<string, { signature: number[]; offset?: number }[]> = 
   'application/vnd.ms-excel': [
     { signature: [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1] }, // OLE2 (XLS legado)
   ],
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': [
+    { signature: [0x50, 0x4b, 0x03, 0x04] }, // PK (DOCX também é ZIP)
+  ],
+  'application/msword': [
+    { signature: [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1] }, // OLE2 (DOC legado)
+  ],
   'video/mp4': [
     { signature: [0x66, 0x74, 0x79, 0x70], offset: 4 }, // ISO BMFF "ftyp" box
   ],
