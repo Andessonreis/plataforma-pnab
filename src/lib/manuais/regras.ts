@@ -9,12 +9,15 @@ import { megabytes } from '@/lib/upload/imagem'
 /** Quem gerencia os manuais. SUPER_ADMIN passa sozinho em requireRole. */
 export const ROLES_MANUAIS: UserRole[] = ['ADMIN', 'COMUNICACAO']
 
-export const EXTENSOES_MANUAL = ['pdf', 'doc', 'docx', 'xls', 'xlsx'] as const
+/** Imagens aceitas (logos, réguas de marca). SVG fica de fora: o arquivo pode carregar script. */
+export const EXTENSOES_IMAGEM = ['png', 'jpg', 'jpeg', 'webp'] as const
+
+export const EXTENSOES_MANUAL = ['pdf', 'doc', 'docx', 'xls', 'xlsx', ...EXTENSOES_IMAGEM] as const
 export type ExtensaoManual = (typeof EXTENSOES_MANUAL)[number]
 
 export const MAX_BYTES_MANUAL = 20 * 1024 * 1024
 
-export const ROTULO_FORMATOS_MANUAL = `PDF, DOC, DOCX, XLS ou XLSX, até ${megabytes(MAX_BYTES_MANUAL)} MB`
+export const ROTULO_FORMATOS_MANUAL = `PDF, DOC, DOCX, XLS, XLSX, PNG, JPG ou WEBP, até ${megabytes(MAX_BYTES_MANUAL)} MB`
 
 /** Atributo `accept` do campo de arquivo. */
 export const ACCEPT_MANUAL = EXTENSOES_MANUAL.map((e) => `.${e}`).join(',')
@@ -28,6 +31,11 @@ export function extensaoDoArquivo(nome: string): string {
 
 export function isExtensaoManual(ext: string): ext is ExtensaoManual {
   return (EXTENSOES_MANUAL as readonly string[]).includes(ext)
+}
+
+/** Aceita nome de arquivo ou URL: o que importa é o trecho depois do último ponto. */
+export function isImagemManual(nomeOuUrl: string): boolean {
+  return (EXTENSOES_IMAGEM as readonly string[]).includes(extensaoDoArquivo(nomeOuUrl))
 }
 
 /** Motivo para recusar o arquivo, ou `undefined` se extensão e tamanho servem. */
