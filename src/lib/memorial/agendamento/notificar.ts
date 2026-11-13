@@ -74,13 +74,35 @@ export async function avisarPedidoRecebido(v: Visita, aviso: string): Promise<bo
   )
 }
 
-/** Equipe de Comunicação ativa + e-mail institucional do Memorial, sem repetir endereço. */
+/** Notificação do sino do painel, sem campanha: uma por pessoa da equipe, apontando para o pedido. */
+async function notificarEquipeNoPainel(v: Visita, userIds: string[]) {
+  if (userIds.length === 0) return
+  const d = dadosVisita(v)
+  await prisma.notification.createMany({
+    data: userIds.map((userId) => ({
+      userId,
+      titulo: 'Novo pedido de visita ao Memorial',
+      corpo: `${d.instituicao} (${d.quantidade} pessoas) pediu visita em ${d.data}, ${d.horario}. Protocolo ${d.protocolo}.`,
+      link: `/admin/memorial/agendamentos/${v.id}`,
+      ctaLabel: 'Ver pedido',
+      canais: ['IN_APP' as const],
+    })),
+  })
+}
+
+/**
+ * Equipe do Memorial ativa (ADMIN, COMUNICACAO e SUPER_ADMIN) recebe a notificação no sino
+ * e o e-mail; o e-mail institucional do Memorial também recebe, sem repetir endereço.
+ */
 export async function avisarEquipeNovoPedido(v: Visita) {
   await semDerrubar(v.protocolo, 'alerta da equipe', async () => {
     const [equipe, contato] = await Promise.all([
-      prisma.user.findMany({ where: { role: { in: ROLES_MEMORIAL_COMPLETO }, ativo: true }, select: { nome: true, email: true } }),
+      prisma.user.findMany({ where: { role: { in: ROLES_MEMORIAL_COMPLETO }, ativo: true }, select: { id: true, nome: true, email: true } }),
       emailDeContato(),
     ])
+    await semDerrubar(v.protocolo, 'notificação da equipe no painel', () =>
+      notificarEquipeNoPainel(v, equipe.map((p) => p.id)),
+    )
     const destinatarios = new Map(equipe.map((p) => [p.email.toLowerCase(), p.nome]))
     if (contato && !destinatarios.has(contato.toLowerCase())) destinatarios.set(contato.toLowerCase(), 'Equipe do Memorial')
 
